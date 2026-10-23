@@ -85,7 +85,7 @@ export function csvRows(csv:string):CatalogRow[]{
   seen.add(sku);
   const changes:CatalogRow["changes"]={};
   for(const [key,v] of Object.entries(raw)){
-   if(key==="sku"||v==="")continue; // Never clear an existing value by accident.
+   if(key==="sku"||key==="opening_stock"||v==="")continue; // Never clear an existing value by accident.
    const label="Row "+(i+2)+" "+key;
    if(key==="price_bdt"||key==="cost_bdt"){
     const n=toPaisa(v,label);
