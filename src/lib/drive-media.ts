@@ -1,5 +1,5 @@
 
-import mediaIndex from "@/data/drive-media.json";
+import mediaIndex from "../data/drive-media.json";
 
 export type DriveMediaItem = (typeof mediaIndex.images)[number];
 export const driveImages: ReadonlyArray<DriveMediaItem> = mediaIndex.images;
