@@ -1,31 +1,20 @@
 
-import {authorize,apiError,assertOrigin,HttpError} from "@/lib/auth";
-import {db} from "@/lib/db";
-import {Product,Audit} from "@/lib/models";
-import {validCloudinaryUrl} from "@/lib/cloudinary-media";
-import mongoose from "mongoose";
 import {z} from "zod";
-const body=z.object({productId:z.string().regex(/^[0-9a-f]{24}$/i),url:z.url().max(600),expectedUpdatedAt:z.iso.datetime({offset:true})}).strict();
+import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
+import {cloudinaryPublicId} from "@/lib/cloudinary-media";
+import {managedAssetId} from "@/lib/cloudinary-signature";
+import {attachManagedAsset} from "@/lib/cloudinary-server";
+export const runtime="nodejs";
+const body=z.object({productId:z.string().regex(/^[a-f0-9]{24}$/i),url:z.url().max(650),
+ expectedUpdatedAt:z.iso.datetime({offset:true})}).strict();
 export async function POST(req:Request){
  try{
-  assertOrigin(req);const actor=await authorize(["owner","admin","inventory"]);
+  assertOrigin(req);const user=await authorize(["owner","admin","inventory"]);
   const data=body.parse(await req.json());
-  if(!validCloudinaryUrl(data.url))throw new HttpError(400,"Only approved ANUSMITA Cloudinary image URLs accepted");
-  await db();const session=await mongoose.startSession();let out:any;
-  try{
-   await session.withTransaction(async()=>{
-    const product=await Product.findById(data.productId).session(session);
-    if(!product)throw new HttpError(404,"Product not found");
-    if(new Date(product.updatedAt).getTime()!==new Date(data.expectedUpdatedAt).getTime())throw new HttpError(409,"Product changed; refresh first");
-    const urls=[...(product.imageUrls||[])];
-    if(!urls.includes(data.url)){
-     if(urls.length>=12)throw new HttpError(409,"Maximum 12 images per product");
-     urls.push(data.url);product.imageUrls=urls;await product.save({session});
-     await Audit.create([{actorId:actor.id,action:"product.cloudinary_image_linked",entity:"Product",entityId:String(product._id),details:{url:data.url}}],{session});
-    }
-    out={id:String(product._id),imageUrls:product.imageUrls,updatedAt:product.updatedAt};
-   });
-  }finally{await session.endSession();}
-  return Response.json(out);
- }catch(err){return apiError(err);}
+  const publicId=cloudinaryPublicId(data.url);
+  if(!publicId||!managedAssetId(publicId))throw new HttpError(400,"Only verified, managed ANUSMITA Cloudinary assets are accepted");
+  const result=await attachManagedAsset({productId:data.productId,expectedUpdatedAt:data.expectedUpdatedAt,publicId,actorId:user.id});
+  if(data.url!==result.secureUrl)throw new HttpError(409,"Cloudinary canonical URL differs from the pasted link. Use the verified original URL.");
+  return Response.json(result);
+ }catch(e){return apiError(e);}
 }
