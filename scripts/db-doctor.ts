@@ -2,8 +2,7 @@
 import "dotenv/config";
 import mongoose from "mongoose";
 import {dedicatedDb,launchFlags,ATLAS_HOST,ATLAS_DB,ATLAS_APP_USER} from "../src/lib/launch-config";
-import {db} from "../src/lib/db";
-import {User,Product} from "../src/lib/models";
+
 async function doctor(){
  const flags=launchFlags(process.env);
  console.log("ANUSMITA Atlas diagnostics (no secrets printed)");
@@ -16,9 +15,13 @@ async function doctor(){
   return;
  }
  try{
-  const conn=await db();await conn.connection.db!.admin().ping();
+  const conn=await mongoose.createConnection(process.env.MONGODB_URI!,{
+   maxPoolSize:2,serverSelectionTimeoutMS:10000,autoIndex:false,autoCreate:false
+  }).asPromise();
+  await conn.db!.admin().ping();
   const [owners,products]=await Promise.all([
-   User.countDocuments({role:"owner",active:true}),Product.countDocuments({active:true})
+   conn.db!.collection("users").countDocuments({role:"owner",active:true}),
+   conn.db!.collection("products").countDocuments({active:true})
   ]);
   console.log("Atlas connectivity: OK");
   console.log("Active owner account:",owners>0?"YES":"NO");
