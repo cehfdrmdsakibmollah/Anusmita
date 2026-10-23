@@ -22,7 +22,7 @@ export async function currentUser() {
   const {payload}=await jwtVerify(raw,key());
   if (!payload.sub || !/^[0-9a-f]{24}$/i.test(payload.sub)) return null;
   await db();
-  const user=await User.findById(payload.sub).select("name email role active").lean();
+  const user=await User.findById(payload.sub).select("name email role active").lean<any>();
   return user && user.active?{id:String(user._id),name:user.name as string,email:user.email as string,role:user.role as Role}:null;
  } catch { return null; }
 }
