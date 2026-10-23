@@ -100,3 +100,8 @@ Owners can open /admin → **Launch Readiness** after the MongoDB owner account 
 Search engine indexing is blocked through robots metadata and robots.txt until checkout is explicitly live with valid configuration. This prevents accidentally promoting a preview as a functioning store.
 
 **Deployment reminder:** The connected Vercel account currently has other projects but no ANUSMITA project. Do not upload a commercial storefront to a plan that forbids commercial use. Choosing a compliant deployment platform, provisioning the ANUSMITA MongoDB database/user, configuring encrypted environment variables, backup restoration and real end-to-end tests are still required. GitHub builds alone are not launch approval.
+
+### ANUSMITA Atlas cluster created
+The dedicated MongoDB Atlas project **ANUSMITA Commerce** contains a **FREE cluster named ANUSMITA** in AP_SOUTH_1, with connection host `anusmita.jvvjo1k.mongodb.net`.
+
+No database user or IP access-list entry has been provisioned yet; these require secure credentials and a known hosting network. The `.env.example` contains the actual cluster hostname but **no password**. Create a least-privilege readWrite database user scoped to `anusmita` and configure encrypted deployment variables when hosting is selected. Do not reuse the old Portfolio database login.
