@@ -103,3 +103,12 @@ export const PurchaseOrder = mongoose.models.PurchaseOrder || mongoose.model("Pu
 export const Expense = mongoose.models.Expense || mongoose.model("Expense",ExpenseSchema);
 export const Audit = mongoose.models.Audit || mongoose.model("Audit",AuditSchema);
 export const Counter = mongoose.models.Counter || mongoose.model("Counter",CounterSchema);
+
+const CatalogImportSchema = new Schema({
+ importKey:{type:String,required:true,unique:true},
+ actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ fileHash:{type:String,required:true},
+ inserted:{type:Number,default:0},updated:{type:Number,default:0},skipped:{type:Number,default:0},
+ affectedSkus:{type:[String],default:[]},completedAt:{type:Date,required:true}
+},opts);
+export const CatalogImport = mongoose.models.CatalogImport || mongoose.model("CatalogImport",CatalogImportSchema);
