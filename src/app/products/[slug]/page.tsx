@@ -5,6 +5,7 @@ import {notFound} from "next/navigation";
 import {db} from "@/lib/db";
 import {Product} from "@/lib/models";
 import {taka} from "@/lib/money";
+import ProductImageGallery from "@/components/product-image-gallery";
 export const dynamic="force-dynamic";
 type Props={params:Promise<{slug:string}>};
 async function loadProduct(slug:string){
@@ -34,7 +35,7 @@ export default async function ProductPage({params}:Props){
  };
  return <div className="container productDetail">
  <p className="eyebrow"><Link href="/">Home</Link> / {p.category} / {p.name}</p>
- <div className="detailGrid"><div className="detailMedia">{p.imageUrls?.[0]?<img src={p.imageUrls[0]} alt={p.name} />:<span aria-hidden="true">✧</span>}</div>
+ <div className="detailGrid"><ProductImageGallery urls={p.imageUrls||[]} name={p.name}/>
  <div className="detailInfo"><p className="eyebrow">{p.origin}{p.brand?" · "+p.brand:""}</p>
  <h1>{p.name}</h1><div className="detailPrice">{taka(p.pricePaisa)}</div>
  <p className="muted">{p.size||p.variantLabel} · {p.category}</p>
