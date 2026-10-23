@@ -11,13 +11,13 @@ describe("supplier payment verification",()=>{
  });
  it("normalizes payment references to detect duplicates",()=>{
   expect(paymentReferenceKey("  abc-99  22  ")).toBe("ABC-99 22");
-  expect(paymentReferenceKey(" a ")).toThrow();
-  expect(paymentReferenceKey("bad\nreference")).toThrow();
+  expect(()=>paymentReferenceKey(" a ")).toThrow();
+  expect(()=>paymentReferenceKey("bad\nreference")).toThrow();
  });
  it("prevents overpayment including concurrent amount checks",()=>{
   expect(remainingSupplierBalance(50000,20000,10000)).toBe(20000);
-  expect(remainingSupplierBalance(50000,20000,30001)).toThrow(/exceeds/);
-  expect(remainingSupplierBalance(50000,50001)).toThrow(/exceeds/);
-  expect(remainingSupplierBalance(100,Number.MAX_SAFE_INTEGER)).toThrow();
+  expect(()=>remainingSupplierBalance(50000,20000,30001)).toThrow(/exceeds/);
+  expect(()=>remainingSupplierBalance(50000,50001)).toThrow(/exceeds/);
+  expect(()=>remainingSupplierBalance(100,Number.MAX_SAFE_INTEGER)).toThrow();
  });
 });
