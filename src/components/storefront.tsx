@@ -41,7 +41,7 @@ export default function Storefront({products,canOrder}:{products:Product[];canOr
  const detailed=useMemo(()=>cart.map(l=>({item:catalog.find(p=>p.id===l.id),quantity:l.quantity})).filter((l):l is {item:Product;quantity:number}=>Boolean(l.item)),[cart,catalog]);
  const subtotal=detailed.reduce((sum,l)=>sum+l.item.pricePaisa*l.quantity,0);
  const shipping=customer.district.trim().toLowerCase()==="dhaka"?7000:12000;
- const add=(id:string)=>{if(!canOrder)return;setCart(old=>{const item=catalog.find(p=>p.id===id);if(!item||item.available<=0)return old;const found=old.find(l=>l.id===id);return found?old.map(l=>l.id===id?{...l,quantity:Math.min(item.available,20,l.quantity+1)}:l):[...old,{id,quantity:1}];});
+ const add=(id:string)=>{if(!canOrder)return;setCart(old=>{const item=catalog.find(p=>p.id===id);if(!item||item.available<=0)return old;const found=old.find(l=>l.id===id);return found?old.map(l=>l.id===id?{...l,quantity:Math.min(item.available,20,l.quantity+1)}:l):[...old,{id,quantity:1}];});};
  const setQty=(id:string,qty:number)=>setCart(old=>old.map(l=>l.id===id?{...l,quantity:Math.min(20,Math.max(0,qty),catalog.find(p=>p.id===id)?.available||0)}:l).filter(l=>l.quantity>0));
  const change=(k:keyof Customer,v:string)=>{setCustomer(c=>({...c,[k]:v}));keyRef.current=null;};
  async function checkout(ev:React.FormEvent<HTMLFormElement>){
