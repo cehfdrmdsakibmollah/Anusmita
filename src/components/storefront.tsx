@@ -6,7 +6,7 @@ type Product={id:string;name:string;slug:string;brand:string;category:string;ori
 type CartLine={id:string;quantity:number};
 type Customer={name:string;phone:string;district:string;area:string;address:string;notes:string};
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
-export default function Storefront({products}:{products:Product[]}){
+export default function Storefront({products,canOrder}:{products:Product[];canOrder:boolean}){
  const [search,setSearch]=useState(""),[category,setCategory]=useState("All"),[cart,setCart]=useState<CartLine[]>([]),[cartOpen,setCartOpen]=useState(false);
  const [remoteProducts,setRemoteProducts]=useState<Product[]>([]),[cartProducts,setCartProducts]=useState<Product[]>([]),[remotePage,setRemotePage]=useState(1),[remotePages,setRemotePages]=useState(1),[searching,setSearching]=useState(false);
  const [hydrated,setHydrated]=useState(false),[customer,setCustomer]=useState<Customer>({name:"",phone:"",district:"",area:"",address:"",notes:""});
@@ -41,11 +41,12 @@ export default function Storefront({products}:{products:Product[]}){
  const detailed=useMemo(()=>cart.map(l=>({item:catalog.find(p=>p.id===l.id),quantity:l.quantity})).filter((l):l is {item:Product;quantity:number}=>Boolean(l.item)),[cart,catalog]);
  const subtotal=detailed.reduce((sum,l)=>sum+l.item.pricePaisa*l.quantity,0);
  const shipping=customer.district.trim().toLowerCase()==="dhaka"?7000:12000;
- const add=(id:string)=>setCart(old=>{const item=catalog.find(p=>p.id===id);if(!item||item.available<=0)return old;const found=old.find(l=>l.id===id);return found?old.map(l=>l.id===id?{...l,quantity:Math.min(item.available,20,l.quantity+1)}:l):[...old,{id,quantity:1}];});
+ const add=(id:string)=>{if(!canOrder)return;setCart(old=>{const item=catalog.find(p=>p.id===id);if(!item||item.available<=0)return old;const found=old.find(l=>l.id===id);return found?old.map(l=>l.id===id?{...l,quantity:Math.min(item.available,20,l.quantity+1)}:l):[...old,{id,quantity:1}];});};
  const setQty=(id:string,qty:number)=>setCart(old=>old.map(l=>l.id===id?{...l,quantity:Math.min(20,Math.max(0,qty),catalog.find(p=>p.id===id)?.available||0)}:l).filter(l=>l.quantity>0));
  const change=(k:keyof Customer,v:string)=>{setCustomer(c=>({...c,[k]:v}));keyRef.current=null;};
  async function checkout(ev:React.FormEvent<HTMLFormElement>){
   ev.preventDefault();setError("");setResult(null);
+  if(!canOrder){setError("Checkout is not yet open");return;}
   if(!detailed.length)return;
   setSubmitting(true);
   try{
@@ -57,14 +58,14 @@ export default function Storefront({products}:{products:Product[]}){
   }catch(e){setError(e instanceof Error?e.message:"Checkout failed");}finally{setSubmitting(false);}
  }
  return <><div className="shopTools"><input type="search" value={search} onChange={e=>{setSearch(e.target.value);setRemotePage(1);setRemoteProducts([]);}} placeholder="Search products, brands, origins…" aria-label="Search products"/>
- <div className="filters"><select aria-label="Product category" value={category} onChange={e=>setCategory(e.target.value)}>{categories.map(c=><option key={c}>{c}</option>)}</select><button className="button small light" onClick={()=>setCartOpen(true)}>Bag ({cart.reduce((s,l)=>s+l.quantity,0)})</button></div></div>
+ <div className="filters"><select aria-label="Product category" value={category} onChange={e=>setCategory(e.target.value)}>{categories.map(c=><option key={c}>{c}</option>)}</select>{canOrder&&<button className="button small light" onClick={()=>setCartOpen(true)}>Bag ({cart.reduce((s,l)=>s+l.quantity,0)})</button>}</div></div>
  {visible.length===0?<div className="notice">{searching?"Searching the full catalogue…":products.length===0?"No items are published yet. The owner can add products in the admin portal.":"No matching items. Try another search or category."}</div>:
  <div className="productGrid">{visible.map(p=><article className="productCard" key={p.id}><div className="productImage">{p.image?<img alt={p.name} src={p.image} loading="lazy" referrerPolicy="no-referrer"/>:<div className="productPlaceholder" aria-hidden="true">✧</div>}</div><div className="productInfo">
  <div className="origin">{p.origin} {p.brand?"· "+p.brand:""}</div><h3><Link href={"/products/"+p.slug}>{p.name}</Link></h3><div className="muted">{p.size||p.category}</div><div className="price">{money(p.pricePaisa)}</div>
- <button disabled={!p.available} className="button small" onClick={()=>{add(p.id);setCartOpen(true);}}>{p.available?"Add to Bag":"Out of Stock"}</button></div></article>)}</div>}
+ <button disabled={!p.available||!canOrder} className="button small" onClick={()=>{add(p.id);setCartOpen(true);}}>{!canOrder?"Coming soon":p.available?"Add to Bag":"Out of Stock"}</button></div></article>)}</div>}
  {search.trim() && remotePage<remotePages && <div style={{textAlign:"center",padding:"28px"}}><button className="button light" disabled={searching} onClick={()=>setRemotePage(p=>p+1)}>{searching?"Loading…":"Load more search results"}</button></div>}
- {cart.length>0&&<button className="cartToggle" onClick={()=>setCartOpen(true)} aria-label="Open shopping bag">Bag · {money(subtotal)}</button>}
- {cartOpen&&<><div className="scrim" onClick={()=>setCartOpen(false)} aria-hidden="true"/><aside className="cartPanel" aria-label="Shopping bag and checkout"><div className="cartTop"><h2>Your bag</h2><button className="iconButton" onClick={()=>setCartOpen(false)} aria-label="Close">✕</button></div>
+ {canOrder&&cart.length>0&&<button className="cartToggle" onClick={()=>setCartOpen(true)} aria-label="Open shopping bag">Bag · {money(subtotal)}</button>}
+ {canOrder&&cartOpen&&<><div className="scrim" onClick={()=>setCartOpen(false)} aria-hidden="true"/><aside className="cartPanel" aria-label="Shopping bag and checkout"><div className="cartTop"><h2>Your bag</h2><button className="iconButton" onClick={()=>setCartOpen(false)} aria-label="Close">✕</button></div>
  {result?<div className="success"><h3>Order received</h3><strong>{result.orderNumber}</strong><p>Total: {money(result.totalPaisa)}</p><p>Your order has been placed; payment is not yet verified. We will confirm it before fulfilment.</p><button className="button small" onClick={()=>{setCartOpen(false);setResult(null);}}>Continue browsing</button></div>:
  <>
  {detailed.length===0?<p className="notice">Your shopping bag is empty.</p>:<><div>{detailed.map(l=><div className="cartRow" key={l.item.id}><div><h4>{l.item.name}</h4><div className="muted">{money(l.item.pricePaisa)} each</div></div><div className="qty"><button aria-label={"Reduce "+l.item.name} onClick={()=>setQty(l.item.id,l.quantity-1)}>−</button>{l.quantity}<button aria-label={"Add "+l.item.name} onClick={()=>setQty(l.item.id,l.quantity+1)}>+</button></div></div>)}</div>

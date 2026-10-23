@@ -2,7 +2,9 @@
 import type {MetadataRoute} from "next";
 import {db} from "@/lib/db";
 import {Product} from "@/lib/models";
+import {checkoutEnabled} from "@/lib/launch-config";
 export default async function sitemap():Promise<MetadataRoute.Sitemap>{
+ if(!checkoutEnabled(process.env))return [];
  const root=(process.env.NEXT_PUBLIC_SITE_URL||"http://localhost:3000").replace(/\/$/,"");
  const entries:MetadataRoute.Sitemap=[{url:root+"/",changeFrequency:"daily",priority:1}];
  if(!process.env.MONGODB_URI)return entries;
