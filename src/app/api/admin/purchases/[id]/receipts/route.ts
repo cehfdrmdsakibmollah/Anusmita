@@ -77,3 +77,20 @@ export async function POST(req:Request,ctx:{params:Promise<{id:string}>}){
   return Response.json(result,{status:201});
  }catch(e){return apiError(e);}
 }
+
+
+export async function GET(_req:Request,ctx:{params:Promise<{id:string}>}){
+ try{
+  await authorize(["owner","admin","purchasing","inventory","finance"]);
+  const {id}=await ctx.params;
+  if(!mongoose.isValidObjectId(id))throw new HttpError(400,"Invalid purchase order ID");
+  await db();
+  const rows=await PurchaseReceipt.find({purchaseOrderId:id}).sort({createdAt:-1}).limit(50)
+    .populate("receivedBy","name role").lean<any[]>();
+  return Response.json({receipts:rows.map(x=>({
+    id:String(x._id),createdAt:x.createdAt,receivedUnits:x.receivedUnits,
+    status:x.poStatus,note:x.note,receivedBy:x.receivedBy?.name||"Staff",
+    lines:x.lines.map((line:any)=>({productId:String(line.productId),quantity:line.quantity}))
+   }))},{headers:{"Cache-Control":"private, no-store"}});
+ }catch(e){return apiError(e);}
+}

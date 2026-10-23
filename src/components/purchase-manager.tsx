@@ -5,6 +5,7 @@ type Supplier={_id:string;name:string;country:string};
 type SearchProduct={_id:string;sku:string;name:string;costPaisa:number;onHand:number;reserved:number};
 type DraftItem={product:SearchProduct;quantity:number;unitCostPaisa:number};
 type PurchaseLine={productId:{_id:string;sku:string;name:string}|string;sku:string;name:string;quantity:number;received:number;unitCostPaisa:number};
+type PurchaseReceipt={id:string;createdAt:string;receivedUnits:number;status:string;note:string;receivedBy:string;lines:{productId:string;quantity:number}[]};
 type Purchase={_id:string;status:string;supplierId:Supplier|string;items:PurchaseLine[];
  invoiceTotalPaisa:number;paidPaisa:number;note:string;createdAt:string;updatedAt:string};
 const money=(p:number)=>"৳"+(p/100).toLocaleString("en-BD",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -24,6 +25,11 @@ export default function PurchaseManager({role}:{role:string}){
  const [selected,setSelected]=useState<Purchase|null>(null),[receiptQty,setReceiptQty]=useState<Record<string,number>>({});
  const [receiptNote,setReceiptNote]=useState(""),[busy,setBusy]=useState(false),[notice,setNotice]=useState("");
  const receiptKey=useRef<string|null>(null);
+ const [receipts,setReceipts]=useState<PurchaseReceipt[]>([]);
+ const loadReceipts=async(poId:string)=>{
+  const r=await fetch("/api/admin/purchases/"+poId+"/receipts",{cache:"no-store"});
+  const data=await readJson(r);setReceipts(data.receipts||[]);
+ };
  const refresh=async(nextPage=page)=>{
   const r=await fetch("/api/admin/purchases?page="+nextPage,{cache:"no-store"});
   const data=await readJson(r);
@@ -86,13 +92,14 @@ export default function PurchaseManager({role}:{role:string}){
     {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({receiptKey:receiptKey.current,lines:items,note:receiptNote})}));
    setNotice((data.alreadyApplied?"Previously saved receipt confirmed. ":"Goods received. ")+
     data.receivedUnits+" units; purchase state: "+data.status);
-   receiptKey.current=null;setReceiptQty({});setReceiptNote("");await refresh();
+   receiptKey.current=null;setReceiptQty({});setReceiptNote("");await refresh();await loadReceipts(selected._id);
   }catch(err){setNotice("Error: "+(err instanceof Error?err.message:"Receipt failed")+
    ". For a network failure, retry the identical receipt before changing amounts.");}
   finally{setBusy(false);}
  }
  function pick(p:Purchase){
   setSelected(p);setReceiptQty({});setReceiptNote("");receiptKey.current=null;setNotice("");
+  setReceipts([]);void loadReceipts(p._id).catch(()=>setNotice("Receipt history could not load"));
  }
  const chosen=purchases.find(p=>p._id===selected?._id)||selected;
  return <section className="adminCard">
@@ -111,7 +118,7 @@ export default function PurchaseManager({role}:{role:string}){
      <td><input aria-label={"Purchase quantity for "+l.product.sku} type="number" min={1} max={100000} value={l.quantity} required
       onChange={e=>changeLine(l.product._id,"quantity",Number(e.target.value))} style={{width:95}}/></td>
      <td><input aria-label={"Purchase unit cost for "+l.product.sku} type="number" min={0} max={10000000} step="0.01" required
-      value={(l.unitCostPaisa/100).toFixed(2)} onChange={e=>changeLine(l.product._id,"unitCostPaisa",Math.round(Number(e.target.value)*100))} style={{width:110}}/></td>
+      value={l.unitCostPaisa/100} onChange={e=>changeLine(l.product._id,"unitCostPaisa",Math.round(Number(e.target.value)*100))} style={{width:110}}/></td>
      <td>{money(l.quantity*l.unitCostPaisa)}</td>
      <td><button className="button small light" type="button" onClick={()=>setLines(old=>old.filter(x=>x.product._id!==l.product._id))}>Remove</button></td>
     </tr>)}</tbody></table></div>
@@ -152,6 +159,11 @@ export default function PurchaseManager({role}:{role:string}){
     <button className="button" disabled={busy} type="submit">Confirm physical goods received</button>
     <p className="smallprint">Changes stock and audit logs in one database transaction. Retrying with the same receipt key does not double-count inventory.</p>
    </form>}
+
+    <h3 style={{marginTop:26}}>Goods receipts & audit history</h3>
+    {receipts.length?<div style={{overflowX:"auto"}}><table><thead><tr><th>Date</th><th>Received</th><th>Recorded by</th><th>Note</th><th>PO state</th></tr></thead><tbody>
+    {receipts.map(x=><tr key={x.id}><td>{new Date(x.createdAt).toLocaleString("en-BD")}</td><td>{x.receivedUnits} units</td><td>{x.receivedBy}</td><td>{x.note}</td><td>{x.status}</td></tr>)}
+    </tbody></table></div>:<p className="muted">No recorded receipts for this PO.</p>}
   </div>}
  </section>;
 }
