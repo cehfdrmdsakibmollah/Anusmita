@@ -14,8 +14,9 @@ async function doctor(){
   process.exitCode=1;console.error("Set MONGODB_URI privately in .env. If necessary reset the user password in Atlas Database Access.");
   return;
  }
+ let conn:mongoose.Connection|undefined;
  try{
-  const conn=await mongoose.createConnection(process.env.MONGODB_URI!,{
+  conn=await mongoose.createConnection(process.env.MONGODB_URI!,{
    maxPoolSize:2,serverSelectionTimeoutMS:10000,autoIndex:false,autoCreate:false
   }).asPromise();
   await conn.db!.admin().ping();
@@ -30,6 +31,6 @@ async function doctor(){
  }catch{
   process.exitCode=1;
   console.error("Atlas connectivity: FAILED. Check local IP allowlist, password, DNS and TLS settings.");
- }finally{await mongoose.disconnect();}
+ }finally{if(conn)await conn.close();}
 }
 doctor().catch(()=>{process.exitCode=1;console.error("Diagnostic failed without database writes.");});
