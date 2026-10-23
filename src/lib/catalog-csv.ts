@@ -41,7 +41,7 @@ export function parseCells(csv:string,maxRows=100,maxChars=120_000):string[][] {
  if(quoted)throw new CsvError("Unterminated quoted field");
  row.push(cell);
  if(row.some(x=>x.trim()!==""))rows.push(row);
- if(rows.length>101)throw new CsvError("Maximum 100 product rows per import");
+ if(rows.length>maxRows+1)throw new CsvError("Maximum "+maxRows+" rows per import");
  return rows;
 }
 function integer(input:string,key:string,max=1000000){
