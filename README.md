@@ -122,3 +122,13 @@ Admin → Purchasing → select submitted/partially received/received purchase �
 - Admin financial overview separates estimated outstanding supplier purchase commitments and supplier funds independently marked as verified. **A draft/submitted PO is not necessarily an invoice or expense**, so don't interpret estimated commitments as audited accounts payable.
 - Supplier repayments/refunds, write-offs, partial vendor invoice allocation across multiple POs, tax/VAT, foreign exchange and true bank feeds are NOT implemented. Do not invent real bank confirmations.
 - No real user/customer business records were modified during this GitHub development phase. Authenticated MongoDB and finance e2e tests are required before accepting actual operational transactions.
+
+
+## Canva-backed ANUSMITA Korean skincare source — 30 product names
+The Canva share link https://canva.link/qt78rkxrqw8fzpz resolves to Canva design DAHYeGxRdho, a 6-page ANUSMITA Korean skincare catalogue. Its five product pages contain 30 identifiable printed product names/sizes.
+
+- A **read-only source snapshot** lives in src/data/canva-catalog.json. Admin → **Canva Catalogue** displays 30 names with page numbers, pack sizes and review flags.
+- Staff can download a **verification CSV** with BLANK matched SKU, purchase cost, selling price, inventory and image columns. The exported CSV is **not** a ready-to-import product inventory; review values against packaging, invoices and stock counts first.
+- No products are auto-created, priced or published. No existing stock, photos or prices are overwritten, and nothing is inferred from broad marketing claims like "200+ items" or "100% authentic."
+- The Canva source may change: this is a dated snapshot, not real-time synchronization. One irregular Centellian packaging-size string is explicitly flagged for human confirmation.
+- Link verified product records to approved Google Drive / Cloudinary marketing photographs only after checking the actual identity and rights. Catalogue copy includes skincare efficacy claims that have NOT been medically or independently verified.

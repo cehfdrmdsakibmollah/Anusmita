@@ -7,10 +7,11 @@ import DriveMediaLibrary from "@/components/drive-media-library";
 import CloudinaryMedia from "@/components/cloudinary-media";
 import LaunchReadiness from "@/components/launch-readiness";
 import PurchaseManager from "@/components/purchase-manager";
+import CanvaCatalogueReview from "@/components/canva-catalogue-review";
 type Overview={orderedPaisa:number;confirmedPaisa:number;deliveredSalesPaisa:number;recordedCollectionsPaisa:number;outstandingPaisa:number;supplierPayablePaisa:number;supplierPaidPaisa:number;cogsPaisa:number;recordedExpensePaisa:number;estimatedGrossProfitPaisa:number;estimatedOperatingProfitPaisa:number;unreconciled:boolean;placedOrders:number;deliveredOrders:number;lowStockSkus:number;reservedUnits:number;inventoryCostPaisa:number};
 type Order={_id:string;orderNumber:string;orderStatus:string;paymentStatus:string;collectedPaisa:number;totalPaisa:number;customer:{name:string;phone:string};createdAt:string};
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
-const tabs=["Overview","Orders","Products","Inventory","Payments","Suppliers","Purchasing","Bulk Import","Drive Images","Cloudinary","Launch Readiness"];
+const tabs=["Overview","Orders","Products","Inventory","Payments","Suppliers","Purchasing","Bulk Import","Canva Catalogue","Drive Images","Cloudinary","Launch Readiness"];
 export default function AdminConsole({role}:{role:string}){
  const [tab,setTab]=useState("Overview"),[overview,setOverview]=useState<Overview|null>(null),[orders,setOrders]=useState<Order[]>([]),[notice,setNotice]=useState(""),[pending,setPending]=useState(false);
  const load=useCallback(async()=>{
@@ -81,6 +82,7 @@ export default function AdminConsole({role}:{role:string}){
  {tab==="Launch Readiness"&&(["owner","admin"].includes(role)?<LaunchReadiness/>:<p className="notice">Owner or admin access required.</p>)}
  {tab==="Cloudinary"&&(canStock?<CloudinaryMedia/>:<p className="notice">Inventory access required.</p>)}
  {tab==="Drive Images"&&(canStock?<DriveMediaLibrary/>:<p className="notice">Inventory access required.</p>)}
+ {tab==="Canva Catalogue"&&(canStock||canSuppliers?<CanvaCatalogueReview/>:<p className="notice">Inventory or purchasing access required.</p>)}
  {tab==="Bulk Import"&&(canStock?<BulkCatalogImport/>:<p className="notice">Inventory access required.</p>)}
  {tab==="Purchasing"&&(["owner","admin","purchasing","inventory","finance"].includes(role)?<PurchaseManager role={role}/>:<p className="notice">Purchasing, inventory or finance permission required.</p>)}
  {tab==="Suppliers"&&<div className="adminCard"><h2>Register supplier</h2>{canSuppliers?<form className="adminForm" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);void send("/api/admin/suppliers",{
