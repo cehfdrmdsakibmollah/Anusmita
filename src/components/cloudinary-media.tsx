@@ -1,6 +1,8 @@
 
 "use client";
 import {useEffect,useState} from "react";
+import ProductPhotoManager from "@/components/product-photo-manager";
+import CloudinaryLibrary from "@/components/cloudinary-library";
 type Item={_id:string;sku:string;name:string;updatedAt:string;imageUrls:string[];slug:string};
 type Signature={apiKey:string;cloudName:string;publicId:string;timestamp:number;signature:string;uploadUrl:string;uploadToken:string};
 const MAX=10*1024*1024;
@@ -78,7 +80,9 @@ export default function CloudinaryMedia(){
    <input id="cl-url" value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://res.cloudinary.com/oseohmxd/image/upload/v…/anusmita/…"/></div>
   {url.startsWith("https://res.cloudinary.com/")&&<div className="productImage" style={{maxWidth:230,height:200}}><img src={url} alt="Selected Cloudinary image preview" loading="lazy"/></div>}
   <button className="button light" disabled={busy||!selected||!url} onClick={()=>void attach()}>Verify & attach URL</button>
+  <CloudinaryLibrary onChoose={setUrl}/>
   {result&&<p role="status" className={result.startsWith("Error")?"error":"notice"}>{result}</p>}
+  {selected&&<ProductPhotoManager product={selected} onSaved={updateSelected}/>}
   {selected?.slug&&<p className="smallprint"><a href={"/products/"+selected.slug} target="_blank" rel="noreferrer" style={{textDecoration:"underline"}}>View product detail page ↗</a></p>}
  </section>;
 }
