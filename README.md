@@ -132,3 +132,16 @@ The Canva share link https://canva.link/qt78rkxrqw8fzpz resolves to Canva design
 - No products are auto-created, priced or published. No existing stock, photos or prices are overwritten, and nothing is inferred from broad marketing claims like "200+ items" or "100% authentic."
 - The Canva source may change: this is a dated snapshot, not real-time synchronization. One irregular Centellian packaging-size string is explicitly flagged for human confirmation.
 - Link verified product records to approved Google Drive / Cloudinary marketing photographs only after checking the actual identity and rights. Catalogue copy includes skincare efficacy claims that have NOT been medically or independently verified.
+
+
+## HR Wholesale Cosmetics supplier reference / 400-row quote staging
+
+The user supplied https://www.hrwholesalecosmetics.com/ as a **possible** Korean product wholesaler for ANUSMITA. The public website advertises 250+ products, including different categories and some non-Korean products; **wholesale prices are gated behind login**. Public product names and supplier claims are not proof of stock, sourcing rights, authenticity or prices.
+
+- A dated **32-public-product-name review snapshot** lives at src/data/hr-wholesale-public.json. No vendor images, product descriptions, protected wholesale costs or website code are copied.
+- Admin **HR Wholesale** tab displays known public names and links, exports a source review CSV with empty supplier SKU/cost/stock fields, and provides the exact six-column official supplier quote template.
+- Staff with owner/admin/purchasing role can upload an authorized supplier CSV for **up to 400 rows per file**, supporting a future complete 250+ supplier catalogue. Each row is validated and previewed before confirmation.
+- The import uses an independent **HrSupplierCandidate** staging collection: its records are **not** Product SKUs and never publish, price or stock ANUSMITA products. Quoted costs in supplier files stay **supplier-provided/unverified** until original supplier quotation/invoices are checked.
+- Product URLs can reference only the exact HR Wholesale HTTPS domain. Per-file supplier references are unique; when missing, a deterministic **NAME-...** reference based on printed name and size is generated. Repeated references upsert review rows instead of producing duplicate storefront listings.
+- Image/media licensing, seller terms, brand/origin verification, minimum order quantity, batch and expiry are manual sign-off steps before sourcing. No automated checkout, bot login or unauthorized bulk scraping occurs.
+- The connected ANUSMITA Atlas cluster still requires private site credentials and live end-to-end testing. No real supplier catalog was modified during code authoring.
