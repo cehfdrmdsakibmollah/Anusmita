@@ -20,7 +20,7 @@ export async function createOrder(input:unknown,idempotencyKey:string) {
  if(new Set(ids).size!==ids.length) throw new HttpError(400,"Duplicate product line");
  const hash=createHash("sha256").update(JSON.stringify(data)).digest("hex");
  await db();
- const existing=await Order.findOne({idempotencyKey}).lean();
+ const existing=await Order.findOne({idempotencyKey}).lean<any>();
  if(existing) {
    if(existing.requestHash!==hash) throw new HttpError(409,"Idempotency key already used for a different order");
    return existing;
@@ -29,7 +29,7 @@ export async function createOrder(input:unknown,idempotencyKey:string) {
  let placed:any;
  try {
   await session.withTransaction(async()=>{
-   const old=await Order.findOne({idempotencyKey}).session(session).lean();
+   const old=await Order.findOne({idempotencyKey}).session(session).lean<any>();
    if(old) { if(old.requestHash!==hash) throw new HttpError(409,"Idempotency conflict"); placed=old; return; }
    const lines:any[]=[];
    for(const item of data.items){
@@ -49,7 +49,7 @@ export async function createOrder(input:unknown,idempotencyKey:string) {
   },{readConcern:{level:"snapshot"},writeConcern:{w:"majority"}});
  } catch(e:any) {
   if(e?.code===11000) {
-   const duplicate=await Order.findOne({idempotencyKey}).lean();
+   const duplicate=await Order.findOne({idempotencyKey}).lean<any>();
    if(duplicate) { if(duplicate.requestHash!==hash) throw new HttpError(409,"Idempotency conflict"); return duplicate; }
   }
   throw e;
