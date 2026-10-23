@@ -14,8 +14,8 @@ export class CsvError extends Error { constructor(message:string){super(message)
 export const CSV_TEMPLATE=CSV_HEADERS.join(",")+"\r\n"+
  "AN-KR-001,Sample Serum 30ml,sample-serum-30ml,Example Brand,Beauty,Korea,Example only,30ml,Standard,950.00,600.00,,false,0,5\r\n";
 
-export function parseCells(csv:string):string[][] {
- if(csv.length>120_000)throw new CsvError("CSV is larger than 120 KB");
+export function parseCells(csv:string,maxRows=100,maxChars=120_000):string[][] {
+ if(csv.length>maxChars)throw new CsvError("CSV exceeds supported import size");
  const rows:string[][]=[];let row:string[]=[],cell="",quoted=false,closed=false;
  const text=csv.replace(/^\uFEFF/,"");
  for(let i=0;i<text.length;i++){
@@ -32,7 +32,7 @@ export function parseCells(csv:string):string[][] {
    if(ch===',')continue;
    if(ch==='\r'&&text[i+1]==='\n')i++;
    if(row.some(x=>x.trim()!==""))rows.push(row);
-   row=[];if(rows.length>101)throw new CsvError("Maximum 100 product rows per import");
+   row=[];if(rows.length>maxRows+1)throw new CsvError("Maximum "+maxRows+" rows per import");
   }else{
    if(closed && !/\s/.test(ch))throw new CsvError("Text after a closing quote");
    cell+=ch;
@@ -41,7 +41,7 @@ export function parseCells(csv:string):string[][] {
  if(quoted)throw new CsvError("Unterminated quoted field");
  row.push(cell);
  if(row.some(x=>x.trim()!==""))rows.push(row);
- if(rows.length>101)throw new CsvError("Maximum 100 product rows per import");
+ if(rows.length>maxRows+1)throw new CsvError("Maximum "+maxRows+" rows per import");
  return rows;
 }
 function integer(input:string,key:string,max=1000000){
