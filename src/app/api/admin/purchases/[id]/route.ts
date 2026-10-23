@@ -23,8 +23,8 @@ export async function PATCH(req:Request,ctx:{params:Promise<{id:string}>}){
       throw new HttpError(409,"Purchase order was modified; refresh first");
     if(data.action==="submit"&&po.status!=="draft")
       throw new HttpError(409,"Only draft purchases can be submitted");
-    if(data.action==="cancel"&&(!["draft","submitted"].includes(po.status)||po.items.some((i:any)=>i.received>0)))
-      throw new HttpError(409,"Cannot cancel a purchase after goods have been received");
+    if(data.action==="cancel"&&(!["draft","submitted"].includes(po.status)||po.items.some((i:any)=>i.received>0)||po.paidPaisa>0))
+      throw new HttpError(409,"Cannot cancel a purchase after goods have been received or supplier payments recorded");
     po.status=data.action==="submit"?"submitted":"cancelled";
     if(data.action==="submit")po.submittedAt=new Date();
     await po.save({session});

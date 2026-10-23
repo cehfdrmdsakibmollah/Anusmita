@@ -108,7 +108,27 @@ const PurchaseReceiptSchema=new Schema({
  poStatus:{type:String,enum:["partially_received","received"],required:true},
  note:{type:String,required:true}
 },opts);
+
 PurchaseReceiptSchema.index({purchaseOrderId:1,createdAt:-1});
+
+/** Independently verified manual payments to suppliers. Not a gateway integration. */
+const SupplierPaymentSchema=new Schema({
+ purchaseOrderId:{type:Schema.Types.ObjectId,ref:"PurchaseOrder",required:true},
+ supplierId:{type:Schema.Types.ObjectId,ref:"Supplier",required:true},
+ paymentKey:{type:String,required:true,unique:true},
+ requestHash:{type:String,required:true},
+ method:{type:String,enum:["bank_transfer","bkash_manual","nagad_manual","cash","other"],required:true},
+ reference:{type:String,required:true},
+ referenceKey:{type:String,required:true},
+ amountPaisa:{type:Number,required:true,min:1},
+ status:{type:String,enum:["verified"],default:"verified"},
+ verifiedAt:{type:Date,required:true},
+ verifiedBy:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ note:{type:String,required:true}
+},opts);
+SupplierPaymentSchema.index({method:1,referenceKey:1},{unique:true});
+SupplierPaymentSchema.index({purchaseOrderId:1,verifiedAt:-1});
+
 const ExpenseSchema = new Schema({
  kind:{type:String,required:true},note:{type:String,default:""},amountPaisa:{type:Number,required:true,min:0},
  recordedBy:{type:Schema.Types.ObjectId,ref:"User",required:true},occurredAt:{type:Date,required:true}
@@ -129,6 +149,7 @@ export const StockMovement = mongoose.models.StockMovement || mongoose.model("St
 export const Supplier = mongoose.models.Supplier || mongoose.model("Supplier",SupplierSchema);
 export const PurchaseOrder = mongoose.models.PurchaseOrder || mongoose.model("PurchaseOrder",PurchaseOrderSchema);
 export const PurchaseReceipt = mongoose.models.PurchaseReceipt || mongoose.model("PurchaseReceipt",PurchaseReceiptSchema);
+export const SupplierPayment = mongoose.models.SupplierPayment || mongoose.model("SupplierPayment",SupplierPaymentSchema);
 export const Expense = mongoose.models.Expense || mongoose.model("Expense",ExpenseSchema);
 export const Audit = mongoose.models.Audit || mongoose.model("Audit",AuditSchema);
 export const Counter = mongoose.models.Counter || mongoose.model("Counter",CounterSchema);

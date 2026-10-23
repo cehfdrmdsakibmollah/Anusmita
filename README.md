@@ -111,3 +111,14 @@ A scoped database user **anusmita_app** has been created with readWrite access *
 The Admin **Purchasing** tab supports real purchase draft creation, supplier selection, SKU-level quantities and expected integer-paisa unit costs, explicit submission, and cancellation before stock receipt. Role-scoped staff can receive part of an order or the remainder. Each goods receipt executes in one MongoDB replica-set transaction and writes a stock-movement ledger, a unique idempotency receipt record, updated purchase state, and an audit event. Retrying a receipt using the same UUID is designed to return its prior result rather than duplicating stock.
 
 **Important boundaries:** Planned PO value is not proof of a supplier's verified invoice or payment; the overview labels this an estimated supplier commitment. A goods receipt requires checking physical quantities before submitting. Received inventory does **not** modify the product selling price or its cost automatically. Supplier payment recording, invoice matching, returns to supplier, exchange-rate landed cost allocations and courier integrations are not implemented. No live goods or financial transactions have been tested in a connected website yet; an actual authenticated Atlas end-to-end test and backup process are prerequisites for live operations.
+
+
+## Supplier Payment Ledger (manual reconciliation; NOT a payment gateway)
+Admin → Purchasing → select submitted/partially received/received purchase → **Supplier payments and reconciliation**.
+- Only owner/admin/finance roles can record funds actually paid. Staff must independently verify the payment against their bank/mobile wallet or signed cash voucher.
+- Input a globally unique reference per payment method, the verified amount in BDT and an evidence note; a checkbox and second confirmation are required.
+- Updates the PO paid amount, append-only SupplierPayment ledger, and Audit entry together using an Atlas transaction. Duplicate reference and same-UUID retries are handled to avoid paying the same invoice twice in bookkeeping; no money is transferred.
+- A submitted purchase with supplier payments cannot be cancelled using the normal purchase cancellation path.
+- Admin financial overview separates estimated outstanding supplier purchase commitments and supplier funds independently marked as verified. **A draft/submitted PO is not necessarily an invoice or expense**, so don't interpret estimated commitments as audited accounts payable.
+- Supplier repayments/refunds, write-offs, partial vendor invoice allocation across multiple POs, tax/VAT, foreign exchange and true bank feeds are NOT implemented. Do not invent real bank confirmations.
+- No real user/customer business records were modified during this GitHub development phase. Authenticated MongoDB and finance e2e tests are required before accepting actual operational transactions.

@@ -1,6 +1,7 @@
 
 "use client";
 import {useEffect,useState,useRef} from "react";
+import SupplierPaymentPanel from "@/components/supplier-payment-panel";
 type Supplier={_id:string;name:string;country:string};
 type SearchProduct={_id:string;sku:string;name:string;costPaisa:number;onHand:number;reserved:number};
 type DraftItem={product:SearchProduct;quantity:number;unitCostPaisa:number};
@@ -134,7 +135,7 @@ export default function PurchaseManager({role}:{role:string}){
     <td>{po.items.reduce((n,x)=>n+x.received,0)} / {po.items.reduce((n,x)=>n+x.quantity,0)}</td>
     <td>{po.status}</td><td><button className="button small light" type="button" onClick={()=>pick(po)}>View / receive</button>
     {canCreate&&po.status==="draft"&&<button type="button" className="button small light" disabled={busy} onClick={()=>void transition(po,"submit")}>Submit</button>}
-    {canCreate&&["draft","submitted"].includes(po.status)&&po.items.every(x=>x.received===0)&&
+    {canCreate&&["draft","submitted"].includes(po.status)&&po.items.every(x=>x.received===0)&&po.paidPaisa===0&&
      <button type="button" className="button small light" disabled={busy} onClick={()=>void transition(po,"cancel")}>Cancel</button>}</td>
    </tr>)}</tbody></table></div>
   <div className="filters" style={{marginTop:15}}>
@@ -160,6 +161,7 @@ export default function PurchaseManager({role}:{role:string}){
     <p className="smallprint">Changes stock and audit logs in one database transaction. Retrying with the same receipt key does not double-count inventory.</p>
    </form>}
 
+    <SupplierPaymentPanel key={chosen._id} purchase={chosen} role={role} onRecorded={async()=>{await refresh();}}/>
     <h3 style={{marginTop:26}}>Goods receipts & audit history</h3>
     {receipts.length?<div style={{overflowX:"auto"}}><table><thead><tr><th>Date</th><th>Received</th><th>Recorded by</th><th>Note</th><th>PO state</th></tr></thead><tbody>
     {receipts.map(x=><tr key={x.id}><td>{new Date(x.createdAt).toLocaleString("en-BD")}</td><td>{x.receivedUnits} units</td><td>{x.receivedBy}</td><td>{x.note}</td><td>{x.status}</td></tr>)}
