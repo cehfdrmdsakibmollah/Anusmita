@@ -2,6 +2,7 @@
 "use client";
 import {useCallback,useEffect,useState} from "react";
 import BulkCatalogImport from "@/components/bulk-catalog-import";
+import ProductManager from "@/components/product-manager";
 type Overview={orderedPaisa:number;confirmedPaisa:number;deliveredSalesPaisa:number;recordedCollectionsPaisa:number;outstandingPaisa:number;supplierPayablePaisa:number;cogsPaisa:number;recordedExpensePaisa:number;estimatedGrossProfitPaisa:number;estimatedOperatingProfitPaisa:number;unreconciled:boolean;placedOrders:number;deliveredOrders:number;lowStockSkus:number;reservedUnits:number;inventoryCostPaisa:number};
 type Order={_id:string;orderNumber:string;orderStatus:string;paymentStatus:string;collectedPaisa:number;totalPaisa:number;customer:{name:string;phone:string};createdAt:string};
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
@@ -57,6 +58,7 @@ export default function AdminConsole({role}:{role:string}){
  <div className="formGrid">{[["name","Product name"],["slug","URL slug"],["sku","Unique SKU"],["brand","Brand"],["category","Category"],["size","Size / variant"],["price","Selling price (BDT)"],["cost","Unit cost (BDT)"],["stock","Opening stock"],["imageUrl","Public HTTPS image URL"]].map(([key,label])=><div className="field" key={key}><label htmlFor={"p-"+key}>{label}</label><input id={"p-"+key} name={key} required={["name","slug","sku","category","price","cost","stock"].includes(key)} type={["price","cost","stock"].includes(key)?"number":"text"} min={["price","cost","stock"].includes(key)?"0":undefined} step={key==="stock"?"1":key==="price"||key==="cost"?"0.01":undefined}/></div>)}
  <div className="field"><label htmlFor="p-origin">Country</label><select id="p-origin" name="origin"><option>Bangladesh</option><option>Japan</option><option>Korea</option><option>China</option><option>Other</option></select></div><div className="field full"><label htmlFor="p-description">Product description</label><textarea id="p-description" name="description" rows={3}/></div></div>
  <label><input type="checkbox" name="active"/> Publish this product immediately</label><p><button className="button" disabled={pending}>Save product</button></p></form>:<p className="notice">Insufficient permission to create products.</p>}</div>}
+ {tab==="Products"&&canStock&&<ProductManager/>}
  {tab==="Inventory"&&<div className="adminCard"><h2>Stock adjustment</h2>{canStock?<form className="adminForm" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);void send("/api/admin/stock",{productId:field(f,"productId"),type:field(f,"type"),quantity:Number(field(f,"quantity")),note:field(f,"note")});}}>
  <div className="field"><label>Product database ID</label><input name="productId" required placeholder="24-character ID"/></div>
  <div className="field"><label>Movement type</label><select name="type"><option value="receive">Stock received (+)</option><option value="damage">Damaged/lost (−)</option><option value="adjust">Adjustment (+/−)</option></select></div>
