@@ -12,7 +12,7 @@ export async function GET() {
    Product.find({}).select("onHand reserved costPaisa reorderLevel active").lean(),
    Payment.aggregate([{$match:{status:"verified",direction:"collection"}},{$group:{_id:null,total:{$sum:"$amountPaisa"}}}]),
    Expense.aggregate([{$group:{_id:null,total:{$sum:"$amountPaisa"}}}]),
-   PurchaseOrder.aggregate([{$match:{status:{$ne:"cancelled"}}},{$group:{_id:null,total:{$sum:{$subtract:["$invoiceTotalPaisa","$paidPaisa"]}}}}])
+   PurchaseOrder.aggregate([{$match:{status:{$in:["submitted","partially_received","received"]}}},{$group:{_id:null,total:{$sum:{$subtract:["$invoiceTotalPaisa","$paidPaisa"]}}}}])
   ]);
   const valid=orders.filter((o:any)=>!["cancelled","returned"].includes(o.orderStatus));
   const confirmed=valid.filter((o:any)=>["confirmed","packed","shipped","delivered"].includes(o.orderStatus));
