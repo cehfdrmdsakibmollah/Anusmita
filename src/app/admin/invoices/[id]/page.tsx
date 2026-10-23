@@ -15,7 +15,7 @@ export default async function ReceiptPage({params,searchParams}:{params:Promise<
  if(!["owner","admin","sales","finance","support"].includes(user.role))notFound();
  const {id}=await params,{format}=await searchParams;
  if(!mongoose.isValidObjectId(id))notFound();
- await db();const order=await Order.findById(id).lean();
+ await db();const order=await Order.findById(id).lean<any>();
  if(!order)notFound();
  const size=format==="58"?"receipt58":format==="80"?"receipt80":"";
  return <div className="container"><div className="noPrint" style={{marginTop:24}}>
