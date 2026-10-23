@@ -20,12 +20,13 @@ export async function POST(req:Request){
   mediaCredentials();
   const publicId="anusmita/drive/"+source.origin.toLowerCase()+"/drive-"+source.id;
   let file=await assetDetails(publicId);
+  const uploadedNow=!file;
   if(!file){
    await mediaDailyQuota(actor.id);
    file=await uploadDriveAsset(publicId,source.id);
   }
   const result=await attachManagedAsset({actorId:actor.id,productId:data.productId,
     expectedUpdatedAt:data.expectedUpdatedAt,publicId,replaceDriveId:source.id});
-  return Response.json({...result,importedToCloudinary:!!file},{headers:{"Cache-Control":"no-store"}});
+  return Response.json({...result,importedToCloudinary:uploadedNow,reusedExisting:!uploadedNow},{headers:{"Cache-Control":"no-store"}});
  }catch(e){return apiError(e);}
 }
