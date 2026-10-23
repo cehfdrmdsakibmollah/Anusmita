@@ -10,6 +10,7 @@ export const supplierPaymentSchema=z.object({
  verificationConfirmed:z.literal(true)
 }).strict();
 export function paymentReferenceKey(reference:string){
+ if(/[\x00-\x1F\x7F]/.test(reference))throw new Error("Invalid payment reference");
  const key=reference.trim().replace(/\s+/g," ").toUpperCase();
  if(key.length<5||key.length>100||/[\x00-\x1F\x7F]/.test(key))
   throw new Error("Invalid payment reference");
