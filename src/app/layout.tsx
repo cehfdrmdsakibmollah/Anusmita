@@ -14,7 +14,7 @@ export default function RootLayout({children}:{children:React.ReactNode}){
  return <html lang="en"><body>
   <div className="announcement">Carefully selected fashion, jewellery &amp; beauty • Bangladesh</div>
   <header className="siteHeader">
-   <Link className="wordmark" href="/" aria-label="ANUSMITA home"><span className="brandMark">✦</span><span>ANUSMITA</span></Link>
+   <Link className="wordmark" href="/" aria-label="ANUSMITA home"><img className="navLogo" src="/brand/anusmita-logo.webp" alt="" width={56} height={56}/><span>ANUSMITA</span></Link>
    <nav aria-label="Main navigation"><Link href="/">Shop</Link><Link href="/#collections">Collections</Link><Link href="/#our-story">Our Story</Link><Link href="/admin">Owner Portal</Link></nav>
   </header>
   <main>{children}</main>
