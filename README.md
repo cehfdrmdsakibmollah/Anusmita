@@ -86,3 +86,17 @@ The connected Cloudinary account uses the cloud name **oseohmxd**, but the ChatG
 - Admin → Cloudinary → Browse Cloudinary assets lists only files within the managed `anusmita/` prefix. It requires Cloudinary **server-side** API credentials and uses a paginated private Admin API request. Selecting an existing image fills the linking field; it does not publish or mutate product data by itself.
 - Product gallery order is persisted as `Product.imageUrls`. The first URL is used as the storefront card/SEO image.
 - These are **code changes** until actual hosting, MongoDB, Cloudinary server settings, staff login and live end-to-end testing are configured.
+
+## Launch readiness / safe catalog mode
+
+**Default: no public orders.** STORE_MODE=catalog is the safe default; the storefront displays a preview and disables checkout. The server POST /api/checkout returns HTTP 503 and does not reserve stock unless *all* of these are true:
+- STORE_MODE=live (explicit opt-in).
+- MONGODB_URI points to database **/anusmita**, not the existing Portfolio database (separate database/user strongly recommended).
+- SESSION_SECRET is a strong random secret, at least 32 characters.
+- NEXT_PUBLIC_SITE_URL is a production HTTPS address (localhost/http rejected).
+
+Owners can open /admin → **Launch Readiness** after the MongoDB owner account is configured to see private configuration checks, active owner and published-product counts. The panel never exposes credentials or claims that a payment gateway, courier, taxes, backups or mobile-device tests are validated.
+
+Search engine indexing is blocked through robots metadata and robots.txt until checkout is explicitly live with valid configuration. This prevents accidentally promoting a preview as a functioning store.
+
+**Deployment reminder:** The connected Vercel account currently has other projects but no ANUSMITA project. Do not upload a commercial storefront to a plan that forbids commercial use. Choosing a compliant deployment platform, provisioning the ANUSMITA MongoDB database/user, configuring encrypted environment variables, backup restoration and real end-to-end tests are still required. GitHub builds alone are not launch approval.

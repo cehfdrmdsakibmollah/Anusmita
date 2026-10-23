@@ -2,6 +2,7 @@
 import { db } from "@/lib/db";
 import { Product } from "@/lib/models";
 import Storefront from "@/components/storefront";
+import {checkoutEnabled} from "@/lib/launch-config";
 export const dynamic="force-dynamic";
 export default async function Home({searchParams}:{searchParams:Promise<{item?:string}>}){
  const queryItem=(await searchParams).item||"";
@@ -26,7 +27,8 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
  <div className="categoryGrid"><a className="categoryCard" href="#shop"><span>✧</span><span>Beauty</span></a><a className="categoryCard" href="#shop"><span>◇</span><span>Jewellery</span></a><a className="categoryCard" href="#shop"><span>✿</span><span>Fashion</span></a><a className="categoryCard" href="#shop"><span>✦</span><span>Accessories</span></a></div>
  <div className="sectionHead" id="shop"><div><p className="eyebrow">Our latest selection</p><h2>Discover the products</h2></div><p>Prices in Bangladeshi Taka</p></div>
  {!configured&&<div className="notice">The store is being configured. The product catalogue will appear after MongoDB setup and owner approval.</div>}
- <Storefront products={products}/>
+ {!checkoutEnabled(process.env)&&<div className="notice"><strong>Catalog preview:</strong> ANUSMITA is preparing for launch. Checkout is not accepting orders yet.</div>}
+ <Storefront products={products} canOrder={configured&&checkoutEnabled(process.env)}/>
  <section className="story" id="our-story"><h2>Thoughtfully curated.<br/>Made for you.</h2><p>ANUSMITA brings together fashion, jewellery and beauty collections in one destination for Bangladesh. Every published item includes its real price and available stock; orders are subject to confirmation and delivery arrangements.</p></section></div>
  </>;
 }
