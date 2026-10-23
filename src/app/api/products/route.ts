@@ -8,9 +8,13 @@ export async function GET(request:Request) {
   const url=new URL(request.url);
   const page=Math.min(10000,Math.max(1,Number(url.searchParams.get("page"))||1));
   const limit=Math.min(48,Math.max(1,Number(url.searchParams.get("limit"))||12));
-  const query=url.searchParams.get("q")?.trim().slice(0,100)||"";
+  const idsRaw=url.searchParams.get("ids")||"";
+  const ids=idsRaw?idsRaw.split(","):[];
+  if(ids.length>30 || ids.some(id=>!/^[0-9a-f]{24}$/i.test(id)))return Response.json({error:"Invalid product IDs"},{status:400});
+  const query=ids.length?"":url.searchParams.get("q")?.trim().slice(0,100)||"";
   const category=url.searchParams.get("category")?.trim().slice(0,60)||"";
   const filter:any={active:true};
+  if(ids.length) filter._id={$in:ids};
   if(category) filter.category=category;
   if(query) filter.$text={$search:query};
   await db();
