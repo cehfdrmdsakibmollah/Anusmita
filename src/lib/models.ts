@@ -1,7 +1,7 @@
 
 import mongoose, { Schema } from "mongoose";
 
-const opts = { timestamps: true, versionKey: false };
+const opts = { timestamps: true, versionKey: false } as const;
 const UserSchema = new Schema({
  email: {type:String,required:true,unique:true,lowercase:true,trim:true},
  name: {type:String,required:true}, passwordHash: {type:String,required:true,select:false},
