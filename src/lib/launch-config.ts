@@ -1,20 +1,23 @@
 
+export const ATLAS_HOST="anusmita.jvvjo1k.mongodb.net";
+export const ATLAS_DB="anusmita";
+export const ATLAS_APP_USER="anusmita_app";
 export type StoreMode="catalog"|"live";
 export function storeMode(value?:string):StoreMode{return value==="live"?"live":"catalog";}
 export function isProductionUrl(raw?:string):boolean{
  if(!raw)return false;
- try{
-  const u=new URL(raw);
-  return u.protocol==="https:"&&Boolean(u.hostname)&&u.hostname!=="localhost"&&!u.hostname.endsWith(".localhost")&&!u.username&&!u.password&&!u.search&&!u.hash;
- }catch{return false;}
+ try{const u=new URL(raw);return u.protocol==="https:"&&Boolean(u.hostname)&&u.hostname!=="localhost"&&!u.hostname.endsWith(".localhost")&&!u.username&&!u.password&&!u.search&&!u.hash;}
+ catch{return false;}
 }
+/** Requires the actual ANUSMITA cluster, database, and scoped application user. */
 export function dedicatedDb(uri?:string):boolean{
  if(!uri)return false;
  try{
   const u=new URL(uri);
-  if(!["mongodb:","mongodb+srv:"].includes(u.protocol))return false;
-  const db=decodeURIComponent(u.pathname.slice(1));
-  return db==="anusmita";
+  return u.protocol==="mongodb+srv:"&&u.hostname.toLowerCase()===ATLAS_HOST&&
+   decodeURIComponent(u.pathname.slice(1))===ATLAS_DB&&
+   decodeURIComponent(u.username)===ATLAS_APP_USER&&
+   Boolean(u.password)&&!u.password.toLowerCase().includes("replace")&&!u.password.startsWith("%3C");
  }catch{return false;}
 }
 export type LaunchEnvironment={
