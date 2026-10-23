@@ -104,4 +104,4 @@ Search engine indexing is blocked through robots metadata and robots.txt until c
 ### ANUSMITA Atlas cluster created
 The dedicated MongoDB Atlas project **ANUSMITA Commerce** contains a **FREE cluster named ANUSMITA** in AP_SOUTH_1, with connection host `anusmita.jvvjo1k.mongodb.net`.
 
-No database user or IP access-list entry has been provisioned yet; these require secure credentials and a known hosting network. The `.env.example` contains the actual cluster hostname but **no password**. Create a least-privilege readWrite database user scoped to `anusmita` and configure encrypted deployment variables when hosting is selected. Do not reuse the old Portfolio database login.
+A scoped database user **anusmita_app** has been created with readWrite access **only** to the `anusmita` database on the ANUSMITA cluster. No network access-list entry has been added, and its password was not committed. For safe local setup, read [docs/ATLAS_SETUP.md](docs/ATLAS_SETUP.md), reset the generated password in Atlas if needed, and run `npm run db:doctor` before `npm run owner:create`. The Portfolio database was not modified.
