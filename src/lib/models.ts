@@ -65,6 +65,7 @@ const StockMovementSchema = new Schema({
  type:{type:String,enum:["receive","reserve","release","fulfil","damage","adjust"],required:true},
  deltaOnHand:{type:Number,default:0},deltaReserved:{type:Number,default:0},
  orderId:{type:Schema.Types.ObjectId,ref:"Order",default:null},
+ purchaseOrderId:{type:Schema.Types.ObjectId,ref:"PurchaseOrder",default:null},
  note:{type:String,default:""},actorId:{type:Schema.Types.ObjectId,ref:"User",default:null}
 },opts);
 StockMovementSchema.index({productId:1,createdAt:-1});
@@ -75,12 +76,39 @@ const SupplierSchema = new Schema({
  notes:{type:String,default:""},active:{type:Boolean,default:true}
 },opts);
 
+const PurchaseLineSchema = new Schema({
+ productId:{type:Schema.Types.ObjectId,ref:"Product",required:true},
+ sku:{type:String,required:true},
+ name:{type:String,required:true},
+ quantity:{type:Number,required:true,min:1},
+ received:{type:Number,default:0,min:0},
+ unitCostPaisa:{type:Number,required:true,min:0}
+},{_id:false});
 const PurchaseOrderSchema = new Schema({
  supplierId:{type:Schema.Types.ObjectId,ref:"Supplier",required:true},
- items:{type:[new Schema({productId:Schema.Types.ObjectId,quantity:Number,received:Number,unitCostPaisa:Number},{_id:false})],default:[]},
+ items:{type:[PurchaseLineSchema],required:true},
  status:{type:String,enum:["draft","submitted","partially_received","received","cancelled"],default:"draft"},
- invoiceTotalPaisa:{type:Number,default:0},paidPaisa:{type:Number,default:0}
+ invoiceTotalPaisa:{type:Number,default:0,min:0},paidPaisa:{type:Number,default:0,min:0},
+ note:{type:String,default:""},
+ createdBy:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ submittedAt:{type:Date,default:null},receivedAt:{type:Date,default:null}
 },opts);
+PurchaseOrderSchema.index({status:1,createdAt:-1});
+const PurchaseReceiptLineSchema=new Schema({
+ productId:{type:Schema.Types.ObjectId,ref:"Product",required:true},
+ quantity:{type:Number,required:true,min:1}
+},{_id:false});
+const PurchaseReceiptSchema=new Schema({
+ purchaseOrderId:{type:Schema.Types.ObjectId,ref:"PurchaseOrder",required:true},
+ receiptKey:{type:String,required:true,unique:true},
+ requestHash:{type:String,required:true},
+ receivedBy:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ lines:{type:[PurchaseReceiptLineSchema],required:true},
+ receivedUnits:{type:Number,required:true,min:1},
+ poStatus:{type:String,enum:["partially_received","received"],required:true},
+ note:{type:String,required:true}
+},opts);
+PurchaseReceiptSchema.index({purchaseOrderId:1,createdAt:-1});
 const ExpenseSchema = new Schema({
  kind:{type:String,required:true},note:{type:String,default:""},amountPaisa:{type:Number,required:true,min:0},
  recordedBy:{type:Schema.Types.ObjectId,ref:"User",required:true},occurredAt:{type:Date,required:true}
@@ -100,6 +128,7 @@ export const Payment = mongoose.models.Payment || mongoose.model("Payment",Payme
 export const StockMovement = mongoose.models.StockMovement || mongoose.model("StockMovement",StockMovementSchema);
 export const Supplier = mongoose.models.Supplier || mongoose.model("Supplier",SupplierSchema);
 export const PurchaseOrder = mongoose.models.PurchaseOrder || mongoose.model("PurchaseOrder",PurchaseOrderSchema);
+export const PurchaseReceipt = mongoose.models.PurchaseReceipt || mongoose.model("PurchaseReceipt",PurchaseReceiptSchema);
 export const Expense = mongoose.models.Expense || mongoose.model("Expense",ExpenseSchema);
 export const Audit = mongoose.models.Audit || mongoose.model("Audit",AuditSchema);
 export const Counter = mongoose.models.Counter || mongoose.model("Counter",CounterSchema);
