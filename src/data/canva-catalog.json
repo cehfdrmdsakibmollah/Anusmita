@@ -1,0 +1,251 @@
+{
+  "source": "Canva",
+  "designId": "DAHYeGxRdho",
+  "shortUrl": "https://canva.link/qt78rkxrqw8fzpz",
+  "designTitle": "_(A4) Korean Skin Care Catalog  - Anusmita (4).pdf",
+  "sourcePageCount": 6,
+  "extractedOn": "2026-10-24",
+  "notes": "30 names transcribed from read-only Canva rich text (six products per pages 2-6). Brand is parsed from the printed name. Descriptions and marketing claims have not been independently verified. No SKU, price, purchase cost, stock, manufacturer provenance, expiry or image-to-product linkage can be confirmed. Review each against original packaging before import.",
+  "products": [
+    {
+      "sourcePage": 2,
+      "positionOnPage": 1,
+      "sourceName": "SKIN1004 Madagascar Centella Hyalu-Cica Sun Serum (50ml)",
+      "brandPrinted": "SKIN1004",
+      "packSizePrinted": "50ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 2,
+      "positionOnPage": 2,
+      "sourceName": "Medicube TXA Niacinamide Capsule Cream (55gm)",
+      "brandPrinted": "Medicube",
+      "packSizePrinted": "55gm",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 2,
+      "positionOnPage": 3,
+      "sourceName": "Christian Dean Secret Tone-up Sun Cream (70ml)",
+      "brandPrinted": "Christian Dean",
+      "packSizePrinted": "70ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 2,
+      "positionOnPage": 4,
+      "sourceName": "COSRX Low pH Good Morning Gel Cleanser (150ml)",
+      "brandPrinted": "COSRX",
+      "packSizePrinted": "150ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 2,
+      "positionOnPage": 5,
+      "sourceName": "iUNIK Centella Calming Daily Sunscreen (60ml)",
+      "brandPrinted": "iUNIK",
+      "packSizePrinted": "60ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 2,
+      "positionOnPage": 6,
+      "sourceName": "Medicube TXA Niacinamide 15 Serum (30ml)",
+      "brandPrinted": "Medicube",
+      "packSizePrinted": "30ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 3,
+      "positionOnPage": 1,
+      "sourceName": "COSRX Salicylic Acid Daily Gentle Cleanser (150ml)",
+      "brandPrinted": "COSRX",
+      "packSizePrinted": "150ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 3,
+      "positionOnPage": 2,
+      "sourceName": "Medicube Zero Pore Blackhead Mud Mask (100gm)",
+      "brandPrinted": "Medicube",
+      "packSizePrinted": "100gm",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 3,
+      "positionOnPage": 3,
+      "sourceName": "W.Skin Laboratory Triple Care Sun Cream SPF50+ PA++++ (60ml)",
+      "brandPrinted": "W.Skin Laboratory",
+      "packSizePrinted": "60ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 3,
+      "positionOnPage": 4,
+      "sourceName": "COSRX Advanced Snail 92 All in one Cream (100gm)",
+      "brandPrinted": "COSRX",
+      "packSizePrinted": "100gm",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 3,
+      "positionOnPage": 5,
+      "sourceName": "Deep Vita C Capsule Cream (55gm)",
+      "brandPrinted": "Deep Vita C",
+      "packSizePrinted": "55gm",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 3,
+      "positionOnPage": 6,
+      "sourceName": "Arencia Vitamin C Booster Shot Face and Eye Moisturizer (10ml)",
+      "brandPrinted": "Arencia",
+      "packSizePrinted": "10ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 4,
+      "positionOnPage": 1,
+      "sourceName": "I'm From Rice Toner (30ml)",
+      "brandPrinted": "I'm From",
+      "packSizePrinted": "30ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 4,
+      "positionOnPage": 2,
+      "sourceName": "NEOGEN Dermalogy Black Energy Cream (80ml)",
+      "brandPrinted": "NEOGEN",
+      "packSizePrinted": "80ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 4,
+      "positionOnPage": 3,
+      "sourceName": "Celimax The Vita-A Retinal Shot Tightening Booster (15ml)",
+      "brandPrinted": "Celimax",
+      "packSizePrinted": "15ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 4,
+      "positionOnPage": 4,
+      "sourceName": "Etude Dear Darling Water Tint #03 Orange Ade (9gm)",
+      "brandPrinted": "ETUDE",
+      "packSizePrinted": "9gm",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 4,
+      "positionOnPage": 5,
+      "sourceName": "ETUDE Dear Darling Water Tint 07 Prune Ade (9gm)",
+      "brandPrinted": "ETUDE",
+      "packSizePrinted": "9gm",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 4,
+      "positionOnPage": 6,
+      "sourceName": "Medicube Kojic Acid Turmeric Night Wrapping Mask (75ml)",
+      "brandPrinted": "Medicube",
+      "packSizePrinted": "75ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 5,
+      "positionOnPage": 1,
+      "sourceName": "Purito Seoul Azelaic Acid 10 Kojic Tea Tree Serum (30ml)",
+      "brandPrinted": "Purito Seoul",
+      "packSizePrinted": "30ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 5,
+      "positionOnPage": 2,
+      "sourceName": "Round Lab 1025 Dokdo Toner (100ml)",
+      "brandPrinted": "Round Lab",
+      "packSizePrinted": "100ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 5,
+      "positionOnPage": 3,
+      "sourceName": "W.Skin Laboratory A.M Cream Anti-Melasma (50ml)",
+      "brandPrinted": "W.Skin Laboratory",
+      "packSizePrinted": "50ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 5,
+      "positionOnPage": 4,
+      "sourceName": "MEDICUBE Collagen Jelly Cream (110ml)",
+      "brandPrinted": "Medicube",
+      "packSizePrinted": "110ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 5,
+      "positionOnPage": 5,
+      "sourceName": "Arencia Fresh Green Rice Mochi Cleanser (120gm)",
+      "brandPrinted": "Arencia",
+      "packSizePrinted": "120gm",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 5,
+      "positionOnPage": 6,
+      "sourceName": "Centellian 24 Madeca Cream Time Reverse (*50ml)",
+      "brandPrinted": "Centellian 24",
+      "packSizePrinted": "50ml",
+      "reviewNote": "Catalogue has malformed size parenthesis; confirm official product packaging."
+    },
+    {
+      "sourcePage": 6,
+      "positionOnPage": 1,
+      "sourceName": "The Face Shop Rice Water Bright Foaming Cleanser (150ml)",
+      "brandPrinted": "The Face Shop",
+      "packSizePrinted": "150ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 6,
+      "positionOnPage": 2,
+      "sourceName": "Medicube Hyaluronic Multi Peptide Serum (30ml)",
+      "brandPrinted": "Medicube",
+      "packSizePrinted": "30ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 6,
+      "positionOnPage": 3,
+      "sourceName": "Medicube Glutathione Glow Serum (30gm)",
+      "brandPrinted": "Medicube",
+      "packSizePrinted": "30gm",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 6,
+      "positionOnPage": 4,
+      "sourceName": "iUNIK Centella Calming Gel Cream (60ml)",
+      "brandPrinted": "iUNIK",
+      "packSizePrinted": "60ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 6,
+      "positionOnPage": 5,
+      "sourceName": "Skin1004 Madagascar Centella Glow 1004 Duo (50+50ml)",
+      "brandPrinted": "SKIN1004",
+      "packSizePrinted": "50+50ml",
+      "reviewNote": null
+    },
+    {
+      "sourcePage": 6,
+      "positionOnPage": 6,
+      "sourceName": "Medicube Fresh That Lasts Deodorant Vanilla & Pistachio (83gm)",
+      "brandPrinted": "Medicube",
+      "packSizePrinted": "83gm",
+      "reviewNote": null
+    }
+  ]
+}
