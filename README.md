@@ -79,3 +79,10 @@ The connected Cloudinary account uses the cloud name **oseohmxd**, but the ChatG
 7. The plugin-based import can also be used independently; the **Cloudinary** tab can validate and attach previously uploaded managed ANUSMITA assets.
 
 **Cautions:** No automatic 655-image migration or product assignment. Product matching is manual to avoid wrong SKU association. Images from the static public Drive index are not automatically verified as saleable products. External live media tests, billing and CORS checks must be performed before production launch. Cloudinary signed uploads can be valid up to one hour; each signature is restricted to a unique asset path but needs owner/admin/inventory access to obtain. Keep rate limiting and account-level usage alerts in place.
+
+## Product gallery controls (next media operations release)
+- In Admin → Cloudinary, search/select a SKU to see its current photo gallery; designate the primary cover photo, change order, or unlink a mistaken association without deleting the original asset.
+- All edits validate the product's updatedAt field and are written with actor audit logs; stale concurrent edits return HTTP 409. No automatic destructive Cloudinary or Google Drive file deletion.
+- Admin → Cloudinary → Browse Cloudinary assets lists only files within the managed `anusmita/` prefix. It requires Cloudinary **server-side** API credentials and uses a paginated private Admin API request. Selecting an existing image fills the linking field; it does not publish or mutate product data by itself.
+- Product gallery order is persisted as `Product.imageUrls`. The first URL is used as the storefront card/SEO image.
+- These are **code changes** until actual hosting, MongoDB, Cloudinary server settings, staff login and live end-to-end testing are configured.

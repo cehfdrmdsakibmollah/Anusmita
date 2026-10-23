@@ -8,6 +8,15 @@ export default function DriveMediaLibrary(){
  const [country,setCountry]=useState("All"),[query,setQuery]=useState(""),[page,setPage]=useState(1),[data,setData]=useState<Page|null>(null);
  const [productQuery,setProductQuery]=useState(""),[products,setProducts]=useState<Product[]>([]),[selected,setSelected]=useState<Product|null>(null);
  const [chosen,setChosen]=useState<Media|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
+ const [history,setHistory]=useState<{id:string;productId:string;createdAt:string;driveFileId:string;cloudinaryAssetId:string}[]>([]);
+ const [historyShown,setHistoryShown]=useState(false);
+ async function viewHistory(){
+  try{
+   const r=await fetch("/api/admin/media/history",{cache:"no-store"});
+   if(!r.ok)throw new Error("Audit history unavailable");
+   const data=await r.json();setHistory(data.items||[]);setHistoryShown(true);
+  }catch(e){setMessage("Error: "+(e instanceof Error?e.message:"Audit history failed"));}
+ }
  useEffect(()=>{const ctl=new AbortController();
   const run=async()=>{try{const r=await fetch("/api/admin/media?origin="+encodeURIComponent(country)+"&q="+encodeURIComponent(query)+"&page="+page,{signal:ctl.signal,cache:"no-store"});if(!r.ok)throw new Error("Unable to load Drive files"); const v=await r.json();if(!ctl.signal.aborted)setData(v);}
   catch(e){if(!ctl.signal.aborted)setMessage(String(e));}};void run();return()=>ctl.abort();
@@ -53,6 +62,11 @@ export default function DriveMediaLibrary(){
    <img alt={item.name} src={item.previewUrl} loading="lazy" referrerPolicy="no-referrer"/><span>{item.name}</span><small>{item.category} · {item.mimeType==="image/heic"?"HEIC":"JPG"}</small>
   </button>)}</div>
   <div className="filters" style={{marginTop:18}}><button className="button light small" disabled={page<=1} onClick={()=>setPage(v=>v-1)}>Previous</button><button className="button light small" disabled={!data||page>=data.pages} onClick={()=>setPage(v=>v+1)}>Next</button></div>
+  <div className="adminCard"><h3>Migration history</h3>
+   <p className="smallprint">Review the latest 30 Drive images migrated into Cloudinary through ANUSMITA, including their associated product identifiers. This log does not transfer images.</p>
+   <button type="button" className="button small light" onClick={()=>void viewHistory()}>View recent migrations</button>
+   {historyShown&&(history.length?<table><thead><tr><th>Date</th><th>Product ID</th><th>Drive image</th><th>Cloudinary asset</th></tr></thead><tbody>{history.map(x=><tr key={x.id}><td>{new Date(x.createdAt).toLocaleDateString("en-BD")}</td><td>{x.productId}</td><td>{x.driveFileId}</td><td>{x.cloudinaryAssetId}</td></tr>)}</tbody></table>:<p className="muted">No tracked migrations to display.</p>)}
+  </div>
   <div className="adminCard"><h3>Attach an image to a product</h3>
    {chosen?<p><strong>Selected:</strong> {chosen.name} · <a href={chosen.viewUrl} target="_blank" rel="noreferrer" style={{textDecoration:"underline"}}>Open original in Drive <span aria-hidden="true">↗</span></a></p>:<p className="muted">First select an image from the gallery.</p>}
    <div className="field"><label htmlFor="link-product">Find the product by name or SKU</label><input id="link-product" value={productQuery} onChange={e=>setProductQuery(e.target.value)} placeholder="Type an existing SKU or product name"/></div>
