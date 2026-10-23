@@ -11,7 +11,8 @@ export async function POST(request:Request) {
   const actor=await authorize(["owner","admin","finance"]);
   const raw=await request.json();
   if(raw.verificationConfirmed!==true) throw new HttpError(400,"Confirm independent transaction verification before recording funds");
-  const data=paymentSchema.parse(raw);
+  const {verificationConfirmed: _operatorAttestation, ...payload}=raw;
+  const data=paymentSchema.parse(payload);
   // IMPORTANT: verificationConfirmed is an operator attestation, not an automated provider verification.
   await db();
   const session=await mongoose.startSession();let result:any;
