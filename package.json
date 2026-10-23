@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "owner:create": "tsx scripts/create-owner.ts"
+    "owner:create": "tsx scripts/create-owner.ts",
+    "db:doctor": "tsx scripts/db-doctor.ts"
   },
   "dependencies": {
     "next": "16.4.2",
