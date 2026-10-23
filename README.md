@@ -66,3 +66,16 @@ GitHub Actions runs Node 22 install, unit tests, TypeScript typecheck and produc
 - This is a **snapshot**, not live folder synchronization. To refresh the snapshot, regenerate the index through a trusted authenticated workflow.
 - Photo ownership and permission to use assets commercially must be verified by ANUSMITA.
 - Product media remains subject to the 12-image limit per SKU; removal does not delete files in Drive.
+
+## Cloudinary: direct admin upload & controlled Google Drive migration
+The connected Cloudinary account uses the cloud name **oseohmxd**, but the ChatGPT connector's credentials **do not automatically exist inside the deployed web app**.
+
+1. In the Cloudinary Console, copy your **API Key** and **API Secret** to private server environment variables. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET in your hosting control panel. Keep these out of git, browser code and NEXT_PUBLIC variables.
+2. Start the website with MongoDB Atlas and admin authentication configured. Open /admin → **Cloudinary**.
+3. Find an existing SKU, choose a JPEG/PNG/WebP (max 10 MB), and press **Upload & link selected image**. A restricted server-signed upload sends the file directly from the browser to Cloudinary. A separate server-side Admin API check verifies the actual asset before attaching it to MongoDB.
+4. To migrate a Google Drive image, go to **Drive Images**, choose a known SKU + one image, then click **Migrate 1 image to Cloudinary**. This uploads only that image and replaces its existing Drive thumbnail reference if present; it keeps the original Drive file untouched.
+5. HEIC originals (129 in this snapshot) are intentionally excluded from automatic migration. Convert to JPEG/WebP before uploading.
+6. Default safety cap is 10 signed uploads/imports per admin per UTC day (MEDIA_DAILY_UPLOAD_LIMIT, clamped to 20). This is not a total credit guarantee: the operator must review Cloudinary usage and image rights.
+7. The plugin-based import can also be used independently; the **Cloudinary** tab can validate and attach previously uploaded managed ANUSMITA assets.
+
+**Cautions:** No automatic 655-image migration or product assignment. Product matching is manual to avoid wrong SKU association. Images from the static public Drive index are not automatically verified as saleable products. External live media tests, billing and CORS checks must be performed before production launch. Cloudinary signed uploads can be valid up to one hour; each signature is restricted to a unique asset path but needs owner/admin/inventory access to obtain. Keep rate limiting and account-level usage alerts in place.

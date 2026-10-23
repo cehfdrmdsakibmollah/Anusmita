@@ -26,8 +26,25 @@ export default function DriveMediaLibrary(){
    setMessage(operation==="add"?"Image linked to "+selected.sku+". Please verify thumbnail visibility before publishing.":"Image removed from "+selected.sku);
   }catch(e){setMessage("Error: "+(e instanceof Error?e.message:"Unable to update"));}finally{setBusy(false);}
  }
+
+ async function migrate(item:Media){
+  if(!selected)return;
+  if(item.mimeType==="image/heic"){setMessage("HEIC cannot be migrated automatically. Convert to JPEG/WebP and upload in Cloudinary tab.");return;}
+  if(!window.confirm("Upload this image from Google Drive to Cloudinary and attach it to "+selected.sku+"? This may use Cloudinary credits. The Drive original will remain unchanged."))return;
+  setBusy(true);setMessage("Importing one image to Cloudinary…");
+  try{
+   const r=await fetch("/api/admin/cloudinary/migrate",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({productId:selected._id,expectedUpdatedAt:selected.updatedAt,fileId:item.id,confirmed:true})});
+   const result=await r.json();
+   if(!r.ok)throw new Error(result.error||"Import failed");
+   const next={...selected,imageUrls:result.imageUrls,updatedAt:result.updatedAt};
+   setSelected(next);setProducts(old=>old.map(p=>p._id===next._id?next:p));
+   setMessage("Cloudinary image verified and linked to "+selected.sku+". Drive original is unchanged.");
+  }catch(e){setMessage("Error: "+(e instanceof Error?e.message:"Import failed"));}
+  finally{setBusy(false);}
+ }
  return <section className="adminCard"><h2>Google Drive Media Library</h2>
-  <p className="smallprint">Card-free image linking from your existing Drive collection. Images stay in Google Drive; this feature saves only their public thumbnail URLs to MongoDB. No R2 account or Google API keys are needed.</p>
+  <p className="smallprint">Card-free image linking from your existing Drive collection. Images stay in Google Drive; this feature saves only their public thumbnail URLs to MongoDB. No R2 account or Google API keys are needed. An optional one-image Cloudinary migration requires your site Cloudinary credentials and an explicit confirmation.</p>
   <p className="notice">Use images only after checking public visibility in a signed-out browser. Drive may block hotlinking or throttle bandwidth. HEIC originals may not display on every device. Product identity must be verified manually; filenames are not product names.</p>
   <div className="formGrid"><div className="field"><label htmlFor="media-origin">Collection</label><select id="media-origin" value={country} onChange={e=>{setCountry(e.target.value);setPage(1);}}><option>All</option><option>Korea</option><option>Japan</option><option>China</option></select></div>
   <div className="field"><label htmlFor="media-search">Search image filename or category</label><input id="media-search" value={query} onChange={e=>{setQuery(e.target.value);setPage(1);}} placeholder="Filename / perfume / bag…" /></div></div>
@@ -47,6 +64,7 @@ export default function DriveMediaLibrary(){
    <div className="filters">
     <button className="button" disabled={busy||!selected||!chosen} onClick={()=>chosen&&void attach(chosen,"add")}>Add selected image</button>
     <button className="button light" disabled={busy||!selected||!chosen} onClick={()=>chosen&&void attach(chosen,"remove")}>Remove selected image</button>
+    <button className="button light" disabled={busy||!selected||!chosen||chosen.mimeType==="image/heic"} onClick={()=>chosen&&void migrate(chosen)}>Migrate 1 image to Cloudinary</button>
    </div>
   </div>
  </section>;
