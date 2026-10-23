@@ -21,6 +21,7 @@ export async function PATCH(request:Request,ctx:{params:Promise<{id:string}>}) {
     const order=await Order.findById(id).session(session);
     if(!order) throw new HttpError(404,"Order not found");
     if(!transitions[order.orderStatus]?.includes(status)) throw new HttpError(409,"Invalid order status transition");
+    if(status==="cancelled" && order.collectedPaisa>0) throw new HttpError(409,"Refund collected funds before cancelling this order");
     if(status==="cancelled" || status==="delivered") {
      for(const line of order.lines) {
       const update=status==="cancelled"?{$inc:{reserved:-line.quantity}}:{$inc:{reserved:-line.quantity,onHand:-line.quantity}};
