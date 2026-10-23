@@ -3,13 +3,18 @@ import { db } from "@/lib/db";
 import { Product } from "@/lib/models";
 import Storefront from "@/components/storefront";
 export const dynamic="force-dynamic";
-export default async function Home(){
+export default async function Home({searchParams}:{searchParams:Promise<{item?:string}>}){
+ const queryItem=(await searchParams).item||"";
  let products:any[]=[];
  let configured=Boolean(process.env.MONGODB_URI);
  if(configured) {
   try{
    await db();
    const data=await Product.find({active:true}).select("name slug sku brand category origin imageUrls size variantLabel pricePaisa onHand reserved").sort({createdAt:-1}).limit(48).lean();
+   if(/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(queryItem) && !data.some((p:any)=>p.slug===queryItem)) {
+    const additional=await Product.findOne({active:true,slug:queryItem}).select("name slug sku brand category origin imageUrls size variantLabel pricePaisa onHand reserved").lean<any>();
+    if(additional)data.unshift(additional);
+   }
    products=data.map((p:any)=>({id:String(p._id),name:p.name,slug:p.slug,brand:p.brand,category:p.category,origin:p.origin,image:p.imageUrls[0]||"",size:p.size,pricePaisa:p.pricePaisa,available:Math.max(0,p.onHand-p.reserved)}));
   }catch{configured=false;}
  }

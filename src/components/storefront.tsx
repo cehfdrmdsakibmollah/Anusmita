@@ -1,6 +1,7 @@
 
 "use client";
 import { useEffect,useMemo,useRef,useState } from "react";
+import Link from "next/link";
 type Product={id:string;name:string;slug:string;brand:string;category:string;origin:string;image:string;size:string;pricePaisa:number;available:number};
 type CartLine={id:string;quantity:number};
 type Customer={name:string;phone:string;district:string;area:string;address:string;notes:string};
@@ -11,7 +12,7 @@ export default function Storefront({products}:{products:Product[]}){
  const [payment,setPayment]=useState("cod"),[deposit,setDeposit]=useState("0"),[submitting,setSubmitting]=useState(false);
  const [error,setError]=useState(""),[result,setResult]=useState<{orderNumber:string;totalPaisa:number}|null>(null);
  const keyRef=useRef<string|null>(null);
- useEffect(()=>{try{const value=JSON.parse(localStorage.getItem("anusmita-cart-v1")||"[]");if(Array.isArray(value))setCart(value.filter((x:any)=>typeof x.id==="string"&&Number.isInteger(x.quantity)&&x.quantity>0));}catch{}setHydrated(true);},[]);
+ useEffect(()=>{if(new URLSearchParams(window.location.search).get("item"))setCategory("All");try{const value=JSON.parse(localStorage.getItem("anusmita-cart-v1")||"[]");if(Array.isArray(value))setCart(value.filter((x:any)=>typeof x.id==="string"&&Number.isInteger(x.quantity)&&x.quantity>0));}catch{}setHydrated(true);},[]);
  useEffect(()=>{if(hydrated)localStorage.setItem("anusmita-cart-v1",JSON.stringify(cart));},[cart,hydrated]);
  const categories=["All",...Array.from(new Set(products.map(p=>p.category)))];
  const visible=products.filter(p=>(category==="All"||p.category===category)&&(p.name+" "+p.brand+" "+p.origin).toLowerCase().includes(search.toLowerCase()));
@@ -37,7 +38,7 @@ export default function Storefront({products}:{products:Product[]}){
  <div className="filters"><select aria-label="Product category" value={category} onChange={e=>setCategory(e.target.value)}>{categories.map(c=><option key={c}>{c}</option>)}</select><button className="button small light" onClick={()=>setCartOpen(true)}>Bag ({cart.reduce((s,l)=>s+l.quantity,0)})</button></div></div>
  {visible.length===0?<div className="notice">{products.length===0?"No items are published yet. The owner can add products in the admin portal.":"No matching items. Try another search or category."}</div>:
  <div className="productGrid">{visible.map(p=><article className="productCard" key={p.id}><div className="productImage">{p.image?<img alt={p.name} src={p.image} loading="lazy" referrerPolicy="no-referrer"/>:<div className="productPlaceholder" aria-hidden="true">✧</div>}</div><div className="productInfo">
- <div className="origin">{p.origin} {p.brand?"· "+p.brand:""}</div><h3>{p.name}</h3><div className="muted">{p.size||p.category}</div><div className="price">{money(p.pricePaisa)}</div>
+ <div className="origin">{p.origin} {p.brand?"· "+p.brand:""}</div><h3><Link href={"/products/"+p.slug}>{p.name}</Link></h3><div className="muted">{p.size||p.category}</div><div className="price">{money(p.pricePaisa)}</div>
  <button disabled={!p.available} className="button small" onClick={()=>{add(p.id);setCartOpen(true);}}>{p.available?"Add to Bag":"Out of Stock"}</button></div></article>)}</div>}
  {cart.length>0&&<button className="cartToggle" onClick={()=>setCartOpen(true)} aria-label="Open shopping bag">Bag · {money(subtotal)}</button>}
  {cartOpen&&<><div className="scrim" onClick={()=>setCartOpen(false)} aria-hidden="true"/><aside className="cartPanel" aria-label="Shopping bag and checkout"><div className="cartTop"><h2>Your bag</h2><button className="iconButton" onClick={()=>setCartOpen(false)} aria-label="Close">✕</button></div>
