@@ -54,3 +54,15 @@ The supplied Drive catalogue contains Korean, Japanese and Chinese product media
 
 ## CI
 GitHub Actions runs Node 22 install, unit tests, TypeScript typecheck and production build. A passing workflow is not proof of gateway, mobile printer, courier or real device readiness.
+
+## Card-free Google Drive product image linking (October 2026)
+- Connected Google Drive inventory snapshot: `src/data/drive-media.json` with 655 image IDs across Korea (268), Japan (176), China (211). Two PDFs were excluded.
+- Owner dashboard → **Drive Images**: search/filter the reviewed media index, select a Drive image, search an existing SKU, then attach/remove images with audit history and optimistic locking.
+- Does **not** create products, set prices, publish listings, change stock, or transfer/delete Drive media. Drive folder filenames are not trustworthy SKUs.
+- **Important:** Google Drive is not a dedicated image CDN. Its thumbnails can be unstable, denied, rate limited, or require sign-in. Public folder access does not guarantee universal thumbnail access. Test each image via private/incognito browser and real devices before publishing.
+- 129 Japanese originals are HEIC: Google may generate previews, but convert the originals to JPEG/WebP when practical before production. The app references Drive thumbnail URLs, not raw HEIC file data.
+- Existing files reviewed in the connected Drive sample exposed "anyone with the link (reader)" access; no sharing permissions were changed by this implementation.
+- Media inventory is committed to a public GitHub repository; it contains file IDs, file names, origin, MIME and sizes. Only use this workflow for intentionally public marketing images; do not put private documents in these folders.
+- This is a **snapshot**, not live folder synchronization. To refresh the snapshot, regenerate the index through a trusted authenticated workflow.
+- Photo ownership and permission to use assets commercially must be verified by ANUSMITA.
+- Product media remains subject to the 12-image limit per SKU; removal does not delete files in Drive.
