@@ -18,6 +18,7 @@ export function dedicatedDb(uri?:string):boolean{
  }catch{return false;}
 }
 export type LaunchEnvironment={
+ [key:string]:string|undefined;
  STORE_MODE?:string;MONGODB_URI?:string;SESSION_SECRET?:string;
  NEXT_PUBLIC_SITE_URL?:string;CLOUDINARY_API_KEY?:string;CLOUDINARY_API_SECRET?:string;
  CLOUDINARY_CLOUD_NAME?:string;
