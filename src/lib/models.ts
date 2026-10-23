@@ -162,3 +162,25 @@ const CatalogImportSchema = new Schema({
  affectedSkus:{type:[String],default:[]},completedAt:{type:Date,required:true}
 },opts);
 export const CatalogImport = mongoose.models.CatalogImport || mongoose.model("CatalogImport",CatalogImportSchema);
+
+
+/**
+ * Supplier-provided product candidates only. This collection is separate from
+ * customer-visible Product SKUs and never makes stock or retail claims.
+ */
+const HrSupplierCandidateSchema=new Schema({
+ sourceId:{type:String,required:true,default:"hr-wholesale"},
+ sourceRef:{type:String,required:true},
+ name:{type:String,required:true,maxlength:150},
+ brand:{type:String,required:true,maxlength:100},
+ size:{type:String,default:"",maxlength:100},
+ sourceUrl:{type:String,required:true,maxlength:400},
+ quotedCostPaisa:{type:Number,default:null,min:0},
+ quoteStatus:{type:String,enum:["supplier_provided_unverified"],default:"supplier_provided_unverified"},
+ reviewStatus:{type:String,enum:["needs_review"],default:"needs_review"},
+ importedBy:{type:Schema.Types.ObjectId,ref:"User",required:true}
+},opts);
+HrSupplierCandidateSchema.index({sourceId:1,sourceRef:1},{unique:true});
+HrSupplierCandidateSchema.index({sourceId:1,updatedAt:-1});
+export const HrSupplierCandidate=mongoose.models.HrSupplierCandidate||
+ mongoose.model("HrSupplierCandidate",HrSupplierCandidateSchema);
