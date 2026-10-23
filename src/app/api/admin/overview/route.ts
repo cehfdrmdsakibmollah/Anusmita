@@ -1,18 +1,19 @@
 
 import { authorize,apiError } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { Order,Product,Payment,Expense,PurchaseOrder } from "@/lib/models";
+import { Order,Product,Payment,Expense,PurchaseOrder,SupplierPayment } from "@/lib/models";
 export const dynamic="force-dynamic";
 export async function GET() {
  try{
   await authorize(["owner","admin","finance","analyst"]);
   await db();
-  const [orders,products,collections,expenses,payables]=await Promise.all([
+  const [orders,products,collections,expenses,payables,supplierPayments]=await Promise.all([
    Order.find({isTest:false}).select("orderStatus subtotalPaisa shippingPaisa totalPaisa collectedPaisa lines").lean(),
    Product.find({}).select("onHand reserved costPaisa reorderLevel active").lean(),
    Payment.aggregate([{$match:{status:"verified",direction:"collection"}},{$group:{_id:null,total:{$sum:"$amountPaisa"}}}]),
    Expense.aggregate([{$group:{_id:null,total:{$sum:"$amountPaisa"}}}]),
-   PurchaseOrder.aggregate([{$match:{status:{$in:["submitted","partially_received","received"]}}},{$group:{_id:null,total:{$sum:{$subtract:["$invoiceTotalPaisa","$paidPaisa"]}}}}])
+   PurchaseOrder.aggregate([{$match:{status:{$in:["submitted","partially_received","received"]}}},{$group:{_id:null,total:{$sum:{$subtract:["$invoiceTotalPaisa","$paidPaisa"]}}}}]),
+   SupplierPayment.aggregate([{$match:{status:"verified"}},{$group:{_id:null,total:{$sum:"$amountPaisa"}}}])
   ]);
   const valid=orders.filter((o:any)=>!["cancelled","returned"].includes(o.orderStatus));
   const confirmed=valid.filter((o:any)=>["confirmed","packed","shipped","delivered"].includes(o.orderStatus));
@@ -25,7 +26,8 @@ export async function GET() {
    orderedPaisa:sum(valid,"totalPaisa"),confirmedPaisa:sum(confirmed,"totalPaisa"),
    deliveredSalesPaisa,recordedCollectionsPaisa:collections[0]?.total||0,
    outstandingPaisa:valid.reduce((n:any,o:any)=>n+Math.max(0,o.totalPaisa-o.collectedPaisa),0),
-   supplierPayablePaisa:payables[0]?.total||0,cogsPaisa,recordedExpensePaisa:expensePaisa,
+   supplierPayablePaisa:payables[0]?.total||0,
+   supplierPaidPaisa:supplierPayments[0]?.total||0,cogsPaisa,recordedExpensePaisa:expensePaisa,
    estimatedGrossProfitPaisa:deliveredSalesPaisa-cogsPaisa,
    estimatedOperatingProfitPaisa:deliveredSalesPaisa-cogsPaisa-expensePaisa,
    unreconciled:true, // fees, tax, outstanding invoices and refunds require reconciliation
