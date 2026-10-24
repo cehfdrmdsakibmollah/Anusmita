@@ -6,7 +6,7 @@ type Action="cover"|"move-left"|"move-right"|"unlink";
 export default function ProductPhotoManager({product,onSaved}:{product:GalleryProduct,onSaved:(newData:{imageUrls:string[];updatedAt:string})=>void}){
  const [busy,setBusy]=useState(false),[message,setMessage]=useState("");
  async function modify(url:string,action:Action){
-  if(action==="unlink"&&!window.confirm("Remove this image from "+product.sku+"? The original file stays safely in Cloudinary or Google Drive."))return;
+  if(action==="unlink"&&!window.confirm("Remove this image from "+product.sku+"? The original file stays safely in R2, Cloudinary or Google Drive."))return;
   setBusy(true);setMessage("");
   try{
    const response=await fetch("/api/admin/products/"+product._id+"/images",{method:"PATCH",headers:{"Content-Type":"application/json"},
@@ -19,7 +19,7 @@ export default function ProductPhotoManager({product,onSaved}:{product:GalleryPr
   finally{setBusy(false);}
  }
  return <div className="adminCard"><h3>Product photo manager</h3>
-  <p className="smallprint">The first image is the storefront cover. Reorder photos, choose a cover or unlink an image without deleting the Cloudinary/Drive original. Changes are saved with an audit log.</p>
+  <p className="smallprint">The first image is the storefront cover. Reorder photos, choose a cover or unlink an image without deleting the R2/Cloudinary/Drive original. Changes are saved with an audit log.</p>
   {product.imageUrls?.length ? <div className="mediaEditorGrid">
    {product.imageUrls.map((url,i)=><div className="mediaEditorCard" key={url}>
     <img loading="lazy" src={url} alt={"Product "+product.sku+" photo "+(i+1)} />
