@@ -108,7 +108,7 @@ export default async function ProductPage({params}:Props){
     <Link href={"/?category="+encodeURIComponent(p.category)+"#shop"}>{p.category}</Link><span>›</span><strong>{p.name}</strong>
    </nav>
    <div className="anPdpMain">
-    <ProductImageGallery urls={p.imageUrls||[]} name={p.name}/>
+    <ProductImageGallery urls={p.imageUrls||[]} name={p.name} preview={preview}/>
     <ProductDetailPurchase key={p.slug} product={{
      ...variant(p),name:p.name,category:p.category,brand:p.brand,description:p.description,origin:p.origin
     }} siblings={variants} canOrder={canOrder} preview={preview}/>

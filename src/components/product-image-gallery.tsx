@@ -2,7 +2,7 @@
 "use client";
 import {useEffect,useState} from "react";
 import {ArrowLeft,ArrowRight,Expand,ImageOff,X,ZoomIn} from "lucide-react";
-export default function ProductImageGallery({urls,name}:{urls:string[];name:string}){
+export default function ProductImageGallery({urls,name,preview=false}:{urls:string[];name:string;preview?:boolean}){
  const safe=urls.filter(Boolean).slice(0,12);
  const [index,setIndex]=useState(0),[broken,setBroken]=useState<string[]>([]),[zoom,setZoom]=useState(false);
  const active=Math.min(index,Math.max(0,safe.length-1));
@@ -19,7 +19,7 @@ export default function ProductImageGallery({urls,name}:{urls:string[];name:stri
   window.addEventListener("keydown",onKey);
   return()=>window.removeEventListener("keydown",onKey);
  },[zoom,safe.length]);
- return <div className="anPdpGallery" aria-label={name+" photos"}>
+ return <div className={"anPdpGallery"+(preview?" isPreview":"")} aria-label={name+" photos"}>
   {safe.length>1&&<div className="anPdpThumbs" aria-label="Select a product photo">{safe.map((src,i)=>
    <button key={i} type="button" className={i===active?"active":""}
     aria-label={"Show product photo "+(i+1)} aria-pressed={i===active} onClick={()=>setIndex(i)}>
