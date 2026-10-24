@@ -4,7 +4,10 @@ import {blockSchema,homeStarterBlocks,homeStarterSections,cmsOperation,publicBlo
 describe("ANUSMITA homepage CMS safety",()=>{
  it("has real categories with no fabricated products, pricing, stock or discounts",()=>{
   expect(homeStarterBlocks.filter(x=>x.kind==="category").map(x=>x.title)).toEqual(["Skincare","Beauty","Fashion","Watches","Mobile Accessories","Bed Sheets","Perfumes","Bags"]);
-  expect(homeStarterBlocks.filter(x=>x.kind==="promotion")).toHaveLength(0);
+  expect(homeStarterBlocks.filter(x=>x.kind==="promotion")).toHaveLength(1);
+  expect(homeStarterBlocks.filter(x=>x.kind==="editorial")).toHaveLength(4);
+  expect(homeStarterBlocks.find(x=>x.kind==="promotion")?.title).not.toMatch(/% off|free shipping/i);
+  expect(homeStarterBlocks.find(x=>x.kind==="hero")?.title).toBe("Your Everyday Beauty, A More Beautiful You");
   expect(homeStarterSections).toHaveLength(5);
   expect(uniqueSections(homeStarterSections)).toBe(true);
   expect(homeStarterBlocks.every(x=>blockSchema.safeParse(x).success)).toBe(true);
@@ -25,6 +28,8 @@ describe("ANUSMITA homepage CMS safety",()=>{
   expect(isSafeImage("javascript:alert(1)")).toBe(false);
   expect(isSafeImage("https://res.cloudinary.com.attacker.com/oseohmxd/image/upload/f.png")).toBe(false);
   expect(isSafeImage("https://images.unsplash.com/photo-test")).toBe(true);
+  expect(isSafeImage("/brand/hero-reference.webp")).toBe(true);
+  expect(isSafeImage("/brand/../private.webp")).toBe(false);
   expect(isSafeLink("//evil.example")).toBe(false);
   expect(isSafeLink("/?category=Beauty#shop")).toBe(true);
   expect(blockSchema.safeParse({...b,href:"https://phishing.example"}).success).toBe(false);

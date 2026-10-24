@@ -14,7 +14,7 @@ export default function HomepagePromotion({promo}:{promo:HomeBlock}){
  // The server hides expired banners on fresh loads. On open tabs hide the
  // *entire promotion*, not just the timer, as soon as its deadline passes.
  if(promo.endsAt&&now!==null&&now>=Date.parse(promo.endsAt))return null;
- return <section className="anPromoWrap">
+ return <section className="anPromoWrap" id={promo.position===0?"offers":undefined}>
   <div className="anWide"><div className="anPromo" style={promo.imageUrl?{
     backgroundImage:"linear-gradient(90deg,rgba(249,229,229,.98),rgba(249,229,229,.94) 42%,rgba(249,229,229,.16) 100%),url('"+promo.imageUrl+"')"
    }:undefined}>

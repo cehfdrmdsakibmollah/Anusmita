@@ -1,7 +1,7 @@
 
 import type {Metadata} from "next";
 import Link from "next/link";
-import {ArrowUpRight,Heart,Search,ShoppingBag,UserRound,Menu} from "lucide-react";
+import {ArrowUpRight,Heart,Search,UserRound,Menu} from "lucide-react";
 import {checkoutEnabled} from "@/lib/launch-config";
 import "./globals.css";
 export const metadata:Metadata={
@@ -14,14 +14,15 @@ export const metadata:Metadata={
 };
 const nav=[
  {label:"Home",href:"/"},
- {label:"Skincare",href:"/?category=Skincare#shop"},
+ {label:"Shop",href:"/#shop"},
  {label:"Beauty",href:"/?category=Beauty#shop"},
  {label:"Fashion",href:"/?category=Fashion#shop"},
+ {label:"Home Decor",href:"/?category=Bed%20Sheets#shop"},
+ {label:"Accessories",href:"/?category=Mobile%20Accessories#shop"},
  {label:"Watches",href:"/?category=Watches#shop"},
  {label:"Perfumes",href:"/?category=Perfumes#shop"},
  {label:"Bags",href:"/?category=Bags#shop"},
- {label:"Home & Living",href:"/?category=Bed%20Sheets#shop"},
- {label:"Mobile Accessories",href:"/?category=Mobile%20Accessories#shop"}
+ {label:"Skincare",href:"/?category=Skincare#shop"}
 ];
 export default function RootLayout({children}:{children:React.ReactNode}){
  return <html lang="en"><body className="anBody">
@@ -33,8 +34,12 @@ export default function RootLayout({children}:{children:React.ReactNode}){
    </Link>
    <nav className="anDesktopNav" aria-label="Main navigation">
     {nav.slice(0,6).map((item,i)=><Link className={i===0?"active":""} key={item.href} href={item.href}>{item.label}</Link>)}
-    <details className="anNavMore"><summary>More collections</summary><div>{nav.slice(6).map(x=><Link href={x.href} key={x.href}>{x.label}</Link>)}</div></details>
+    <details className="anNavMore"><summary>More</summary><div>{nav.slice(6).map(x=><Link href={x.href} key={x.href}>{x.label}</Link>)}<Link href="/#offers">Featured offers</Link></div></details>
    </nav>
+   <form className="anHeaderSearch" action="/" method="get" role="search">
+    <input type="search" name="q" aria-label="Search products" placeholder="Search for products…"/>
+    <button type="submit" aria-label="Submit product search"><Search size={17}/></button>
+   </form>
    <div className="anHeaderTools">
     <a href="/#store-search" aria-label="Search the collection"><Search size={20}/></a>
     <Link href="/admin/login" aria-label="Staff portal"><UserRound size={19}/></Link>
