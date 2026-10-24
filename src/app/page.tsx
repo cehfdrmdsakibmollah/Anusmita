@@ -1,3 +1,4 @@
+import Link from "next/link";
 
 import {ArrowRight,ArrowUpRight,Heart,Package,ShieldCheck,Sparkles,Truck} from "lucide-react";
 import {db} from "@/lib/db";
