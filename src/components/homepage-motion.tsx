@@ -19,7 +19,7 @@ export default function HomepageMotion(){
   const delayed=items.filter(el=>el.getBoundingClientRect().top>initialViewport*0.88);
   if(!delayed.length)return;
 
-  const completionTimers:ReturnType<typeof window.setTimeout>[]=[];
+  const completionTimers:number[]=[];
   const observer=new IntersectionObserver(entries=>{
    for(const entry of entries){
     if(!entry.isIntersecting)continue;
@@ -45,7 +45,7 @@ export default function HomepageMotion(){
   media.addEventListener("change",onMotionChange);
   return()=>{
    observer.disconnect();
-   completionTimers.forEach(window.clearTimeout);
+   completionTimers.forEach(id=>window.clearTimeout(id));
    media.removeEventListener("change",onMotionChange);
    delayed.forEach(el=>el.classList.remove("an-reveal-pending","an-reveal-entering"));
   };
