@@ -18,12 +18,12 @@ const sizes = ["2ml Spray", "5ml", "10ml", "15ml", "50ml", "100ml"];
 // Deliberately separate from catalogue prices and inventory.
 const samplePrices = [4,8,12,17,38,68];
 const collections = [
-  {name:"Glow Moisture Cream",category:"Skincare",region:[47,895,159,94] as Region,price:36},
-  {name:"Matte Velvet Lipstick",category:"Beauty",region:[225,897,157,92] as Region,price:22},
-  {name:"Vitamin C Face Serum",category:"Skincare",region:[397,896,155,94] as Region,price:28},
-  {name:"Premium Handbag",category:"Bags",region:[571,898,155,92] as Region,price:72},
-  {name:"Elegant Women's Watch",category:"Watches",region:[747,897,153,93] as Region,price:54},
-  {name:"Cotton Bed Sheet Set",category:"Bed Sheets",region:[920,898,156,92] as Region,price:68},
+  {name:"Glow Moisture Cream",category:"Skincare",region:[47,875,159,114] as Region,price:36},
+  {name:"Matte Velvet Lipstick",category:"Beauty",region:[225,875,157,114] as Region,price:22},
+  {name:"Vitamin C Face Serum",category:"Skincare",region:[397,875,155,115] as Region,price:28},
+  {name:"Premium Handbag",category:"Bags",region:[571,875,155,115] as Region,price:72},
+  {name:"Elegant Women's Watch",category:"Watches",region:[747,875,153,115] as Region,price:54},
+  {name:"Cotton Bed Sheet Set",category:"Bed Sheets",region:[920,875,156,115] as Region,price:68},
 ];
 const description = "A timeless fragrance that celebrates your inner glow. ANUSMITA Radiance Eau De Parfum is a delicate blend of fresh florals and warm musks, crafted for the modern woman who radiates confidence, grace and beauty in every moment.";
 const details = [
