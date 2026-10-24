@@ -11,8 +11,8 @@ export default function ProductDetailsAccordion({product}:{product:ProductFacts}
  return <div className="anPdpInfoGrid">
   <article className="anPdpInfoStory">
    <span className="anPdpInfoEyebrow">THE ANUSMITA EDIT</span>
-   <h2>A little luxury,<br/><em>every day.</em></h2>
-   <p>Discover pieces that feel beautifully you. Genuine product specifications are added by the ANUSMITA team.</p>
+   <h2>A fragrance that<br/><em>feels like you.</em></h2>
+   <p>The ANUSMITA edit celebrates the little things that make everyday moments memorable. Product details are added by our team.</p>
    <span className="anPdpInfoSig">ANUSMITA ✦</span>
   </article>
   <article className="anPdpInfoPanel">

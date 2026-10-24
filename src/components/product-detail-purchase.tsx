@@ -55,12 +55,13 @@ export default function ProductDetailPurchase({product,siblings,canOrder,preview
  return <div className="anPdpBuy">
   <div className="anPdpOverline">{product.brand||"ANUSMITA"} <span> / </span> {product.category}</div>
   <h1>{product.name}</h1>
-  <p className="anPdpPrice">{preview?"Price will appear once this SKU is published":money(product.pricePaisa)}
-   {!preview&&<span className="anPdpPriceCaption">Price in BDT · no hidden discount claim</span>}</p>
+  {preview?<div className="anPdpDemoPrice"><strong>Pricing available soon</strong><span>Demonstration product · no price or discount displayed</span></div>:
+   <p className="anPdpPrice">{money(product.pricePaisa)}
+    <span className="anPdpPriceCaption">BDT · exact price for selected size</span></p>}
   {product.description?<p className="anPdpDescription">{product.description}</p>:
    <p className="anPdpDescription">Thoughtfully selected for the ANUSMITA collection. Please check the product details and available sizes.</p>}
   {perfume?<div className="anPdpVariantArea">
-   <div className="anPdpOptionLabel"><strong>Choose your size</strong><span>Each size has its own SKU and price</span></div>
+   <div className="anPdpOptionLabel"><strong>Size</strong><span>2ml Spray · 5ml · 10ml · 15ml · 50ml · 100ml</span></div>
    <div className="anPdpSizeGrid">
     {choices.map(size=>preview?<div key={size.key} className={"anPdpSizeCard unavailable"+(size.selected?" selected":"")} aria-label={size.label+" design preview"}>
     <strong>{size.label}</strong><span>Design only</span></div>:size.slug?<Link href={"/products/"+size.slug} key={size.key} aria-current={size.selected?"page":undefined}
@@ -84,15 +85,15 @@ export default function ProductDetailPurchase({product,siblings,canOrder,preview
   </div>
   <div className="anPdpButtons">
    {canOrder&&!preview&&product.available>0?<button className="anPdpAdd" onClick={addToCart} type="button"><ShoppingBag size={19}/> Add to Bag <ArrowRight size={17}/></button>:
-    <button className="anPdpAdd disabled" disabled type="button"><ShoppingBag size={19}/>{preview?"Preview only — not for sale":!canOrder?"Checkout opening soon":"Currently unavailable"}</button>}
+    <button className="anPdpAdd disabled" disabled type="button"><ShoppingBag size={19}/>{preview?"Add to Cart · Preview only":!canOrder?"Checkout opening soon":"Currently unavailable"}</button>}
    <button className={"anPdpWish"+(favourite?" active":"")} type="button" onClick={toggleFavourite} disabled={preview}
     aria-pressed={favourite}><Heart size={19} fill={favourite?"currentColor":"none"}/>{favourite?"Saved":"Wishlist"}</button>
    <button className="anPdpShare" type="button" onClick={()=>void share()} aria-label="Copy product URL"><Share2 size={18}/></button>
   </div>
   {message&&<p className="anPdpFeedback" role="status">{message}</p>}
   <div className="anPdpPurchaseNotes">
-   <p><Check size={15}/> Real SKU prices and stock only</p>
-   <p><Check size={15}/> Shipping and payment details confirmed during checkout</p>
+   <p><Check size={15}/> Independently priced sizes</p>
+   <p><Check size={15}/> Authentic published stock information</p>
   </div>
   <Link className="anPdpBrowse" href="/#shop">Continue exploring ANUSMITA <ArrowRight size={17}/></Link>
  </div>;
