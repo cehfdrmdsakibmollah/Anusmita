@@ -1,0 +1,9 @@
+# ANUSMITA — Netlify Next.js Runtime (auto-detected)
+# This is NOT a static export: App Router and API routes require functions.
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  STORE_MODE = "catalog"
