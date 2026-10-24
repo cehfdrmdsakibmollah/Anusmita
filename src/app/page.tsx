@@ -1,134 +1,123 @@
 
-import { db } from "@/lib/db";
-import { Product } from "@/lib/models";
-import Storefront from "@/components/storefront";
+import Link from "next/link";
+import {ArrowRight,ArrowUpRight,Heart,Package,ShieldCheck,Sparkles,Truck} from "lucide-react";
+import {db} from "@/lib/db";
+import {Product,HomePage,Order} from "@/lib/models";
 import {checkoutEnabled} from "@/lib/launch-config";
-import {ArrowRight, ArrowUpRight, Sparkles} from "lucide-react";
+import {homeStarterBlocks,homeStarterSections,publicBlocks,type HomeBlock,type HomeSection} from "@/lib/home-content";
+import HomepageCarousel from "@/components/homepage-carousel";
+import HomepageCountdown from "@/components/homepage-countdown";
+import HomepageFeatured,{type FeaturedShelf,type FeaturedProduct} from "@/components/homepage-featured";
+import Storefront from "@/components/storefront";
 export const dynamic="force-dynamic";
-const cloud="https://res.cloudinary.com/oseohmxd/image/upload";
-const categories=[
- {title:"Beauty & Skincare",label:"01 / THE RITUAL",slug:"Beauty",
-  image:cloud+"/v1792790797/anusmita/drive/korea/drive-1ox6P3J_wfThTQ_UuY2eAfyS0aaZNCCjY.jpg",
-  alt:"ANUSMITA Korean beauty collection photography"},
- {title:"Jewellery",label:"02 / LITTLE TREASURES",slug:"Jewellery",
-  image:"https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1000&q=85",
-  alt:"Editorial photograph of delicate jewellery"},
- {title:"Fashion",label:"03 / YOUR EXPRESSION",slug:"Fashion",
-  image:"https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=85",
-  alt:"Fashion editorial photography"},
- {title:"Accessories",label:"04 / THE DETAILS",slug:"Accessories",
-  image:"https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85",
-  alt:"Handbag and accessories editorial photography"}
-];
-export default async function Home({searchParams}:{searchParams:Promise<{item?:string;category?:string}>}){
+const format=(p:any):FeaturedProduct=>({id:String(p._id),name:p.name,slug:p.slug,brand:p.brand||"",
+ category:p.category,origin:p.origin||"Other",image:p.imageUrls?.[0]||"",size:p.size||p.variantLabel||"",
+ pricePaisa:p.pricePaisa,available:Math.max(0,(p.onHand||0)-(p.reserved||0))});
+type ShopProduct=FeaturedProduct&{origin:string};
+export default async function Home({searchParams}:{searchParams:Promise<{item?:string}>}){
  const queryItem=(await searchParams).item||"";
- let products:any[]=[];
- let configured=Boolean(process.env.MONGODB_URI);
- if(configured){
-  try{
-   await db();
-   const data=await Product.find({active:true})
-    .select("name slug sku brand category origin imageUrls size variantLabel pricePaisa onHand reserved")
-    .sort({createdAt:-1}).limit(48).lean();
-   if(/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(queryItem)&&!data.some((p:any)=>p.slug===queryItem)){
-    const extra=await Product.findOne({active:true,slug:queryItem})
-     .select("name slug sku brand category origin imageUrls size variantLabel pricePaisa onHand reserved").lean<any>();
-    if(extra)data.unshift(extra);
+ let configured=false,products:ShopProduct[]=[],shelves:FeaturedShelf[]=[];
+ let blocks:HomeBlock[]=homeStarterBlocks;
+ let sections:HomeSection[]=homeStarterSections;
+ if(process.env.MONGODB_URI)try{
+  await db();configured=true;
+  const [settings,data]=await Promise.all([
+   HomePage.findOne({key:"main"}).lean<any>(),
+   Product.find({active:true}).select("name slug brand category origin imageUrls size variantLabel pricePaisa onHand reserved")
+    .sort({createdAt:-1}).limit(48).lean<any[]>()
+  ]);
+  if(settings){
+   blocks=settings.blocks as HomeBlock[];
+   sections=settings.sections as HomeSection[];
+  }
+  if(/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(queryItem)&&!data.some(p=>p.slug===queryItem)){
+   const item=await Product.findOne({active:true,slug:queryItem}).select("name slug brand category origin imageUrls size variantLabel pricePaisa onHand reserved").lean<any>();
+   if(item)data.unshift(item);
+  }
+  products=data.map(format) as ShopProduct[];
+  const allChosen=[...new Set(sections.flatMap(s=>s.productIds||[]))].filter(x=>/^[0-9a-f]{24}$/i.test(x)).slice(0,120);
+  const additional=allChosen.length?await Product.find({active:true,_id:{$in:allChosen}})
+   .select("name slug brand category origin imageUrls size variantLabel pricePaisa onHand reserved").lean<any[]>():[];
+  const lookup=new Map([...data,...additional].map(p=>[String(p._id),format(p)]));
+  let actualBestIds:string[]=[];
+  if(sections.some(s=>s.enabled&&s.key==="best_sellers"&&s.productIds.length===0)){
+   const sold=await Order.aggregate([
+    {$match:{orderStatus:"delivered",isTest:{$ne:true}}},
+    {$unwind:"$lines"},
+    {$group:{_id:"$lines.productId",sold:{$sum:"$lines.quantity"}}},
+    {$sort:{sold:-1}},{$limit:16}
+   ]);
+   actualBestIds=sold.map(x=>String(x._id));
+   const missing=actualBestIds.filter(id=>!lookup.has(id));
+   if(missing.length){
+    const found=await Product.find({active:true,_id:{$in:missing}}).select("name slug brand category origin imageUrls size variantLabel pricePaisa onHand reserved").lean<any[]>();
+    found.forEach(p=>lookup.set(String(p._id),format(p)));
    }
-   products=data.map((p:any)=>({
-    id:String(p._id),name:p.name,slug:p.slug,brand:p.brand||"",
-    category:p.category,origin:p.origin,image:p.imageUrls?.[0]||"",
-    size:p.size||p.variantLabel||"",pricePaisa:p.pricePaisa,
-    available:Math.max(0,p.onHand-p.reserved)
-   }));
-  }catch{configured=false;}
+  }
+  shelves=sections.filter(s=>s.enabled).sort((a,b)=>a.position-b.position).map(s=>{
+   const ids=s.productIds?.length?s.productIds:
+    s.key==="new_arrivals"?products.map(p=>p.id):
+    s.key==="best_sellers"?actualBestIds:[];
+   return {key:s.key,title:s.title,subtitle:s.subtitle,products:ids.map(id=>lookup.get(id))
+    .filter((p):p is FeaturedProduct=>!!p).slice(0,s.maxItems)};
+  }).filter(s=>s.products.length>0);
+ }catch{
+  configured=false;products=[];shelves=[];
  }
+ const active=publicBlocks(blocks);
+ const slides=active.filter(x=>x.kind==="hero");
+ const categories=active.filter(x=>x.kind==="category");
+ const promos=active.filter(x=>x.kind==="promotion");
+ const editorial=active.filter(x=>x.kind==="editorial");
+ const announcement=active.find(x=>x.kind==="announcement");
  const canOrder=configured&&checkoutEnabled(process.env);
  return <>
-  <section className="luxHero" aria-label="ANUSMITA fashion jewellery beauty">
-   <div className="luxHeroText">
-    <div className="luxHeroNumber"><span className="luxRule"/> ANUSMITA / THE CURATED EDIT</div>
-    <p className="luxMicroHeading">Fashion <span>✦</span> Jewellery <span>✦</span> Beauty</p>
-    <h1>A little<br/><em>luxury,</em><br/>every day.</h1>
-    <p className="luxHeroDesc">Find your kind of beautiful. A considered world of skincare, jewellery, fashion and the little things that make it yours.</p>
-    <div className="luxHeroActions">
-     <a href="#collections" className="luxPrimaryButton">Explore the collection <ArrowUpRight size={17} strokeWidth={1.7}/></a>
-     <a href="#our-story" className="luxUnderLink">Our story <ArrowRight size={17}/></a>
-    </div>
-    <div className="luxHeroFoot"><span>Thoughtfully selected for Bangladesh</span><span className="luxHeroFootLine"/></div>
-   </div>
-   <div className="luxHeroArt">
-    <div className="luxArtBackground"/>
-    <img className="luxHeroImage" src="https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1400&q=88"
-     alt="Editorial arrangement of premium skincare products" fetchPriority="high"/>
-    <div className="luxHeroArtShade"/>
-    <div className="luxArtVertical">ANUSMITA — EST. FOR EVERYDAY BEAUTY</div>
-    <div className="luxArtLabel"><span className="luxArtLabelTop">THE ANUSMITA EDIT</span><strong>Beautifully<br/>considered.</strong><span>01 — 04</span></div>
-   </div>
-  </section>
-
-  <div className="luxMarquee" aria-label="Our collections">
-   <span>Beauty rituals</span><i>✦</i><span>Everyday jewellery</span><i>✦</i>
-   <span>Style discoveries</span><i>✦</i><span>Thoughtful details</span>
+  <HomepageCarousel slides={slides}/>
+  <div className="anTrustBar" aria-label="Shopping experience">
+   <div><Sparkles size={25}/><span><strong>Thoughtfully curated</strong><small>An edited world of finds</small></span></div>
+   <div><Package size={25}/><span><strong>Beauty to lifestyle</strong><small>Everything in one place</small></span></div>
+   <div><Heart size={25}/><span><strong>Find what you love</strong><small>Discover your everyday style</small></span></div>
+   <div><Truck size={25}/><span><strong>Made for Bangladesh</strong><small>Local shopping, global inspiration</small></span></div>
   </div>
-
-  <section className="luxCollectionSection" id="collections">
-   <div className="luxContainer">
-    <div className="luxSectionIntro">
-     <div><p className="luxKicker">DISCOVER ANUSMITA <span> / 01</span></p>
-      <h2>Find your <em>beautiful.</em></h2></div>
-     <p>Explore the worlds that make ANUSMITA yours. Every collection has its own story.</p>
-    </div>
-    <div className="luxCategoryGrid">
-     {categories.map(category=><a className="luxCategory" key={category.slug} href={"/?category="+encodeURIComponent(category.slug)+"#shop"}
-       aria-label={"Explore "+category.title}>
-       <div className="luxCategoryVisual"><img src={category.image} alt={category.alt} loading="lazy"/>
-        <div className="luxCategoryOverlay"/><span className="luxCategoryArrow"><ArrowUpRight size={21} strokeWidth={1.5}/></span>
-       </div>
-       <div className="luxCategoryMeta"><small>{category.label}</small><h3>{category.title}</h3></div>
-      </a>)}
+  <section className="anCategories" id="collections">
+   <div className="anWide">
+    <div className="anSectionTitle"><div><p className="anOverline">DISCOVER YOUR NEXT FAVOURITE <span>✦</span></p>
+     <h2>Shop by category</h2></div><a href="#shop" className="anTextLink">Explore collections <ArrowUpRight size={17}/></a></div>
+    <div className="anCategoryGrid">
+     {categories.map(c=><Link href={c.href} className="anCategoryCard" key={c.id}>
+      <div className="anCategoryImage">{c.imageUrl?<img src={c.imageUrl} alt={c.title} loading="lazy"/>:<div className="anCategoryBlank">ANUSMITA</div>}</div>
+      <div className="anCategoryCaption"><strong>{c.title}</strong><span>{c.cta||"Explore"} <ArrowRight size={14}/></span></div>
+     </Link>)}
     </div>
    </div>
   </section>
-
-  <section className="luxEditorialBanner" aria-label="The ANUSMITA edit">
-   <div className="luxContainer luxBannerInner">
-    <span className="luxBannerSymbol"><Sparkles size={35} strokeWidth={1}/></span>
-    <div><p>AN EDIT OF LITTLE LUXURIES</p><h2>Style is personal.<br/><em>Make it yours.</em></h2></div>
-    <a href="#shop" className="luxBannerLink">Discover what's next <ArrowUpRight size={18}/></a>
-   </div>
-  </section>
-
-  <section className="luxShopSection" id="shop">
-   <div className="luxContainer">
-    <div className="luxSectionIntro luxShopHeading">
-     <div><p className="luxKicker">THE CURATED SELECTION <span> / 02</span></p>
-      <h2>The latest <em>edit.</em></h2></div>
-     <p>Browse the pieces available in the ANUSMITA collection. Prices shown in BDT.</p>
+  {promos.map(p=><section key={p.id} className="anPromoWrap">
+   <div className="anWide"><div className="anPromo" style={p.imageUrl?{backgroundImage:"linear-gradient(90deg,rgba(249,229,229,.98),rgba(249,229,229,.94) 42%,rgba(249,229,229,.16) 100%),url('"+p.imageUrl+"')"}:undefined}>
+    <div className="anPromoCopy"><p className="anOverline">{p.label||"ANUSMITA EDIT"}</p><h2>{p.title}</h2><p>{p.subtitle}</p>
+     <a href={p.href} className="anAction">{p.cta||"Explore offer"} <ArrowUpRight size={16}/></a></div>
+    {p.endsAt&&<HomepageCountdown endsAt={p.endsAt}/>}
+   </div></div>
+  </section>)}
+  <div className="anWide">
+   {shelves.length>0&&<HomepageFeatured shelves={shelves}/>}
+  </div>
+  <section id="shop" className="anShop">
+   <div className="anWide">
+    <div className="anSectionTitle"><div><p className="anOverline">THE ANUSMITA EDIT <span>✦</span></p>
+      <h2>Explore the collection</h2><p>Find your favourites across beauty, fashion, jewellery and more.</p></div>
+     <span className="anShopContext">PRICES IN BANGLADESHI TAKA</span>
     </div>
     <Storefront products={products} canOrder={canOrder}/>
-    {!canOrder&&<p className="luxPreviewNote" role="status">The boutique is preparing for launch. Online checkout is currently closed.</p>}
+    {!canOrder&&<p className="anLaunchNotice"><ShieldCheck size={16}/> ANUSMITA is preparing for launch. Online checkout is not accepting orders yet.</p>}
    </div>
   </section>
-
-  <section className="luxStory" id="our-story">
-   <div className="luxStoryVisual">
-    <div className="luxStorySeal"><span>ANUSMITA</span><span>FASHION · JEWELLERY · BEAUTY</span></div>
-    <img src={cloud+"/v1792790882/anusmita/drive/korea/drive-1qrMzxSBkX2BAxACC8BDlBxZOOU1WZcEq.jpg"}
-       alt="Beauty editorial from the ANUSMITA image collection" loading="lazy"/>
+  {editorial.map((item,i)=><section className={"anEditorial"+(i%2?" reverse":"")} key={item.id} id={i===0?"our-story":undefined}>
+   <div className="anEditorialImage">{item.imageUrl?<img src={item.imageUrl} alt={item.title} loading="lazy"/>:<span>ANUSMITA</span>}</div>
+   <div className="anEditorialCopy"><p className="anOverline">{item.label||"THE ANUSMITA WORLD"}</p>
+    <h2>{item.title}</h2><p>{item.subtitle}</p><a href={item.href} className="anAction">{item.cta||"Discover more"} <ArrowUpRight size={17}/></a>
    </div>
-   <div className="luxStoryCopy">
-    <p className="luxKicker">OUR POINT OF VIEW <span> / 03</span></p>
-    <h2>More than<br/>a shop.<br/><em>A feeling.</em></h2>
-    <p>ANUSMITA is built around the joy of discovering something special. From beauty rituals inspired by Korea and Japan to jewellery, fashion and everyday accessories, we bring together a considered edit for Bangladesh.</p>
-    <p>Good taste isn't about having more. It's about finding what feels like you.</p>
-    <a className="luxUnderLink" href="#collections">Explore our world <ArrowUpRight size={18}/></a>
-   </div>
-  </section>
-
-  <section className="luxClosing" aria-label="ANUSMITA brand sign off">
-   <p>Thoughtfully selected. Beautifully yours.</p>
-   <div>ANUSMITA <span>✦</span></div>
-  </section>
+  </section>)}
+  {!editorial.length&&<section className="anSimpleStory" id="our-story"><div className="anWide"><h2>The ANUSMITA world</h2><p>Fashion, jewellery, beauty and everyday discoveries thoughtfully brought together for Bangladesh.</p></div></section>}
+  <div className="anPromise"><span>✦</span><h2>{announcement?.title||"Beautiful discoveries. Thoughtfully yours."}</h2><p>ANUSMITA — Fashion · Jewellery · Beauty · Lifestyle</p></div>
  </>;
 }
