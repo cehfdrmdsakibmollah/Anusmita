@@ -6,7 +6,7 @@ import {Product,HomePage,Order} from "@/lib/models";
 import {checkoutEnabled} from "@/lib/launch-config";
 import {homeStarterBlocks,homeStarterSections,publicBlocks,type HomeBlock,type HomeSection} from "@/lib/home-content";
 import HomepageCarousel from "@/components/homepage-carousel";
-import HomepageCountdown from "@/components/homepage-countdown";
+import HomepagePromotion from "@/components/homepage-promotion";
 import HomepageFeatured,{type FeaturedShelf,type FeaturedProduct} from "@/components/homepage-featured";
 import Storefront from "@/components/storefront";
 export const dynamic="force-dynamic";
@@ -91,13 +91,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
     </div>
    </div>
   </section>
-  {promos.map(p=><section key={p.id} className="anPromoWrap">
-   <div className="anWide"><div className="anPromo" style={p.imageUrl?{backgroundImage:"linear-gradient(90deg,rgba(249,229,229,.98),rgba(249,229,229,.94) 42%,rgba(249,229,229,.16) 100%),url('"+p.imageUrl+"')"}:undefined}>
-    <div className="anPromoCopy"><p className="anOverline">{p.label||"ANUSMITA EDIT"}</p><h2>{p.title}</h2><p>{p.subtitle}</p>
-     <a href={p.href} className="anAction">{p.cta||"Explore offer"} <ArrowUpRight size={16}/></a></div>
-    {p.endsAt&&<HomepageCountdown endsAt={p.endsAt}/>}
-   </div></div>
-  </section>)}
+  {promos.map(p=><HomepagePromotion key={p.id} promo={p}/>)}
   <div className="anWide">
    {shelves.length>0&&<HomepageFeatured shelves={shelves}/>}
   </div>
