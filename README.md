@@ -145,3 +145,13 @@ The user supplied https://www.hrwholesalecosmetics.com/ as a **possible** Korean
 - Product URLs can reference only the exact HR Wholesale HTTPS domain. Per-file supplier references are unique; when missing, a deterministic **NAME-...** reference based on printed name and size is generated. Repeated references upsert review rows instead of producing duplicate storefront listings.
 - Image/media licensing, seller terms, brand/origin verification, minimum order quantity, batch and expiry are manual sign-off steps before sourcing. No automated checkout, bot login or unauthorized bulk scraping occurs.
 - The connected ANUSMITA Atlas cluster still requires private site credentials and live end-to-end testing. No real supplier catalog was modified during code authoring.
+
+
+## ANUSMITA premium homepage and visual merchandising — editable from admin
+- Live storefront includes a two-slide accessible carousel, eight curated shopping categories, an original editorial layout, mobile-friendly navigation, real product rails, collection filters, and optional scheduled promotional countdowns.
+- Admin → Homepage Studio (owner/admin only) is a database-backed CMS for creating, editing, publishing/unpublishing, reordering and deleting hero slides, categories, editorial banners, announcements and promotional offers. Featured sections (New Arrivals, Best Sellers, Trending, Popular, Recommended) have editable title, description, position, visibility and assigned product SKUs.
+- No invented catalogue products, prices, customer reviews, discount percentages, shipping promotions or fake sales counters. An offer with a valid expiry disappears after its end time. New Arrivals are published products sorted by creation time. Best Sellers use delivered non-test order quantities when not curated; all other labelled sections need manually selected published product SKUs.
+- Image URLs require HTTPS Cloudinary under oseohmxd or Unsplash; use approved/licensed actual brand photography for customer-facing advertisements. Starter editorial imagery is for layout only; not verified ANUSMITA inventory. Replace in Homepage Studio when authorized.
+- Product, inventory, payments and supplier ledgers cannot be mutated through homepage CMS. Changes require an authenticated owner/admin and are audit logged. Versioned writes prevent accidental lost edits.
+- IMPORTANT: MONGODB_URI and an initial owner must be configured before the Homepage Studio can persist changes in live Netlify. Before then the public homepage uses design fallback assets and an honest prelaunch empty-catalogue state.
+- Netlify auto deploys main; keep STORE_MODE=catalog until checkout, payment, Atlas IP access and real DB integration tests pass.

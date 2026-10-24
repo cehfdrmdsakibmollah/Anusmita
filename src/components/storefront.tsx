@@ -2,10 +2,27 @@
 "use client";
 import { useEffect,useMemo,useRef,useState } from "react";
 import Link from "next/link";
+import {ArrowRight,ArrowUpRight,Search,ShoppingBag,SlidersHorizontal} from "lucide-react";
 type Product={id:string;name:string;slug:string;brand:string;category:string;origin:string;image:string;size:string;pricePaisa:number;available:number};
 type CartLine={id:string;quantity:number};
 type Customer={name:string;phone:string;district:string;area:string;address:string;notes:string};
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
+const mainCategories=["All","Skincare","Beauty","Fashion","Watches","Mobile Accessories","Bed Sheets","Perfumes","Bags","Jewellery","Accessories"];
+function matchCategory(actual:string,selected:string){
+ if(selected==="All")return true;
+ const normalized=actual.toLowerCase(),needle=selected.toLowerCase();
+ if(needle==="skincare")return /skin|cleanser|serum|sunscreen|toner|cream/.test(normalized);
+ if(needle==="beauty")return /beauty|cosmetic|makeup|skin|hair/.test(normalized);
+ if(needle==="watches")return /watch|timepiece/.test(normalized);
+ if(needle==="mobile accessories")return /mobile|phone|tech|electronics|earbud/.test(normalized);
+ if(needle==="bed sheets")return /bed|home|linen|sheet/.test(normalized);
+ if(needle==="perfumes")return /perfume|fragrance|scent/.test(normalized);
+ if(needle==="bags")return /bag|purse|handbag/.test(normalized);
+ if(needle==="jewellery")return /jewel|jewelr|necklace|ring|bracelet|earring/.test(normalized);
+ if(needle==="fashion")return /fashion|cloth|apparel|dress|wear/.test(normalized);
+ if(needle==="accessories")return /accessor|bag|watch/.test(normalized);
+ return normalized===needle;
+}
 export default function Storefront({products,canOrder}:{products:Product[];canOrder:boolean}){
  const [search,setSearch]=useState(""),[category,setCategory]=useState("All"),[cart,setCart]=useState<CartLine[]>([]),[cartOpen,setCartOpen]=useState(false);
  const [remoteProducts,setRemoteProducts]=useState<Product[]>([]),[cartProducts,setCartProducts]=useState<Product[]>([]),[remotePage,setRemotePage]=useState(1),[remotePages,setRemotePages]=useState(1),[searching,setSearching]=useState(false);
@@ -13,9 +30,9 @@ export default function Storefront({products,canOrder}:{products:Product[];canOr
  const [payment,setPayment]=useState("cod"),[deposit,setDeposit]=useState("0"),[submitting,setSubmitting]=useState(false);
  const [error,setError]=useState(""),[result,setResult]=useState<{orderNumber:string;totalPaisa:number}|null>(null);
  const keyRef=useRef<string|null>(null);
- useEffect(()=>{if(new URLSearchParams(window.location.search).get("item"))setCategory("All");try{const value=JSON.parse(localStorage.getItem("anusmita-cart-v1")||"[]");if(Array.isArray(value))setCart(value.filter((x:any)=>typeof x.id==="string"&&Number.isInteger(x.quantity)&&x.quantity>0));}catch{}setHydrated(true);},[]);
+ useEffect(()=>{const params=new URLSearchParams(window.location.search);const requested=params.get("category");if(requested&&mainCategories.some(x=>x.toLowerCase()===requested.toLowerCase()))setCategory(mainCategories.find(x=>x.toLowerCase()===requested.toLowerCase())||"All");else if(params.get("item"))setCategory("All");try{const value=JSON.parse(localStorage.getItem("anusmita-cart-v1")||"[]");if(Array.isArray(value))setCart(value.filter((x:any)=>typeof x.id==="string"&&Number.isInteger(x.quantity)&&x.quantity>0));}catch{}setHydrated(true);},[]);
  useEffect(()=>{if(hydrated)localStorage.setItem("anusmita-cart-v1",JSON.stringify(cart));},[cart,hydrated]);
- const categories=["All",...Array.from(new Set(products.map(p=>p.category)))];
+ const categories=[...mainCategories,...Array.from(new Set(products.map(p=>p.category))).filter(c=>!mainCategories.some(x=>x.toLowerCase()===c.toLowerCase()))];
  const catalog=useMemo(()=>{const seen=new Map<string,Product>();for(const p of [...products,...remoteProducts,...cartProducts])seen.set(p.id,p);return Array.from(seen.values());},[products,remoteProducts,cartProducts]);
  const mapProduct=(p:any):Product=>({id:String(p._id),name:p.name,slug:p.slug,brand:p.brand||"",category:p.category,origin:p.origin,image:p.imageUrls?.[0]||"",size:p.size||"",pricePaisa:p.pricePaisa,available:p.available});
  useEffect(()=>{
@@ -37,7 +54,7 @@ export default function Storefront({products,canOrder}:{products:Product[];canOr
    .then(data=>{if(!controller.signal.aborted)setCartProducts(data.products.map(mapProduct));}).catch(()=>{});
   return()=>controller.abort();
  },[cart,products]);
- const visible=(search.trim()?remoteProducts:products).filter(p=>(category==="All"||p.category===category)&&(p.name+" "+p.brand+" "+p.origin).toLowerCase().includes(search.toLowerCase()));
+ const visible=(search.trim()?remoteProducts:products).filter(p=>matchCategory(p.category,category)&&(p.name+" "+p.brand+" "+p.origin).toLowerCase().includes(search.toLowerCase()));
  const detailed=useMemo(()=>cart.map(l=>({item:catalog.find(p=>p.id===l.id),quantity:l.quantity})).filter((l):l is {item:Product;quantity:number}=>Boolean(l.item)),[cart,catalog]);
  const subtotal=detailed.reduce((sum,l)=>sum+l.item.pricePaisa*l.quantity,0);
  const shipping=customer.district.trim().toLowerCase()==="dhaka"?7000:12000;
@@ -57,12 +74,58 @@ export default function Storefront({products,canOrder}:{products:Product[];canOr
    setResult({orderNumber:data.orderNumber,totalPaisa:data.totalPaisa});setCart([]);keyRef.current=null;
   }catch(e){setError(e instanceof Error?e.message:"Checkout failed");}finally{setSubmitting(false);}
  }
- return <><div className="shopTools"><input type="search" value={search} onChange={e=>{setSearch(e.target.value);setRemotePage(1);setRemoteProducts([]);}} placeholder="Search products, brands, origins…" aria-label="Search products"/>
- <div className="filters"><select aria-label="Product category" value={category} onChange={e=>setCategory(e.target.value)}>{categories.map(c=><option key={c}>{c}</option>)}</select>{canOrder&&<button className="button small light" onClick={()=>setCartOpen(true)}>Bag ({cart.reduce((s,l)=>s+l.quantity,0)})</button>}</div></div>
- {visible.length===0?<div className="notice">{searching?"Searching the full catalogue…":products.length===0?"No items are published yet. The owner can add products in the admin portal.":"No matching items. Try another search or category."}</div>:
- <div className="productGrid">{visible.map(p=><article className="productCard" key={p.id}><div className="productImage">{p.image?<img alt={p.name} src={p.image} loading="lazy" referrerPolicy="no-referrer"/>:<div className="productPlaceholder" aria-hidden="true">✧</div>}</div><div className="productInfo">
- <div className="origin">{p.origin} {p.brand?"· "+p.brand:""}</div><h3><Link href={"/products/"+p.slug}>{p.name}</Link></h3><div className="muted">{p.size||p.category}</div><div className="price">{money(p.pricePaisa)}</div>
- <button disabled={!p.available||!canOrder} className="button small" onClick={()=>{add(p.id);setCartOpen(true);}}>{!canOrder?"Coming soon":p.available?"Add to Bag":"Out of Stock"}</button></div></article>)}</div>}
+
+ return <><div className="shopTools luxShopTools">
+  <div className="luxSearchBox"><Search size={19} strokeWidth={1.6} aria-hidden="true"/>
+   <input id="store-search" type="search" value={search} onChange={e=>{setSearch(e.target.value);setRemotePage(1);setRemoteProducts([]);}}
+    placeholder="What are you looking for?" aria-label="Search ANUSMITA products"/>
+  </div>
+  <div className="luxShopFilter"><SlidersHorizontal size={17} aria-hidden="true"/>
+   <select aria-label="Filter products by category" value={category} onChange={e=>setCategory(e.target.value)}>{categories.map(c=><option key={c}>{c}</option>)}</select>
+  </div>
+  {canOrder&&<button className="luxHeaderBag" type="button" onClick={()=>setCartOpen(true)}>
+   <ShoppingBag size={18}/><span>Bag ({cart.reduce((sum,line)=>sum+line.quantity,0)})</span>
+  </button>}
+ </div>
+ <div className="luxCategoryTabs" role="group" aria-label="Shop categories">
+  {mainCategories.map(c=><button key={c} type="button" className={category===c?"active":""}
+   aria-pressed={category===c} onClick={()=>setCategory(c)}>{c}</button>)}
+ </div>
+ {visible.length===0?(products.length===0&&!search.trim()?<div className="luxEmptyEdit">
+  <div className="luxEmptyCopy"><span className="luxKicker">A NEW CHAPTER IS COMING</span>
+   <h3>Something <em>lovely</em><br/>is on its way.</h3>
+   <p>Our online product selection is being prepared. Discover the ANUSMITA story and collections while we get everything ready.</p>
+   <a className="luxUnderLink" href="#collections">Explore the collections <ArrowUpRight size={18}/></a>
+   <span className="luxEmptyFine">Preview only · No orders are being taken</span>
+  </div>
+  <div className="luxEmptyVisual" aria-label="ANUSMITA editorial beauty gallery">
+   <img src="https://res.cloudinary.com/oseohmxd/image/upload/v1792790876/anusmita/drive/korea/drive-1VJkC6_mH_tZEM6qd62tmtrK19KibPi2m.jpg"
+    alt="ANUSMITA beauty collection editorial" loading="lazy"/>
+   <div className="luxEmptyStamp">THE ART OF<br/><i>DISCOVERY</i><small>ANUSMITA · BD</small></div>
+  </div>
+ </div>:<div className="luxNoResults" role="status">
+  {searching?<p>Searching the collection…</p>:<>
+   <h3>No matches in this edit.</h3>
+   <p>Try another category or search for a different name.</p>
+   <button className="luxUnderLink" type="button" onClick={()=>{setCategory("All");setSearch("");setRemotePage(1);}}>Clear filters <ArrowRight size={16}/></button>
+  </>}
+ </div>):
+ <div className="productGrid luxProductGrid">{visible.map(p=><article className="productCard luxProductCard" key={p.id}>
+  <Link className="productImage luxProductImage" href={"/products/"+p.slug} aria-label={"View "+p.name}>
+   {p.image?<img alt={p.name} src={p.image} loading="lazy" referrerPolicy="no-referrer"/>:<span className="luxProductFallback" aria-hidden="true">A.</span>}
+   <span className="luxProductExplore"><ArrowUpRight size={18}/></span>
+   {p.available<=0&&<span className="luxStockStatus">Currently unavailable</span>}
+  </Link>
+  <div className="productInfo luxProductInfo">
+   <div className="origin luxProductOrigin">{p.brand||p.origin}<span> / {p.category}</span></div>
+   <h3><Link href={"/products/"+p.slug}>{p.name}</Link></h3>
+   <div className="luxProductBottom">
+    <div><div className="muted">{p.size||p.origin}</div><div className="price">{money(p.pricePaisa)}</div></div>
+    {canOrder&&p.available>0?<button type="button" className="luxProductAdd" aria-label={"Add "+p.name+" to bag"} onClick={()=>{add(p.id);setCartOpen(true);}}>
+     <ShoppingBag size={19}/></button>:<Link className="luxProductAdd" href={"/products/"+p.slug} aria-label={"View details for "+p.name}><ArrowUpRight size={18}/></Link>}
+   </div>
+  </div>
+ </article>)}</div>}
  {search.trim() && remotePage<remotePages && <div style={{textAlign:"center",padding:"28px"}}><button className="button light" disabled={searching} onClick={()=>setRemotePage(p=>p+1)}>{searching?"Loading…":"Load more search results"}</button></div>}
  {canOrder&&cart.length>0&&<button className="cartToggle" onClick={()=>setCartOpen(true)} aria-label="Open shopping bag">Bag · {money(subtotal)}</button>}
  {canOrder&&cartOpen&&<><div className="scrim" onClick={()=>setCartOpen(false)} aria-hidden="true"/><aside className="cartPanel" aria-label="Shopping bag and checkout"><div className="cartTop"><h2>Your bag</h2><button className="iconButton" onClick={()=>setCartOpen(false)} aria-label="Close">✕</button></div>
