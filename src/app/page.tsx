@@ -1,5 +1,4 @@
 
-import Link from "next/link";
 import {ArrowRight,ArrowUpRight,Heart,Package,ShieldCheck,Sparkles,Truck} from "lucide-react";
 import {db} from "@/lib/db";
 import {Product,HomePage,Order} from "@/lib/models";
@@ -95,6 +94,23 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
   <div className="anWide">
    {shelves.length>0&&<HomepageFeatured shelves={shelves}/>}
   </div>
+
+  {!products.length&&categories.length>0&&<section className="anPreviewSelection" aria-label="ANUSMITA product collection preview">
+   <div className="anWide"><div className="anSectionTitle"><div>
+    <p className="anOverline">A PREVIEW OF WHAT'S COMING <span>✦</span></p>
+    <h2>Discover the ANUSMITA edit</h2>
+    <p>Our product catalogue is being prepared. Explore the collections below.</p></div>
+    <a href="#collections" className="anTextLink">View categories <ArrowUpRight size={16}/></a>
+   </div>
+   <div className="anPreviewGrid">{categories.map(c=><a className="anPreviewItem" key={c.id} href={c.href}>
+    <div className="anPreviewPhoto">{c.imageUrl&&<img src={c.imageUrl} alt="" loading="lazy"/>}
+      <span className="anPreviewSoon">COMING SOON</span></div>
+    <div className="anPreviewDetails"><span>ANUSMITA</span><h3>{c.title}</h3>
+     <p>{c.subtitle}</p><small>Explore collection <ArrowUpRight size={13}/></small>
+    </div>
+   </a>)}</div>
+   </div>
+  </section>}
   <section id="shop" className="anShop">
    <div className="anWide">
     <div className="anSectionTitle"><div><p className="anOverline">THE ANUSMITA EDIT <span>✦</span></p>
@@ -105,13 +121,23 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
     {!canOrder&&<p className="anLaunchNotice"><ShieldCheck size={16}/> ANUSMITA is preparing for launch. Online checkout is not accepting orders yet.</p>}
    </div>
   </section>
-  {editorial.map((item,i)=><section className={"anEditorial"+(i%2?" reverse":"")} key={item.id} id={i===0?"our-story":undefined}>
-   <div className="anEditorialImage">{item.imageUrl?<img src={item.imageUrl} alt={item.title} loading="lazy"/>:<span>ANUSMITA</span>}</div>
-   <div className="anEditorialCopy"><p className="anOverline">{item.label||"THE ANUSMITA WORLD"}</p>
-    <h2>{item.title}</h2><p>{item.subtitle}</p><a href={item.href} className="anAction">{item.cta||"Discover more"} <ArrowUpRight size={17}/></a>
+
+  {editorial.length>0?<section className="anCurated">
+   <div className="anWide">
+    <div className="anSectionTitle anCuratedHeading"><div><p className="anOverline">THE ANUSMITA WORLD <span>✦</span></p>
+     <h2>Curated Collections</h2></div><a href="#collections" className="anTextLink">View All Collections <ArrowUpRight size={16}/></a></div>
+    <div className="anCuratedGrid">{editorial.map(item=><a key={item.id} href={item.href}
+       className="anCuratedCard">
+      {item.imageUrl?<img src={item.imageUrl} alt="" loading="lazy"/>:<div className="anCuratedBlank">ANUSMITA</div>}
+      <span className="anCuratedFade"/>
+      <span className="anCuratedText"><strong>{item.title}</strong>
+       <small>{item.subtitle}</small><span>{item.cta||"Explore"} <ArrowUpRight size={14}/></span>
+      </span>
+     </a>)}</div>
    </div>
-  </section>)}
-  {!editorial.length&&<section className="anSimpleStory" id="our-story"><div className="anWide"><h2>The ANUSMITA world</h2><p>Fashion, jewellery, beauty and everyday discoveries thoughtfully brought together for Bangladesh.</p></div></section>}
+  </section>:<section className="anSimpleStory" id="our-story"><div className="anWide">
+   <h2>The ANUSMITA world</h2><p>Fashion, jewellery, beauty and everyday discoveries thoughtfully brought together for Bangladesh.</p>
+  </div></section>}
   <div className="anPromise"><span>✦</span><h2>{announcement?.title||"Beautiful discoveries. Thoughtfully yours."}</h2><p>ANUSMITA — Fashion · Jewellery · Beauty · Lifestyle</p></div>
  </>;
 }
