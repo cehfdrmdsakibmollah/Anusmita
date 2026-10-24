@@ -155,3 +155,12 @@ The user supplied https://www.hrwholesalecosmetics.com/ as a **possible** Korean
 - Product, inventory, payments and supplier ledgers cannot be mutated through homepage CMS. Changes require an authenticated owner/admin and are audit logged. Versioned writes prevent accidental lost edits.
 - IMPORTANT: MONGODB_URI and an initial owner must be configured before the Homepage Studio can persist changes in live Netlify. Before then the public homepage uses design fallback assets and an honest prelaunch empty-catalogue state.
 - Netlify auto deploys main; keep STORE_MODE=catalog until checkout, payment, Atlas IP access and real DB integration tests pass.
+
+## Product Details Page — premium ANUSMITA reference design
+- /products/[slug] has an interactive image gallery with vertical thumbnails, zoom/lightbox, previous/next controls and mobile navigation. The buying panel shows SKU price, description, quantity, local wishlist and a safe bag action only in live mode.
+- Perfume size selector: **2ml Spray, 5ml, 10ml, 15ml, 50ml, 100ml**. Only published SKUs have linked prices and selectable cards; missing variants explicitly say Not listed. No prices or stock are extrapolated.
+- For the same perfume, create one Product SKU per size. In Admin → Products → Edit assign the same lowercase dash-separated variantGroup (e.g. gucci-flora-gardenia) to each, with matching brand and category. Set each product's size, price, images and stock separately.
+- Optional verified fields: ingredients, usageInstructions, topNotes, heartNotes and baseNotes. These render only when populated; no generated/fake fragrance performance claims.
+- Related products are only genuine published database Products in the same category, excluding linked size variations.
+- /products/design-preview provides a labeled noindex page using existing ANUSMITA editorial artwork while live product database is unconfigured. It is not a sale offer, product SKU or real price.
+- Existing catalog-mode checkout is disabled and prelaunch noindex remains. Production MongoDB and first owner are still not configured; activate those privately before live testing.

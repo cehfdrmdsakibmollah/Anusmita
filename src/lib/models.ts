@@ -16,6 +16,9 @@ const ProductSchema = new Schema({
  category:{type:String,required:true},origin:{type:String,enum:["Bangladesh","China","Japan","Korea","Other"],default:"Other"},
  description:{type:String,default:""}, imageUrls:{type:[String],default:[]},
  variantLabel:{type:String,default:"Standard"},size:{type:String,default:""},
+ variantGroup:{type:String,default:"",trim:true,lowercase:true},
+ ingredients:{type:String,default:""},usageInstructions:{type:String,default:""},
+ topNotes:{type:String,default:""},heartNotes:{type:String,default:""},baseNotes:{type:String,default:""},
  pricePaisa:{type:Number,required:true,min:0},costPaisa:{type:Number,required:true,min:0},
  onHand:{type:Number,default:0,min:0},reserved:{type:Number,default:0,min:0},
  reorderLevel:{type:Number,default:5,min:0},active:{type:Boolean,default:false},
@@ -23,6 +26,7 @@ const ProductSchema = new Schema({
  supplierId:{type:Schema.Types.ObjectId,ref:"Supplier",default:null}
 },opts);
 ProductSchema.index({active:1,category:1,createdAt:-1});
+ProductSchema.index({variantGroup:1,active:1});
 ProductSchema.index({name:"text",brand:"text",category:"text"});
 
 const OrderLineSchema = new Schema({
