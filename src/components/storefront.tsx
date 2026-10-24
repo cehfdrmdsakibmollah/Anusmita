@@ -7,11 +7,17 @@ type Product={id:string;name:string;slug:string;brand:string;category:string;ori
 type CartLine={id:string;quantity:number};
 type Customer={name:string;phone:string;district:string;area:string;address:string;notes:string};
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
-const mainCategories=["All","Beauty","Jewellery","Fashion","Accessories"];
+const mainCategories=["All","Skincare","Beauty","Fashion","Watches","Mobile Accessories","Bed Sheets","Perfumes","Bags","Jewellery","Accessories"];
 function matchCategory(actual:string,selected:string){
  if(selected==="All")return true;
  const normalized=actual.toLowerCase(),needle=selected.toLowerCase();
- if(needle==="beauty")return /beauty|skin|cosmetic|makeup|fragrance|perfume|hair/.test(normalized);
+ if(needle==="skincare")return /skin|cleanser|serum|sunscreen|toner|cream/.test(normalized);
+ if(needle==="beauty")return /beauty|cosmetic|makeup|skin|hair/.test(normalized);
+ if(needle==="watches")return /watch|timepiece/.test(normalized);
+ if(needle==="mobile accessories")return /mobile|phone|tech|electronics|earbud/.test(normalized);
+ if(needle==="bed sheets")return /bed|home|linen|sheet/.test(normalized);
+ if(needle==="perfumes")return /perfume|fragrance|scent/.test(normalized);
+ if(needle==="bags")return /bag|purse|handbag/.test(normalized);
  if(needle==="jewellery")return /jewel|jewelr|necklace|ring|bracelet|earring/.test(normalized);
  if(needle==="fashion")return /fashion|cloth|apparel|dress|wear/.test(normalized);
  if(needle==="accessories")return /accessor|bag|watch/.test(normalized);

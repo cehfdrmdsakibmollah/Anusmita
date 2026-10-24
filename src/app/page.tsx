@@ -10,10 +10,10 @@ import HomepageCountdown from "@/components/homepage-countdown";
 import HomepageFeatured,{type FeaturedShelf,type FeaturedProduct} from "@/components/homepage-featured";
 import Storefront from "@/components/storefront";
 export const dynamic="force-dynamic";
-const format=(p:any):FeaturedProduct=>({id:String(p._id),name:p.name,slug:p.slug,brand:p.brand||"",
+type ShopProduct=FeaturedProduct&{origin:string};
+const format=(p:any):ShopProduct=>({id:String(p._id),name:p.name,slug:p.slug,brand:p.brand||"",
  category:p.category,origin:p.origin||"Other",image:p.imageUrls?.[0]||"",size:p.size||p.variantLabel||"",
  pricePaisa:p.pricePaisa,available:Math.max(0,(p.onHand||0)-(p.reserved||0))});
-type ShopProduct=FeaturedProduct&{origin:string};
 export default async function Home({searchParams}:{searchParams:Promise<{item?:string}>}){
  const queryItem=(await searchParams).item||"";
  let configured=false,products:ShopProduct[]=[],shelves:FeaturedShelf[]=[];
