@@ -4,6 +4,7 @@ import {useCallback,useEffect,useState} from "react";
 import BulkCatalogImport from "@/components/bulk-catalog-import";
 import ProductManager from "@/components/product-manager";
 import DriveMediaLibrary from "@/components/drive-media-library";
+import R2Media from "@/components/r2-media";
 import CloudinaryMedia from "@/components/cloudinary-media";
 import LaunchReadiness from "@/components/launch-readiness";
 import PurchaseManager from "@/components/purchase-manager";
@@ -13,7 +14,7 @@ import HomepageManager from "@/components/homepage-manager";
 type Overview={orderedPaisa:number;confirmedPaisa:number;deliveredSalesPaisa:number;recordedCollectionsPaisa:number;outstandingPaisa:number;supplierPayablePaisa:number;supplierPaidPaisa:number;cogsPaisa:number;recordedExpensePaisa:number;estimatedGrossProfitPaisa:number;estimatedOperatingProfitPaisa:number;unreconciled:boolean;placedOrders:number;deliveredOrders:number;lowStockSkus:number;reservedUnits:number;inventoryCostPaisa:number};
 type Order={_id:string;orderNumber:string;orderStatus:string;paymentStatus:string;collectedPaisa:number;totalPaisa:number;customer:{name:string;phone:string};createdAt:string};
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
-const tabs=["Overview","Homepage Studio","Orders","Products","Inventory","Payments","Suppliers","Purchasing","Bulk Import","Canva Catalogue","HR Wholesale","Drive Images","Cloudinary","Launch Readiness"];
+const tabs=["Overview","Homepage Studio","Orders","Products","Inventory","Payments","Suppliers","Purchasing","Bulk Import","Canva Catalogue","HR Wholesale","Drive Images","Cloudinary","R2 Images","Launch Readiness"];
 export default function AdminConsole({role}:{role:string}){
  const [tab,setTab]=useState("Overview"),[overview,setOverview]=useState<Overview|null>(null),[orders,setOrders]=useState<Order[]>([]),[notice,setNotice]=useState(""),[pending,setPending]=useState(false);
  const load=useCallback(async()=>{
@@ -83,6 +84,7 @@ export default function AdminConsole({role}:{role:string}){
  <p><label><input type="checkbox" name="verified" required/> I independently confirmed this payment with the provider or actual cash receipt</label></p>
  <button className="button" disabled={pending}>Record verified funds</button></form>:<p className="notice">Finance permission required.</p>}</div>}
  {tab==="Launch Readiness"&&(["owner","admin"].includes(role)?<LaunchReadiness/>:<p className="notice">Owner or admin access required.</p>)}
+ {tab==="R2 Images"&&(canStock?<R2Media/>:<p className="notice">Inventory access required.</p>)}
  {tab==="Cloudinary"&&(canStock?<CloudinaryMedia/>:<p className="notice">Inventory access required.</p>)}
  {tab==="Drive Images"&&(canStock?<DriveMediaLibrary/>:<p className="notice">Inventory access required.</p>)}
  {tab==="HR Wholesale"&&(["owner","admin","inventory","purchasing"].includes(role)?<HrWholesaleSource role={role}/>:<p className="notice">Purchasing or inventory permission required.</p>)}
