@@ -526,3 +526,295 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
  .anCuratedText>small{font-size:9px}
  .anCuratedText>span{margin-top:9px;padding:6px}
 }
+
+
+/* ===========================================================================
+   ANUSMITA / Smooth boutique interactions: Shop by Category + Discover Edit.
+   No hardcoded products or copy: works with homepage CMS content.
+   All transitions use transform / opacity / filter, with layout unchanged.
+   =========================================================================== */
+:root{
+ --an-smooth-ease:cubic-bezier(.22,1,.36,1);
+ --an-soft-shadow:0 18px 38px rgba(155,77,101,.17);
+}
+
+/* Heading micro-detail: graceful editorial accent with no shifting text */
+.anCategories .anSectionTitle h2,
+.anPreviewSelection .anSectionTitle h2,
+.anCurated .anSectionTitle h2{
+ position:relative;
+ width:fit-content;
+ padding-bottom:5px;
+}
+.anCategories .anSectionTitle h2::after,
+.anPreviewSelection .anSectionTitle h2::after,
+.anCurated .anSectionTitle h2::after{
+ content:"";
+ position:absolute;
+ height:2px;
+ left:0;
+ bottom:0;
+ width:35px;
+ background:linear-gradient(90deg,#c94e72,#e9b7a6);
+ border-radius:3px;
+ transform-origin:left center;
+ transform:scaleX(.75);
+ opacity:.7;
+ transition:transform .65s var(--an-smooth-ease),opacity .5s ease;
+}
+.anCategories .anSectionTitle:hover h2::after,
+.anPreviewSelection .anSectionTitle:hover h2::after,
+.anCurated .anSectionTitle:hover h2::after{
+ transform:scaleX(1.6);
+ opacity:1;
+}
+
+/* Every category gets the same deliberately quiet premium treatment. */
+.anCategoryCard{
+ position:relative;
+ isolation:isolate;
+ will-change:auto;
+ overflow:hidden;
+ transform:translate3d(0,0,0);
+ transition:
+  transform .6s var(--an-smooth-ease),
+  box-shadow .6s var(--an-smooth-ease),
+  border-color .4s ease,
+  background-color .4s ease;
+}
+.anCategoryImage{position:relative;isolation:isolate}
+.anCategoryImage::after{
+ content:"";
+ position:absolute;
+ inset:0;
+ pointer-events:none;
+ background:linear-gradient(130deg,transparent 20%,rgba(255,248,250,.24) 49%,transparent 76%);
+ transform:translate3d(-130%,0,0);
+ opacity:0;
+ transition:transform .85s var(--an-smooth-ease),opacity .35s ease;
+}
+.anCategoryImage img{
+ transition:
+  transform .85s var(--an-smooth-ease),
+  filter .75s ease;
+ transform:scale(1);
+ backface-visibility:hidden;
+}
+.anCategoryCaption{
+ transition:background-color .45s ease;
+}
+.anCategoryCaption strong{
+ transition:color .35s ease;
+}
+.anCategoryCaption span{
+ display:inline-flex;
+ align-items:center;
+ gap:5px;
+ transition:color .3s ease,letter-spacing .4s ease;
+}
+.anCategoryCaption span svg{
+ transition:transform .55s var(--an-smooth-ease);
+}
+.anCategoryCard:focus-visible,
+.anPreviewItem:focus-visible,
+.anCuratedCard:focus-visible{
+ outline:2px solid #c84f73;
+ outline-offset:3px;
+}
+@media (hover:hover) and (pointer:fine){
+ .anCategoryCard:hover,.anCategoryCard:focus-visible{
+  transform:translate3d(0,-8px,0);
+  background:#fff;
+  box-shadow:var(--an-soft-shadow);
+  border-color:#e9b9c9;
+ }
+ .anCategoryCard:hover .anCategoryImage img,
+ .anCategoryCard:focus-visible .anCategoryImage img{
+  transform:scale(1.09);
+  filter:saturate(1.065) contrast(1.025);
+ }
+ .anCategoryCard:hover .anCategoryImage::after,
+ .anCategoryCard:focus-visible .anCategoryImage::after{
+  opacity:1;
+  transform:translate3d(130%,0,0);
+ }
+ .anCategoryCard:hover .anCategoryCaption,
+ .anCategoryCard:focus-visible .anCategoryCaption{
+  background:linear-gradient(180deg,#fffafa,#fff1f4);
+ }
+ .anCategoryCard:hover .anCategoryCaption strong,
+ .anCategoryCard:focus-visible .anCategoryCaption strong{
+  color:#9e3a5d;
+ }
+ .anCategoryCard:hover .anCategoryCaption span svg,
+ .anCategoryCard:focus-visible .anCategoryCaption span svg{
+  transform:translate3d(5px,0,0);
+ }
+}
+
+/* Discover the ANUSMITA edit: photographed cards, airy hover detail. */
+.anPreviewItem{
+ position:relative;
+ isolation:isolate;
+ transform:translate3d(0,0,0);
+ overflow:hidden;
+ transition:
+  transform .65s var(--an-smooth-ease),
+  border-color .4s ease,
+  box-shadow .65s var(--an-smooth-ease);
+}
+.anPreviewPhoto img{
+ transform:scale(1);
+ backface-visibility:hidden;
+ transition:
+  transform .9s var(--an-smooth-ease),
+  filter .75s ease;
+}
+.anPreviewPhoto::after{
+ content:"";
+ position:absolute;
+ inset:0;
+ pointer-events:none;
+ background:linear-gradient(0deg,rgba(123,46,69,.11),transparent 48%);
+ opacity:0;
+ transition:opacity .5s ease;
+}
+.anPreviewSoon{
+ z-index:1;
+ transition:transform .5s var(--an-smooth-ease),box-shadow .4s ease;
+}
+.anPreviewDetails{
+ transition:background-color .5s ease;
+}
+.anPreviewDetails h3{
+ transition:color .35s ease;
+}
+.anPreviewDetails small{
+ width:fit-content;
+ transition:gap .5s var(--an-smooth-ease),color .4s ease;
+}
+.anPreviewDetails small svg{
+ transition:transform .5s var(--an-smooth-ease);
+}
+@media(hover:hover) and (pointer:fine){
+ .anPreviewItem:hover,.anPreviewItem:focus-visible{
+  transform:translate3d(0,-7px,0);
+  border-color:#e9bac9;
+  box-shadow:0 16px 32px rgba(155,77,101,.16);
+ }
+ .anPreviewItem:hover .anPreviewPhoto img,
+ .anPreviewItem:focus-visible .anPreviewPhoto img{
+  transform:scale(1.085);
+  filter:saturate(1.07);
+ }
+ .anPreviewItem:hover .anPreviewPhoto::after,
+ .anPreviewItem:focus-visible .anPreviewPhoto::after{opacity:1}
+ .anPreviewItem:hover .anPreviewSoon,
+ .anPreviewItem:focus-visible .anPreviewSoon{
+  transform:translate3d(0,3px,0);
+  box-shadow:0 2px 10px #803a5526;
+ }
+ .anPreviewItem:hover .anPreviewDetails,
+ .anPreviewItem:focus-visible .anPreviewDetails{
+  background:#fff8fa;
+ }
+ .anPreviewItem:hover .anPreviewDetails h3,
+ .anPreviewItem:focus-visible .anPreviewDetails h3{color:#a74465}
+ .anPreviewItem:hover .anPreviewDetails small svg,
+ .anPreviewItem:focus-visible .anPreviewDetails small svg{
+  transform:translate3d(5px,0,0);
+ }
+}
+
+/* Curated collection banners and shelf products: matching polish. */
+.anCuratedCard{
+ transition:transform .6s var(--an-smooth-ease),
+  box-shadow .6s var(--an-smooth-ease),border-color .35s ease;
+}
+.anCuratedCard img{
+ transition:transform .9s var(--an-smooth-ease),filter .7s ease;
+}
+.anCuratedFade{transition:opacity .5s ease}
+.anCuratedText>span svg{transition:transform .5s var(--an-smooth-ease)}
+.anTextLink svg{transition:transform .5s var(--an-smooth-ease)}
+@media(hover:hover) and (pointer:fine){
+ .anCuratedCard:hover,.anCuratedCard:focus-visible{
+  transform:translate3d(0,-5px,0);
+  box-shadow:0 15px 32px #b66e841f;
+  border-color:#e6b8c8;
+ }
+ .anCuratedCard:hover img,.anCuratedCard:focus-visible img{
+  transform:scale(1.085);
+  filter:saturate(1.045);
+ }
+ .anCuratedCard:hover .anCuratedFade,
+ .anCuratedCard:focus-visible .anCuratedFade{opacity:.9}
+ .anCuratedCard:hover .anCuratedText>span svg,
+ .anCuratedCard:focus-visible .anCuratedText>span svg,
+ .anTextLink:hover svg,.anTextLink:focus-visible svg{
+  transform:translate3d(5px,0,0);
+ }
+}
+
+/* The existing store CTA buttons should feel responsive, not flashy. */
+.anAction{
+ transition:transform .42s var(--an-smooth-ease),
+  box-shadow .42s var(--an-smooth-ease),background-color .3s ease;
+}
+.anAction svg{transition:transform .5s var(--an-smooth-ease)}
+@media(hover:hover) and (pointer:fine){
+ .anAction:hover,.anAction:focus-visible{
+  transform:translate3d(0,-2px,0);
+  box-shadow:0 9px 22px rgba(177,66,98,.19);
+ }
+ .anAction:hover svg,.anAction:focus-visible svg{transform:translate3d(4px,-2px,0)}
+}
+
+/* Optional scroll entrance: content is visible without JS or unsupported APIs. */
+@media (prefers-reduced-motion:no-preference){
+ [data-an-reveal]{
+  transition:
+   opacity .78s var(--an-smooth-ease),
+   transform .78s var(--an-smooth-ease),
+   box-shadow .6s var(--an-smooth-ease),
+   border-color .4s ease;
+ }
+ [data-an-reveal].an-reveal-pending{
+  opacity:0;
+  transform:translate3d(0,17px,0);
+ }
+ [data-an-reveal].an-reveal-entering{
+  opacity:1;
+  transform:translate3d(0,0,0);
+ }
+ .anCategoryGrid>[data-an-reveal]:nth-child(8n+2),
+ .anPreviewGrid>[data-an-reveal]:nth-child(8n+2){transition-delay:55ms}
+ .anCategoryGrid>[data-an-reveal]:nth-child(8n+3),
+ .anPreviewGrid>[data-an-reveal]:nth-child(8n+3){transition-delay:95ms}
+ .anCategoryGrid>[data-an-reveal]:nth-child(8n+4),
+ .anPreviewGrid>[data-an-reveal]:nth-child(8n+4){transition-delay:135ms}
+ .anCategoryGrid>[data-an-reveal]:nth-child(8n+5),
+ .anPreviewGrid>[data-an-reveal]:nth-child(8n+5){transition-delay:175ms}
+ .anCategoryGrid>[data-an-reveal]:nth-child(8n+6),
+ .anPreviewGrid>[data-an-reveal]:nth-child(8n+6){transition-delay:215ms}
+ .anCategoryGrid>[data-an-reveal]:nth-child(8n+7),
+ .anPreviewGrid>[data-an-reveal]:nth-child(8n+7){transition-delay:255ms}
+ .anCategoryGrid>[data-an-reveal]:nth-child(8n),
+ .anPreviewGrid>[data-an-reveal]:nth-child(8n){transition-delay:295ms}
+}
+@media(hover:none),(pointer:coarse){
+ /* Touch devices must never rely on hover to reveal category links. */
+ .anCategoryCard,.anPreviewItem,.anCuratedCard{transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .anCategoryCard,.anCategoryImage img,.anCategoryImage::after,
+ .anCategoryCaption,.anCategoryCaption span,.anCategoryCaption span svg,
+ .anPreviewItem,.anPreviewPhoto img,.anPreviewPhoto::after,
+ .anPreviewSoon,.anPreviewDetails,.anPreviewDetails small,
+ .anCuratedCard,.anCuratedCard img,.anCuratedFade,
+ .anCuratedText>span svg,.anTextLink svg,.anAction,
+ .anAction svg,[data-an-reveal]{
+  animation:none!important;transition:none!important;transform:none!important;
+ }
+ [data-an-reveal]{opacity:1!important}
+}
