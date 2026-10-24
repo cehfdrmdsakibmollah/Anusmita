@@ -115,7 +115,7 @@ body:has(.radiancePreview)>.anAnnouncement,body:has(.radiancePreview)>.anHeader,
 .rp-info article{border-radius:10px}
 .rp-info h2{margin-bottom:20px}
 .rp-story>div{padding:22px 12px 20px 8px}
-.rp-story h2{font-size:22px;line-height:1.15;margin-bottom:14px}
+.rp-story h2{font-size:19px;line-height:1.18;margin-bottom:14px}
 .rp-story p{line-height:1.65}
 .rp-story div>span{margin-top:24px;font-size:21px}
 .rp-notes,.rp-highlights,.rp-details{padding:22px 16px 20px}
@@ -143,7 +143,7 @@ body:has(.radiancePreview)>.anAnnouncement,body:has(.radiancePreview)>.anHeader,
 @media(min-width:1250px){
  .rp-sizes button{min-height:49px}
  .rp-info{margin-top:48px;margin-bottom:52px;gap:22px}
- .rp-story h2{font-size:26px}
+ .rp-story h2{font-size:23px}
  .rp-notes,.rp-highlights,.rp-details{padding:25px 19px}
  .rp-notes .rp-art{width:60px;height:60px}
  .rp-product-grid{gap:22px;margin-bottom:52px}
