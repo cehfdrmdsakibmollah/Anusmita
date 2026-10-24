@@ -1571,3 +1571,24 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
   transition:none!important;
  }
 }
+
+
+/* Floral note indicators in the labelled design preview — no fragrance claims. */
+.anPdp .anPdpPreviewNotes .anPdpNoteRow{align-items:center}
+.anPdp .anPdpPreviewNotes .anPdpNoteRow>span{
+ color:#b95773;
+ display:grid;
+ place-items:center;
+ width:42px;
+ height:42px;
+ flex:0 0 42px;
+ border:1px solid #ecc9d3;
+ background:radial-gradient(circle,#fff8f4,#f4d5df);
+ font:400 27px/1 Georgia,serif;
+ border-radius:50%;
+}
+.anPdp .anPdpPreviewNotes .anPdpNoteRow p{
+ font-size:10px;
+ line-height:1.35;
+ color:#97848c;
+}
