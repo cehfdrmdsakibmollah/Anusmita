@@ -33,6 +33,7 @@ export function isSafeLink(value:string){
  return (/^\/(?!\/)[a-zA-Z0-9/?#&=_%.+-]*$/.test(value)||/^#[a-zA-Z][\w-]*$/.test(value))&&!/[\s\\]/.test(value);
 }
 export function isSafeImage(value:string){
+ if(/^\/brand\/(?:categories\/)?[a-z0-9-]+\.webp$/.test(value))return true;
  try{
   const u=new URL(value);
   return u.protocol==="https:"&&!u.username&&!u.password&&
@@ -42,8 +43,8 @@ export function isSafeImage(value:string){
 }
 const image=(photo:string,w=1000)=>"https://images.unsplash.com/"+photo+"?auto=format&fit=crop&w="+w+"&q=85";
 export const homeStarterBlocks:HomeBlock[]=[
- {id:"00000000-0000-4000-8000-000000000001",kind:"hero",title:"Your everyday beauty. More beautifully you.",subtitle:"Discover fashion, jewellery, skincare and little luxuries worth loving. A curated world made for you.",label:"THE ANUSMITA EDIT",imageUrl:image("photo-1524504388940-b1c1722653e1",1500),href:"#collections",cta:"Explore collections",enabled:true,position:0,startsAt:null,endsAt:null},
- {id:"00000000-0000-4000-8000-000000000002",kind:"hero",title:"The art of finding your beautiful.",subtitle:"Beauty rituals and considered finds, from everyday favourites to special discoveries.",label:"BEAUTY MEETS LIFESTYLE",imageUrl:image("photo-1596462502278-27bfdc403348",1500),href:"/?category=Beauty#shop",cta:"Discover beauty",enabled:true,position:1,startsAt:null,endsAt:null},
+ {id:"00000000-0000-4000-8000-000000000001",kind:"hero",title:"Your Everyday Beauty, A More Beautiful You",subtitle:"Premium fashion, jewellery, beauty and lifestyle essentials for a brighter, more confident you.",label:"BEAUTY · FASHION · LIFESTYLE",imageUrl:"/brand/hero-reference.webp",href:"#shop",cta:"Shop Now",enabled:true,position:0,startsAt:null,endsAt:null},
+ {id:"00000000-0000-4000-8000-000000000002",kind:"hero",title:"Confidence Looks Beautiful On You",subtitle:"Discover ANUSMITA's edit of premium beauty, fashion, bags, perfumes, watches and everyday essentials.",label:"THE ANUSMITA EDIT",imageUrl:"/brand/hero-reference.webp",href:"#collections",cta:"Explore Collection",enabled:true,position:1,startsAt:null,endsAt:null},
  {id:"00000000-0000-4000-8000-000000000003",kind:"category",title:"Skincare",subtitle:"The daily glow ritual",label:"BEAUTY",imageUrl:image("photo-1608248543803-ba4f8c70ae0b"),href:"/?category=Skincare#shop",cta:"Shop skincare",enabled:true,position:0,startsAt:null,endsAt:null},
  {id:"00000000-0000-4000-8000-000000000004",kind:"category",title:"Beauty",subtitle:"Makeup & more",label:"MAKEUP",imageUrl:image("photo-1596462502278-27bfdc403348"),href:"/?category=Beauty#shop",cta:"Shop beauty",enabled:true,position:1,startsAt:null,endsAt:null},
  {id:"00000000-0000-4000-8000-000000000005",kind:"category",title:"Fashion",subtitle:"Wear your story",label:"STYLE",imageUrl:image("photo-1483985988355-763728e1935b"),href:"/?category=Fashion#shop",cta:"Explore fashion",enabled:true,position:2,startsAt:null,endsAt:null},

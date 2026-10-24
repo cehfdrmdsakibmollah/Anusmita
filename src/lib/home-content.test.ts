@@ -25,6 +25,8 @@ describe("ANUSMITA homepage CMS safety",()=>{
   expect(isSafeImage("javascript:alert(1)")).toBe(false);
   expect(isSafeImage("https://res.cloudinary.com.attacker.com/oseohmxd/image/upload/f.png")).toBe(false);
   expect(isSafeImage("https://images.unsplash.com/photo-test")).toBe(true);
+  expect(isSafeImage("/brand/hero-reference.webp")).toBe(true);
+  expect(isSafeImage("/brand/../private.webp")).toBe(false);
   expect(isSafeLink("//evil.example")).toBe(false);
   expect(isSafeLink("/?category=Beauty#shop")).toBe(true);
   expect(blockSchema.safeParse({...b,href:"https://phishing.example"}).success).toBe(false);
