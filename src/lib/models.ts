@@ -184,3 +184,14 @@ HrSupplierCandidateSchema.index({sourceId:1,sourceRef:1},{unique:true});
 HrSupplierCandidateSchema.index({sourceId:1,updatedAt:-1});
 export const HrSupplierCandidate=mongoose.models.HrSupplierCandidate||
  mongoose.model("HrSupplierCandidate",HrSupplierCandidateSchema);
+
+
+/* Site merchandising only: never modifies Product, payment, customer or stock. */
+const HomePageSchema=new Schema({
+ key:{type:String,unique:true,required:true,default:"main"},
+ revision:{type:Number,required:true,default:0,min:0},
+ blocks:{type:[Schema.Types.Mixed],default:[]},
+ sections:{type:[Schema.Types.Mixed],default:[]},
+ lastEditedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
+},opts);
+export const HomePage=mongoose.models.HomePage||mongoose.model("HomePage",HomePageSchema);
