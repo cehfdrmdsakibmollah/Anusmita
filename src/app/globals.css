@@ -346,3 +346,132 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 @media print{.anHeader,.anAnnouncement,.anFooter,.anHeroControls{display:none!important}}
+
+
+/* ===== ANUSMITA REFERENCE-FAITHFUL VISUAL CORRECTION (Oct 2026) =====
+   Matches user's approved mockup: compact image-backed pink hero, precise
+   three-line blush heading, no generic monogram, slim category and cards.
+   Scoped .an* to avoid modifying ERP workflows. */
+.anBody{background:#fffdfc;color:#282126}
+.anWide{width:min(1390px,calc(100% - 80px))}
+.anAnnouncement{min-height:31px;padding:8px 18px;background:#f6d9dc;color:#8f4e62;font-size:10px;font-weight:600;letter-spacing:.03em}
+.anHeader{height:83px;box-shadow:0 2px 11px #7d42560a;border-bottom:1px solid #f5e9e9}
+.anHeaderInner{gap:19px}
+.anLogo img{width:53px;height:53px;mix-blend-mode:multiply}
+.anLogo>span{font:400 29px Georgia,"Times New Roman",serif;letter-spacing:.055em}
+.anLogo small{font:700 8px Arial,sans-serif;letter-spacing:.16em;margin-top:4px}
+.anDesktopNav{gap:clamp(11px,1.4vw,21px)}
+.anDesktopNav>a,.anNavMore summary{font-size:10px;font-weight:700;letter-spacing:.03em}
+.anHeaderTools{gap:12px}
+.anHero.anHeroReference{height:clamp(380px,33vw,485px);background:#f9e6e4;overflow:hidden}
+.anHeroReference .anHeroSlide{display:block;position:absolute;inset:0}
+.anHeroReference .anHeroVisual{position:absolute;inset:0;height:100%;width:100%;z-index:0;background:#fae3e0}
+.anHeroReference .anHeroVisual img{left:auto;right:-8%;top:0;width:79%;height:100%;object-fit:cover;object-position:center center;transform:none!important;transition:opacity .4s ease}
+.anHeroReference .anHeroOverlay{background:linear-gradient(90deg,#fdf0ed 0%,#fcf0ed 25%,#fbede9f5 32%,#fae8e5d6 39%,#fae4e266 49%,transparent 69%)}
+.anHeroReference .anHeroContent{z-index:2;position:relative;width:54%;height:100%;display:flex;align-items:center;justify-content:flex-start;padding:29px 0 36px max(65px,calc((100vw - 1390px)/2 + 30px));background:transparent}
+.anHeroReference .anHeroContentInner{max-width:590px;position:relative}
+.anHeroReference .anEyebrow{font-size:10px;font-weight:700;letter-spacing:.24em;color:#ad6e66;margin:0 0 21px}
+.anHeroReference .anHero h1,.anHeroReference h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(42px,4.36vw,71px);line-height:1.02;letter-spacing:-.055em;font-weight:400;color:#201b1f;margin:0 0 18px;text-wrap:initial}
+.anHeroReference h1 em{font-weight:400;color:#bd405d;font-style:normal}
+.anHeroReference .anHeroSubtitle{font-size:13.5px;line-height:1.55;max-width:435px;margin:0 0 19px;color:#43383d}
+.anHeroReference .anAction{min-height:44px;background:#c94d6b;box-shadow:none;border-color:#c94d6b;color:#fff;font-size:12px;border-radius:4px;padding:11px 25px}
+.anHeroReference .anHeroPills{margin-top:22px;display:flex;align-items:center;gap:clamp(7px,1.5vw,20px);font-size:10px;color:#8b665e;font-weight:600}
+.anHeroReference .anHeroPills span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.anHeroReference .anHeroPills svg{color:#a47853;flex-shrink:0}
+.anHeroReference .anHeroControls{position:absolute;left:0;right:0;bottom:0;top:0;transform:none;pointer-events:none;display:block}
+.anHeroReference .anHeroControls>button{pointer-events:auto;position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;box-shadow:0 2px 8px #784b5124;background:#fffffff0;color:#b04762;border:1px solid #f5e7e9}
+.anHeroReference .anPrevious{left:16px}.anHeroReference .anNext{right:16px}
+.anHeroReference .anHeroDots{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);pointer-events:auto;display:flex;gap:8px}
+.anHeroReference .anHeroDots button{height:8px;width:8px;border-radius:50%;background:#fbe7e8;box-shadow:0 1px 6px #80435555}
+.anHeroReference .anHeroDots button.active{width:20px;border-radius:12px;background:#d65a78}
+.anTrustBar{width:min(1390px,calc(100% - 80px));border-radius:9px;margin:11px auto 0;padding:8px 5px;box-shadow:none;border:1px solid #f4ece8;background:#fff}
+.anTrustBar>div{padding:10px 18px;gap:12px}
+.anTrustBar svg{color:#a8785b;height:25px;width:25px}
+.anTrustBar strong{font-size:11.5px}.anTrustBar small{font-size:10px}
+.anCategories{padding:23px 0 20px;background:#fffdfc}
+.anCategories .anSectionTitle{margin:0 0 14px;align-items:center}
+.anSectionTitle h2{font:400 clamp(27px,2.5vw,37px) Georgia,serif;letter-spacing:-.04em}
+.anSectionTitle .anOverline{font-size:9px;margin:0 0 5px;color:#af6377}
+.anCategoryGrid{grid-template-columns:repeat(8,minmax(0,1fr));gap:10px}
+.anCategoryCard{border-radius:7px;border:1px solid #f4e8e7;background:#fff7f4;box-shadow:none}
+.anCategoryImage{aspect-ratio:1/1;overflow:hidden}
+.anCategoryImage img{object-fit:cover}
+.anCategoryCaption{min-height:65px;gap:7px;padding:9px 4px 11px}
+.anCategoryCaption strong{font:600 clamp(12px,1vw,15px) Georgia,serif}
+.anCategoryCaption span{font-size:9px;color:#c24a6a}
+.anPromoWrap{padding:0 0 25px;background:#fffdfc}
+.anPromo{min-height:195px;border-radius:9px;padding:25px 6%;background-position:center 50%}
+.anPromoCopy h2{font:400 clamp(33px,3.9vw,56px) Georgia,serif}
+.anShelf{padding:22px 0 26px}
+.anShelf .anSectionTitle{margin-bottom:18px}
+.anProductRail{gap:12px}
+.anProductTile{flex:0 0 clamp(175px,16vw,225px)}
+.anShop{padding:28px 0 42px;background:#fffdfc}
+.anShop .anSectionTitle{margin-bottom:22px}
+.anEditorial{min-height:310px;grid-template-columns:1fr 1fr}
+.anEditorialImage{min-height:310px}
+.anEditorialCopy{padding:6% 9%}
+.anEditorialCopy h2{font-size:clamp(34px,3.3vw,50px)}
+.anEditorialCopy>p:not(.anOverline){font-size:13px;line-height:1.6}
+.anPromise{padding:27px 15px}
+.anPromise h2{font-size:30px}
+.anFooter{padding:39px 0 18px}
+.anFooterTop{padding-bottom:30px;gap:30px}
+.anFooterLogo{font-size:31px}
+@media(max-width:1100px){
+ .anHeader{height:74px}
+ .anLogo>span{font-size:22px}.anLogo small{font-size:7px}
+ .anDesktopNav{gap:10px}.anDesktopNav>a,.anNavMore summary{font-size:9px}
+ .anCategoryGrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .anHero.anHeroReference{height:430px}
+ .anHeroReference h1{font-size:clamp(42px,5.1vw,58px)}
+ .anHeroReference .anHeroContent{padding-left:55px;width:55%}
+ .anHeroReference .anHeroPills{font-size:9px;flex-wrap:wrap;max-width:400px}
+}
+@media(max-width:850px){
+ .anWide{width:calc(100% - 32px)}
+ .anDesktopNav{display:none}
+ .anMobileNav{display:block}
+ .anHeader{height:69px}
+ .anHeroReference .anHeroVisual img{width:83%;right:-18%}
+ .anHeroReference .anHeroContent{padding-left:44px;width:62%}
+ .anHeroReference .anHeroOverlay{background:linear-gradient(90deg,#fdf0ed 0%,#fdf0ed 29%,#fdf0edd9 47%,transparent 75%)}
+ .anHeroReference h1{font-size:clamp(37px,5.5vw,50px)}
+ .anTrustBar{width:calc(100% - 32px)}
+}
+@media(max-width:600px){
+ .anAnnouncement{font-size:9px;min-height:28px;padding:8px 10px}
+ .anHeader{height:61px}
+ .anLogo img{height:43px;width:43px}.anLogo>span{font-size:19px}
+ .anLogo small{font-size:6px;letter-spacing:.12em}
+ .anHeaderTools{gap:8px;padding-left:0}
+ .anHero.anHeroReference{height:555px}
+ .anHeroReference .anHeroSlide{display:block}
+ .anHeroReference .anHeroVisual{height:53%;top:0;bottom:auto}
+ .anHeroReference .anHeroVisual img{width:117%;height:100%;right:-17%;object-fit:cover;object-position:center center}
+ .anHeroReference .anHeroOverlay{background:linear-gradient(0deg,#fdf0edd9,transparent 30%)}
+ .anHeroReference .anHeroContent{position:absolute;top:53%;height:47%;width:100%;padding:17px 27px 46px;align-items:flex-start;background:#fdf0ed}
+ .anHeroReference .anEyebrow{font-size:8px;margin-bottom:9px;letter-spacing:.16em}
+ .anHeroReference h1{font-size:clamp(32px,8vw,45px);margin:0 0 9px;line-height:.99}
+ .anHeroReference .anHeroSubtitle{font-size:11px;line-height:1.45;margin-bottom:11px;max-width:390px}
+ .anHeroReference .anAction{padding:9px 15px;min-height:39px;font-size:11px}
+ .anHeroReference .anHeroPills{display:none}
+ .anHeroReference .anHeroControls>button{top:25%;width:30px;height:30px}
+ .anHeroReference .anPrevious{left:8px}.anHeroReference .anNext{right:8px}
+ .anHeroReference .anHeroDots{bottom:13px}
+ .anTrustBar{width:100%;margin:0;border:0;border-bottom:1px solid #f1e7e8;border-radius:0;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .anTrustBar>div{padding:10px 10px}
+ .anTrustBar strong{font-size:10px}.anTrustBar small{font-size:9px}
+ .anCategories{padding:30px 0 18px}
+ .anCategories .anSectionTitle{margin-bottom:14px}
+ .anCategoryGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .anCategoryImage{aspect-ratio:1.25}
+ .anCategoryCaption{min-height:55px}
+ .anPromoWrap{padding-bottom:18px}
+ .anPromo{min-height:210px}
+ .anShelf{padding:20px 0}
+ .anProductTile{flex-basis:65vw}
+ .anEditorial{grid-template-columns:1fr}.anEditorialImage{min-height:245px}
+ .anEditorialCopy{padding:30px 25px}
+ .anFooter{padding-top:34px}
+}
