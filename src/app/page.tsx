@@ -59,7 +59,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
     s.key==="new_arrivals"?products.map(p=>p.id):
     s.key==="best_sellers"?actualBestIds:[];
    return {key:s.key,title:s.title,subtitle:s.subtitle,products:ids.map(id=>lookup.get(id))
-    .filter((p):p is FeaturedProduct=>!!p).slice(0,s.maxItems)};
+    .filter((p):p is ShopProduct=>!!p).slice(0,s.maxItems)};
   }).filter(s=>s.products.length>0);
  }catch{
   configured=false;products=[];shelves=[];
