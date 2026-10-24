@@ -2,14 +2,14 @@
 
 ## Created project
 - Netlify team: `mdsakibmollah`
-- Netlify site: `anusmita-commerce-bd`
-- Dashboard: https://app.netlify.com/projects/anusmita-commerce-bd
+- Netlify site: `anusmita`
+- Dashboard: https://app.netlify.com/projects/anusmita
 - GitHub source: https://github.com/cehfdrmdsakibmollah/Anusmita (`main`, repository root).
 - `netlify.toml` uses the built-in current Next.js runtime, Node 22 and `.next` publish output.
 
 ## Release discipline
-1. Connect this site to the ANUSMITA GitHub repository from Netlify UI (**Project configuration → Build & deploy → Continuous deployment → Link repository**, or site's import flow as applicable). Merely creating an empty site does NOT link GitHub or publish a deploy.
-2. The site has been initialized with `STORE_MODE=catalog` and `NEXT_PUBLIC_SITE_URL=https://anusmita-commerce-bd.netlify.app` in Netlify site variables; keep checkout disabled.
+1. Connect this site to the ANUSMITA GitHub repository from Netlify UI (**Netlify project → Link repository**, or site's import flow as applicable). Merely creating an empty site does NOT link GitHub or publish a deploy.
+2. The site has been initialized with `STORE_MODE=catalog` and `NEXT_PUBLIC_SITE_URL=https://anusmita.netlify.app` in Netlify site variables; keep checkout disabled.
 3. The homepage intentionally displays a catalogue configuration notice if `MONGODB_URI` is not configured. Database credentials must never be committed. Do not invent MongoDB passwords, Cloudinary secrets or customer stock.
 4. Later, reset the scoped `anusmita_app` Atlas DB user's password privately and configure Netlify site `MONGODB_URI` (builds+functions scope) after reviewing Atlas Network Access. Use only the dedicated `anusmita.jvvjo1k.mongodb.net/anusmita` cluster. Never modify unrelated portfolio databases.
 5. Generate a random 32+ byte `SESSION_SECRET` privately in Netlify site runtime env. A valid session secret alone does not enable checkout.
