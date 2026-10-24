@@ -122,7 +122,7 @@ export default async function ProductPage({params}:Props){
      </div>
     </div>
    </div>
-   <ProductDetailsAccordion product={{
+   <ProductDetailsAccordion preview={preview} product={{
     description:p.description,ingredients:p.ingredients,usageInstructions:p.usageInstructions,
     topNotes:p.topNotes,heartNotes:p.heartNotes,baseNotes:p.baseNotes,
     brand:p.brand,origin:p.origin,size:p.size||p.variantLabel,category:p.category,sku:p.sku
