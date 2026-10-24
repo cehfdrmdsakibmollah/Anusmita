@@ -26,6 +26,7 @@ export default function ProductImageGallery({urls,name,preview=false}:{urls:stri
     <img src={src} alt="" loading="lazy" onError={()=>setBroken(old=>old.includes(src)?old:[...old,src])}/>
    </button>)}</div>}
   <div className="anPdpMainImage">
+   {preview&&<span className="anPdpImageTag">DESIGN PREVIEW</span>}
    {isBroken?<div className="anPdpImageFallback"><ImageOff size={38}/><p>Product image is not available yet</p><span>ANUSMITA</span></div>:
     <img src={url} alt={name+" — image "+(active+1)+" of "+safe.length} loading="eager"
      onError={()=>setBroken(old=>old.includes(url)?old:[...old,url])}/>}

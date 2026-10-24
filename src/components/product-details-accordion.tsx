@@ -5,19 +5,24 @@ type ProductFacts={
  topNotes?:string;heartNotes?:string;baseNotes?:string;
  brand?:string;origin?:string;size?:string;category:string;sku?:string;
 };
-export default function ProductDetailsAccordion({product}:{product:ProductFacts}){
+export default function ProductDetailsAccordion({product,preview=false}:{product:ProductFacts;preview?:boolean}){
  const notes=[["Top notes",product.topNotes],["Heart notes",product.heartNotes],["Base notes",product.baseNotes]]
   .filter((v):v is [string,string]=>Boolean(v[1]?.trim()));
  return <div className="anPdpInfoGrid">
   <article className="anPdpInfoStory">
    <span className="anPdpInfoEyebrow">THE ANUSMITA EDIT</span>
-   <h2>A little luxury,<br/><em>every day.</em></h2>
-   <p>Discover pieces that feel beautifully you. Genuine product specifications are added by the ANUSMITA team.</p>
+   <h2>A fragrance that<br/><em>feels like you.</em></h2>
+   <p>The ANUSMITA edit celebrates the little things that make everyday moments memorable. Product details are added by our team.</p>
    <span className="anPdpInfoSig">ANUSMITA ✦</span>
   </article>
   <article className="anPdpInfoPanel">
-   <h2><Droplets size={22}/> {notes.length?"Fragrance notes":"Product at a glance"}</h2>
-   {notes.length?notes.map(([title,value])=><div className="anPdpNoteRow" key={title}><span><Leaf size={18}/></span><div><strong>{title}</strong><p>{value}</p></div></div>):
+   <h2><Droplets size={22}/> {notes.length||preview?"Fragrance notes":"Product at a glance"}</h2>
+   {preview?<div className="anPdpPreviewNotes">
+     {["Top notes","Heart notes","Base notes"].map((label,i)=><div className="anPdpNoteRow" key={label}>
+      <span>{i===0?"✿":i===1?"❀":"◇"}</span>
+      <div><strong>{label}</strong><p>Details coming with the published product</p></div>
+     </div>)}
+    </div>:notes.length?notes.map(([title,value])=><div className="anPdpNoteRow" key={title}><span><Leaf size={18}/></span><div><strong>{title}</strong><p>{value}</p></div></div>):
     <div className="anPdpFacts">
      <p><strong>Category</strong><span>{product.category}</span></p>
      {product.brand&&<p><strong>Brand</strong><span>{product.brand}</span></p>}

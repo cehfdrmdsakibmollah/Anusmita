@@ -21,9 +21,9 @@ type DbProduct={
 };
 const projection="name slug sku brand category origin description imageUrls size variantLabel variantGroup pricePaisa onHand reserved ingredients usageInstructions topNotes heartNotes baseNotes";
 const previewProduct:DbProduct={
- _id:"preview",name:"Radiance Eau de Parfum — Design Preview",slug:"design-preview",
- sku:"",brand:"ANUSMITA",category:"Perfumes",origin:"Other",description:"An illustration of the ANUSMITA perfume product page design. This is not a published product or an offer for sale.",
- imageUrls:["/brand/categories/perfumes.webp","/brand/hero-reference.webp"],
+ _id:"preview",name:"Radiance Eau de Parfum",slug:"design-preview",
+ sku:"",brand:"ANUSMITA",category:"Perfumes",origin:"Other",description:"A preview of the ANUSMITA product detail experience, inspired by our beauty and fragrance collections. Actual fragrance details will be added when a product is published.",
+ imageUrls:["/brand/categories/perfumes.webp","/brand/promo-reference.webp","/brand/hero-reference.webp"],
  size:"100ml",variantLabel:"100ml",variantGroup:"",pricePaisa:0,onHand:0,reserved:0,
  ingredients:"",usageInstructions:"",topNotes:"",heartNotes:"",baseNotes:""
 };
@@ -79,7 +79,9 @@ const sampleCollections=[
  {title:"Skincare",image:"/brand/categories/skincare.webp",href:"/?category=Skincare#shop"},
  {title:"Beauty",image:"/brand/categories/beauty.webp",href:"/?category=Beauty#shop"},
  {title:"Watches",image:"/brand/categories/watches.webp",href:"/?category=Watches#shop"},
- {title:"Bags",image:"/brand/categories/bags.webp",href:"/?category=Bags#shop"}
+ {title:"Bags",image:"/brand/categories/bags.webp",href:"/?category=Bags#shop"},
+ {title:"Bed Sheets",image:"/brand/categories/bed-sheets.webp",href:"/?category=Bed%20Sheets#shop"},
+ {title:"Fashion",image:"/brand/categories/fashion.webp",href:"/?category=Fashion#shop"}
 ];
 export default async function ProductPage({params}:Props){
  const {slug}=await params,p=await getProduct(slug);
@@ -100,38 +102,39 @@ export default async function ProductPage({params}:Props){
  };
  return <div className="anPdp">
   <div className="anWide">
-   {preview&&<div className="anPdpPreviewAlert" role="status"><Sparkles size={19}/>
-    <span><strong>Design preview:</strong> This page demonstrates the layout using editorial artwork. No real product, price, inventory or orders are displayed.</span>
-   </div>}
+
    <nav aria-label="Breadcrumb" className="anPdpBreadcrumb">
     <Link href="/">Home</Link><span>›</span><Link href="/#collections">Shop</Link><span>›</span>
     <Link href={"/?category="+encodeURIComponent(p.category)+"#shop"}>{p.category}</Link><span>›</span><strong>{p.name}</strong>
+    {preview&&<span className="anPdpDemoChip" title="No real product, price, review, stock or order">Design preview · Not for sale</span>}
    </nav>
    <div className="anPdpMain">
     <ProductImageGallery urls={p.imageUrls||[]} name={p.name} preview={preview}/>
-    <ProductDetailPurchase key={p.slug} product={{
-     ...variant(p),name:p.name,category:p.category,brand:p.brand,description:p.description,origin:p.origin
-    }} siblings={variants} canOrder={canOrder} preview={preview}/>
+    <div className="anPdpRight">
+     <ProductDetailPurchase key={p.slug} product={{
+      ...variant(p),name:p.name,category:p.category,brand:p.brand,description:p.description,origin:p.origin
+     }} siblings={variants} canOrder={canOrder} preview={preview}/>
+     <div className="anPdpTrust" aria-label="Shopping information">
+      <div><Sparkles size={22}/><span><strong>Curated with care</strong><small>Selected for ANUSMITA</small></span></div>
+      <div><Package size={22}/><span><strong>Real sizes</strong><small>SKU-based pricing</small></span></div>
+      <div><ShieldCheck size={22}/><span><strong>Stock shown</strong><small>Based on inventory</small></span></div>
+      <div><Truck size={22}/><span><strong>Delivery</strong><small>Confirmed at checkout</small></span></div>
+     </div>
+    </div>
    </div>
-   <div className="anPdpTrust" aria-label="What to know before ordering">
-    <div><Sparkles size={25}/><span><strong>Thoughtfully selected</strong><small>The ANUSMITA edit</small></span></div>
-    <div><Package size={25}/><span><strong>Size-specific SKUs</strong><small>Actual price per size</small></span></div>
-    <div><ShieldCheck size={25}/><span><strong>Stock transparency</strong><small>Availability checked</small></span></div>
-    <div><Truck size={25}/><span><strong>Bangladesh</strong><small>Delivery details at checkout</small></span></div>
-   </div>
-   <ProductDetailsAccordion product={{
+   <ProductDetailsAccordion preview={preview} product={{
     description:p.description,ingredients:p.ingredients,usageInstructions:p.usageInstructions,
     topNotes:p.topNotes,heartNotes:p.heartNotes,baseNotes:p.baseNotes,
     brand:p.brand,origin:p.origin,size:p.size||p.variantLabel,category:p.category,sku:p.sku
    }}/>
    {(related.length>0||preview)&&<section className="anPdpRelated" aria-label="Explore related collections">
     <div className="anPdpRelatedTitle"><div><span className="anPdpOverline">MORE TO EXPLORE</span>
-      <h2>{preview?"Discover more ANUSMITA collections":"You may also like"}</h2></div>
-     <Link href="/#shop">Explore all <ArrowRight size={18}/></Link></div>
+      <h2>{preview?"You may also like":"You may also like"}</h2></div>
+     <Link href="/#shop">View all products <ArrowRight size={18}/></Link></div>
     <div className="anPdpRelatedGrid">
      {preview?sampleCollections.map(item=><Link href={item.href} className="anPdpRelatedCard" key={item.title}>
       <div className="anPdpRelatedImage"><img src={item.image} alt="" loading="lazy"/><span className="anPdpRelatedArrow"><ArrowUpRight size={19}/></span></div>
-      <div className="anPdpRelatedCopy"><small>ANUSMITA COLLECTION</small><h3>{item.title}</h3><span>Explore category</span></div>
+      <div className="anPdpRelatedCopy"><small>DISCOVER THE EDIT</small><h3>{item.title}</h3><span>Explore collection →</span></div>
      </Link>):related.map(item=><Link key={String(item._id)} href={"/products/"+item.slug} className="anPdpRelatedCard">
       <div className="anPdpRelatedImage">{item.imageUrls?.[0]?<img src={item.imageUrls[0]} alt={item.name} loading="lazy"/>:<div className="anPdpRelatedBlank">ANUSMITA</div>}
        <span className="anPdpRelatedArrow"><ArrowUpRight size={19}/></span>
