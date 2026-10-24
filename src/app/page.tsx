@@ -6,6 +6,7 @@ import {Product,HomePage,Order} from "@/lib/models";
 import {checkoutEnabled} from "@/lib/launch-config";
 import {homeStarterBlocks,homeStarterSections,publicBlocks,type HomeBlock,type HomeSection} from "@/lib/home-content";
 import HomepageCarousel from "@/components/homepage-carousel";
+import HomepageMotion from "@/components/homepage-motion";
 import HomepagePromotion from "@/components/homepage-promotion";
 import HomepageFeatured,{type FeaturedShelf,type FeaturedProduct} from "@/components/homepage-featured";
 import Storefront from "@/components/storefront";
@@ -72,6 +73,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
  const announcement=active.find(x=>x.kind==="announcement");
  const canOrder=configured&&checkoutEnabled(process.env);
  return <>
+  <HomepageMotion/>
   <HomepageCarousel slides={slides}/>
   <div className="anTrustBar" aria-label="Shopping experience">
    <div><Sparkles size={25}/><span><strong>Thoughtfully curated</strong><small>An edited world of finds</small></span></div>
@@ -79,12 +81,12 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
    <div><Heart size={25}/><span><strong>Find what you love</strong><small>Discover your everyday style</small></span></div>
    <div><Truck size={25}/><span><strong>Made for Bangladesh</strong><small>Local shopping, global inspiration</small></span></div>
   </div>
-  <section className="anCategories" id="collections">
+  <section className="anCategories" id="collections" aria-label="Shop by category">
    <div className="anWide">
-    <div className="anSectionTitle"><div><p className="anOverline">DISCOVER YOUR NEXT FAVOURITE <span>✦</span></p>
+    <div className="anSectionTitle" data-an-reveal><div><p className="anOverline">DISCOVER YOUR NEXT FAVOURITE <span>✦</span></p>
      <h2>Shop by category</h2></div><a href="#shop" className="anTextLink">Explore collections <ArrowUpRight size={17}/></a></div>
     <div className="anCategoryGrid">
-     {categories.map(c=><Link href={c.href} className="anCategoryCard" key={c.id}>
+     {categories.map(c=><Link href={c.href} className="anCategoryCard" key={c.id} data-an-reveal>
       <div className="anCategoryImage">{c.imageUrl?<img src={c.imageUrl} alt={c.title} loading="lazy"/>:<div className="anCategoryBlank">ANUSMITA</div>}</div>
       <div className="anCategoryCaption"><strong>{c.title}</strong><span>{c.cta||"Explore"} <ArrowRight size={14}/></span></div>
      </Link>)}
@@ -97,13 +99,13 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
   </div>
 
   {!products.length&&categories.length>0&&<section className="anPreviewSelection" aria-label="ANUSMITA product collection preview">
-   <div className="anWide"><div className="anSectionTitle"><div>
+   <div className="anWide"><div className="anSectionTitle" data-an-reveal><div>
     <p className="anOverline">A PREVIEW OF WHAT'S COMING <span>✦</span></p>
     <h2>Discover the ANUSMITA edit</h2>
     <p>Our product catalogue is being prepared. Explore the collections below.</p></div>
     <a href="#collections" className="anTextLink">View categories <ArrowUpRight size={16}/></a>
    </div>
-   <div className="anPreviewGrid">{categories.map(c=><a className="anPreviewItem" key={c.id} href={c.href}>
+   <div className="anPreviewGrid">{categories.map(c=><a className="anPreviewItem" key={c.id} href={c.href} data-an-reveal>
     <div className="anPreviewPhoto">{c.imageUrl&&<img src={c.imageUrl} alt="" loading="lazy"/>}
       <span className="anPreviewSoon">COMING SOON</span></div>
     <div className="anPreviewDetails"><span>ANUSMITA</span><h3>{c.title}</h3>
@@ -125,10 +127,10 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
 
   {editorial.length>0?<section className="anCurated">
    <div className="anWide">
-    <div className="anSectionTitle anCuratedHeading"><div><p className="anOverline">THE ANUSMITA WORLD <span>✦</span></p>
+    <div className="anSectionTitle anCuratedHeading" data-an-reveal><div><p className="anOverline">THE ANUSMITA WORLD <span>✦</span></p>
      <h2>Curated Collections</h2></div><a href="#collections" className="anTextLink">View All Collections <ArrowUpRight size={16}/></a></div>
     <div className="anCuratedGrid">{editorial.map(item=><a key={item.id} href={item.href}
-       className="anCuratedCard">
+       className="anCuratedCard" data-an-reveal>
       {item.imageUrl?<img src={item.imageUrl} alt="" loading="lazy"/>:<div className="anCuratedBlank">ANUSMITA</div>}
       <span className="anCuratedFade"/>
       <span className="anCuratedText"><strong>{item.title}</strong>
