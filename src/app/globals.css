@@ -785,22 +785,21 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
  }
  [data-an-reveal].an-reveal-entering{
   opacity:1;
-  transform:translate3d(0,0,0);
  }
- .anCategoryGrid>[data-an-reveal]:nth-child(8n+2),
- .anPreviewGrid>[data-an-reveal]:nth-child(8n+2){transition-delay:55ms}
- .anCategoryGrid>[data-an-reveal]:nth-child(8n+3),
- .anPreviewGrid>[data-an-reveal]:nth-child(8n+3){transition-delay:95ms}
- .anCategoryGrid>[data-an-reveal]:nth-child(8n+4),
- .anPreviewGrid>[data-an-reveal]:nth-child(8n+4){transition-delay:135ms}
- .anCategoryGrid>[data-an-reveal]:nth-child(8n+5),
- .anPreviewGrid>[data-an-reveal]:nth-child(8n+5){transition-delay:175ms}
- .anCategoryGrid>[data-an-reveal]:nth-child(8n+6),
- .anPreviewGrid>[data-an-reveal]:nth-child(8n+6){transition-delay:215ms}
- .anCategoryGrid>[data-an-reveal]:nth-child(8n+7),
- .anPreviewGrid>[data-an-reveal]:nth-child(8n+7){transition-delay:255ms}
- .anCategoryGrid>[data-an-reveal]:nth-child(8n),
- .anPreviewGrid>[data-an-reveal]:nth-child(8n){transition-delay:295ms}
+ .anCategoryGrid>[data-an-reveal].an-reveal-entering:nth-child(8n+2),
+ .anPreviewGrid>[data-an-reveal].an-reveal-entering:nth-child(8n+2){transition-delay:55ms}
+ .anCategoryGrid>[data-an-reveal].an-reveal-entering:nth-child(8n+3),
+ .anPreviewGrid>[data-an-reveal].an-reveal-entering:nth-child(8n+3){transition-delay:95ms}
+ .anCategoryGrid>[data-an-reveal].an-reveal-entering:nth-child(8n+4),
+ .anPreviewGrid>[data-an-reveal].an-reveal-entering:nth-child(8n+4){transition-delay:135ms}
+ .anCategoryGrid>[data-an-reveal].an-reveal-entering:nth-child(8n+5),
+ .anPreviewGrid>[data-an-reveal].an-reveal-entering:nth-child(8n+5){transition-delay:175ms}
+ .anCategoryGrid>[data-an-reveal].an-reveal-entering:nth-child(8n+6),
+ .anPreviewGrid>[data-an-reveal].an-reveal-entering:nth-child(8n+6){transition-delay:215ms}
+ .anCategoryGrid>[data-an-reveal].an-reveal-entering:nth-child(8n+7),
+ .anPreviewGrid>[data-an-reveal].an-reveal-entering:nth-child(8n+7){transition-delay:255ms}
+ .anCategoryGrid>[data-an-reveal].an-reveal-entering:nth-child(8n),
+ .anPreviewGrid>[data-an-reveal].an-reveal-entering:nth-child(8n){transition-delay:295ms}
 }
 @media(hover:none),(pointer:coarse){
  /* Touch devices must never rely on hover to reveal category links. */
