@@ -62,7 +62,8 @@ export default function ProductDetailPurchase({product,siblings,canOrder,preview
   {perfume?<div className="anPdpVariantArea">
    <div className="anPdpOptionLabel"><strong>Choose your size</strong><span>Each size has its own SKU and price</span></div>
    <div className="anPdpSizeGrid">
-    {choices.map(size=>size.slug?<Link href={"/products/"+size.slug} key={size.key} aria-current={size.selected?"page":undefined}
+    {choices.map(size=>preview?<div key={size.key} className={"anPdpSizeCard unavailable"+(size.selected?" selected":"")} aria-label={size.label+" design preview"}>
+    <strong>{size.label}</strong><span>Design only</span></div>:size.slug?<Link href={"/products/"+size.slug} key={size.key} aria-current={size.selected?"page":undefined}
       className={"anPdpSizeCard"+(size.selected?" selected":"")}>
      <strong>{size.label}</strong><span>{size.pricePaisa===null?"Price on request":money(size.pricePaisa)}</span>
      {size.available===0&&<small>Out of stock</small>}
