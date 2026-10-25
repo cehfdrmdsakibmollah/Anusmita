@@ -3,7 +3,7 @@ import {useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import {ArrowRight,ChevronDown,ChevronLeft,ChevronRight,Crown,Diamond,Gift,Grid2X2,Heart,Instagram,Facebook,Youtube,Leaf,List,Menu,Package,Search,ShoppingBag,SlidersHorizontal,UserRound,X} from 'lucide-react';
 import {demoProducts,emptyFilters,filterProducts,sortOptions,type Filters,type Sort,type Region,type DemoProduct} from '@/lib/shop-preview';
-function Art({region,label,className=''}:{region:Region;label:string;className?:string}){const [x,y,w,h]=region;return <span className={'sp-art '+className} role="img" aria-label={label} style={{aspectRatio:`${w}/${h}`}}><img src="/brand/reference/shop.png" alt="" draggable={false} style={{width:`${1024/w*100}%`,height:`${1536/h*100}%`,left:`${-x/w*100}%`,top:`${-y/h*100}%`}}/></span>;}
+function Art({region,label,className=''}:{region:Region;label:string;className?:string}){const lipstick=region[0]===738&&region[1]===408;const [x,y,w,h]=lipstick?[225,875,157,114]:region;const source=lipstick?'radiance.png':'shop.png';const sw=lipstick?1122:1024,sh=lipstick?1402:1536;return <span className={'sp-art '+className} role="img" aria-label={label} style={{aspectRatio:`${w}/${h}`}}><img src={"/brand/reference/"+source} alt="" draggable={false} style={{width:`${sw/w*100}%`,height:`${sh/h*100}%`,left:`${-x/w*100}%`,top:`${-y/h*100}%`}}/></span>;}
 function Logo({footer=false}:{footer?:boolean}){return <Link href="/" className="sp-logo"><Art region={footer?[53,1338,57,58]:[28,35,58,55]} label="ANUSMITA emblem"/><span>ANUSMITA<small>FASHION · JEWELLERY · BEAUTY</small></span></Link>;}
 const money=(n:number)=>'৳'+n.toLocaleString('en-BD');
 export default function ShopPreview(){
