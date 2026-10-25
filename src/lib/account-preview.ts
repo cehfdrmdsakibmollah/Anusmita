@@ -1,0 +1,14 @@
+import {z} from 'zod';
+export const products=[{id:'perfume',name:'Radiance Eau De Parfum',price:2950,region:[1171,338,136,129],stock:true},{id:'cream',name:'Glow Moisture Cream',price:1850,region:[1344,338,136,129],stock:true},{id:'bag',name:'Blush Grace Handbag',price:2400,region:[1171,578,136,129],stock:true},{id:'bed',name:'Floral Dreams Bedsheet Set',price:2800,region:[1344,578,136,129],stock:false}] as const;
+export const statuses=['All','Pending','Processing','Shipped','Delivered'] as const;
+export const orders=[{id:'ANU-10248',date:'12 Apr 2024',product:'perfume',status:'Pending'},{id:'ANU-10232',date:'08 Apr 2024',product:'cream',status:'Processing'},{id:'ANU-10216',date:'04 Apr 2024',product:'bag',status:'Shipped'},{id:'ANU-10198',date:'28 Mar 2024',product:'bed',status:'Delivered'}] as const;
+export const addressSchema=z.object({id:z.string().max(60),name:z.string().trim().min(1).max(100),phone:z.string().max(30),street:z.string().trim().min(1).max(200),district:z.string().trim().min(1).max(80),city:z.string().trim().min(1).max(80),area:z.string().trim().min(1).max(80),label:z.enum(['Home','Office']),isDefault:z.boolean()});
+export type Address=z.infer<typeof addressSchema>;
+export const initialAddresses:Address[]=[{id:'home',name:'Anu Rahman',phone:'01XXXXXXXXX',street:'House 12, Road 5',district:'Dhaka',city:'Dhaka',area:'Dhanmondi',label:'Home',isDefault:true},{id:'office',name:'Anu Rahman',phone:'01XXXXXXXXX',street:'Banani',district:'Dhaka',city:'Dhaka',area:'Banani',label:'Office',isDefault:false}];
+export const blankAddress:Address={id:'',name:'',phone:'',street:'',district:'Dhaka',city:'Dhaka',area:'Dhanmondi',label:'Home',isDefault:false};
+export const stateSchema=z.object({addresses:z.array(addressSchema).max(20).refine(a=>a.filter(x=>x.isDefault).length===(a.length?1:0)&&new Set(a.map(x=>x.id)).size===a.length),wishlist:z.array(z.enum(['perfume','cream','bag','bed'])).max(4).refine(a=>new Set(a).size===a.length)});
+export type AccountState=z.infer<typeof stateSchema>;
+export const initialAccount:AccountState={addresses:initialAddresses,wishlist:['perfume','cream','bag','bed']};
+export function saveAddress(list:Address[],input:Address){const a=addressSchema.parse(input);const existing=list.some(x=>x.id===a.id);if(!existing&&list.length>=20)throw Error('You can save up to 20 addresses.');const next=existing?list.map(x=>x.id===a.id?a:x):[...list,a];if(a.isDefault)return next.map(x=>({...x,isDefault:x.id===a.id}));if(!next.some(x=>x.isDefault)&&next[0])next[0]={...next[0],isDefault:true};return next;}
+export function deleteAddress(list:Address[],id:string){const next=list.filter(x=>x.id!==id);if(next.length&&!next.some(x=>x.isDefault))next[0]={...next[0],isDefault:true};return next;}
+export function validPhone(phone:string){return /^(?:\+?88)?01[3-9]\d{8}$/.test(phone.replace(/[\s-]/g,''));}
