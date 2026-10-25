@@ -5,7 +5,7 @@ import {Search,UserRound,ShoppingBag,ArrowRight,ChevronRight,Mail,Phone,Facebook
 import {articles,contact,enquirySchema,whatsappDraft,filterArticles,type Enquiry} from '@/lib/information-preview';
 type View='about'|'contact'|'journal';
 const routes={about:'/about/design-preview',contact:'/contact/design-preview',journal:'/journal/design-preview'};
-function Art({region,label,className=''}:{region:readonly number[];label:string;className?:string}){const [x,y,w,h]=region;return <span className={'ip-art '+className} role="img" aria-label={label} style={{aspectRatio:`${w}/${h}`}}><img src="/brand/reference/information.png" alt="" draggable={false} style={{width:`${1536/w*100}%`,height:`${1024/h*100}%`,left:`${-x/w*100}%`,top:`${-y/h*100}%`}}/></span>;}
+function Art({region,label,className=''}:{region:readonly number[];label:string;className?:string}){const [x,y,w,h]=region;return <span className={'ip-art '+className} role="img" aria-label={label} style={{aspectRatio:`${w}/${h}`}}><svg viewBox={`${x} ${y} ${w} ${h}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true" style={{position:"absolute",inset:0,width:"100%",height:"100%"}}><image href="/brand/reference/information.png" width="1536" height="1024"/></svg></span>;}
 function Brand(){return <Link className="ip-brand" href="/">ANUSMITA<small>FASHION · JEWELLERY · BEAUTY</small></Link>;}
 function ChatIcon({whatsapp=false}:{whatsapp?:boolean}){return <span className={'ip-chat-icon '+(whatsapp?'whatsapp':'messenger')}>{whatsapp?<><MessageCircle/><Phone className="ip-phone-mini"/></>:<><MessageCircle fill="currentColor"/><span className="ip-bolt">⌁</span></>}</span>;}
 export default function InformationPreview({view}:{view:View}){
