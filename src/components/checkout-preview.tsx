@@ -18,7 +18,7 @@ export default function CheckoutPreview({view}:{view:View}){
  useEffect(()=>{try{const raw=sessionStorage.getItem(storageKey);if(raw){const parsed=sessionSchema.safeParse(JSON.parse(raw));if(parsed.success){setState(parsed.data);setCoupon(parsed.data.coupon);}else sessionStorage.removeItem(storageKey);}}catch{setStorageOK(false);}setReady(true);},[]);
  function save(next:PreviewState){setState(next);try{sessionStorage.setItem(storageKey,JSON.stringify(next));setStorageOK(true);return true;}catch{setStorageOK(false);return false;}}
  function info(text:string){setDialogText(text);dialog.current?.showModal();}
- function reset(){save({...initialState,customer:{...blankCustomer}});setCoupon('');setMessage('Sample bag restored.');setAgreed(false);submitLock.current=false;}
+ function reset(){save({...initialState,customer:{...blankCustomer}});setCoupon('');setMessage('Sample bag restored.');setAgreed(false);setBusy(false);submitLock.current=false;}
  function quantity(id:string,delta:number){save({...state,lines:state.lines.map(l=>l.id===id?{...l,qty:Math.max(1,Math.min(20,l.qty+delta))}:l)});}
  function updateCustomer(key:keyof Customer,value:string){save({...state,customer:{...state.customer,[key]:value}});}
  function applyCoupon(){const code=coupon.trim().toUpperCase();if(code==='DEMO10'){save({...state,coupon:'DEMO10'});setMessage('DEMO10 applied: 10% off sample products.');}else if(!code){save({...state,coupon:''});setMessage('Coupon removed.');}else setMessage('This sample code is not valid. Try DEMO10 in this preview.');}
