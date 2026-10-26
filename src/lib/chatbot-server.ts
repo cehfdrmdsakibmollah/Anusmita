@@ -14,3 +14,14 @@ export async function boundedJson(req:Request,max=5000){
  while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>max){await reader.cancel();throw new HttpError(413,'Message too large');}chunks.push(value);}
  try{return JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw new HttpError(400,'Invalid JSON');}
 }
+
+// Netlify can rewrite request.url to a deploy permalink. Trust only server-owned
+// deployment URLs, never Host/X-Forwarded-Host supplied by a caller.
+export function assertChatOrigin(req:Request,env:Record<string,string|undefined>=process.env){
+ const origin=req.headers.get('origin');if(!origin)return;
+ const allowed=new Set([new URL(req.url).origin]);
+ for(const value of [env.DEPLOY_PRIME_URL,env.DEPLOY_URL,env.URL]){
+  if(!value)continue;try{const u=new URL(value);if(u.protocol==='https:')allowed.add(u.origin);}catch{/* Ignore invalid configuration. */}
+ }
+ if(!allowed.has(origin))throw new HttpError(403,'Cross-origin request rejected');
+}

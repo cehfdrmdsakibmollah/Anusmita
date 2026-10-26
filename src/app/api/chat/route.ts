@@ -1,16 +1,16 @@
-import {assertOrigin,apiError,HttpError} from '@/lib/auth';
+import {apiError,HttpError} from '@/lib/auth';
 import {db} from '@/lib/db';
 import {Product} from '@/lib/models';
 import {dedicatedDb} from '@/lib/launch-config';
 import {ChatbotSettings} from '@/lib/chatbot-model';
 import {chatSchema,answersSchema,builtinReply,searchTerms,escapeRegex,matchCustom,supportLinks,type ChatProduct} from '@/lib/chatbot';
-import {allowChat,boundedJson} from '@/lib/chatbot-server';
+import {allowChat,boundedJson,assertChatOrigin} from '@/lib/chatbot-server';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const headers={'Cache-Control':'no-store'};
 export async function POST(req:Request){
  try{
-  assertOrigin(req);
+  assertChatOrigin(req);
   if(!allowChat(req.headers.get('x-nf-client-connection-ip')||'unknown'))return Response.json({error:'Please wait a minute before sending another message.'},{status:429,headers:{...headers,'Retry-After':'60'}});
   const {message,language,context}=chatSchema.parse(await boundedJson(req));
   const builtin=builtinReply(message,language);if(builtin)return Response.json(builtin,{headers});
