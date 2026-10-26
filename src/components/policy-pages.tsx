@@ -4,14 +4,14 @@ import {useState} from "react";
 import {Search,UserRound,ShoppingBag,Headphones,MapPin,Truck,Package,FileText,MessageCircle,Settings,CreditCard,ShieldCheck,Cookie,Phone,ArrowRight,ChevronDown,Printer,ClipboardList,Flower2} from "lucide-react";
 export type PolicyView="shipping"|"returns"|"privacy"|"terms"|"faq";
 const pages: {id:PolicyView;label:string;title:string;accent:string;subtitle:string;art:number[]}[]=[
-{id:"shipping",label:"Shipping",title:"Shipping &",accent:"Delivery",subtitle:"Thoughtfully packed. Delivered with care.",art:[350,84,165,100]},
+{id:"shipping",label:"Shipping",title:"Shipping &",accent:"Delivery",subtitle:"Thoughtfully packed. Delivered with care.",art:[380,84,135,100]},
 {id:"returns",label:"Returns",title:"Return &",accent:"Refund",subtitle:"A little reassurance with every order.",art:[839,84,168,100]},
 {id:"privacy",label:"Privacy",title:"Privacy",accent:"Policy",subtitle:"Your trust matters to us.",art:[1345,84,163,100]},
 {id:"terms",label:"Terms",title:"Terms of",accent:"Service",subtitle:"Clear information. Confident shopping.",art:[500,666,266,78]},
 {id:"faq",label:"FAQ",title:"Frequently Asked",accent:"Questions",subtitle:"Good questions. Thoughtful answers.",art:[1280,666,215,78]}];
 export const policyHref=(id:PolicyView)=>`/${id}/design-preview`;
 const support="/contact/design-preview#assistant-title";
-function Brand({header=false}:{header?:boolean}){return <Link href="/" className="pc-brand">{header&&<img src="/brand/anusmita-logo.webp" width="50" height="50" alt=""/>}<span>ANUSMITA<small>FASHION · JEWELLERY · BEAUTY</small></span></Link>}
+function Brand({header=false}:{header?:boolean}){return <Link href="/" className="pc-brand">{header&&<svg className="pc-emblem" viewBox="50 49 34 32" aria-hidden="true"><image href="/brand/reference/policy-approved.png" width="1536" height="1024"/></svg>}<span>ANUSMITA<small>FASHION · JEWELLERY · BEAUTY</small></span></Link>}
 function Accordion({title,children,icon:Icon,open=false}:{title:string;children:React.ReactNode;icon?:typeof Truck;open?:boolean}){return <details className="pc-accordion" open={open||undefined}><summary>{Icon&&<Icon/>}<span>{title}</span><ChevronDown/></summary><div>{children}</div></details>}
 function Help({title,children,button="Ask ANUSMITA",icon:Icon=Headphones}:{title:string;children:React.ReactNode;button?:string;icon?:typeof Headphones}){return <aside className="pc-help"><Icon/><div><h3>{title}</h3><p>{children}</p></div><Link className="pc-button" href={support}>{button} <ArrowRight/></Link></aside>}
 const privacy=[{id:"information",title:"Information you share",icon:Settings,body:"We collect information that you provide when you create an account, place an order or contact us, such as your name, contact details and order information."},{id:"use",title:"How information is used",icon:Settings,body:"We use your information to process orders, communicate with you, improve our services and provide a better shopping experience."},{id:"cookies",title:"Cookies & preferences",icon:Cookie,body:"Cookies and similar technologies may support site functionality. The final policy will describe any analytics, preference controls and third-party services used."},{id:"choices",title:"Your choices",icon:UserRound,body:"You can ask about accessing, updating or removing your personal information by contacting us."}];
