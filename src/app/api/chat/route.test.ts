@@ -2,7 +2,7 @@ import {describe,it,expect,vi,beforeEach} from 'vitest';
 vi.mock('server-only',()=>({}));
 vi.mock('@/lib/db',()=>({db:vi.fn()}));
 vi.mock('@/lib/launch-config',()=>({dedicatedDb:vi.fn(()=>false)}));
-vi.mock('@/lib/models',()=>({Product:{find:vi.fn()},User:{}}));
+vi.mock('@/lib/models',()=>({Product:{find:vi.fn(),findOne:vi.fn()},User:{}}));
 vi.mock('@/lib/chatbot-model',()=>({ChatbotSettings:{findOne:vi.fn()}}));
 import {POST} from './route';
 import {dedicatedDb} from '@/lib/launch-config';
@@ -22,4 +22,15 @@ describe('chat API boundaries',()=>{
  const chain={select:vi.fn().mockReturnThis(),sort:vi.fn().mockReturnThis(),limit:vi.fn().mockReturnThis(),maxTimeMS:vi.fn().mockReturnThis(),lean:vi.fn().mockResolvedValue([{_id:'abc',name:'Round Lab',slug:'round-lab',category:'Skincare',size:'100ml',pricePaisa:100000,onHand:5,reserved:2,costPaisa:60000,supplierId:'private',description:'Published description',usageInstructions:'Label instructions'}])};vi.mocked(Product.find).mockReturnValue(chain as never);
  const r=await POST(req({message:'Round Lab',language:'en'}));const data=await r.json();expect(Product.find).toHaveBeenCalledWith(expect.objectContaining({active:true}));expect(chain.limit).toHaveBeenCalledWith(4);expect(data.products[0].available).toBe(3);expect(data.products[0]).not.toHaveProperty('costPaisa');expect(data.products[0]).not.toHaveProperty('supplierId');expect(r.headers.get('Cache-Control')).toBe('no-store');
  });
+ it('scopes variant replies to a published product group, brand and category',async()=>{
+  vi.mocked(dedicatedDb).mockReturnValue(true);vi.mocked(ChatbotSettings.findOne).mockReturnValue({lean:async()=>null} as never);
+  vi.mocked(Product.findOne).mockReturnValue({select:()=>({maxTimeMS:()=>({lean:async()=>({slug:'navy-m',variantGroup:'dress',brand:'ANUSMITA',category:'Fashion'})})})} as never);
+  const chain={select:vi.fn().mockReturnThis(),sort:vi.fn().mockReturnThis(),limit:vi.fn().mockReturnThis(),maxTimeMS:vi.fn().mockReturnThis(),lean:vi.fn().mockResolvedValue([{_id:'abc',name:'Dress',slug:'navy-m',category:'Fashion',size:'M',color:'Navy',material:'Cotton',pricePaisa:100000,onHand:2,reserved:2}])};vi.mocked(Product.find).mockReturnValue(chain as never);
+  const response=await POST(req({message:'L',productSlug:'navy-m',language:'en'}));const data=await response.json();expect(Product.find).toHaveBeenCalledWith({active:true,variantGroup:'dress',brand:'ANUSMITA',category:'Fashion'});expect(chain.limit).toHaveBeenCalledWith(12);expect(data.products[0].available).toBe(0);expect(data.products[0].color).toBe('Navy');expect(data.products[0].facts).toContainEqual({label:'Material / fabric',value:'Cotton'});
+ });
+ it('does not reveal variants for an unpublished product slug',async()=>{
+  vi.mocked(dedicatedDb).mockReturnValue(true);vi.mocked(ChatbotSettings.findOne).mockReturnValue({lean:async()=>null} as never);vi.mocked(Product.findOne).mockReturnValue({select:()=>({maxTimeMS:()=>({lean:async()=>null})})} as never);
+  const response=await POST(req({message:'L',productSlug:'archived-dress',language:'en'}));expect((await response.json()).reply).toContain('no longer published');expect(Product.find).not.toHaveBeenCalled();
+ });
+
 });

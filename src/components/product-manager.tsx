@@ -1,7 +1,8 @@
 
 "use client";
 import {useEffect,useState} from "react";
-type Product={_id:string;sku:string;name:string;slug:string;category:string;brand:string;size?:string;variantGroup?:string;ingredients?:string;usageInstructions?:string;topNotes?:string;heartNotes?:string;baseNotes?:string;description?:string;pricePaisa:number;costPaisa:number;onHand:number;reserved:number;active:boolean;updatedAt:string};
+import {detailFields,type ProductDetails} from "@/lib/product-experience";
+type Product=ProductDetails&{_id:string;sku:string;name:string;slug:string;category:string;brand:string;size?:string;variantGroup?:string;ingredients?:string;usageInstructions?:string;topNotes?:string;heartNotes?:string;baseNotes?:string;description?:string;pricePaisa:number;costPaisa:number;onHand:number;reserved:number;active:boolean;updatedAt:string};
 type Result={products:Product[];page:number;pages:number;total:number};
 export default function ProductManager(){
  const [q,setQ]=useState(""),[page,setPage]=useState(1),[result,setResult]=useState<Result|null>(null);
@@ -16,7 +17,7 @@ export default function ProductManager(){
   const form=new FormData(e.currentTarget);
   setBusy(true);setMessage("");
   try{
-   const changes={name:String(form.get("name")||"").trim(),slug:String(form.get("slug")||"").trim(),
+   const changes={...Object.fromEntries(detailFields.map(([key])=>[key,String(form.get(key)||"").trim()])),name:String(form.get("name")||"").trim(),slug:String(form.get("slug")||"").trim(),
     brand:String(form.get("brand")||"").trim(),category:String(form.get("category")||"").trim(),
     size:String(form.get("size")||"").trim(),variantGroup:String(form.get("variantGroup")||"").trim().toLowerCase(),
     description:String(form.get("description")||"").trim(),ingredients:String(form.get("ingredients")||"").trim(),
@@ -32,7 +33,7 @@ export default function ProductManager(){
   finally{setBusy(false);}
  }
  return <section className="adminCard"><h2>Search & edit products</h2>
- <p className="smallprint">Update product information without redeploying. Price edits affect future orders only; existing order snapshots remain unchanged. To change stock, use Inventory adjustments. Perfume sizes are separate SKUs (2ml spray, 5ml, 10ml, 15ml, 50ml, 100ml). Give matching perfume SKUs the same variant group key, e.g. gucci-flora-gardenia; never create a size without its SKU, price and stock.</p>
+ <p className="smallprint">Update product information without redeploying. Price edits affect future orders only; existing order snapshots remain unchanged. To change stock, use Inventory adjustments. Every colour/size combination is a separate SKU. Use the same group, category and brand to link variants. Perfume sizes are separate SKUs (2ml spray, 5ml, 10ml, 15ml, 50ml, 100ml). Give matching perfume SKUs the same variant group key, e.g. gucci-flora-gardenia; never create a size without its SKU, price and stock.</p>
  <div className="field"><label htmlFor="catalog-search">Search by product name, SKU or brand</label><input id="catalog-search" placeholder="Type a name or SKU" value={q} onChange={e=>{setQ(e.target.value);setPage(1);}}/></div>
  {message&&<p className={message.startsWith("Error")?"error":"notice"} role="status">{message}</p>}
  <table><thead><tr><th>SKU</th><th>Product</th><th>Price</th><th>Available</th><th>Status</th><th></th></tr></thead><tbody>
@@ -51,6 +52,7 @@ export default function ProductManager(){
    ["heartNotes","Heart fragrance notes (if verified)",selected.heartNotes||""],
    ["baseNotes","Base fragrance notes (if verified)",selected.baseNotes||""],["price","Price BDT",(selected.pricePaisa/100).toFixed(2)],["cost","Cost BDT",(selected.costPaisa/100).toFixed(2)]] as [string,string,string][]).map(([key,title,value])=>
    <div className="field" key={key}><label htmlFor={"edit-"+key}>{title}</label><input id={"edit-"+key} name={key} defaultValue={value} required={["name","slug","category","price","cost"].includes(key)} type={key==="price"||key==="cost"?"number":"text"} step={key==="price"||key==="cost"?"0.01":undefined} min={key==="price"?"0.01":key==="cost"?"0":undefined}/></div>)}
+  {detailFields.map(([key,title])=><div className="field" key={key}><label htmlFor={'edit-'+key}>{title}</label><textarea id={'edit-'+key} name={key} defaultValue={selected[key]||''} maxLength={key==='colorHex'?7:2000} rows={key==='sizeGuide'?4:2}/></div>)}
   </div><p><label><input type="checkbox" name="active" defaultChecked={selected.active}/> Published (uncheck to archive)</label></p>
   <div className="filters"><button className="button" disabled={busy} type="submit">{busy?"Saving…":"Save product"}</button><button className="button light" onClick={()=>setSelected(null)} type="button">Cancel</button></div>
  </form>}
