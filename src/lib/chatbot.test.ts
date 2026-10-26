@@ -1,0 +1,11 @@
+import {describe,it,expect} from 'vitest';
+import {builtinReply,chatSchema,searchTerms,escapeRegex,keywordMatch,matchCustom,answersSchema,enquiryLink} from './chatbot';
+describe('shopping assistant',()=>{
+ it('does not confuse substrings with greetings or order intents',()=>{expect(keywordMatch('this shirt','hi')).toBe(false);expect(builtinReply('Skin1004 toner','en')).toBe(null);});
+ it('prioritises private order safeguards before order keywords',()=>{const r=builtinReply('অর্ডার কোথায়','bn');expect(r?.reply).toContain('ব্যক্তিগত');expect(r?.products).toBeUndefined();});
+ it('does not invent coupons or place orders',()=>{expect(builtinReply('ANUSMITA10 discount','en')?.reply).toContain('does not generate');expect(builtinReply('confirm order','en')?.reply).toContain('does not automatically');});
+ it('rejects forged user IDs, oversized messages and invalid languages',()=>{expect(chatSchema.safeParse({message:'hi',userId:'someone-else'}).success).toBe(false);expect(chatSchema.safeParse({message:'x'.repeat(601)}).success).toBe(false);expect(chatSchema.safeParse({message:'hi',language:'xx'}).success).toBe(false);});
+ it('uses bounded literal terms and follow-up context',()=>{expect(searchTerms('price','Round Lab')).toEqual(['Round Lab']);expect(searchTerms('show me oily skin')).toEqual(['oily']);expect(new RegExp(escapeRegex('a.*')).test('abc')).toBe(false);});
+ it('matches only enabled complete FAQ keywords',()=>{const a={id:'cd8fe6bf-fdaf-4d67-9382-8aafaf409567',keywords:['gift wrap'],bn:'হ্যাঁ',en:'Yes',enabled:true};expect(matchCustom('Is gift wrap available?',[a],'en')).toBe('Yes');expect(matchCustom('gift wrapping',[a],'en')).toBeUndefined();expect(matchCustom('gift wrap',[{...a,enabled:false}],'en')).toBeUndefined();expect(answersSchema.safeParse([a,a]).success).toBe(false);});
+ it('encodes enquiries without confirming or sending an order',()=>{const u=new URL(enquiryLink([{product:{id:'a',name:'A & B',slug:'a',category:'Beauty',size:'5ml',pricePaisa:15000,available:1,description:'',usage:''},quantity:2}]));expect(u.hostname).toBe('wa.me');expect(u.pathname).toBe('/8801310339192');expect([...u.searchParams.keys()]).toEqual(['text']);expect(u.searchParams.get('text')).toContain('not a confirmed order');expect(u.searchParams.get('text')).toContain('A & B (5ml) × 2');});
+});
