@@ -63,7 +63,7 @@ export default function RootLayout({children}:{children:React.ReactNode}){
      <Link href="/?category=Mobile%20Accessories#shop">Mobile accessories</Link>
      <Link href="/?category=Bed%20Sheets#shop">Bed sheets</Link><Link href="/#collections">Explore all</Link></div>
     <div className="anFooterLinks"><strong>ANUSMITA</strong><Link href="/about/design-preview">Our story</Link><Link href="/contact/design-preview">Contact & assistance</Link><Link href="/journal/design-preview">Beauty Journal</Link>
-     <Link href="/admin/login">Team portal</Link><Link href="/#shop">Discover products</Link>
+     <Link href="/shipping/design-preview">Shipping & Delivery</Link><Link href="/returns/design-preview">Returns & Refunds</Link><Link href="/faq/design-preview">FAQ</Link><Link href="/privacy/design-preview">Privacy Policy</Link><Link href="/terms/design-preview">Terms of Service</Link><Link href="/admin/login">Team portal</Link><Link href="/#shop">Discover products</Link>
      <span className="anFooterMotto">A little more beautiful, every day. ✦</span></div>
    </div><div className="anFooterBottom"><span>© {new Date().getFullYear()} ANUSMITA. All rights reserved.</span><span>Thoughtfully curated in Bangladesh</span></div></div>
   </footer>
