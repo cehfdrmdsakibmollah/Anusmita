@@ -1,7 +1,7 @@
 import {z} from 'zod';
 import {contact} from './information-preview';
 export type Language='bn'|'en';
-export type ChatProduct={id:string;name:string;slug:string;category:string;size:string;pricePaisa:number;available:number;description:string;usage:string};
+export type ChatProduct={id:string;name:string;slug:string;category:string;size:string;pricePaisa:number;available:number;description:string;usage:string;imageUrl?:string};
 export type ChatReply={reply:string;products?:ChatProduct[];suggestions?:string[];links?:{label:string;href:string}[];context?:string};
 export const chatSchema=z.object({message:z.string().trim().min(1).max(600),language:z.enum(['bn','en']).default('bn'),context:z.string().max(100).default('')}).strict();
 export const answerSchema=z.object({id:z.uuid(),keywords:z.array(z.string().trim().min(2).max(60)).min(1).max(12),bn:z.string().trim().min(1).max(1200),en:z.string().trim().min(1).max(1200),enabled:z.boolean()}).strict();
