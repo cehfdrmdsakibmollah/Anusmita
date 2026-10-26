@@ -10,11 +10,12 @@ import LaunchReadiness from "@/components/launch-readiness";
 import PurchaseManager from "@/components/purchase-manager";
 import CanvaCatalogueReview from "@/components/canva-catalogue-review";
 import HrWholesaleSource from "@/components/hr-wholesale-source";
+import ChatbotManager from "@/components/chatbot-manager";
 import HomepageManager from "@/components/homepage-manager";
 type Overview={orderedPaisa:number;confirmedPaisa:number;deliveredSalesPaisa:number;recordedCollectionsPaisa:number;outstandingPaisa:number;supplierPayablePaisa:number;supplierPaidPaisa:number;cogsPaisa:number;recordedExpensePaisa:number;estimatedGrossProfitPaisa:number;estimatedOperatingProfitPaisa:number;unreconciled:boolean;placedOrders:number;deliveredOrders:number;lowStockSkus:number;reservedUnits:number;inventoryCostPaisa:number};
 type Order={_id:string;orderNumber:string;orderStatus:string;paymentStatus:string;collectedPaisa:number;totalPaisa:number;customer:{name:string;phone:string};createdAt:string};
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
-const tabs=["Overview","Homepage Studio","Orders","Products","Inventory","Payments","Suppliers","Purchasing","Bulk Import","Canva Catalogue","HR Wholesale","Drive Images","Cloudinary","R2 Images","Launch Readiness"];
+const tabs=["Overview","Assistant Replies","Homepage Studio","Orders","Products","Inventory","Payments","Suppliers","Purchasing","Bulk Import","Canva Catalogue","HR Wholesale","Drive Images","Cloudinary","R2 Images","Launch Readiness"];
 export default function AdminConsole({role}:{role:string}){
  const [tab,setTab]=useState("Overview"),[overview,setOverview]=useState<Overview|null>(null),[orders,setOrders]=useState<Order[]>([]),[notice,setNotice]=useState(""),[pending,setPending]=useState(false);
  const load=useCallback(async()=>{
@@ -48,6 +49,7 @@ export default function AdminConsole({role}:{role:string}){
  const canSuppliers=["owner","admin","purchasing"].includes(role);
  return <>
  <div className="tabbar" role="tablist" aria-label="ERP sections">{tabs.map(t=><button key={t} className={tab===t?"active":""} role="tab" aria-selected={tab===t} onClick={()=>setTab(t)}>{t}</button>)}</div>
+ {tab==="Assistant Replies"&&(["owner","admin"].includes(role)?<ChatbotManager/>:<p>Owner or admin access required.</p>)}
  {notice&&<p role="status" className={notice.startsWith("Error")?"error":"success"}>{notice}</p>}
  {tab==="Overview"&&<><p className="muted">Financial totals show actual recorded orders and manually verified payments. Profit is an estimate until reconciliation.</p>
  {overview?<><div className="kpiGrid">
