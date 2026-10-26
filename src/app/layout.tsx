@@ -4,6 +4,8 @@ import Link from "next/link";
 import {ArrowUpRight,Heart,Search,UserRound,Menu} from "lucide-react";
 import {checkoutEnabled} from "@/lib/launch-config";
 import "./globals.css";
+import "./storefront-polish.css";
+import StorefrontHelp from "@/components/storefront-help";
 export const metadata:Metadata={
  title:{default:"ANUSMITA | Fashion · Jewellery · Beauty",template:"%s | ANUSMITA"},
  description:"Discover ANUSMITA's curated collection of beauty, skincare, fashion, jewellery, watches, bags, perfume, home and everyday accessories in Bangladesh.",
@@ -49,7 +51,7 @@ export default function RootLayout({children}:{children:React.ReactNode}){
        <Link href="/admin/login">Admin Portal <ArrowUpRight size={14}/></Link></nav></details>
    </div>
   </div></header>
-  <main>{children}</main>
+  <main>{children}<StorefrontHelp/></main>
   <footer className="anFooter">
    <div className="anWide"><div className="anFooterTop">
     <div className="anFooterBrand"><Link href="/" className="anFooterLogo">ANUSMITA</Link><p>FASHION · JEWELLERY · BEAUTY</p>
@@ -60,7 +62,7 @@ export default function RootLayout({children}:{children:React.ReactNode}){
     <div className="anFooterLinks"><strong>COLLECTIONS</strong><Link href="/?category=Perfumes#shop">Perfumes</Link>
      <Link href="/?category=Mobile%20Accessories#shop">Mobile accessories</Link>
      <Link href="/?category=Bed%20Sheets#shop">Bed sheets</Link><Link href="/#collections">Explore all</Link></div>
-    <div className="anFooterLinks"><strong>ANUSMITA</strong><Link href="/#our-story">Our story</Link>
+    <div className="anFooterLinks"><strong>ANUSMITA</strong><Link href="/about/design-preview">Our story</Link><Link href="/contact/design-preview">Contact & assistance</Link><Link href="/journal/design-preview">Beauty Journal</Link>
      <Link href="/admin/login">Team portal</Link><Link href="/#shop">Discover products</Link>
      <span className="anFooterMotto">A little more beautiful, every day. ✦</span></div>
    </div><div className="anFooterBottom"><span>© {new Date().getFullYear()} ANUSMITA. All rights reserved.</span><span>Thoughtfully curated in Bangladesh</span></div></div>

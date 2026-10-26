@@ -13,13 +13,14 @@ import ProductDetailsAccordion from "@/components/product-details-accordion";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 type Props={params:Promise<{slug:string}>};
-type DbProduct={
+import type {ProductDetails} from "@/lib/product-experience";
+type DbProduct=ProductDetails&{
  _id:any;name:string;slug:string;sku:string;brand:string;category:string;origin:string;
  description:string;imageUrls:string[];size:string;variantLabel:string;variantGroup:string;
  pricePaisa:number;onHand:number;reserved:number;ingredients:string;usageInstructions:string;
  topNotes:string;heartNotes:string;baseNotes:string
 };
-const projection="name slug sku brand category origin description imageUrls size variantLabel variantGroup pricePaisa onHand reserved ingredients usageInstructions topNotes heartNotes baseNotes";
+const projection="name slug sku brand category origin description imageUrls size variantLabel variantGroup pricePaisa onHand reserved ingredients usageInstructions topNotes heartNotes baseNotes color colorHex material dimensions compatibility careInstructions warranty sizeGuide skinType benefits";
 const previewProduct:DbProduct={
  _id:"preview",name:"Radiance Eau de Parfum",slug:"design-preview",
  sku:"",brand:"ANUSMITA",category:"Perfumes",origin:"Other",description:"A preview of the ANUSMITA product detail experience, inspired by our beauty and fragrance collections. Actual fragrance details will be added when a product is published.",
@@ -38,14 +39,14 @@ async function getProduct(slug:string):Promise<DbProduct|null>{
  }catch{return null;}
 }
 const variant=(p:DbProduct):ProductVariant=>({
- id:String(p._id),slug:p.slug,sku:p.sku||"",size:p.size||p.variantLabel||"",
+ id:String(p._id),slug:p.slug,sku:p.sku||"",color:p.color,colorHex:p.colorHex,size:p.size||p.variantLabel||"",
  pricePaisa:p.pricePaisa,available:Math.max(0,(p.onHand||0)-(p.reserved||0))
 });
 async function supporting(p:DbProduct){
  if(p.slug==="design-preview")return {variants:[] as ProductVariant[],related:[] as DbProduct[]};
  try{
   const category=String(p.category);
-  const linked=shouldListGroup(p.variantGroup)&&isPerfumeCategory(category);
+  const linked=shouldListGroup(p.variantGroup);
   const [siblings,related]=await Promise.all([
    linked?Product.find({
     active:true,variantGroup:p.variantGroup,brand:p.brand,category,
@@ -109,10 +110,10 @@ export default async function ProductPage({params}:Props){
     {preview&&<span className="anPdpDemoChip" title="No real product, price, review, stock or order">Design preview · Not for sale</span>}
    </nav>
    <div className="anPdpMain">
-    <ProductImageGallery urls={p.imageUrls||[]} name={p.name} preview={preview}/>
+    <ProductImageGallery key={p.slug} urls={p.imageUrls||[]} name={p.name} preview={preview}/>
     <div className="anPdpRight">
      <ProductDetailPurchase key={p.slug} product={{
-      ...variant(p),name:p.name,category:p.category,brand:p.brand,description:p.description,origin:p.origin
+      ...variant(p),name:p.name,category:p.category,brand:p.brand,description:p.description,origin:p.origin,details:Object.fromEntries(["color", "colorHex", "material", "dimensions", "compatibility", "careInstructions", "warranty", "sizeGuide", "skinType", "benefits"].map(key=>[key,p[key as keyof ProductDetails]||""]))
      }} siblings={variants} canOrder={canOrder} preview={preview}/>
      <div className="anPdpTrust" aria-label="Shopping information">
       <div><Sparkles size={22}/><span><strong>Curated with care</strong><small>Selected for ANUSMITA</small></span></div>
@@ -125,7 +126,7 @@ export default async function ProductPage({params}:Props){
    <ProductDetailsAccordion preview={preview} product={{
     description:p.description,ingredients:p.ingredients,usageInstructions:p.usageInstructions,
     topNotes:p.topNotes,heartNotes:p.heartNotes,baseNotes:p.baseNotes,
-    brand:p.brand,origin:p.origin,size:p.size||p.variantLabel,category:p.category,sku:p.sku
+    ...Object.fromEntries(["color", "colorHex", "material", "dimensions", "compatibility", "careInstructions", "warranty", "sizeGuide", "skinType", "benefits"].map(key=>[key,p[key as keyof ProductDetails]||""])),brand:p.brand,origin:p.origin,size:p.size||p.variantLabel,category:p.category,sku:p.sku
    }}/>
    {(related.length>0||preview)&&<section className="anPdpRelated" aria-label="Explore related collections">
     <div className="anPdpRelatedTitle"><div><span className="anPdpOverline">MORE TO EXPLORE</span>

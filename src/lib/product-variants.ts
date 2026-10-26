@@ -19,7 +19,7 @@ export function canonicalPerfumeSize(value:string){
  return PERFUME_SIZES.find(s=>Number(s.key.match(/^\d+/)?.[0])===n)?.key||null;
 }
 export type ProductVariant={
- id:string;slug:string;size:string;pricePaisa:number;available:number;sku:string
+ id:string;slug:string;size:string;pricePaisa:number;available:number;sku:string;color?:string;colorHex?:string
 };
 export function perfumeSizeCards(variants:ProductVariant[],current:ProductVariant){
  const all=[current,...variants];
@@ -32,3 +32,10 @@ export function perfumeSizeCards(variants:ProductVariant[],current:ProductVarian
 export function shouldListGroup(group?:string){
  return Boolean(group&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(group)&&group.length<=100);
 }
+
+export function colourChoices(variants:ProductVariant[],current:ProductVariant){
+ const all=[current,...variants];return [...new Set(all.map(v=>v.color||'').filter(Boolean))].map(color=>{
+ const matching=all.filter(v=>v.color===color);const target=matching.find(v=>v.size===current.size)||matching[0];return {color,hex:target.colorHex||'',slug:target.slug,selected:color===current.color};
+ });
+}
+export function sizeChoices(variants:ProductVariant[],current:ProductVariant){return [current,...variants].filter(v=>(v.color||'')===(current.color||''));}

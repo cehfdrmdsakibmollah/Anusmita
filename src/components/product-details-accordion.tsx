@@ -1,6 +1,7 @@
 
 import {Box,ClipboardList,Droplets,Leaf,PackageCheck} from "lucide-react";
-type ProductFacts={
+import {categoryLabels,productFacts,type ProductDetails} from "@/lib/product-experience";
+type ProductFacts=ProductDetails&{
  description?:string;ingredients?:string;usageInstructions?:string;
  topNotes?:string;heartNotes?:string;baseNotes?:string;
  brand?:string;origin?:string;size?:string;category:string;sku?:string;
@@ -11,7 +12,7 @@ export default function ProductDetailsAccordion({product,preview=false}:{product
  return <div className="anPdpInfoGrid">
   <article className="anPdpInfoStory">
    <span className="anPdpInfoEyebrow">THE ANUSMITA EDIT</span>
-   <h2>A fragrance that<br/><em>feels like you.</em></h2>
+   <h2>{categoryLabels(product.category).story}</h2>
    <p>The ANUSMITA edit celebrates the little things that make everyday moments memorable. Product details are added by our team.</p>
    <span className="anPdpInfoSig">ANUSMITA ✦</span>
   </article>
@@ -43,6 +44,7 @@ export default function ProductDetailsAccordion({product,preview=false}:{product
   <article className="anPdpInfoPanel anPdpAccordions">
    <h2>Product details</h2>
    <details open><summary>Description</summary><p>{product.description||"Detailed product information is being prepared."}</p></details>
+   {productFacts(product).map(f=><details key={f.label}><summary>{f.label}</summary><p style={{whiteSpace:"pre-line"}}>{f.value}</p></details>)}
    {product.ingredients&&<details><summary>Ingredients / materials</summary><p>{product.ingredients}</p></details>}
    {product.usageInstructions&&<details><summary>How to use</summary><p>{product.usageInstructions}</p></details>}
    <details><summary>Shipping & delivery</summary><p>Delivery coverage, timing and charges are confirmed during checkout or with ANUSMITA support. No free-shipping promise applies unless separately confirmed.</p></details>
