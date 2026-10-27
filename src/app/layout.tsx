@@ -26,6 +26,7 @@ const nav=[
  {label:"Watches",href:"/?category=Watches#shop"},
  {label:"Perfumes",href:"/?category=Perfumes#shop"},
  {label:"Bags",href:"/?category=Bags#shop"},
+ {label:"Routine Finder",href:"/routine-quiz"},
  {label:"Skincare",href:"/?category=Skincare#shop"}
 ];
 export default function RootLayout({children}:{children:React.ReactNode}){
