@@ -17,6 +17,7 @@ export const metadata:Metadata={
 const nav=[
  {label:"Home",href:"/"},
  {label:"Shop",href:"/#shop"},
+ {label:"Deals",href:"/deals"},
  {label:"Beauty",href:"/?category=Beauty#shop"},
  {label:"Fashion",href:"/?category=Fashion#shop"},
  {label:"Home Decor",href:"/?category=Bed%20Sheets#shop"},
