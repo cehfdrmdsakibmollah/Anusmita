@@ -26,6 +26,7 @@ const nav=[
  {label:"Watches",href:"/?category=Watches#shop"},
  {label:"Perfumes",href:"/?category=Perfumes#shop"},
  {label:"Bags",href:"/?category=Bags#shop"},
+ {label:"Gift Cards",href:"/gift-cards"},
  {label:"Customer Stories",href:"/customer-stories"},
  {label:"Track Order",href:"/track-order"},
  {label:"Routine Finder",href:"/routine-quiz"},
