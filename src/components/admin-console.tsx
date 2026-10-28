@@ -16,8 +16,8 @@ type Overview={orderedPaisa:number;confirmedPaisa:number;deliveredSalesPaisa:num
 type Order={_id:string;orderNumber:string;orderStatus:string;paymentStatus:string;collectedPaisa:number;totalPaisa:number;customer:{name:string;phone:string};createdAt:string};
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
 const tabs=["Overview","Assistant Replies","Homepage Studio","Orders","Products","Inventory","Payments","Suppliers","Purchasing","Bulk Import","Canva Catalogue","HR Wholesale","Drive Images","Cloudinary","R2 Images","Launch Readiness"];
-export default function AdminConsole({role}:{role:string}){
- const [tab,setTab]=useState("Overview"),[overview,setOverview]=useState<Overview|null>(null),[orders,setOrders]=useState<Order[]>([]),[notice,setNotice]=useState(""),[pending,setPending]=useState(false);
+export default function AdminConsole({role,initialTab}:{role:string;initialTab?:string}){
+ const [tab,setTab]=useState(initialTab&&tabs.includes(initialTab)?initialTab:"Overview"),[overview,setOverview]=useState<Overview|null>(null),[orders,setOrders]=useState<Order[]>([]),[notice,setNotice]=useState(""),[pending,setPending]=useState(false);
  const load=useCallback(async()=>{
   if(["owner","admin","finance","analyst"].includes(role)){
    const response=await fetch("/api/admin/overview",{cache:"no-store"});
