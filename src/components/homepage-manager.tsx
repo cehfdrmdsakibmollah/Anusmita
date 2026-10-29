@@ -111,7 +111,7 @@ export default function HomepageManager(){
      {kind!=="announcement"&&<div className="field full"><label>Hero / banner / card image HTTPS URL</label><input type="url" value={draft.imageUrl} onChange={e=>patch("imageUrl",e.target.value)}
       placeholder="https://res.cloudinary.com/oseohmxd/image/upload/…"/>
       <span className="smallprint">Cloudinary ANUSMITA images or images.unsplash.com only. Use the Cloudinary tab to upload real licensed images.</span></div>}
-     <div className="field"><label>Button / click destination</label><input value={draft.href} onChange={e=>patch("href",e.target.value)} required placeholder="/?category=Beauty#shop"/></div>
+     <div className="field"><label>Button / click destination</label><input value={draft.href} onChange={e=>patch("href",e.target.value)} required placeholder="/shop?category=Beauty#shop"/></div>
      <div className="field"><label>Button label</label><input maxLength={40} value={draft.cta} onChange={e=>patch("cta",e.target.value)}/></div>
      {(kind==="promotion"||kind==="hero"||kind==="editorial")&&<>
       <div className="field"><label>Show from (optional)</label><input type="datetime-local" value={localValue(draft.startsAt)}
