@@ -1,4 +1,5 @@
 import Link from "next/link";
+import HomepageDiscover from "@/components/homepage-discover";
 
 import {ArrowRight,ArrowUpRight,Heart,Package,ShieldCheck,Sparkles,Truck} from "lucide-react";
 import {db} from "@/lib/db";
@@ -84,7 +85,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
   <section className="anCategories" id="collections" aria-label="Shop by category">
    <div className="anWide">
     <div className="anSectionTitle" data-an-reveal><div><p className="anOverline">DISCOVER YOUR NEXT FAVOURITE <span>✦</span></p>
-     <h2>Shop by category</h2></div><a href="#shop" className="anTextLink">Explore collections <ArrowUpRight size={17}/></a></div>
+     <h2>Shop by category</h2></div><a href="/shop" className="anTextLink">Explore collections <ArrowUpRight size={17}/></a></div>
     <div className="anCategoryGrid">
      {categories.map(c=><Link href={c.href} className="anCategoryCard" key={c.id} data-an-reveal>
       <div className="anCategoryImage">{c.imageUrl?<img src={c.imageUrl} alt={c.title} loading="lazy"/>:<div className="anCategoryBlank">ANUSMITA</div>}</div>
@@ -141,6 +142,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
   </section>:<section className="anSimpleStory" id="our-story"><div className="anWide">
    <h2>The ANUSMITA world</h2><p>Fashion, jewellery, beauty and everyday discoveries thoughtfully brought together for Bangladesh.</p>
   </div></section>}
+  <HomepageDiscover/>
   <div className="anPromise"><span>✦</span><h2>{announcement?.title||"Beautiful discoveries. Thoughtfully yours."}</h2><p>ANUSMITA — Fashion · Jewellery · Beauty · Lifestyle</p></div>
  </>;
 }
