@@ -4,7 +4,7 @@ import Link from 'next/link';
 import AdminSalesChart from '@/components/admin-sales-chart';
 import type {DashboardMetrics} from '@/lib/dashboard-metrics';
 import {Home,ShoppingCart,ShoppingBag,Package,UserRound,Truck,CreditCard,PanelsTopLeft,MessageCircle,ChartNoAxesColumnIncreasing,Settings,Search,Bell,ArrowUpRight,ArrowRight,ChevronRight,Upload,FileText,ClipboardList,TriangleAlert,Menu,X,MoreHorizontal,Wallet,Info} from 'lucide-react';
-const money=(n:number)=>'৳'+new Intl.NumberFormat('en-BD',{maximumFractionDigits:0}).format(n/100);
+const money=(n:number)=>'৳'+new Intl.NumberFormat('en-BD',{maximumFractionDigits:2}).format(n/100);
 type Overview={orderedPaisa:number;recordedCollectionsPaisa:number;estimatedOperatingProfitPaisa:number;outstandingPaisa:number;supplierPayablePaisa:number;reservedUnits:number;lowStockSkus:number};
 type Order={orderNumber:string;source:string;paymentStatus:string;orderStatus:string;totalPaisa:number};
 const samples:Order[]=[{orderNumber:'ANU-10482',source:'chatbot',paymentStatus:'Unverified',orderStatus:'To verify',totalPaisa:240000},{orderNumber:'ANU-10481',source:'Checkout',paymentStatus:'Paid',orderStatus:'Packing',totalPaisa:360000},{orderNumber:'ANU-10480',source:'Checkout',paymentStatus:'COD pending',orderStatus:'Ready to dispatch',totalPaisa:180000}];
