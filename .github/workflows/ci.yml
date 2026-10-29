@@ -9,6 +9,16 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      mongo:
+        image: mongo:8.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ping:1}).ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,8 +26,10 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Unit tests
+      - name: Unit and isolated database tests
         run: npm test
+        env:
+          DASHBOARD_TEST_MONGODB_URI: mongodb://127.0.0.1:27017/anusmita_dashboard_test
       - name: Typecheck
         run: npm run typecheck
       - name: Production build
