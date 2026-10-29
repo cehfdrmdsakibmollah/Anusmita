@@ -6,6 +6,7 @@ import {checkoutEnabled} from "@/lib/launch-config";
 import "./globals.css";
 import "./storefront-polish.css";
 import "./homepage-connected.css";
+import "./catalogue-refresh.css";
 import StoreNavigation from "@/components/store-navigation";
 import StorefrontHelp from "@/components/storefront-help";
 export const metadata:Metadata={
@@ -36,20 +37,6 @@ export default function RootLayout({children}:{children:React.ReactNode}){
    </div>
   </div></header>
   <main id="main-content">{children}<StorefrontHelp/></main>
-  <footer className="anFooter">
-   <div className="anWide"><div className="anFooterTop">
-    <div className="anFooterBrand"><Link href="/" className="anFooterLogo">ANUSMITA</Link><p>FASHION · JEWELLERY · BEAUTY</p>
-     <small>Your favourite discoveries, beautifully brought together for Bangladesh.</small></div>
-    <div className="anFooterLinks"><strong>DISCOVER</strong><Link href="/shop">All products</Link>
-     <Link href="/shop?category=Beauty">Beauty & skincare</Link><Link href="/shop?category=Fashion">Fashion</Link>
-     <Link href="/shop?category=Watches">Watches</Link><Link href="/shop?category=Bags">Bags</Link></div>
-    <div className="anFooterLinks"><strong>COLLECTIONS</strong><Link href="/bundles">Bundles</Link><Link href="/deals">Daily offers</Link><Link href="/pre-orders">Pre-orders</Link><Link href="/gift-cards">Gift cards</Link><Link href="/shop?category=Perfumes">Perfumes</Link>
-     <Link href="/shop?category=Mobile%20Accessories">Mobile accessories</Link>
-     <Link href="/shop?category=Bed%20Sheets">Bed sheets</Link><Link href="/#collections">Explore all</Link></div>
-    <div className="anFooterLinks"><strong>ANUSMITA</strong><Link href="/track-order">Track your order</Link><Link href="/routine-quiz">Routine Finder</Link><Link href="/customer-stories">Customer Stories</Link><Link href="/about/design-preview">Our story</Link><Link href="/contact/design-preview">Contact & assistance</Link><Link href="/journal/design-preview">Beauty Journal</Link>
-     <Link href="/shipping/design-preview">Shipping & Delivery</Link><Link href="/returns/design-preview">Returns & Refunds</Link><Link href="/faq/design-preview">FAQ</Link><Link href="/privacy/design-preview">Privacy Policy</Link><Link href="/terms/design-preview">Terms of Service</Link><Link href="/admin/login">Team portal</Link><Link href="/shop">Discover products</Link>
-     <span className="anFooterMotto">A little more beautiful, every day. ✦</span></div>
-   </div><div className="anFooterBottom"><span>© {new Date().getFullYear()} ANUSMITA. All rights reserved.</span><span>Thoughtfully curated in Bangladesh</span></div></div>
-  </footer>
+  <footer className="anFooter anFooterCompact"><div className="anWide"><div className="anFooterTop"><div className="anFooterBrand"><Link href="/" className="anFooterLogo">ANUSMITA</Link><p>FASHION · JEWELLERY · BEAUTY</p></div><div className="anFooterLinks"><strong>SHOP</strong><Link href="/shop">All products</Link><Link href="/shop?category=Bed%20Sheets">Bed sheets</Link><Link href="/bundles">Bundles & offers</Link><Link href="/about/design-preview">Our story</Link></div><div className="anFooterLinks"><strong>CUSTOMER CARE</strong><Link href="/track-order">Track your order</Link><Link href="/shipping/design-preview">Shipping & delivery</Link><Link href="/returns/design-preview">Returns & refunds</Link><Link href="/contact/design-preview">Contact us</Link></div></div><div className="anFooterBottom"><span>© {new Date().getFullYear()} ANUSMITA</span><span><Link href="/privacy/design-preview">Privacy Policy</Link><Link href="/terms/design-preview">Terms of Service</Link></span></div></div></footer>
  </body></html>;
 }
