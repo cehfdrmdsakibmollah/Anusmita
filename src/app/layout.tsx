@@ -1,3 +1,4 @@
+import {ShoppingLinks} from '@/components/catalogue-shopping';
 
 import type {Metadata} from "next";
 import Link from "next/link";
@@ -32,7 +33,7 @@ export default function RootLayout({children}:{children:React.ReactNode}){
    <div className="anHeaderTools">
     <a href="/shop#store-search" aria-label="Search the collection"><Search size={20}/></a>
     <Link href="/account/design-preview" aria-label="Customer account preview"><UserRound size={19}/></Link>
-    <a href="/account/wishlist/design-preview" aria-label="Wishlist preview"><Heart size={19}/></a>
+    <ShoppingLinks/>
     <StoreNavigation mobile/>
    </div>
   </div></header>
