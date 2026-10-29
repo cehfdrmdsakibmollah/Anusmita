@@ -7,7 +7,8 @@ on:
     branches: [main]
 jobs:
   quality:
-    runs-on: ubuntu-latest
+    # MongoDB 8 currently rejects kernel 6.19+; use the Ubuntu 22.04 runner.
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     services:
       mongo:
