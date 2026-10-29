@@ -2,6 +2,7 @@
 "use client";
 import { useEffect,useMemo,useRef,useState } from "react";
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 import {ArrowRight,ArrowUpRight,Search,ShoppingBag,SlidersHorizontal} from "lucide-react";
 type Product={id:string;name:string;slug:string;brand:string;category:string;origin:string;image:string;size:string;pricePaisa:number;available:number};
 type CartLine={id:string;quantity:number};
@@ -23,8 +24,10 @@ function matchCategory(actual:string,selected:string){
  if(needle==="accessories")return /accessor|bag|watch/.test(normalized);
  return normalized===needle;
 }
-export default function Storefront({products,canOrder}:{products:Product[];canOrder:boolean}){
- const [search,setSearch]=useState(""),[category,setCategory]=useState("All"),[cart,setCart]=useState<CartLine[]>([]),[cartOpen,setCartOpen]=useState(false);
+export default function Storefront({products,canOrder,catalogPage=false,initialCategory="All"}:{products:Product[];canOrder:boolean;catalogPage?:boolean;initialCategory?:string}){
+ const router=useRouter();
+ function chooseCategory(value:string){if(catalogPage){const params=new URLSearchParams(window.location.search);params.delete("page");params.set("category",value);router.push("/shop?"+params.toString());}else setCategory(value);}
+ const [search,setSearch]=useState(""),[category,setCategory]=useState(initialCategory),[cart,setCart]=useState<CartLine[]>([]),[cartOpen,setCartOpen]=useState(false);
  const [remoteProducts,setRemoteProducts]=useState<Product[]>([]),[cartProducts,setCartProducts]=useState<Product[]>([]),[remotePage,setRemotePage]=useState(1),[remotePages,setRemotePages]=useState(1),[searching,setSearching]=useState(false);
  const [hydrated,setHydrated]=useState(false),[customer,setCustomer]=useState<Customer>({name:"",phone:"",district:"",area:"",address:"",notes:""});
  const [payment,setPayment]=useState("cod"),[deposit,setDeposit]=useState("0"),[submitting,setSubmitting]=useState(false);
@@ -81,7 +84,7 @@ export default function Storefront({products,canOrder}:{products:Product[];canOr
     placeholder="What are you looking for?" aria-label="Search ANUSMITA products"/>
   </div>
   <div className="luxShopFilter"><SlidersHorizontal size={17} aria-hidden="true"/>
-   <select aria-label="Filter products by category" value={category} onChange={e=>setCategory(e.target.value)}>{categories.map(c=><option key={c}>{c}</option>)}</select>
+   <select aria-label="Filter products by category" value={category} onChange={e=>chooseCategory(e.target.value)}>{categories.map(c=><option key={c}>{c}</option>)}</select>
   </div>
   {canOrder&&<button className="luxHeaderBag" type="button" onClick={()=>setCartOpen(true)}>
    <ShoppingBag size={18}/><span>Bag ({cart.reduce((sum,line)=>sum+line.quantity,0)})</span>
@@ -89,13 +92,13 @@ export default function Storefront({products,canOrder}:{products:Product[];canOr
  </div>
  <div className="luxCategoryTabs" role="group" aria-label="Shop categories">
   {mainCategories.map(c=><button key={c} type="button" className={category===c?"active":""}
-   aria-pressed={category===c} onClick={()=>setCategory(c)}>{c}</button>)}
+   aria-pressed={category===c} onClick={()=>chooseCategory(c)}>{c}</button>)}
  </div>
  {visible.length===0?(products.length===0&&!search.trim()?<div className="luxEmptyEdit">
   <div className="luxEmptyCopy"><span className="luxKicker">A NEW CHAPTER IS COMING</span>
    <h3>Something <em>lovely</em><br/>is on its way.</h3>
    <p>Our online product selection is being prepared. Discover the ANUSMITA story and collections while we get everything ready.</p>
-   <a className="luxUnderLink" href="#collections">Explore the collections <ArrowUpRight size={18}/></a>
+   <a className="luxUnderLink" href="/#collections">Explore the collections <ArrowUpRight size={18}/></a>
    <span className="luxEmptyFine">Preview only · No orders are being taken</span>
   </div>
   <div className="luxEmptyVisual" aria-label="ANUSMITA editorial beauty gallery">
