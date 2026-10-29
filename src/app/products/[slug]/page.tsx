@@ -1,3 +1,5 @@
+import {sheetCatalogue} from '@/lib/sheet-catalogue';
+import {SheetProductDetails} from '@/components/sheet-catalogue';
 
 import type {Metadata} from "next";
 import Link from "next/link";
@@ -63,6 +65,8 @@ async function supporting(p:DbProduct){
 }
 export async function generateMetadata({params}:Props):Promise<Metadata>{
  const {slug}=await params;
+ const sheet=!process.env.MONGODB_URI?sheetCatalogue.find(p=>p.slug===slug):undefined;
+ if(sheet)return {title:sheet.name,description:sheet.description,alternates:{canonical:"/products/"+slug}};
  const p=await getProduct(slug);
  if(!p)return {title:"Product not available",robots:{index:false,follow:false}};
  const isPreview=slug==="design-preview";
@@ -85,7 +89,10 @@ const sampleCollections=[
  {title:"Fashion",image:"/brand/categories/fashion.webp",href:"/?category=Fashion#shop"}
 ];
 export default async function ProductPage({params}:Props){
- const {slug}=await params,p=await getProduct(slug);
+ const {slug}=await params;
+ const sheet=!process.env.MONGODB_URI?sheetCatalogue.find(p=>p.slug===slug):undefined;
+ if(sheet)return <SheetProductDetails p={sheet}/>;
+ const p=await getProduct(slug);
  if(!p)notFound();
  const preview=slug==="design-preview";
  const {variants,related}=await supporting(p);

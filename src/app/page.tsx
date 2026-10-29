@@ -1,3 +1,5 @@
+import {selectCatalogue} from '@/lib/sheet-catalogue';
+import {CatalogueCard} from '@/components/sheet-catalogue';
 import Link from "next/link";
 import HomepageDiscover from "@/components/homepage-discover";
 
@@ -60,12 +62,14 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
    const ids=s.productIds?.length?s.productIds:
     s.key==="new_arrivals"?products.map(p=>p.id):
     s.key==="best_sellers"?actualBestIds:[];
-   return {key:s.key,title:s.title,subtitle:s.subtitle,products:ids.map(id=>lookup.get(id))
+   return {key:s.key,title:s.key==="new_arrivals"?"Latest Products":s.title,subtitle:s.subtitle,products:ids.map(id=>lookup.get(id))
     .filter((p):p is ShopProduct=>!!p).slice(0,s.maxItems)};
   }).filter(s=>s.products.length>0);
  }catch{
   configured=false;products=[];shelves=[];
  }
+ const snapshot=!process.env.MONGODB_URI;
+ const latest=selectCatalogue().slice(0,8);
  const active=publicBlocks(blocks);
  const slides=active.filter(x=>x.kind==="hero");
  const categories=active.filter(x=>x.kind==="category");
@@ -99,32 +103,8 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
    {shelves.length>0&&<HomepageFeatured shelves={shelves}/>}
   </div>
 
-  {!products.length&&categories.length>0&&<section className="anPreviewSelection" aria-label="ANUSMITA product collection preview">
-   <div className="anWide"><div className="anSectionTitle" data-an-reveal><div>
-    <p className="anOverline">A PREVIEW OF WHAT'S COMING <span>✦</span></p>
-    <h2>Discover the ANUSMITA edit</h2>
-    <p>Our product catalogue is being prepared. Explore the collections below.</p></div>
-    <a href="#collections" className="anTextLink">View categories <ArrowUpRight size={16}/></a>
-   </div>
-   <div className="anPreviewGrid">{categories.map(c=><a className="anPreviewItem" key={c.id} href={c.href} data-an-reveal>
-    <div className="anPreviewPhoto">{c.imageUrl&&<img src={c.imageUrl} alt="" loading="lazy"/>}
-      <span className="anPreviewSoon">COMING SOON</span></div>
-    <div className="anPreviewDetails"><span>ANUSMITA</span><h3>{c.title}</h3>
-     <p>{c.subtitle}</p><small>Explore collection <ArrowUpRight size={13}/></small>
-    </div>
-   </a>)}</div>
-   </div>
-  </section>}
-  <section id="shop" className="anShop">
-   <div className="anWide">
-    <div className="anSectionTitle"><div><p className="anOverline">THE ANUSMITA EDIT <span>✦</span></p>
-      <h2>Explore the collection</h2><p>Find your favourites across beauty, fashion, jewellery and more.</p></div>
-     <span className="anShopContext">PRICES IN BANGLADESHI TAKA</span>
-    </div>
-    <Storefront products={products} canOrder={canOrder}/>
-    {!canOrder&&<p className="anLaunchNotice"><ShieldCheck size={16}/> ANUSMITA is preparing for launch. Online checkout is not accepting orders yet.</p>}
-   </div>
-  </section>
+  {snapshot?<section className="anWide homeLatest" id="shop"><div className="anSectionTitle"><div><p className="anOverline">FRESHLY ADDED TO OUR CATALOGUE</p><h2>Latest Products</h2><p>Beautiful bedsheets for your everyday sanctuary.</p></div><Link className="anTextLink" href="/shop">Shop all 60 designs →</Link></div><div className="sheetGrid">{latest.map(p=><CatalogueCard key={p.id} p={p}/>)}</div><div className="homeShopCta"><p>Ready stock · ৳2,500 per design · Delivery included</p><Link href="/shop?category=Bed%20Sheets" className="sheetPrimary">Explore bed sheets →</Link></div></section>:<section className="anWide homeShopCta" id="shop"><h2>Explore the collection</h2><Link className="sheetPrimary" href="/shop">Shop all products →</Link></section>}
+  {!shelves.some(s=>s.key==='best_sellers')&&<div className="anWide"><section className="sheetEmpty" aria-label="Best Sellers"><p className="anOverline">LOVED BY OUR CUSTOMERS</p><h2>Best Sellers</h2><p>Our most-loved products will appear here as completed orders come in. In the meantime, discover the latest collection.</p><Link href="/shop">Find your favourite →</Link></section></div>}
 
   {editorial.length>0?<section className="anCurated">
    <div className="anWide">

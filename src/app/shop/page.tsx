@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import Link from 'next/link';
+import SheetCatalogue from '@/components/sheet-catalogue';
 import Storefront from '@/components/storefront';
 import {db} from '@/lib/db';
 import {Product} from '@/lib/models';
@@ -8,8 +9,9 @@ import {categoryFilter} from '@/lib/catalog-category';
 export const dynamic='force-dynamic';
 export const metadata:Metadata={title:'Shop all products',description:'Browse ANUSMITA beauty, fashion, fragrance and home collections.',alternates:{canonical:'/shop'}};
 const pageSize=48;
-export default async function Shop({searchParams}:{searchParams:Promise<{page?:string;category?:string;q?:string}>}){
+export default async function Shop({searchParams}:{searchParams:Promise<{page?:string;category?:string;q?:string;sort?:string}>}){
  const query=await searchParams;
+ if(!process.env.MONGODB_URI)return <SheetCatalogue query={query}/>;
  const requested=/^[1-9]\d{0,4}$/.test(query.page||'')?Number(query.page):1;
  const category=(query.category||'All').slice(0,80),filter:any={active:true};
  const selected=categoryFilter(category);if(selected)filter.category=selected;
