@@ -1592,3 +1592,25 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
  line-height:1.35;
  color:#97848c;
 }
+
+
+/* Shop reference: one clear card CTA, image-corner wishlist, no duplicate arrows. */
+.anShopReferenceCard{display:flex;flex-direction:column;border-radius:7px;border:1px solid #f2e7e7;background:#fff;overflow:hidden;min-width:0}
+.anShopCardMedia{position:relative;isolation:isolate}
+.anShopReferenceCard .luxProductImage{display:block;aspect-ratio:1.22 / 1;height:auto;overflow:hidden;background:#f9eff0}
+.anShopReferenceCard .luxProductImage img{display:block;width:100%;height:100%;object-fit:cover}
+.anShopCardHeart{position:absolute;z-index:2;top:11px;right:11px;width:34px;height:34px;border:1px solid #f1e8e8;border-radius:50%;background:#fff;display:grid;place-items:center;color:#30242a;cursor:pointer;box-shadow:0 2px 9px #35102212}
+.anShopCardHeart[aria-pressed="true"]{color:#be365c;background:#fff4f6}
+.anShopCardHeart:disabled{opacity:.6;cursor:wait}
+.anShopCardHeart:focus-visible,.anShopCardView:focus-visible{outline:3px solid #7e2945;outline-offset:2px}
+.anShopCardMedia .luxStockStatus{z-index:1;left:9px;top:10px;max-width:calc(100% - 59px);background:#fffaf8ee;color:#93465f}
+.anShopReferenceCard .anShopCardDetails{padding:11px 11px 13px;display:flex;flex:1;flex-direction:column;align-items:stretch}
+.anShopReferenceCard .luxProductOrigin{font-size:10px;letter-spacing:.05em;color:#85747a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.anShopReferenceCard .luxProductInfo h3{font-family:Georgia,"Times New Roman",serif;font-size:16px;line-height:1.35;font-weight:500;margin:5px 0 8px;min-height:43px}
+.anShopReferenceCard .luxProductInfo h3 a{color:#211b1d;text-decoration:none}
+.anShopCardMeta{font-size:11px;color:#71656a;margin-top:auto;margin-bottom:6px}
+.anShopReferenceCard .price{font-size:16px;font-weight:700;color:#231e20;margin:0 0 9px}
+.anShopCardView{display:flex;width:100%;min-height:39px;align-items:center;justify-content:center;gap:9px;padding:9px 12px;border-radius:4px;background:#cc456b;color:#fff!important;font-size:12px;font-weight:600;text-decoration:none;transition:background .2s}
+.anShopCardView:hover{background:#a82f54}
+@media(max-width:650px){.anShopCardHeart{top:8px;right:8px;width:32px;height:32px}.anShopReferenceCard .anShopCardDetails{padding:10px}.anShopReferenceCard .luxProductInfo h3{font-size:14px}.anShopReferenceCard .price{font-size:14px}.anShopCardView{min-height:40px}}
+@media(prefers-reduced-motion:reduce){.anShopCardView{transition:none}}
