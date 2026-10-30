@@ -38,4 +38,8 @@ export function colourChoices(variants:ProductVariant[],current:ProductVariant){
  const matching=all.filter(v=>v.color===color);const target=matching.find(v=>v.size===current.size)||matching[0];return {color,hex:target.colorHex||'',slug:target.slug,selected:color===current.color};
  });
 }
-export function sizeChoices(variants:ProductVariant[],current:ProductVariant){return [current,...variants].filter(v=>(v.color||'')===(current.color||''));}
+/** Render a size picker only when another published SKU offers a distinct size in the selected colour. */
+export function sizeChoices(variants:ProductVariant[],current:ProductVariant){
+ const choices=[current,...variants].filter(v=>(v.color||'')===(current.color||''));
+ return new Set(choices.map(v=>v.size.trim().toLowerCase())).size>1?choices:[];
+}

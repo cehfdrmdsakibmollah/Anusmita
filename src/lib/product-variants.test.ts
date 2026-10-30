@@ -1,6 +1,6 @@
 
 import {describe,it,expect} from "vitest";
-import {PERFUME_SIZES,canonicalPerfumeSize,perfumeSizeCards,isPerfumeCategory,shouldListGroup} from "./product-variants";
+import {PERFUME_SIZES,canonicalPerfumeSize,perfumeSizeCards,isPerfumeCategory,shouldListGroup,sizeChoices} from "./product-variants";
 describe("ANUSMITA perfume size catalogue",()=>{
  it("matches the six requested real SKU sizes",()=>{
   expect(PERFUME_SIZES.map(x=>x.label)).toEqual(["2ml Spray","5ml","10ml","15ml","50ml","100ml"]);
@@ -26,6 +26,13 @@ describe("ANUSMITA perfume size catalogue",()=>{
   const result=perfumeSizeCards([other],selected);
   expect(result[3]).toMatchObject({pricePaisa:298000,available:0,selected:true});
   expect(result[5]).toMatchObject({pricePaisa:1499900,available:3,selected:false,slug:"test-100ml"});
+ });
+ it("hides a single nonfunctional size option but preserves genuine SKU choices",()=>{
+  const base={id:"a",slug:"skincare-50ml",sku:"SKU-A",size:"50ml",pricePaisa:100000,available:0};
+  expect(sizeChoices([],base)).toEqual([]);
+  expect(sizeChoices([{...base,id:"b",slug:"other-colour",color:"Red",size:"100ml"}],base)).toEqual([]);
+  const second={...base,id:"c",slug:"skincare-100ml",size:"100ml",pricePaisa:190000,available:0};
+  expect(sizeChoices([second],base)).toEqual([base,second]);
  });
  it("only groups manually linked inventory",()=>{
   expect(isPerfumeCategory("Perfumes")).toBe(true);
