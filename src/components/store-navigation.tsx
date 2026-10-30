@@ -4,7 +4,7 @@ import {usePathname} from 'next/navigation';
 import {useRef} from 'react';
 import {Menu,ArrowUpRight} from 'lucide-react';
 const primary=[['Home','/'],['Shop','/shop'],['Bundles','/bundles'],['Deals','/deals'],['Journal','/journal/design-preview'],['Contact','/contact/design-preview']];
-const more=[['Routine Finder','/routine-quiz'],['Pre-orders','/pre-orders'],['Gift Cards','/gift-cards'],['Customer Stories','/customer-stories'],['Track Order','/track-order'],['About ANUSMITA','/about/design-preview'],['My Account (preview)','/account/design-preview'],['Wishlist (preview)','/account/wishlist/design-preview'],['Cart (preview)','/cart/design-preview'],['Checkout (preview)','/checkout/design-preview']];
+const more=[['Routine Finder','/routine-quiz'],['Pre-orders','/pre-orders'],['Gift Cards','/gift-cards'],['Customer Stories','/customer-stories'],['Track Order','/track-order'],['About ANUSMITA','/about/design-preview'],['My Account (preview)','/account/design-preview'],['Wishlist','/wishlist'],['Cart','/cart'],['Order request','/checkout']];
 export default function StoreNavigation({mobile=false}:{mobile?:boolean}){
  const path=usePathname();const details=useRef<HTMLDetailsElement>(null);
  const close=()=>{if(details.current)details.current.open=false;};
