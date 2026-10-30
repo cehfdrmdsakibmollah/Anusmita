@@ -1614,3 +1614,7 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
 .anShopCardView:hover{background:#a82f54}
 @media(max-width:650px){.anShopCardHeart{top:8px;right:8px;width:32px;height:32px}.anShopReferenceCard .anShopCardDetails{padding:10px}.anShopReferenceCard .luxProductInfo h3{font-size:14px}.anShopReferenceCard .price{font-size:14px}.anShopCardView{min-height:40px}}
 @media(prefers-reduced-motion:reduce){.anShopCardView{transition:none}}
+
+/* Three curated columns like the supplied shop reference; two on narrow screens. */
+.luxProductGrid.anShopReferenceGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+@media(max-width:650px){.luxProductGrid.anShopReferenceGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
