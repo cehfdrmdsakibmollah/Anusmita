@@ -11,7 +11,7 @@ describe("ANUSMITA safe launch behavior",()=>{
  });
  it("requires the right cluster, database, and least-privilege user",()=>{
   expect(dedicatedDb(uri)).toBe(true);
-  expect(dedicatedDb(uri.replace(ATLAS_HOST,"portfolio.tis5sjm.mongodb.net"))).toBe(false);
+  expect(dedicatedDb(uri.replace(ATLAS_HOST,"unapproved-cluster.example.mongodb.net"))).toBe(false);
   expect(dedicatedDb(uri.replace("/anusmita?","/Portfolio?"))).toBe(false);
   expect(dedicatedDb(uri.replace(ATLAS_APP_USER,"portfolio_admin"))).toBe(false);
   expect(dedicatedDb(uri.replace("encoded%40password","%3CPASSWORD%3E"))).toBe(false);
