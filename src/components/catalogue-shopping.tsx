@@ -39,7 +39,7 @@ export default function ShoppingPage({mode}:{mode:'cart'|'wishlist'|'checkout'})
  const total=lines.reduce((sum,l)=>sum+(l.p.pricePaisa||0)*l.quantity,0);
  const unknown=lines.some(l=>l.p.pricePaisa===null);
  const extraDelivery=lines.some(l=>!l.p.deliveryIncluded);
- const summary=['Hello ANUSMITA, I would like to request an order:',...lines.map(l=>`${l.id} | ${l.p.name} | ${l.p.size} | Qty ${l.quantity} | ${l.p.pricePaisa===null?'Please confirm price':money(l.p.pricePaisa*l.quantity)}`),`Known-price subtotal: ${money(total)}${unknown?' + items awaiting a price':''}`,'Please confirm availability, sizes, delivery fees, final total and payment options before accepting my order.'].join('\\n');
+ const summary=['Hello ANUSMITA, I would like to request an order:',...lines.map(l=>`${l.id} | ${l.p.name} | ${l.p.size} | Qty ${l.quantity} | ${l.p.pricePaisa===null?'Please confirm price':money(l.p.pricePaisa*l.quantity)}`),`Known-price subtotal: ${money(total)}${unknown?' + items awaiting a price':''}`,'Please confirm availability, sizes, delivery fees, final total and payment options before accepting my order.'].join('\n');
  return <div className="anWide shoppingPage"><p className="anOverline">YOUR ANUSMITA SELECTION</p>
   <h1>{mode==='wishlist'?'Your saved favourites.':isCheckout?'Review your order request.':'Your shopping bag.'}</h1>
   <nav className="shoppingNav"><Link href="/shop">Continue shopping</Link><Link href="/cart">Cart ({state.cart.reduce((n,l)=>n+l.quantity,0)})</Link><Link href="/wishlist">Wishlist ({state.wishlist.length})</Link></nav>
