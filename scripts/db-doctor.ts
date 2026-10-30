@@ -1,3 +1,5 @@
+import dns from "node:dns";
+dns.setServers(["1.1.1.1"]);
 
 import "dotenv/config";
 import mongoose from "mongoose";
@@ -28,9 +30,9 @@ async function doctor(){
   console.log("Active owner account:",owners>0?"YES":"NO");
   console.log("Published products:",products);
   console.log("Diagnostic was read-only.");
- }catch{
+ }catch(error){
   process.exitCode=1;
-  console.error("Atlas connectivity: FAILED. Check local IP allowlist, password, DNS and TLS settings.");
+  console.error("Atlas connectivity: FAILED."); console.error("Error:", error instanceof Error ? error.message : "Unknown error");
  }finally{if(conn)await conn.close();}
 }
 doctor().catch(()=>{process.exitCode=1;console.error("Diagnostic failed without database writes.");});

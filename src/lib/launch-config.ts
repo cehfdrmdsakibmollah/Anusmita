@@ -1,5 +1,5 @@
 
-export const ATLAS_HOST="anusmita.jvvjo1k.mongodb.net";
+export const ATLAS_HOST="portfolio.tis5sjm.mongodb.net";
 export const ATLAS_DB="anusmita";
 export const ATLAS_APP_USER="anusmita_app";
 export type StoreMode="catalog"|"live";

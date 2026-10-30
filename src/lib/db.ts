@@ -1,5 +1,7 @@
-
+﻿
 import mongoose from "mongoose";
+import dns from "node:dns";
+if (process.env.NODE_ENV !== "production") { dns.setServers(["1.1.1.1"]); }
 import {dedicatedDb} from "./launch-config";
 type Cached={conn:typeof mongoose|null;promise:Promise<typeof mongoose>|null};
 const state=globalThis as typeof globalThis & {__anusmitaMongoose?:Cached};
