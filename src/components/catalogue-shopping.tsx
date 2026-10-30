@@ -10,6 +10,17 @@ function useShopping(){const [state,setState]=useState<ShoppingState>(emptyShopp
 const money=(n:number)=>'৳'+(n/100).toLocaleString('en-BD');
 export function ShoppingLinks(){const {state}=useShopping();return <><Link href="/wishlist" aria-label={'Wishlist, '+state.wishlist.length+' saved products'}><Heart size={20}/><small>{state.wishlist.length||''}</small></Link><Link href="/cart" aria-label={'Shopping bag, '+state.cart.reduce((n,l)=>n+l.quantity,0)+' items'}><ShoppingBag size={20}/><small>{state.cart.reduce((n,l)=>n+l.quantity,0)||''}</small></Link></>}
 export function ShoppingActions({id,detail=false}:{id:string;detail?:boolean}){const {state,ready,error,update}=useShopping();const [notice,setNotice]=useState('');const router=useRouter();const saved=state.wishlist.includes(id);function add(buy=false){const ok=update(s=>{const old=s.cart.find(l=>l.id===id);return {...s,cart:old?s.cart.map(l=>l.id===id?{...l,quantity:Math.min(20,l.quantity+1)}:l):[...s.cart,{id,quantity:1}]}});if(ok){setNotice('Added to your bag');if(buy)router.push('/checkout')}}return <div className="shoppingActions"><div><button disabled={!ready} className="shoppingAdd" onClick={()=>add()}>Add to cart</button><button disabled={!ready} className="shoppingHeart" aria-label={saved?'Remove from wishlist':'Add to wishlist'} aria-pressed={saved} onClick={()=>update(s=>({...s,wishlist:saved?s.wishlist.filter(x=>x!==id):[...s.wishlist,id]}))}><Heart size={19} fill={saved?'currentColor':'none'}/></button></div>{detail&&<button disabled={!ready} className="shoppingBuy" onClick={()=>add(true)}>Buy now · Confirm with ANUSMITA</button>}<span role="status">{error||notice}{notice&&!error&&<> · <Link href="/cart">View cart</Link></>}</span></div>}
+/** Compact, accessible wishlist toggle for the top-right corner of product imagery. */
+export function ProductCardWishlist({id}:{id:string}){
+ const {state,ready,error,update}=useShopping();
+ const saved=state.wishlist.includes(id);
+ return <button type="button" className="anShopCardHeart" disabled={!ready}
+  aria-label={saved?'Remove from wishlist':'Add to wishlist'} aria-pressed={saved}
+  title={error|| (saved?'Remove from wishlist':'Save to wishlist')}
+  onClick={()=>update(s=>({...s,wishlist:saved?s.wishlist.filter(x=>x!==id):[...s.wishlist,id]}))}>
+  <Heart size={19} strokeWidth={1.8} fill={saved?'currentColor':'none'}/>
+ </button>;
+}
 type DisplayProduct={id:string;name:string;slug:string;size:string;image:string;pricePaisa:number|null;deliveryIncluded:boolean;category:string};
 const staticProducts:DisplayProduct[]=sheetCatalogue.map(p=>({id:p.id,name:p.name,slug:p.slug,size:p.size,image:p.image,pricePaisa:p.pricePaisa,deliveryIncluded:p.deliveryIncluded,category:p.category}));
 export default function ShoppingPage({mode}:{mode:'cart'|'wishlist'|'checkout'}){

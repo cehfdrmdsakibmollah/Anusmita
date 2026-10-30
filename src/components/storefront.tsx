@@ -2,7 +2,7 @@
 "use client";
 import { useEffect,useMemo,useRef,useState } from "react";
 import Link from "next/link";
-import {ShoppingActions} from "@/components/catalogue-shopping";
+import {ProductCardWishlist} from "@/components/catalogue-shopping";
 import {useRouter} from "next/navigation";
 import {ArrowRight,ArrowUpRight,Search,ShoppingBag,SlidersHorizontal} from "lucide-react";
 type Product={id:string;name:string;slug:string;brand:string;category:string;origin:string;image:string;size:string;pricePaisa:number;available:number};
@@ -114,21 +114,20 @@ export default function Storefront({products,canOrder,catalogPage=false,initialC
    <button className="luxUnderLink" type="button" onClick={()=>{setCategory("All");setSearch("");setRemotePage(1);}}>Clear filters <ArrowRight size={16}/></button>
   </>}
  </div>):
- <div className="productGrid luxProductGrid">{visible.map(p=><article className="productCard luxProductCard" key={p.id}>
-  <Link className="productImage luxProductImage" href={"/products/"+p.slug} aria-label={"View "+p.name}>
-   {p.image?<img alt={p.name} src={p.image} loading="lazy" referrerPolicy="no-referrer"/>:<span className="luxProductFallback" aria-hidden="true">A.</span>}
-   <span className="luxProductExplore"><ArrowUpRight size={18}/></span>
+ <div className="productGrid luxProductGrid anShopReferenceGrid">{visible.map(p=><article className="productCard luxProductCard anShopReferenceCard" key={p.id}>
+  <div className="anShopCardMedia">
+   <Link className="productImage luxProductImage" href={"/products/"+p.slug} aria-label={"View "+p.name}>
+    {p.image?<img alt={p.name} src={p.image} loading="lazy" referrerPolicy="no-referrer"/>:<span className="luxProductFallback" aria-hidden="true">A.</span>}
+   </Link>
+   <ProductCardWishlist id={p.id}/>
    {p.available<=0&&<span className="luxStockStatus">Currently unavailable</span>}
-  </Link>
-  <div className="productInfo luxProductInfo">
-   <div className="origin luxProductOrigin">{p.brand||p.origin}<span> / {p.category}</span></div>
+  </div>
+  <div className="productInfo luxProductInfo anShopCardDetails">
+   <div className="origin luxProductOrigin">{p.brand||p.origin}</div>
    <h3><Link href={"/products/"+p.slug}>{p.name}</Link></h3>
-   <div className="luxProductBottom">
-    <div><div className="muted">{p.size||p.origin}</div><div className="price">{money(p.pricePaisa)}</div></div>
-    {canOrder&&p.available>0?<button type="button" className="luxProductAdd" aria-label={"Add "+p.name+" to bag"} onClick={()=>{add(p.id);setCartOpen(true);}}>
-     <ShoppingBag size={19}/></button>:<Link className="luxProductAdd" href={"/products/"+p.slug} aria-label={"View details for "+p.name}><ArrowUpRight size={18}/></Link>}
-   </div>
-   <ShoppingActions id={p.id}/>
+   <div className="anShopCardMeta">{p.size||p.category}</div>
+   <div className="price">{money(p.pricePaisa)}</div>
+   <Link className="anShopCardView" href={"/products/"+p.slug}>View Product <ArrowRight size={16} aria-hidden="true"/></Link>
   </div>
  </article>)}</div>}
  {search.trim() && remotePage<remotePages && <div style={{textAlign:"center",padding:"28px"}}><button className="button light" disabled={searching} onClick={()=>setRemotePage(p=>p+1)}>{searching?"Loading…":"Load more search results"}</button></div>}
