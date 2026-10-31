@@ -209,3 +209,23 @@ const HomePageSchema=new Schema({
  lastEditedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
 },opts);
 export const HomePage=mongoose.models.HomePage||mongoose.model("HomePage",HomePageSchema);
+
+
+/** Only independently verified customer-submitted reviews may become public.
+ * No synthetic ratings, timestamps or authors are generated on a page visit. */
+const ProductReviewSchema=new Schema({
+ productId:{type:Schema.Types.ObjectId,ref:"Product",required:true,index:true},
+ orderId:{type:Schema.Types.ObjectId,ref:"Order",required:true},
+ rating:{type:Number,required:true,min:1,max:5},
+ body:{type:String,required:true,minlength:10,maxlength:1500},
+ skinType:{type:String,default:"",maxlength:60},
+ photoUrls:{type:[String],default:[]},
+ consentToPublish:{type:Boolean,required:true,default:false},
+ submittedByCustomer:{type:Boolean,required:true,default:false},
+ verifiedPurchase:{type:Boolean,required:true,default:false},
+ moderationStatus:{type:String,enum:["pending","approved","rejected"],default:"pending"},
+ verifiedAt:{type:Date,default:null}
+},opts);
+ProductReviewSchema.index({productId:1,moderationStatus:1,createdAt:-1});
+ProductReviewSchema.index({orderId:1,productId:1},{unique:true});
+export const ProductReview=mongoose.models.ProductReview||mongoose.model("ProductReview",ProductReviewSchema);
