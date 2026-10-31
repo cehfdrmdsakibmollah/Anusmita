@@ -182,6 +182,8 @@ const StoreChromeSchema=new Schema({
  key:{type:String,required:true,unique:true,default:"main"},
  announcement:{type:String,default:"",maxlength:180},
  footerNote:{type:String,default:"",maxlength:240},
+ headerOrder:{type:[String],default:["logo","navigation","search","tools"]},
+ footerOrder:{type:[String],default:["brand","shop","care"]},
  enabled:{type:Boolean,default:false},
  revision:{type:Number,default:0,min:0},
  lastEditedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
