@@ -12,7 +12,7 @@ export default function HomepageCarousel({slides}:{slides:HomeBlock[]}){
  },[]);
  useEffect(()=>{
   if(paused||reduced||slides.length<2)return;
-  const interval=window.setInterval(()=>setIndex(x=>(x+1)%slides.length),8500);
+  const interval=window.setInterval(()=>setIndex(x=>(x+1)%slides.length),3000);
   return()=>window.clearInterval(interval);
  },[paused,reduced,slides.length]);
  useEffect(()=>setIndex(0),[slides.length]);
