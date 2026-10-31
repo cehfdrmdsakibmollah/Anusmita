@@ -2036,3 +2036,5 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
 @media(max-width:1060px){.apTopGrid{grid-template-columns:1fr 1fr}.apMedia{grid-column:1/-1}.apGallery{grid-template-columns:repeat(6,minmax(0,1fr))}}
 @media(max-width:700px){.apHeading{align-items:flex-start;flex-direction:column}.apTopGrid,.apLowerGrid,.apDetailsBody{grid-template-columns:1fr}.apMedia{grid-column:auto}.apGallery{grid-template-columns:repeat(4,minmax(0,1fr))}.apSaveBox{border-left:0;border-top:1px solid #e8d8da;padding:14px 0 0}.apCard h3{font-size:17px}}
 @media(max-width:370px){.apTwo{grid-template-columns:1fr}.apGallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+.apAdvanced{margin:15px 0;border:1px solid #ead8db;border-radius:13px;padding:16px;background:#fff9fa}.apAdvanced summary{cursor:pointer;color:#8b2850;font-weight:700}.apAdvanced>.adminCard{margin-top:14px}.apAdvanced .adminCard{box-shadow:none}.apWorkspace .apSaveBox .apSecondary{margin-top:4px}
