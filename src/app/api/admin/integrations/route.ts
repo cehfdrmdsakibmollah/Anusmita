@@ -8,7 +8,7 @@ const definitions=[
  {id:"meta",name:"Meta Pixel / CAPI",group:"Marketing",keys:["META_PIXEL_ID","META_CAPI_ACCESS_TOKEN"],instructions:"Verify test events and deduplication before enabling purchase events"},
  {id:"ga4",name:"GA4",group:"Marketing",keys:["NEXT_PUBLIC_GA_MEASUREMENT_ID"],instructions:"Verify event consent and Realtime DebugView"},
  {id:"whatsapp",name:"WhatsApp Cloud API",group:"Social Inbox",keys:["WHATSAPP_ACCESS_TOKEN","WHATSAPP_PHONE_NUMBER_ID"],instructions:"Requires approved WhatsApp business account, subscriptions and webhook verification"},
- {id:"messenger",name:"Messenger / Instagram",group:"Social Inbox",keys:["META_PAGE_ACCESS_TOKEN","META_APP_SECRET"],instructions:"Requires Meta app review, scoped page permissions and signed webhook verification"},
+ {id:"messenger",name:"Messenger / Instagram inbound",group:"Social Inbox",keys:["META_INBOX_ENABLED","META_APP_SECRET","META_WEBHOOK_VERIFY_TOKEN"],instructions:"Inbound receiver exists; set META_INBOX_ENABLED=true only after Meta app review and signed webhook testing. No reply API connected."},
  {id:"sms",name:"SMS / OTP",group:"Customer messaging",keys:["SMS_PROVIDER_API_KEY"],instructions:"Requires approved provider, verified sender and consent policy"},
  {id:"payment",name:"Payment Gateway",group:"Payment & COD",keys:["PAYMENT_GATEWAY_API_KEY"],instructions:"Requires independent merchant verification, callback signatures and reconciliation testing"}
 ] as const;
@@ -16,7 +16,7 @@ export async function GET(){
  try{
   await authorize(["owner","admin"]);
   const integrations:Integration[]=definitions.map(d=>{
-   const missing=d.keys.filter(k=>!process.env[k]);
+   const missing=d.keys.filter(k=>!process.env[k]||(k==="META_INBOX_ENABLED"&&process.env[k]!=="true"));
    return {id:d.id,name:d.name,group:d.group,configured:missing.length===0,verified:false,missing,instructions:d.instructions};
   });
   return Response.json({integrations,notes:"Credential presence is not a successful API connection. No credential values are returned. No service is activated by this page."},{headers:{"Cache-Control":"private, no-store"}});
