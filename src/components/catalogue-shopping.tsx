@@ -23,9 +23,13 @@ export function ProductCardWishlist({id}:{id:string}){
 }
 type DisplayProduct={id:string;name:string;slug:string;size:string;image:string;pricePaisa:number|null;deliveryIncluded:boolean;category:string};
 const staticProducts:DisplayProduct[]=sheetCatalogue.map(p=>({id:p.id,name:p.name,slug:p.slug,size:p.size,image:p.image,pricePaisa:p.pricePaisa,deliveryIncluded:p.deliveryIncluded,category:p.category}));
-export default function ShoppingPage({mode}:{mode:'cart'|'wishlist'|'checkout'}){
+export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishlist'|'checkout';codEnabled?:boolean}){
  const {state,ready,error,update}=useShopping();
  const [consent,setConsent]=useState(false);
+ const [codCustomer,setCodCustomer]=useState({name:'',phone:'',district:'',area:'',address:'',notes:''});
+ const [codPending,setCodPending]=useState(false),[codError,setCodError]=useState('');
+ const [codKey,setCodKey]=useState('');
+ const router=useRouter();
  const [remote,setRemote]=useState<DisplayProduct[]>([]);
  const [loading,setLoading]=useState(false);
  const [loadError,setLoadError]=useState('');
@@ -50,7 +54,18 @@ export default function ShoppingPage({mode}:{mode:'cart'|'wishlist'|'checkout'})
  const total=lines.reduce((sum,l)=>sum+(l.p.pricePaisa||0)*l.quantity,0);
  const unknown=lines.some(l=>l.p.pricePaisa===null);
  const extraDelivery=lines.some(l=>!l.p.deliveryIncluded);
- const summary=['Hello ANUSMITA, I would like to request an order:',...lines.map(l=>`${l.id} | ${l.p.name} | ${l.p.size} | Qty ${l.quantity} | ${l.p.pricePaisa===null?'Please confirm price':money(l.p.pricePaisa*l.quantity)}`),`Known-price subtotal: ${money(total)}${unknown?' + items awaiting a price':''}`,'Please confirm availability, sizes, delivery fees, final total and payment options before accepting my order.'].join('\n');
+ async function submitCod(event:React.FormEvent<HTMLFormElement>){
+  event.preventDefault();if(!codEnabled||!consent||codPending||loadError||missing.length||unknown||lines.some(l=>!/^[0-9a-f]{24}$/i.test(l.id)))return;
+  setCodPending(true);setCodError('');
+  const key=codKey||crypto.randomUUID();setCodKey(key);
+  try{
+   const response=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':key},body:JSON.stringify({items:lines.map(l=>({productId:l.id,quantity:l.quantity})),customer:codCustomer,paymentMethod:'cod',depositPaisa:0})});
+   const result=await response.json();if(!response.ok)throw new Error(result.error||'COD order was not accepted');
+   if(typeof result.receiptUrl!=='string'||!result.receiptUrl.startsWith('/order-success?token='))throw new Error('Order recorded but receipt unavailable. Contact support with your order reference.');
+   setCodKey('');update(x=>({...x,cart:[]}));router.push(result.receiptUrl);
+  }catch(error){setCodError(error instanceof Error?error.message:'Unable to place COD order');}finally{setCodPending(false)}
+ }
+
  return <div className="anWide shoppingPage"><p className="anOverline">YOUR ANUSMITA SELECTION</p>
   <h1>{mode==='wishlist'?'Your saved favourites.':isCheckout?'Review your order request.':'Your shopping bag.'}</h1>
   <nav className="shoppingNav"><Link href="/shop">Continue shopping</Link><Link href="/cart">Cart ({state.cart.reduce((n,l)=>n+l.quantity,0)})</Link><Link href="/wishlist">Wishlist ({state.wishlist.length})</Link></nav>
@@ -73,9 +88,15 @@ export default function ShoppingPage({mode}:{mode:'cart'|'wishlist'|'checkout'})
     {unknown&&<p>Some items need a price confirmation and are not included in the subtotal.</p>}
     <div><span>Delivery</span><span>{extraDelivery?'To be confirmed':'Included'}</span></div>
     <p>Stock is not reserved. We will confirm availability and the final total before accepting your request. No payment is collected here.</p>
-    {isCheckout?<><label className="shoppingConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/> I understand this is an order request, not a confirmed purchase.</label>
-     {consent?<a className="sheetPrimary" href={'https://wa.me/8801310339192?text='+encodeURIComponent(summary)} target="_blank" rel="noopener noreferrer">Send request on WhatsApp →</a>:<button className="sheetPrimary" disabled>Send request on WhatsApp →</button>}<Link href="/cart">Back to cart</Link></>:
-     <Link className="sheetPrimary" href="/checkout">Continue to order request →</Link>}
+    {isCheckout?<>{codEnabled?<form className="anCodForm" onSubmit={submitCod}>
+     <h3>Cash on Delivery</h3><p>No advance payment. Order total and delivery fee are calculated and validated by our server.</p>
+     {(['name','phone','district','area','address'] as const).map(k=><label key={k}>{k.charAt(0).toUpperCase()+k.slice(1)} *<input required type={k==='phone'?'tel':'text'} inputMode={k==='phone'?'tel':'text'} pattern={k==='phone'?'01[3-9][0-9]{8}':undefined} maxLength={k==='address'?400:100} value={codCustomer[k]} onChange={e=>{setCodCustomer(x=>({...x,[k]:e.target.value}));setCodKey('');}}/></label>)}
+     <label>Delivery notes<textarea rows={2} maxLength={400} value={codCustomer.notes} onChange={e=>setCodCustomer(x=>({...x,notes:e.target.value}))}/></label>
+     <label className="shoppingConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/> I confirm the details are correct and understand the order is unpaid until verified.</label>
+     {codError&&<p role="alert" className="error">{codError}</p>}
+     <button className="sheetPrimary" type="submit" disabled={!consent||codPending||Boolean(loadError)||missing.length>0||unknown}>{codPending?'Submitting…':'Place COD Order →'}</button>
+     </form>:<div className="notice"><strong>COD checkout is not open yet.</strong><p>ANUSMITA is in catalogue mode. Verified stock and owner-controlled launch settings must be ready before orders are accepted.</p><Link href="/shop">Continue browsing</Link></div>}<Link href="/cart">Back to cart</Link></>:
+     <Link className="sheetPrimary" href="/checkout">Continue to COD checkout →</Link>}
     <small>Your selections are saved on this browser.</small>
    </aside></div>)}
   </>}

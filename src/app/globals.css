@@ -1727,3 +1727,25 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
 .anCategoryRailShell :is(a,button):focus-visible{outline:3px solid #7a3652;outline-offset:3px}
 @media(max-width:700px){.anCategoryRail{gap:12px}.anCategoryRail .anCategoryCard{flex-basis:min(54vw,220px)}}
 @media(prefers-reduced-motion:reduce){.anCategoryRail{scroll-behavior:auto}}
+
+
+/* COD preparation and customer receipt, without changing catalogue-mode launch gate. */
+.anCodForm{display:grid;gap:12px;margin:18px 0}
+.anCodForm>label{display:grid;gap:6px;font-size:13px;font-weight:600;color:#5c3b48}
+.anCodForm input:not([type=checkbox]),.anCodForm textarea{width:100%;padding:11px;border:1px solid #d8c1ca;border-radius:6px;background:#fff;color:#31262d}
+.anCodForm .shoppingConsent{display:flex;align-items:flex-start;gap:9px;font-weight:400;line-height:1.5}
+.anCodForm input[type=checkbox]{margin-top:3px}
+.anCodForm :is(input,textarea,button):focus-visible{outline:3px solid #8b3859;outline-offset:2px}
+.courierProviderStatus{padding:14px 0}
+.courierProviderStatus>div{display:flex;justify-content:space-between;gap:15px;padding:11px;border-bottom:1px solid #ecdce2}
+.courierProviderStatus dd{margin:0;font-weight:600}
+.anOrderReceipt{min-height:55vh;max-width:740px;margin:0 auto;padding-top:50px;padding-bottom:55px}
+.anOrderReceiptCard{padding:35px;border:1px solid #ead7df;border-radius:14px;text-align:center;background:#fffaf9}
+.anOrderReceiptCard>svg{color:#a84060}
+.anOrderReceiptCard h1{font:400 clamp(28px,4vw,42px)/1.16 Georgia,serif;color:#402d37}
+.anOrderReceiptCard p{line-height:1.6}
+.anOrderReceiptCard dl>div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #eadde1;padding:10px 0;text-align:left}
+.anOrderReceiptCard dd{margin:0;overflow-wrap:anywhere}
+.anOrderReceiptActions{display:flex;justify-content:center;gap:12px;margin:22px 0;flex-wrap:wrap}
+.anOrderReceiptActions a,.anOrderReceiptCard>a{display:inline-flex;align-items:center;gap:8px;padding:12px 15px;border-radius:5px;color:#fff;background:#a94965}
+@media(max-width:600px){.anOrderReceiptCard{padding:22px 14px}.anOrderReceipt{padding:20px 12px}}
