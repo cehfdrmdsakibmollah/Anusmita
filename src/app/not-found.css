@@ -111,3 +111,14 @@
  .an404-photo-caption span{font-size:14px}
  .an404-photo-caption small{font-size:6px}
 }
+
+
+/* PR: dedicated arrow-free 1497x1152 AVIF hero, derived from supplied right crop. */
+.an404-photo{
+ background-image:url("/brand/404-hero-clean.avif");
+ background-size:cover;
+ background-position:center center;
+}
+@media(max-width:700px){
+ .an404-photo{background-size:cover;background-position:center 48%;}
+}
