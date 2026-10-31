@@ -1,0 +1,4 @@
+import OwnerSetupForm from "@/components/owner-setup-form";
+export const dynamic="force-dynamic";
+export const metadata={title:"Secure Owner Setup | ANUSMITA",robots:{index:false,follow:false},referrer:"no-referrer" as const};
+export default async function Page({searchParams}:{searchParams:Promise<{token?:string}>}){const {token}=await searchParams;return <section className="anOwnerLogin"><div className="anOwnerLoginCard"><aside className="anOwnerLoginArt"><div className="anOwnerLoginArtContent"><span className="anOwnerLoginArtBrand">ANUSMITA<small>FASHION · JEWELLERY · BEAUTY</small></span><span className="anOwnerLoginArtRule"/><p>More than a brand,<br/>a world of beautiful possibilities.</p></div></aside><div className="anOwnerLoginPanel"><OwnerSetupForm token={token||""}/></div></div></section>}
