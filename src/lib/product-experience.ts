@@ -15,7 +15,7 @@ export function categoryLabels(category:string){
 export function unitPrice(pricePaisa:number,size:string){const m=size.trim().match(/^(\d+(?:\.\d+)?)\s*(ml|g|gm)(?:\s+spray)?$/i);if(!m||Number(m[1])<=0)return null;return {paisa:pricePaisa/Number(m[1]),unit:m[2].toLowerCase()==='ml'?'ml':'g'};}
 export function assistantHref(name:string,slug?:string){const query=new URLSearchParams({product:name.slice(0,150)});if(slug&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)&&slug!=='design-preview')query.set('productSlug',slug);return '/contact/design-preview?'+query+'#assistant-title';}
 export function productEnquiry(name:string,slug:string,size:string,color:string,quantity=1,note=''){
- const text=`Hello ANUSMITA, please confirm availability and details for ${name}${color?' · '+color:''}${size?' · '+size:''} × ${quantity}.\nhttps://anusmita.netlify.app/products/${encodeURIComponent(slug)}${note?'\nGift request (please confirm service and cost): '+note:''}`;
+ const text=`Hello ANUSMITA, please confirm availability and details for ${name}${color?' · '+color:''}${size?' · '+size:''} × ${quantity}.\nhttps://anusmita.netlify.app/products/${encodeURIComponent(slug)}${note?'\nAdditional enquiry (please confirm details): '+note:''}`;
  return contact.whatsapp+'?text='+encodeURIComponent(text);
 }
 export function productFacts(p:ProductDetails){return detailFields.filter(([key])=>key!=='colorHex'&&Boolean(p[key]?.trim())).map(([key,label])=>({label,value:p[key]!}));}
