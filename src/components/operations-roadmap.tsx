@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState} from "react";
+type Loyalty={eligibleCustomers:number;preview:{silver:number;gold:number;platinum:number};disclaimer:string};
 type Location={id:string;code:string;name:string;address:string;active:boolean};
 type Snapshot={inventory:{skuCount:number;onHand:number;reserved:number;stockCostPaisa:number;linkedSuppliers:number};
  customerEligibility:{customersWithPaidDeliveredOrders:number;paidDeliveredOrders:number};
@@ -13,11 +14,13 @@ const modules=[
 ] as const;
 export default function OperationsRoadmap({role}:{role:string}){
  const [data,setData]=useState<Snapshot|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState("");
+ const [loyalty,setLoyalty]=useState<Loyalty|null>(null);
  const [locations,setLocations]=useState<Location[]>([]),[code,setCode]=useState(""),[name,setName]=useState(""),[address,setAddress]=useState(""),[notice,setNotice]=useState(""),[saving,setSaving]=useState(false);
  async function refresh(){
   setLoading(true);setError("");
   try{const res=await fetch("/api/admin/operations-readiness",{cache:"no-store"});if(!res.ok)throw new Error(res.status===403?"Not authorized for operations readiness.":"Unable to load records.");
    setData(await res.json());
+   if(["owner","admin","finance","analyst"].includes(role)){const lr=await fetch("/api/admin/loyalty-preview",{cache:"no-store"});if(lr.ok)setLoyalty(await lr.json());}
    const l=await fetch("/api/admin/warehouse-locations",{cache:"no-store"});if(l.ok){const body=await l.json();setLocations(body.locations||[]);}
   }catch(e){setError(e instanceof Error?e.message:"Unable to load records.");}
   finally{setLoading(false);}
@@ -35,6 +38,7 @@ export default function OperationsRoadmap({role}:{role:string}){
   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:12}}>
    {modules.map(m=><article className="kpi" key={m.name}><h3>{m.name}</h3><strong>{m.status}</strong><p className="smallprint">{m.detail}</p><a href={m.href}>Open existing workspace</a></article>)}
   </div>
+  {loyalty&&<div className="adminCard"><h3>Loyalty Eligibility Preview</h3><div className="kpiGrid">{(["silver","gold","platinum"] as const).map(t=><div className="kpi" key={t}><p className="muted">{t.toUpperCase()} — eligible preview</p><div className="number">{loyalty.preview[t]}</div></div>)}</div><p className="smallprint">{loyalty.disclaimer}</p></div>}
   <div className="adminCard"><h3>Warehouse Location Registry</h3><p className="smallprint">Create internal location records only. Stock allocation and stock transfers remain disabled; this does not establish physical inventory at any location.</p>{notice&&<p role="status">{notice}</p>}{["owner","admin"].includes(role)&&<form onSubmit={e=>void createLocation(e)} className="adminForm"><div className="field"><label>Location code</label><input required minLength={2} maxLength={24} pattern="[A-Za-z0-9_-]{2,24}" value={code} onChange={e=>setCode(e.target.value)} placeholder="DHAKA-HUB"/></div><div className="field"><label>Location name</label><input required minLength={2} maxLength={100} value={name} onChange={e=>setName(e.target.value)}/></div><div className="field"><label>Address (optional)</label><input maxLength={250} value={address} onChange={e=>setAddress(e.target.value)}/></div><button type="submit" className="button" disabled={saving}>Register location</button></form>}<h3>Registered locations</h3>{locations.length?<ul>{locations.map(l=><li key={l.id}>{l.code} — {l.name} ({l.active?"Active":"Inactive"})</li>)}</ul>:<p className="smallprint">No locations registered.</p>}</div>
   <p className="smallprint">External services cannot be activated by merely inserting API keys. Each requires signed webhook handling, permissions, consent, retries, and end-to-end verification.</p>
  </section>;
