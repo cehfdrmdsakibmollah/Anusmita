@@ -85,19 +85,20 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
      <div className="anFlowQty"><button type="button" disabled={quantity<=1} aria-label={"Reduce quantity of "+p.name} onClick={()=>update(x=>({...x,cart:x.cart.map(l=>l.id===id?{...l,quantity:Math.max(1,l.quantity-1)}:l)}))}><Minus size={14}/></button><output>{quantity}</output><button type="button" disabled={quantity>=20} aria-label={"Increase quantity of "+p.name} onClick={()=>update(x=>({...x,cart:x.cart.map(l=>l.id===id?{...l,quantity:Math.min(20,l.quantity+1)}:l)}))}><Plus size={14}/></button></div>
      <button className="shoppingRemove" aria-label={'Remove '+p.name} onClick={()=>update(s=>({...s,cart:s.cart.filter(l=>l.id!==id)}))}><Trash2 size={15}/> Remove</button>
     </div><strong>{p.pricePaisa===null?'Confirm price':money(p.pricePaisa*quantity)}</strong>
-   </article>)}</section>
-   <aside className="shoppingSummary anFlowSummary"><h2>Order Summary</h2><p className="anFlowSummaryCaption">{state.cart.reduce((n,l)=>n+l.quantity,0)} item(s) in your bag</p><div><span>{unknown?'Known-price subtotal':'Product subtotal'}</span><strong>{money(total)}</strong></div>
-    {unknown&&<p>Some items need a price confirmation and are not included in the subtotal.</p>}
-    <div><span>Delivery</span><span>{extraDelivery?'To be confirmed':'Included'}</span></div>
-    <p className="anFlowNotice">Shipping and availability are confirmed by our team. No payment is collected in catalogue mode.</p>
-    {isCheckout?<>{codEnabled?<form className="anCodForm" onSubmit={submitCod}>
+   </article>)}{isCheckout&&<form className="anCodForm anFlowCheckoutForm" onSubmit={submitCod}>
      <h3><Truck size={18}/> Cash on Delivery</h3><p>Pay on delivery. Final charges are calculated by our server.</p>
      {(['name','phone','district','area','address'] as const).map(k=><label key={k}>{k.charAt(0).toUpperCase()+k.slice(1)} *<input required type={k==='phone'?'tel':'text'} inputMode={k==='phone'?'tel':'text'} pattern={k==='phone'?'01[3-9][0-9]{8}':undefined} maxLength={k==='address'?400:100} value={codCustomer[k]} onChange={e=>{setCodCustomer(x=>({...x,[k]:e.target.value}));setCodKey('');}}/></label>)}
      <label>Delivery notes<textarea rows={2} maxLength={400} value={codCustomer.notes} onChange={e=>setCodCustomer(x=>({...x,notes:e.target.value}))}/></label>
      <label className="shoppingConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/> I confirm the details are correct and understand the order is unpaid until verified.</label>
      {codError&&<p role="alert" className="error">{codError}</p>}
-     <button className="sheetPrimary" type="submit" disabled={!consent||codPending||Boolean(loadError)||missing.length>0||unknown}>{codPending?'Submitting…':'Place COD Order →'}</button>
-     </form>:<div className="notice anFlowClosed"><LockKeyhole size={22}/><strong>COD checkout is not open yet.</strong><p>ANUSMITA is in catalogue mode. Verified stock and owner-controlled launch settings must be ready before orders are accepted.</p><Link href="/shop">Continue browsing</Link></div>}<Link href="/cart">Back to cart</Link></>:
+     {!codEnabled&&<div className="anFlowClosed"><LockKeyhole size={18}/><strong>Checkout preview only</strong><p>COD orders are not accepted while ANUSMITA is in catalogue mode. No details entered here are submitted or saved to the server.</p></div>}
+     <button className="sheetPrimary" type="submit" disabled={!codEnabled||!consent||codPending||Boolean(loadError)||missing.length>0||unknown}>{codPending?'Submitting…':codEnabled?'Place COD Order →':'COD checkout unavailable'}</button>
+     </form>}</section>
+   <aside className="shoppingSummary anFlowSummary"><h2>Order Summary</h2><p className="anFlowSummaryCaption">{state.cart.reduce((n,l)=>n+l.quantity,0)} item(s) in your bag</p><div><span>{unknown?'Known-price subtotal':'Product subtotal'}</span><strong>{money(total)}</strong></div>
+    {unknown&&<p>Some items need a price confirmation and are not included in the subtotal.</p>}
+    <div><span>Delivery</span><span>{extraDelivery?'To be confirmed':'Included'}</span></div>
+    <p className="anFlowNotice">Shipping and availability are confirmed by our team. No payment is collected in catalogue mode.</p>
+    {isCheckout?<><p className="anFlowPaymentLabel">Payment method: <strong>Cash on Delivery</strong></p><p>Complete delivery details in the form on this page.</p><Link href="/cart">Back to cart</Link></>:
      <Link className="sheetPrimary anFlowButton" href="/checkout">Proceed to Checkout <ArrowRight size={16}/></Link>}
     <small>Your selections are saved on this browser.</small>
    </aside></div>)}
