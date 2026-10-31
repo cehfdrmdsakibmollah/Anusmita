@@ -31,7 +31,7 @@ const ProductSchema = new Schema({
  topNotes:{type:String,default:""},heartNotes:{type:String,default:""},baseNotes:{type:String,default:""},
  pricePaisa:{type:Number,required:true,min:0},costPaisa:{type:Number,required:true,min:0},
  onHand:{type:Number,default:0,min:0},reserved:{type:Number,default:0,min:0},
- reorderLevel:{type:Number,default:5,min:0},active:{type:Boolean,default:false},
+ reorderLevel:{type:Number,default:5,min:0},warehouseAllocationRevision:{type:Number,default:0},active:{type:Boolean,default:false},
  expiryAt:{type:Date,default:null},batch:{type:String,default:""},
  supplierId:{type:Schema.Types.ObjectId,ref:"Supplier",default:null}
 },opts);
@@ -153,6 +153,49 @@ const AuditSchema = new Schema({
  details:{type:Schema.Types.Mixed,default:{}}
 },opts);
 AuditSchema.index({createdAt:-1,entity:1});
+const WarehouseLocationSchema=new Schema({
+ code:{type:String,required:true,unique:true,uppercase:true,trim:true,maxlength:24},
+ name:{type:String,required:true,trim:true,maxlength:100},
+ address:{type:String,default:"",maxlength:250},
+ active:{type:Boolean,default:true},
+ createdBy:{type:Schema.Types.ObjectId,ref:"User",required:true}
+},opts);
+WarehouseLocationSchema.index({active:1,name:1});
+const WarehouseBalanceSchema=new Schema({
+ productId:{type:Schema.Types.ObjectId,ref:"Product",required:true},
+ locationId:{type:Schema.Types.ObjectId,ref:"WarehouseLocation",required:true},
+ quantity:{type:Number,required:true,min:0,default:0}
+},opts);
+WarehouseBalanceSchema.index({productId:1,locationId:1},{unique:true});
+const WarehouseEventSchema=new Schema({
+ operationKey:{type:String,required:true,unique:true},
+ kind:{type:String,enum:["allocate","transfer"],required:true},
+ productId:{type:Schema.Types.ObjectId,ref:"Product",required:true},
+ fromLocationId:{type:Schema.Types.ObjectId,ref:"WarehouseLocation",default:null},
+ toLocationId:{type:Schema.Types.ObjectId,ref:"WarehouseLocation",required:true},
+ quantity:{type:Number,required:true,min:1},
+ actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ note:{type:String,required:true}
+},opts);
+WarehouseEventSchema.index({createdAt:-1});
+const StoreChromeSchema=new Schema({
+ key:{type:String,required:true,unique:true,default:"main"},
+ announcement:{type:String,default:"",maxlength:180},
+ footerNote:{type:String,default:"",maxlength:240},
+ enabled:{type:Boolean,default:false},
+ revision:{type:Number,default:0,min:0},
+ lastEditedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
+},opts);
+const SocialInboundSchema=new Schema({
+ provider:{type:String,enum:["messenger","instagram"],required:true},
+ eventId:{type:String,required:true,maxlength:180},
+ senderId:{type:String,required:true,maxlength:180},
+ text:{type:String,required:true,maxlength:2000},
+ receivedAt:{type:Date,required:true,default:Date.now},
+ eventAt:{type:Date,default:null}
+},{versionKey:false});
+SocialInboundSchema.index({provider:1,eventId:1},{unique:true});
+SocialInboundSchema.index({receivedAt:1},{expireAfterSeconds:2592000});
 const CounterSchema = new Schema({key:{type:String,unique:true},value:{type:Number,default:0}}, {versionKey:false});
 
 export const User = mongoose.models.User || mongoose.model("User",UserSchema);
@@ -167,6 +210,11 @@ export const SupplierPayment = mongoose.models.SupplierPayment || mongoose.model
 export const Expense = mongoose.models.Expense || mongoose.model("Expense",ExpenseSchema);
 export const Audit = mongoose.models.Audit || mongoose.model("Audit",AuditSchema);
 export const Counter = mongoose.models.Counter || mongoose.model("Counter",CounterSchema);
+export const SocialInbound=mongoose.models.SocialInbound||mongoose.model("SocialInbound",SocialInboundSchema);
+export const StoreChrome=mongoose.models.StoreChrome||mongoose.model("StoreChrome",StoreChromeSchema);
+export const WarehouseBalance=mongoose.models.WarehouseBalance||mongoose.model("WarehouseBalance",WarehouseBalanceSchema);
+export const WarehouseEvent=mongoose.models.WarehouseEvent||mongoose.model("WarehouseEvent",WarehouseEventSchema);
+export const WarehouseLocation=mongoose.models.WarehouseLocation||mongoose.model("WarehouseLocation",WarehouseLocationSchema);
 
 const CatalogImportSchema = new Schema({
  importKey:{type:String,required:true,unique:true},

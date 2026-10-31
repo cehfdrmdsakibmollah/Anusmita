@@ -13,10 +13,20 @@ import HrWholesaleSource from "@/components/hr-wholesale-source";
 import ChatbotManager from "@/components/chatbot-manager";
 import HomepageManager from "@/components/homepage-manager";
 import CourierSetup from "@/components/courier-setup";
+import SocialInbox from "@/components/social-inbox";
+import StoreChromeEditor from "@/components/store-chrome-editor";
+import InventoryHealth from "@/components/inventory-health";
+import CustomerCRM from "@/components/customer-crm";
+import ActivityAudit from "@/components/activity-audit";
+import IntegrationHub from "@/components/integration-hub";
+import OrderQuality from "@/components/order-quality";
+import FinanceAudit from "@/components/finance-audit";
+import WarehouseLedger from "@/components/warehouse-ledger";
+import OperationsRoadmap from "@/components/operations-roadmap";
 type Overview={orderedPaisa:number;confirmedPaisa:number;deliveredSalesPaisa:number;recordedCollectionsPaisa:number;outstandingPaisa:number;supplierPayablePaisa:number;supplierPaidPaisa:number;cogsPaisa:number;recordedExpensePaisa:number;estimatedGrossProfitPaisa:number;estimatedOperatingProfitPaisa:number;unreconciled:boolean;placedOrders:number;deliveredOrders:number;lowStockSkus:number;reservedUnits:number;inventoryCostPaisa:number};
 type Order={_id:string;orderNumber:string;orderStatus:string;paymentStatus:string;collectedPaisa:number;totalPaisa:number;customer:{name:string;phone:string};createdAt:string};
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
-const tabs=["Overview","Assistant Replies","Homepage Studio","Orders","Courier Setup","Products","Inventory","Payments","Suppliers","Purchasing","Bulk Import","Canva Catalogue","HR Wholesale","Drive Images","Cloudinary","R2 Images","Launch Readiness"];
+const tabs=["Overview","Enterprise Modules","Warehouse Transfers","Assistant Replies","Homepage Studio","Orders","Courier Setup","Products","Inventory","Payments","Suppliers","Purchasing","Bulk Import","Canva Catalogue","HR Wholesale","Drive Images","Cloudinary","R2 Images","Launch Readiness","Finance Audit","Order Quality","Integration Hub","Activity Logs","Customers","Inventory Health","Header & Footer","Social Inbox"];
 export default function AdminConsole({role,initialTab}:{role:string;initialTab?:string}){
  const [tab,setTab]=useState(initialTab&&tabs.includes(initialTab)?initialTab:"Overview"),[overview,setOverview]=useState<Overview|null>(null),[orders,setOrders]=useState<Order[]>([]),[notice,setNotice]=useState(""),[pending,setPending]=useState(false);
  const load=useCallback(async()=>{
@@ -56,6 +66,16 @@ export default function AdminConsole({role,initialTab}:{role:string;initialTab?:
  {overview?<><div className="kpiGrid">
  {([["Ordered value",overview.orderedPaisa],["Confirmed value",overview.confirmedPaisa],["Delivered value",overview.deliveredSalesPaisa],["Funds recorded",overview.recordedCollectionsPaisa],["Outstanding balances",overview.outstandingPaisa],["Supplier commitments remaining (est.)",overview.supplierPayablePaisa],["Verified supplier payouts",overview.supplierPaidPaisa],["Delivered COGS",overview.cogsPaisa],["Recorded expenses",overview.recordedExpensePaisa],["Estimated gross profit",overview.estimatedGrossProfitPaisa],["Estimated operating profit",overview.estimatedOperatingProfitPaisa],["Inventory cost (on hand)",overview.inventoryCostPaisa]] as [string,number][]).map(([label,value])=><div className="kpi" key={label}><div className="muted">{label}</div><div className="number">{money(value)}</div></div>)}
  <div className="kpi"><div className="muted">Low-stock SKUs</div><div className="number">{overview.lowStockSkus}</div></div></div><p className="notice"><strong>Unreconciled estimates.</strong> Supplier commitments are planned purchase totals, not verified invoices. Costs, tax, refunds, courier COD remittances and operating expenses require reconciliation before net-profit reporting. Reserved units: {overview.reservedUnits}.</p></>:<p className="notice">Financial dashboard requires owner, administrator, finance or analyst access and a configured database.</p>}</>}
+ {tab==="Enterprise Modules"&&(["owner","admin","inventory","purchasing","finance","analyst"].includes(role)?<OperationsRoadmap role={role}/>:<p className="notice">Operations access required.</p>)}
+ {tab==="Warehouse Transfers"&&(["owner","admin","inventory","purchasing"].includes(role)?<WarehouseLedger role={role}/>:<p className="notice">Warehouse permission required.</p>)}
+ {tab==="Finance Audit"&&(["owner","admin","finance","analyst"].includes(role)?<FinanceAudit/>:<p className="notice">Permission required.</p>)}
+ {tab==="Order Quality"&&(["owner","admin","sales","support","analyst"].includes(role)?<OrderQuality/>:<p className="notice">Permission required.</p>)}
+ {tab==="Integration Hub"&&(["owner","admin"].includes(role)?<IntegrationHub/>:<p className="notice">Permission required.</p>)}
+ {tab==="Activity Logs"&&(["owner","admin","analyst"].includes(role)?<ActivityAudit/>:<p className="notice">Permission required.</p>)}
+ {tab==="Customers"&&(["owner","admin","sales","support","analyst"].includes(role)?<CustomerCRM/>:<p className="notice">Permission required.</p>)}
+ {tab==="Inventory Health"&&(["owner","admin","inventory","purchasing"].includes(role)?<InventoryHealth/>:<p className="notice">Permission required.</p>)}
+ {tab==="Header & Footer"&&(["owner","admin"].includes(role)?<StoreChromeEditor/>:<p className="notice">Permission required.</p>)}
+ {tab==="Social Inbox"&&(["owner","admin","support"].includes(role)?<SocialInbox/>:<p className="notice">Permission required.</p>)}
  {tab==="Homepage Studio"&&(["owner","admin"].includes(role)?<HomepageManager/>:<p className="notice">Owner or admin permission required.</p>)}
  {tab==="Courier Setup"&&<CourierSetup role={role}/>}
  {tab==="Orders"&&<div className="adminCard"><h2>Order queue</h2><p className="smallprint">Payment status and shipment status are separate. Mark an order shipped only after courier acceptance.</p>
