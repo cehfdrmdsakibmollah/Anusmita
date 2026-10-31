@@ -30,7 +30,7 @@ export default async function Shop({searchParams}:{searchParams:Promise<Query>})
  if(origins.length)filter.origin={$in:origins};
  if(selectedConcerns.length)filter.skinType={$regex:selectedConcerns.join("|"),$options:"i"};
  if(minPrice!==null||maxPrice!==null)filter.pricePaisa={...(minPrice!==null?{$gte:Math.round(minPrice*100)}:{}),...(maxPrice!==null?{$lte:Math.round(maxPrice*100)}:{})};
- if(search)filter.$or=[{name:{$regex:search.replace(/[.*+?^$()|[\]{}\\]/g,"\\$&"),$options:"i"}},{brand:{$regex:search.replace(/[.*+?^$()|[\]{}\\]/g,"\\$&"),$options:"i"}}];
+ if(search){const escaped=search.split("").map(c=>"\\^$.*+?()[]{}|".includes(c)?"\\"+c:c).join("");filter.$or=[{name:{$regex:escaped,$options:"i"}},{brand:{$regex:escaped,$options:"i"}}];}
  const sortMap:Record<string,Record<string,1|-1>>={newest:{createdAt:-1,_id:-1},"price-low":{pricePaisa:1,_id:-1},"price-high":{pricePaisa:-1,_id:-1},name:{name:1,_id:1}};
  let products:any[]=[],count=0,page=pageRequested,pages=1,failed=false;
  try{await db();count=await Product.countDocuments(filter).maxTimeMS(10000);pages=Math.max(1,Math.ceil(count/9));page=Math.min(pageRequested,pages);
