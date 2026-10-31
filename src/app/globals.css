@@ -1676,3 +1676,29 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
 @media(max-width:850px){.anShopPageScope{width:calc(100% - 32px)!important}.anShopBody{grid-template-columns:185px minmax(0,1fr);gap:12px}.anShopCards{gap:9px}.anShopNewMedia{aspect-ratio:1/1}}
 @media(max-width:680px){.anShopBody{display:block}.anShopSidebar{margin-bottom:16px}.anShopSidebar fieldset{display:inline-block;vertical-align:top;width:50%;padding-right:12px}.anShopHero{min-height:175px;background-position:60% center}.anShopHero>div{padding:19px}.anShopHero h1{font-size:39px;letter-spacing:-1.4px}.anShopHero p{font-size:11px;max-width:220px}.anShopHeading{align-items:flex-start;flex-direction:column}.anShopCards{grid-template-columns:repeat(2,minmax(0,1fr))}.anShopCardsList{grid-template-columns:1fr}}
 @media(max-width:420px){.anShopPageScope{width:calc(100% - 24px)!important}.anShopHero h1{font-size:33px}.anShopHero span{font-size:8px}.anShopToolbar{width:100%}.anShopToolbar>label{margin-left:auto}.anShopSidebar fieldset{width:100%}.anShopNewInfo{padding:8px}.anShopNewInfo h3{font-size:12px}.anShopCardsList .anShopNewCard{grid-template-columns:125px minmax(0,1fr)}}
+
+
+/* Data-backed PDP customer care — scoped; no invented shipping rates or reviews. */
+.anPdpServices{margin:34px 0;padding:25px;border:1px solid #ebdce1;background:#fffaf9;border-radius:12px;color:#3e3035}
+.anPdpServicesHead>span{font-size:10px;letter-spacing:.22em;color:#b34464;font-weight:700}
+.anPdpServicesHead h2{font:400 clamp(24px,3vw,34px)/1.14 Georgia,serif;margin:9px 0}
+.anPdpServicesHead p{font-size:13px;color:#7b6a70;margin:0 0 17px}
+.anPdpServiceCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.anPdpServiceCard{background:white;border:1px solid #f0e6e8;border-radius:9px;padding:17px;display:flex;flex-direction:column;gap:9px}
+.anPdpServiceCard h3{display:flex;align-items:center;gap:9px;font:600 18px Georgia,serif;margin:0 0 4px;color:#713c50}
+.anPdpServiceCard label{font-size:12px;font-weight:600}
+.anPdpServiceCard select,.anPdpServiceCard textarea{width:100%;border:1px solid #d9c8cf;border-radius:5px;background:#fff;padding:11px 12px;font:13px/1.4 Arial,sans-serif;color:#322b30}
+.anPdpServiceCard p{font:12px/1.55 Arial,sans-serif;color:#766b6e}
+.anPdpServiceCard>a{font-size:12px;color:#a83f60;text-decoration:underline;text-underline-offset:3px}
+.anPdpRestockChoice{display:flex;align-items:flex-start;gap:12px;margin:17px 0;font:13px/1.6 Arial,sans-serif;cursor:pointer}
+.anPdpRestockChoice input{width:18px;height:18px;flex:0 0 18px;accent-color:#ad4260;margin-top:2px}
+.anPdpRestockChoice span{display:flex;gap:8px;align-items:flex-start}
+.anPdpRestockChoice svg{flex-shrink:0;margin-top:2px}
+.anPdpServiceSubmit{display:inline-flex;justify-content:center;align-items:center;gap:9px;background:#af4967;color:#fff!important;text-decoration:none;padding:13px 24px;border-radius:5px;font:600 13px Arial,sans-serif;margin-top:15px}
+.anPdpServiceSubmit:hover{background:#8e304d}
+.anPdpServiceStatus{font-size:12px;color:#715767;margin:10px 0}
+.anPdpReviewTruth{display:flex;align-items:flex-start;gap:10px;margin-top:18px;padding:15px 0 0;border-top:1px solid #ecdfe3}
+.anPdpReviewTruth svg{flex-shrink:0;color:#a54362}
+.anPdpReviewTruth p{font:12px/1.6 Arial,sans-serif;margin:0;color:#655b61}
+.anPdpServices :is(a,select,textarea,input):focus-visible{outline:3px solid #843651;outline-offset:3px}
+@media(max-width:700px){.anPdpServices{padding:16px;margin:22px 0}.anPdpServiceCards{grid-template-columns:1fr}.anPdpServiceSubmit{width:100%}}
