@@ -12,12 +12,12 @@ export default async function OrderSuccess({searchParams}:{searchParams:Promise<
  let order:null|{orderNumber:string;orderStatus:string;paymentStatus:string;totalPaisa:number}=null;
  if(id){try{await db();const doc=await Order.findById(id).select("orderNumber orderStatus paymentStatus totalPaisa").lean<any>();if(doc)order={orderNumber:doc.orderNumber,orderStatus:doc.orderStatus,paymentStatus:doc.paymentStatus,totalPaisa:doc.totalPaisa};}catch{}}
  return <main className="anWide anOrderReceipt">
-  {order?<section className="anOrderReceiptCard">
-   <CheckCircle2 size={45} aria-hidden="true"/><p className="anOverline">ANUSMITA · ORDER RECEIVED</p>
-   <h1>Thank you for your order request.</h1>
+  {order?<section className="anOrderReceiptCard anReferenceReceipt">
+   <div className="anReferenceReceiptIcon"><CheckCircle2 size={45} aria-hidden="true"/></div><div className="anCheckoutSteps" aria-label="Order steps"><span className="done">1. Shopping Bag</span><span className="done">2. Checkout</span><span className="current">3. Thank You</span></div><p className="anOverline">ANUSMITA · ORDER RECEIVED</p>
+   <h1>Thank you for choosing ANUSMITA.</h1>
    <p>Your order was recorded successfully. Our team will review it before fulfilment. Payment and courier pickup are not automatically confirmed.</p>
    <dl><div><dt>Order reference</dt><dd>{order.orderNumber}</dd></div><div><dt>Order status</dt><dd>{order.orderStatus}</dd></div><div><dt>Payment status</dt><dd>{order.paymentStatus}</dd></div><div><dt>Recorded total</dt><dd>৳{(order.totalPaisa/100).toLocaleString("en-BD")}</dd></div></dl>
-   <div className="anOrderReceiptActions"><Link href="/track-order"><PackageCheck size={18}/> Track your order</Link><Link href="/shop">Continue shopping <ArrowRight size={18}/></Link></div>
+   <p className="anReferenceReceiptLabel">YOUR ORDER ACKNOWLEDGEMENT</p><div className="anOrderReceiptActions"><Link href="/track-order"><PackageCheck size={18}/> Track your order</Link><Link href="/shop">Continue shopping <ArrowRight size={18}/></Link></div>
    <small>Keep your order reference private. Tracking may require additional identity verification.</small>
   </section>:<section className="anOrderReceiptCard"><h1>Order confirmation unavailable</h1><p>There is no verified order receipt for this link. No order or payment has been confirmed by this page.</p><Link href="/cart">Return to your bag <ArrowRight size={18}/></Link></section>}
  </main>;
