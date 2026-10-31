@@ -5,6 +5,7 @@ import SupplierPaymentPanel from "@/components/supplier-payment-panel";
 type Supplier={_id:string;name:string;country:string};
 type SearchProduct={_id:string;sku:string;name:string;costPaisa:number;onHand:number;reserved:number};
 type DraftItem={product:SearchProduct;quantity:number;unitCostPaisa:number};
+type ReorderSuggestion={id:string;sku:string;name:string;costPaisa:number;onHand:number;reserved:number;supplierId:string;suggestedQuantity:number};
 type PurchaseLine={productId:{_id:string;sku:string;name:string}|string;sku:string;name:string;quantity:number;received:number;unitCostPaisa:number};
 type PurchaseReceipt={id:string;createdAt:string;receivedUnits:number;status:string;note:string;receivedBy:string;lines:{productId:string;quantity:number}[]};
 type Purchase={_id:string;status:string;supplierId:Supplier|string;items:PurchaseLine[];
@@ -18,6 +19,7 @@ async function readJson(res:Response){
 function lineId(row:PurchaseLine){return typeof row.productId==="string"?row.productId:row.productId?._id;}
 export default function PurchaseManager({role}:{role:string}){
  const canCreate=["owner","admin","purchasing"].includes(role);
+ const [suggestions,setSuggestions]=useState<ReorderSuggestion[]>([]),[reorderMessage,setReorderMessage]=useState("");
  const canReceive=["owner","admin","purchasing","inventory"].includes(role);
  const [suppliers,setSuppliers]=useState<Supplier[]>([]),[supplier,setSupplier]=useState("");
  const [lookup,setLookup]=useState(""),[found,setFound]=useState<SearchProduct[]>([]);
@@ -41,6 +43,15 @@ export default function PurchaseManager({role}:{role:string}){
   }
  };
  useEffect(()=>{void refresh(1).catch(e=>setNotice("Unable to load purchases: "+String(e)));},[]);
+ async function loadSuggestions(){try{const res=await fetch("/api/admin/reorder-suggestions",{cache:"no-store"});const data=await readJson(res);setSuggestions(data.suggestions||[]);setReorderMessage("");}catch(e){setReorderMessage(e instanceof Error?e.message:"Unable to load suggestions");}}
+ useEffect(()=>{if(canCreate)void loadSuggestions();},[canCreate]);
+ function planSuggested(s:ReorderSuggestion){
+  if(!suppliers.some(x=>x._id===s.supplierId)){setReorderMessage("Linked supplier is inactive or unavailable. Review the product supplier first.");return;}
+  if(lines.length&&supplier!==s.supplierId){setReorderMessage("Save or clear the draft lines for the currently selected supplier before switching.");return;}
+  const p:SearchProduct={_id:s.id,sku:s.sku,name:s.name,costPaisa:s.costPaisa,onHand:s.onHand,reserved:s.reserved};
+  setSupplier(s.supplierId);setLines(old=>old.some(x=>x.product._id===s.id)?old:[...old,{product:p,quantity:s.suggestedQuantity,unitCostPaisa:s.costPaisa}]);
+  setReorderMessage("Added to unsaved purchase draft. Verify supplier availability, cost and quantity before saving.");
+ }
  useEffect(()=>{
   if(!canCreate)return;
   fetch("/api/admin/suppliers",{cache:"no-store"}).then(readJson).then(data=>{
@@ -107,6 +118,7 @@ export default function PurchaseManager({role}:{role:string}){
   <h2>Purchase orders & stock receiving</h2>
   <p className="smallprint">Keep purchasing records separate from customer orders. Draft → Submitted → Partially received → Received. Stock is added only when physical goods receipt is confirmed; no supplier payment is recorded automatically.</p>
   {notice&&<p role="status" className={notice.startsWith("Error")?"error":"notice"}>{notice}</p>}
+  {canCreate&&<div className="adminCard"><h3>Supplier-linked Reorder Planner</h3><p className="smallprint">Suggestions from recorded available stock and reorder thresholds. No purchase is placed automatically. Limited to the first 100 matching active SKUs.</p><button type="button" className="button small light" onClick={()=>void loadSuggestions()}>Refresh suggestions</button>{reorderMessage&&<p role="status">{reorderMessage}</p>}<div style={{overflowX:"auto"}}><table><thead><tr><th>SKU</th><th>Suggested qty</th><th>Planning cost</th><th>Action</th></tr></thead><tbody>{suggestions.map(s=><tr key={s.id}><td>{s.sku} · {s.name}</td><td>{s.suggestedQuantity}</td><td>{money(s.costPaisa*s.suggestedQuantity)}</td><td><button type="button" className="button small light" disabled={busy} onClick={()=>planSuggested(s)}>Add to draft</button></td></tr>)}</tbody></table></div>{suggestions.length===0&&<p className="smallprint">No linked-supplier reorder suggestions available.</p>}</div>}
   {canCreate&&<form className="adminForm" onSubmit={e=>void create(e)}>
    <h3>Create supplier purchase draft</h3>
    <div className="field"><label htmlFor="purchase-supplier">Supplier</label>
