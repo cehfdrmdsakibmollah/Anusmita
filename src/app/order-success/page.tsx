@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type {Metadata} from "next";
-import {CheckCircle2,PackageCheck,ArrowRight,ShieldCheck,ShoppingBag} from "lucide-react";
+import {CheckCircle2,PackageCheck,ArrowRight} from "lucide-react";
 import {db} from "@/lib/db";
 import {Order} from "@/lib/models";
 import {verifyOrderReceipt} from "@/lib/order-receipt";
@@ -11,13 +11,13 @@ export default async function OrderSuccess({searchParams}:{searchParams:Promise<
  const id=token.length<1500?await verifyOrderReceipt(token):null;
  let order:null|{orderNumber:string;orderStatus:string;paymentStatus:string;totalPaisa:number}=null;
  if(id){try{await db();const doc=await Order.findById(id).select("orderNumber orderStatus paymentStatus totalPaisa").lean<any>();if(doc)order={orderNumber:doc.orderNumber,orderStatus:doc.orderStatus,paymentStatus:doc.paymentStatus,totalPaisa:doc.totalPaisa};}catch{}}
- return <main className="anWide anOrderReceipt anCommerceReceipt">
+ return <main className="anWide anOrderReceipt">
   {order?<section className="anOrderReceiptCard">
-   <div className="anCommerceReceiptIcon"><CheckCircle2 size={48} aria-hidden="true"/></div><p className="anOverline">ANUSMITA · ORDER RECEIVED</p>
-   <h1>Thank You for Choosing ANUSMITA!</h1>
+   <CheckCircle2 size={45} aria-hidden="true"/><p className="anOverline">ANUSMITA · ORDER RECEIVED</p>
+   <h1>Thank you for your order request.</h1>
    <p>Your order was recorded successfully. Our team will review it before fulfilment. Payment and courier pickup are not automatically confirmed.</p>
    <dl><div><dt>Order reference</dt><dd>{order.orderNumber}</dd></div><div><dt>Order status</dt><dd>{order.orderStatus}</dd></div><div><dt>Payment status</dt><dd>{order.paymentStatus}</dd></div><div><dt>Recorded total</dt><dd>৳{(order.totalPaisa/100).toLocaleString("en-BD")}</dd></div></dl>
-   <div className="anCommerceReceiptSteps"><div><CheckCircle2 size={20}/><span>Request recorded</span></div><div><PackageCheck size={20}/><span>Team confirmation pending</span></div><div><ShieldCheck size={20}/><span>COD remains unpaid</span></div></div><div className="anOrderReceiptActions"><Link href="/track-order"><PackageCheck size={18}/> Track your order</Link><Link href="/shop"><ShoppingBag size={18}/> Continue shopping <ArrowRight size={18}/></Link></div>
+   <div className="anOrderReceiptActions"><Link href="/track-order"><PackageCheck size={18}/> Track your order</Link><Link href="/shop">Continue shopping <ArrowRight size={18}/></Link></div>
    <small>Keep your order reference private. Tracking may require additional identity verification.</small>
   </section>:<section className="anOrderReceiptCard"><h1>Order confirmation unavailable</h1><p>There is no verified order receipt for this link. No order or payment has been confirmed by this page.</p><Link href="/cart">Return to your bag <ArrowRight size={18}/></Link></section>}
  </main>;
