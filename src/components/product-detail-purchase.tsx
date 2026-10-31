@@ -2,6 +2,7 @@
 "use client";
 import {useEffect,useState} from "react";
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 import {ArrowRight,Check,Heart,Minus,Plus,Share2,ShoppingBag} from "lucide-react";
 import {isPerfumeCategory,perfumeSizeCards,colourChoices,sizeChoices,type ProductVariant} from "@/lib/product-variants";
 import {categoryLabels,unitPrice,assistantHref,productEnquiry,type ProductDetails} from "@/lib/product-experience";
@@ -14,6 +15,7 @@ type Props={
 };
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
 export default function ProductDetailPurchase({product,siblings,preview=false}:Props){
+ const router=useRouter();
  const [qty,setQty]=useState(1),[favourite,setFavourite]=useState(false),[message,setMessage]=useState(""),[gift,setGift]=useState(false),[giftNote,setGiftNote]=useState("");
  const unit=unitPrice(product.pricePaisa,product.size);
  const colours=colourChoices(siblings,product),variants=sizeChoices(siblings,product);
@@ -50,7 +52,7 @@ export default function ProductDetailPurchase({product,siblings,preview=false}:P
    setMessage(saved?"Removed from your wishlist":"Added to your wishlist");
   }catch{setMessage("Could not save your wishlist on this device.");}
  }
- function addToCart(){
+ function addToCart(goToCheckout=false){
   if(preview)return;
   try{
    const current=readSelection();
@@ -59,6 +61,7 @@ export default function ProductDetailPurchase({product,siblings,preview=false}:P
    const next=old?current.cart.map(l=>l.id===product.id?{...l,quantity}:l):[...current.cart,{id:product.id,quantity:qty}];
    writeSelection({...current,cart:next});
    setMessage("Added to bag — availability and final total will be confirmed before ordering.");
+   if(goToCheckout)router.push("/checkout");
   }catch{setMessage("Unable to save your bag. Enable browser storage and try again.");}
  }
  async function share(){
@@ -103,15 +106,16 @@ export default function ProductDetailPurchase({product,siblings,preview=false}:P
    </div>
   </div>
   <div className="anPdpButtons">
-   <button className={"anPdpAdd"+(preview?" disabled":"")} disabled={preview} onClick={addToCart} type="button"><ShoppingBag size={19}/>{preview?"Preview only":"Add to Bag"} <ArrowRight size={17}/></button>
+   <button className={"anPdpAdd"+(preview?" disabled":"")} disabled={preview} onClick={()=>addToCart()} type="button"><ShoppingBag size={19}/>{preview?"Preview only":"Add to Bag"} <ArrowRight size={17}/></button>
    <button className={"anPdpWish"+(favourite?" active":"")} type="button" onClick={toggleFavourite} disabled={preview} aria-pressed={favourite}><Heart size={19} fill={favourite?"currentColor":"none"}/>{favourite?"Saved":"Wishlist"}</button>
    <button className="anPdpShare" type="button" onClick={()=>void share()} aria-label="Copy product URL"><Share2 size={18}/></button>
   </div>
+  {!preview&&<button className="anPdpBuyNow" type="button" onClick={()=>addToCart(true)}>Buy Now · Continue to Checkout <ArrowRight size={17}/></button>}
   {!preview&&<p className="anPdpFeedback" role="status">Catalogue request mode: adding an item does not reserve stock or place an order. <Link href="/cart">Review your bag →</Link></p>}
   {!preview&&<p className="pd-subtotal">Product subtotal <strong>{money(product.pricePaisa*qty)}</strong><small>Delivery calculated separately.</small></p>}
   <div className="pd-help"><Link href={help}>Ask ANUSMITA about this product →</Link><a href={enquiry} target="_blank" rel="noopener noreferrer">Enquire on WhatsApp ↗</a></div>
   <details className="pd-guide"><summary>Sending a gift?</summary><label><input type="checkbox" checked={gift} onChange={e=>setGift(e.target.checked)}/> Include a gift request in my WhatsApp enquiry</label>{gift&&<><textarea aria-label="Gift request" placeholder="Gift message or packaging request" value={giftNote} maxLength={250} onChange={e=>setGiftNote(e.target.value)}/><small>Our team will confirm packaging availability and cost. This request is sent only when you send the WhatsApp draft.</small></>}</details>
-  <div className="pd-mobile-bar"><div><strong>{product.name}</strong><span>{preview?'Design preview':money(product.pricePaisa)}</span></div>{!preview?<button onClick={addToCart}>Add to Bag</button>:<Link href={help}>Ask ANUSMITA</Link>}</div>
+  <div className="pd-mobile-bar"><div><strong>{product.name}</strong><span>{preview?'Design preview':money(product.pricePaisa)}</span></div>{!preview?<button onClick={()=>addToCart()}>Add to Bag</button>:<Link href={help}>Ask ANUSMITA</Link>}</div>
   {message&&<p className="anPdpFeedback" role="status">{message}</p>}
   <div className="anPdpPurchaseNotes">
    <p><Check size={15}/> Independently priced sizes</p>
