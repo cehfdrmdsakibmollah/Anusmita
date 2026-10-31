@@ -2,7 +2,7 @@
 "use client";
 import {useCallback,useEffect,useState} from "react";
 import BulkCatalogImport from "@/components/bulk-catalog-import";
-import ProductManager from "@/components/product-manager";
+import AdminProductWorkspace from "@/components/admin-product-workspace";
 import DriveMediaLibrary from "@/components/drive-media-library";
 import R2Media from "@/components/r2-media";
 import CloudinaryMedia from "@/components/cloudinary-media";
@@ -61,17 +61,7 @@ export default function AdminConsole({role,initialTab}:{role:string;initialTab?:
  {tab==="Orders"&&<div className="adminCard"><h2>Order queue</h2><p className="smallprint">Payment status and shipment status are separate. Mark an order shipped only after courier acceptance.</p>
  <table><thead><tr><th>Order</th><th>Customer</th><th>Value</th><th>Order state</th><th>Payment</th><th>Actions</th></tr></thead><tbody>{orders.map(o=><tr key={o._id}><td>{o.orderNumber}<br/><span className="muted">{new Date(o.createdAt).toLocaleDateString("en-BD")}</span></td><td>{o.customer?.name}<br/>{o.customer?.phone}</td><td>{money(o.totalPaisa)}</td><td>{o.orderStatus}</td><td>{o.paymentStatus}<br/><span className="muted">{money(o.collectedPaisa)} collected</span></td><td>{canOrders&&({placed:["confirmed","cancelled"],confirmed:["packed","cancelled"],packed:["shipped","cancelled"],shipped:["delivered"]} as Record<string,string[]>)[o.orderStatus]?.map(s=><button key={s} className="button small light" disabled={pending} style={{margin:"2px"}} onClick={()=>transition(o,s)}>{s}</button>)}<a style={{display:"block",marginTop:6}} href={"/admin/invoices/"+o._id}>Invoice</a></td></tr>)}</tbody></table>
  {orders.length===0&&<p className="notice">No accessible orders yet.</p>}</div>}
- {tab==="Products"&&<div className="adminCard"><h2>Add a product / variant</h2><p className="smallprint">Every size or colour should use its own unique SKU. New products are drafts by default unless you explicitly publish them.</p>
- {canStock?<form className="adminForm" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);void send("/api/admin/products",{
- name:field(f,"name"),slug:field(f,"slug"),sku:field(f,"sku"),brand:field(f,"brand"),category:field(f,"category"),
- origin:field(f,"origin"),size:field(f,"size"),description:field(f,"description"),imageUrls:field(f,"imageUrl")?[field(f,"imageUrl")]:[],
- pricePaisa:Math.round(Number(field(f,"price"))*100),costPaisa:Math.round(Number(field(f,"cost"))*100),
- onHand:Number(field(f,"stock")),reorderLevel:5,active:f.get("active")==="on"
- });}}>
- <div className="formGrid">{[["name","Product name"],["slug","URL slug"],["sku","Unique SKU"],["brand","Brand"],["category","Category"],["size","Size / variant"],["price","Selling price (BDT)"],["cost","Unit cost (BDT)"],["stock","Opening stock"],["imageUrl","Public HTTPS image URL"]].map(([key,label])=><div className="field" key={key}><label htmlFor={"p-"+key}>{label}</label><input id={"p-"+key} name={key} required={["name","slug","sku","category","price","cost","stock"].includes(key)} type={["price","cost","stock"].includes(key)?"number":"text"} min={["price","cost","stock"].includes(key)?"0":undefined} step={key==="stock"?"1":key==="price"||key==="cost"?"0.01":undefined}/></div>)}
- <div className="field"><label htmlFor="p-origin">Country</label><select id="p-origin" name="origin"><option>Bangladesh</option><option>Japan</option><option>Korea</option><option>China</option><option>Other</option></select></div><div className="field full"><label htmlFor="p-description">Product description</label><textarea id="p-description" name="description" rows={3}/></div></div>
- <label><input type="checkbox" name="active"/> Publish this product immediately</label><p><button className="button" disabled={pending}>Save product</button></p></form>:<p className="notice">Insufficient permission to create products.</p>}</div>}
- {tab==="Products"&&canStock&&<ProductManager/>}
+ {tab==="Products"&&(canStock?<AdminProductWorkspace/>:<p className="notice">Inventory permission required.</p>)}
  {tab==="Inventory"&&<div className="adminCard"><h2>Stock adjustment</h2>{canStock?<form className="adminForm" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);void send("/api/admin/stock",{productId:field(f,"productId"),type:field(f,"type"),quantity:Number(field(f,"quantity")),note:field(f,"note")});}}>
  <div className="field"><label>Product database ID</label><input name="productId" required placeholder="24-character ID"/></div>
  <div className="field"><label>Movement type</label><select name="type"><option value="receive">Stock received (+)</option><option value="damage">Damaged/lost (−)</option><option value="adjust">Adjustment (+/−)</option></select></div>
