@@ -1945,3 +1945,11 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
 .anFlowCheckoutReference .anFlowSummary .anFlowPaymentLabel{margin-top:18px}
 @media(max-width:850px){.anFlowCheckoutReference .anFlowLayout{grid-template-columns:1fr}.anFlowCheckoutReference .anFlowSummary{position:static}}
 @media(max-width:550px){.anCheckoutFieldGrid{grid-template-columns:1fr}.anCheckoutShippingOptions,.anCheckoutPaymentOptions{grid-template-columns:1fr}.anCheckoutShippingOptions button{min-height:58px}.anFlowCheckoutReference .anFlowCheckoutIntro h2{font-size:29px}.anCheckoutFloral{font-size:26px}}
+
+
+/* District → Area/Thana native dropdowns match the reference two-column checkout form. */
+.anFlowCheckoutReference .anCheckoutFieldGrid select{height:39px;width:100%;min-width:0;border:1px solid #e3dce0;border-radius:5px;background:#fff;color:#343035;padding:8px 32px 8px 12px;font:13px Arial,sans-serif;cursor:pointer}
+.anFlowCheckoutReference .anCheckoutFieldGrid select:disabled{background:#f7f5f5;color:#a39a9e;cursor:not-allowed}
+.anFlowCheckoutReference .anCheckoutFieldGrid select:invalid{color:#8c8187}
+.anFlowCheckoutReference .anCheckoutFieldGrid select option{color:#262126}
+.anFlowCheckoutReference .anCheckoutFieldGrid select:focus-visible{outline:3px solid #ba4d70;outline-offset:2px}
