@@ -153,6 +153,14 @@ const AuditSchema = new Schema({
  details:{type:Schema.Types.Mixed,default:{}}
 },opts);
 AuditSchema.index({createdAt:-1,entity:1});
+const WarehouseLocationSchema=new Schema({
+ code:{type:String,required:true,unique:true,uppercase:true,trim:true,maxlength:24},
+ name:{type:String,required:true,trim:true,maxlength:100},
+ address:{type:String,default:"",maxlength:250},
+ active:{type:Boolean,default:true},
+ createdBy:{type:Schema.Types.ObjectId,ref:"User",required:true}
+},opts);
+WarehouseLocationSchema.index({active:1,name:1});
 const CounterSchema = new Schema({key:{type:String,unique:true},value:{type:Number,default:0}}, {versionKey:false});
 
 export const User = mongoose.models.User || mongoose.model("User",UserSchema);
@@ -167,6 +175,7 @@ export const SupplierPayment = mongoose.models.SupplierPayment || mongoose.model
 export const Expense = mongoose.models.Expense || mongoose.model("Expense",ExpenseSchema);
 export const Audit = mongoose.models.Audit || mongoose.model("Audit",AuditSchema);
 export const Counter = mongoose.models.Counter || mongoose.model("Counter",CounterSchema);
+export const WarehouseLocation=mongoose.models.WarehouseLocation||mongoose.model("WarehouseLocation",WarehouseLocationSchema);
 
 const CatalogImportSchema = new Schema({
  importKey:{type:String,required:true,unique:true},
