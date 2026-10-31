@@ -9,6 +9,7 @@ import {Product,HomePage,Order} from "@/lib/models";
 import {checkoutEnabled} from "@/lib/launch-config";
 import {homeStarterBlocks,homeStarterSections,publicBlocks,type HomeBlock,type HomeSection} from "@/lib/home-content";
 import HomepageCarousel from "@/components/homepage-carousel";
+import HomepageCategoryRail from "@/components/homepage-category-rail";
 import HomepageMotion from "@/components/homepage-motion";
 import HomepagePromotion from "@/components/homepage-promotion";
 import HomepageFeatured,{type FeaturedShelf,type FeaturedProduct} from "@/components/homepage-featured";
@@ -90,12 +91,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
    <div className="anWide">
     <div className="anSectionTitle" data-an-reveal><div><p className="anOverline">DISCOVER YOUR NEXT FAVOURITE <span>✦</span></p>
      <h2>Shop by category</h2></div><a href="/shop" className="anTextLink">Explore collections <ArrowUpRight size={17}/></a></div>
-    <div className="anCategoryGrid">
-     {categories.map(c=><Link href={c.href} className="anCategoryCard" key={c.id} data-an-reveal>
-      <div className="anCategoryImage">{c.imageUrl?<img src={c.imageUrl} alt={c.title} loading="lazy"/>:<div className="anCategoryBlank">ANUSMITA</div>}</div>
-      <div className="anCategoryCaption"><strong>{c.title}</strong><span>{c.cta||"Explore"} <ArrowRight size={14}/></span></div>
-     </Link>)}
-    </div>
+    <HomepageCategoryRail categories={categories}/>
    </div>
   </section>
   {promos.map(p=><HomepagePromotion key={p.id} promo={p}/>)}
