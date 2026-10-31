@@ -27,7 +27,7 @@ export default async function RootLayout({children}:{children:React.ReactNode}){
    {(chrome?.headerOrder||["logo","navigation","search","tools"]).map(section=>{
     switch(section){
      case "logo":return <Link key="logo" href="/" className="anLogo" aria-label="ANUSMITA homepage"><span>ANUSMITA<small>FASHION · JEWELLERY · BEAUTY</small></span></Link>;
-     case "navigation":return <div key="navigation" className="anHeaderNavSlot"><StoreNavigation/></div>;
+     case "navigation":return <StoreNavigation key="navigation"/>;
      case "search":return <form key="search" className="anHeaderSearch" action="/shop" method="get" role="search"><input type="search" name="q" aria-label="Search products" placeholder="Search for products…"/><button type="submit" aria-label="Submit product search"><Search size={17}/></button></form>;
      case "tools":return <div key="tools" className="anHeaderTools"><a href="/shop#store-search" aria-label="Search the collection"><Search size={20}/></a><Link href="/account/design-preview" aria-label="Customer account preview"><UserRound size={19}/></Link><ShoppingLinks/><StoreNavigation mobile/></div>;
      default:return null;
