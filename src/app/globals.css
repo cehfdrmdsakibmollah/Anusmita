@@ -1805,3 +1805,20 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
 .anPdp .anPdpBuy h1{font-family:Georgia,serif;letter-spacing:-.025em}
 .anPdp .anPdpButtons :is(button,a){border-radius:9px}
 .anPdp .anPdpRelatedCard{border-radius:16px;overflow:hidden}
+
+
+/* Verified receipt: design parity, never simulate an order. */
+.anCommerceReceipt{max-width:800px;padding-block:60px 80px}
+.anCommerceReceipt .anOrderReceiptCard{max-width:760px;background:#fff;border:1px solid #eadde0;border-radius:25px;padding:clamp(22px,4vw,54px);box-shadow:0 12px 35px #4826310b}
+.anCommerceReceiptIcon{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;margin:0 auto 16px;background:#fdf0f3;color:#b74764}
+.anCommerceReceipt .anOrderReceiptCard h1{font:600 clamp(29px,4vw,44px)/1.15 Georgia,serif;color:#2b2329}
+.anCommerceReceipt .anOrderReceiptCard>p{max-width:530px;margin:14px auto 22px;color:#74656e;font-size:14px}
+.anCommerceReceipt .anOrderReceiptCard dl{background:#fff9f8;border-radius:14px;padding:11px 20px;border:1px solid #eee0e4}
+.anCommerceReceipt .anOrderReceiptCard dt{font-size:12px;color:#776970}
+.anCommerceReceipt .anOrderReceiptCard dd{font-size:13px;font-weight:700}
+.anCommerceReceiptSteps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:20px 0}
+.anCommerceReceiptSteps>div{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;padding:16px 8px;background:#fdf1f3;border-radius:12px;color:#804c5f;font-size:11px;font-weight:600}
+.anCommerceReceiptSteps svg{color:#b74764}
+.anCommerceReceipt .anOrderReceiptActions a{display:inline-flex;align-items:center;gap:9px;border-radius:9px;text-decoration:none}
+.anCommerceReceipt .anOrderReceiptActions a:last-child{background:transparent;color:#a63f60;border:1px solid #b74764}
+@media(max-width:520px){.anCommerceReceiptSteps{grid-template-columns:1fr}.anCommerceReceiptSteps>div{flex-direction:row;justify-content:flex-start;padding:11px 14px}.anCommerceReceipt .anOrderReceiptCard dl{padding:8px 11px}}
