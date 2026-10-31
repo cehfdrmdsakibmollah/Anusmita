@@ -48,7 +48,7 @@ export default function AdminConsole({role,initialTab}:{role:string;initialTab?:
  function field(form:FormData,name:string){return String(form.get(name)||"").trim();}
  const canFinance=["owner","admin","finance"].includes(role),canStock=["owner","admin","inventory"].includes(role),canOrders=["owner","admin","sales"].includes(role);
  const canSuppliers=["owner","admin","purchasing"].includes(role);
- return <>
+ return <div className={tab==="Products"?"apConsole":""}>
  <div className="tabbar" role="tablist" aria-label="ERP sections">{tabs.map(t=><button key={t} className={tab===t?"active":""} role="tab" aria-selected={tab===t} onClick={()=>setTab(t)}>{t}</button>)}</div>
  {tab==="Assistant Replies"&&(["owner","admin"].includes(role)?<ChatbotManager/>:<p>Owner or admin access required.</p>)}
  {notice&&<p role="status" className={notice.startsWith("Error")?"error":"success"}>{notice}</p>}
@@ -88,5 +88,5 @@ export default function AdminConsole({role,initialTab}:{role:string;initialTab?:
  {tab==="Suppliers"&&<div className="adminCard"><h2>Register supplier</h2>{canSuppliers?<form className="adminForm" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);void send("/api/admin/suppliers",{
  name:field(f,"name"),contact:field(f,"contact"),phone:field(f,"phone"),email:field(f,"email"),country:field(f,"country"),paymentTerms:field(f,"paymentTerms"),notes:field(f,"notes")});}}>
  {([["name","Supplier/company name"],["contact","Contact person"],["phone","Phone"],["email","Email"],["country","Country"],["paymentTerms","Payment terms"],["notes","Notes"]] as [string,string][]).map(([key,label])=><div className="field" key={key}><label>{label}</label><input name={key} required={key==="name"}/></div>)}<button className="button" disabled={pending}>Save supplier</button></form>:<p className="notice">Purchasing permission required.</p>}</div>}
- </>;
+ </div>;
 }
