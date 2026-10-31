@@ -1800,3 +1800,97 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
  .anPdpReal .anPdpPhotoStudio .anPdpStudioFrame{order:1;min-height:260px}
  .anPdpReal .anPdpPhotoStudio .anPdpStudioFrame>img{padding:8px}
 }
+
+
+/* ANUSMITA reference-style shopping flow. Original global header/footer remain untouched. */
+.anFlowPage{max-width:1220px!important;padding-top:24px;padding-bottom:64px}
+.anFlowSteps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));max-width:780px;margin:0 auto 26px;gap:10px}
+.anFlowStep{display:flex;flex-direction:column;align-items:center;gap:7px;position:relative;text-align:center;color:#777079;font-size:12px}
+.anFlowStep:not(:last-child):after{content:"";position:absolute;left:calc(50% + 24px);right:calc(-50% + 24px);top:16px;height:2px;background:#eadce1;z-index:0}
+.anFlowStep.done:not(:last-child):after{background:#d73a65}
+.anFlowStepDot{display:grid;place-items:center;position:relative;z-index:1;width:33px;height:33px;border-radius:50%;border:1px solid #e1d7dc;background:#f3f0f0;color:#6e686c;font-weight:700}
+.anFlowStep.current .anFlowStepDot,.anFlowStep.done .anFlowStepDot{background:#d73964;border-color:#d73964;color:#fff}
+.anFlowStep.current>span:last-child{color:#d73964;font-weight:700}
+.anFlowPage>h1{font:600 clamp(28px,4vw,39px)/1.15 Georgia,serif;margin:4px 0 8px}
+.anFlowSubtitle{color:#695d65;font-size:14px;margin:0 0 17px}
+.anFlowPage>.shoppingNav{margin-bottom:20px}
+.anFlowLayout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(305px,.9fr);align-items:start;gap:22px}
+.anFlowItems{min-width:0}
+.anFlowHero{display:flex;justify-content:space-between;align-items:center;background:#fff3f1;border-radius:13px;overflow:hidden;min-height:145px;padding:18px 24px;margin:0 0 15px}
+.anFlowHero>div{position:relative;z-index:1}
+.anFlowHero small{font-size:10px;letter-spacing:.17em;color:#ac4061}
+.anFlowHero h2{font:600 29px/1.16 Georgia,serif;color:#34222b;margin:6px 0}
+.anFlowHero p{font-size:12px;color:#7b6470;margin:0}
+.anFlowHero img{width:190px;height:135px;object-fit:cover;object-position:center;border-radius:12px;max-width:39%}
+.anFlowItem{border:1px solid #efdedf;border-radius:12px;background:#fff;padding:17px;margin:0 0 12px;display:grid;grid-template-columns:94px minmax(0,1fr) auto;gap:15px;align-items:start}
+.anFlowItem>a:first-child{height:100px;width:94px;border-radius:8px;overflow:hidden;background:#fff5f1}
+.anFlowItem>a:first-child img{width:100%;height:100%;object-fit:cover}
+.anFlowItem>div small{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#ac4661}
+.anFlowItem>div h2{font:600 16px Georgia,serif;color:#2a2127;margin:4px 0}
+.anFlowItem>div p{font-size:12px;color:#786b70;margin:5px 0}
+.anFlowItem>strong{white-space:nowrap;color:#2a2127}
+.anFlowQty{display:inline-flex;border:1px solid #e7d9dd;border-radius:6px;margin:9px 0 2px;align-items:center;overflow:hidden}
+.anFlowQty button{width:30px;height:30px;border:0;background:#fff8f7;display:grid;place-items:center;color:#9e4561}
+.anFlowQty output{min-width:33px;text-align:center;font-size:13px}
+.anFlowSummary{border:1px solid #ecdee1;background:#fffaf9;border-radius:13px;padding:22px;position:sticky;top:95px}
+.anFlowSummary h2{font:600 23px Georgia,serif;margin:0 0 4px}
+.anFlowSummaryCaption{font-size:11px;color:#84737a;margin:0 0 18px}
+.anFlowSummary>div:not(.notice){padding:9px 0;display:flex;justify-content:space-between;gap:12px;font-size:13px}
+.anFlowSummary>div:not(.notice) strong{font-size:13px}
+.anFlowNotice{padding:10px 0;color:#756872;font-size:12px;line-height:1.6}
+.anFlowButton{display:flex!important;align-items:center;justify-content:center;gap:10px;min-height:45px;background:#d83865!important;color:#fff!important;border:0;border-radius:8px;font-weight:700;text-decoration:none}
+.anFlowClosed{display:flex;flex-direction:column;gap:7px;padding:13px;border:1px solid #ecdadd;border-radius:8px;background:#fff}
+.anFlowClosed svg{color:#c54261}
+.anFlowCheckoutIntro{background:#fff4f2;padding:20px;border-radius:12px;margin:0 0 14px}
+.anFlowCheckoutIntro h2{font:600 26px Georgia,serif;margin:0 0 5px}
+.anFlowCheckoutIntro p{font-size:12px;color:#76646b;margin:0}
+.anFlowPage .anCodForm{display:grid;gap:12px;background:#fff;padding:18px;border:1px solid #ebdce0;border-radius:10px}
+.anFlowPage .anCodForm h3{display:flex;align-items:center;gap:8px;color:#932e4c}
+.anFlowPage .anCodForm input:not([type=checkbox]),.anFlowPage .anCodForm textarea{border:1px solid #ded2d7;border-radius:6px;background:#fff;padding:11px}
+.anFlowPage :is(button,a,input,textarea):focus-visible,.anFlowInvoicePage button:focus-visible{outline:3px solid #9e3151;outline-offset:2px}
+.anFlowReceipt{max-width:850px;padding-top:28px}
+.anFlowReceipt .anOrderReceiptCard{border:1px solid #eddde1;background:#fff7f5;border-radius:17px;padding:36px 25px}
+.anFlowReceipt .anOrderReceiptCard>svg{color:#d83a64}
+.anFlowReceipt .anOrderReceiptCard h1{font:600 clamp(30px,4vw,43px) Georgia,serif}
+.anFlowStatus{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:22px 0}
+.anFlowStatus span{padding:13px 9px;border-radius:9px;background:#fff;border:1px solid #ecdae0;display:flex;flex-direction:column;align-items:center;gap:6px;color:#a23f5b;font-size:11px}
+.anFlowReceipt .anOrderReceiptActions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.anFlowReceipt .anOrderReceiptActions a{display:inline-flex;align-items:center;gap:8px;border-radius:7px;padding:12px 16px;background:#d53c65;color:#fff}
+.anFlowInvoicePage{background:#fdf5f3;padding:25px 15px 70px}
+.anFlowInvoiceToolbar{max-width:850px;margin:0 auto 16px;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+.anFlowPrintActions{display:flex;gap:9px;flex-wrap:wrap}
+.anFlowPrintActions button{display:inline-flex;align-items:center;gap:8px;background:#d53661;border:1px solid #d53661;border-radius:7px;color:white;padding:11px 16px}
+.anFlowPrintActions button+button{background:white;color:#bc3156}
+.anFlowInvoicePaper{max-width:850px;min-height:1050px;margin:auto;background:white;padding:45px 43px;box-shadow:0 8px 30px #60324420;border:1px solid #e9d7de}
+.anFlowInvoiceHeader{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #e9b4c2;padding-bottom:18px}
+.anFlowInvoiceHeader strong{font:500 37px Georgia,serif;letter-spacing:.05em;color:#942840}
+.anFlowInvoiceHeader small{display:block;font-size:9px;letter-spacing:.17em}
+.anFlowInvoiceHeader>span{font-size:11px;color:#9a5668}
+.anFlowInvoicePaper>h1{text-align:center;font:600 41px Georgia,serif;color:#8e2945;margin:28px 0 3px}
+.anFlowInvoiceSub{text-align:center;color:#8a7d82;font-size:12px;margin:0 0 20px}
+.anFlowInvoiceMeta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-block:1px solid #eadde1;padding:15px 0;margin:0 0 22px}
+.anFlowInvoiceMeta>div{display:grid;gap:5px;text-align:center;border-right:1px solid #eadde1;font-size:12px}
+.anFlowInvoiceMeta>div:last-child{border-right:0}
+.anFlowInvoiceMeta span{color:#8f7781}
+.anFlowInvoiceParties{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 20px}
+.anFlowInvoiceParties section{border:1px solid #f0c8d2;border-radius:8px;padding:17px;background:#fffafa}
+.anFlowInvoiceParties h2{font:600 18px Georgia,serif;color:#ad3055;margin:0 0 9px}
+.anFlowInvoiceParties p{font-size:13px;line-height:1.65;margin:0 0 6px}
+.anFlowInvoicePayment{display:inline-block;border:1px solid #b83c59;color:#b83c59;border-radius:5px;padding:5px 11px;font-size:12px}
+.anFlowInvoiceTableScroll{overflow-x:auto}
+.anFlowInvoicePaper table{width:100%;border-collapse:collapse;font-size:12px}
+.anFlowInvoicePaper th{background:#cc3e67;color:#fff;text-align:left;padding:12px 10px}
+.anFlowInvoicePaper td{padding:13px 10px;border-bottom:1px solid #eddee1}
+.anFlowInvoicePaper td small{display:block;color:#8e7a81;margin-top:5px}
+.anFlowInvoiceTotals{max-width:370px;margin:23px 0 30px auto}
+.anFlowInvoiceTotals>div{display:flex;justify-content:space-between;gap:15px;padding:8px 0;font-size:13px}
+.anFlowInvoiceTotals dd{margin:0;font-weight:700}
+.anFlowInvoiceTotal{background:#fff0f2;color:#8c2540;border-radius:7px;padding:15px!important;font:600 18px Georgia,serif!important}
+.anFlowInvoiceEnd{text-align:center;border-top:1px solid #edd7dc;padding-top:28px;color:#9a435d}
+.anFlowInvoiceEnd p{font:500 20px Georgia,serif}
+.anFlowInvoiceEnd small{color:#806a73}
+.anFlowInvoiceUnavailable{padding:55px 20px}
+@media(max-width:850px){.anFlowLayout{grid-template-columns:1fr}.anFlowSummary{position:static}.anFlowPage{padding-inline:15px}}
+@media(max-width:520px){.anFlowItem{grid-template-columns:75px minmax(0,1fr);gap:10px;padding:12px}.anFlowItem>a:first-child{width:75px;height:82px}.anFlowItem>strong{grid-column:2}.anFlowHero{padding:14px}.anFlowHero h2{font-size:23px}.anFlowInvoicePaper{padding:20px 14px;min-height:0}.anFlowInvoiceParties{grid-template-columns:1fr}.anFlowInvoiceHeader strong{font-size:26px}.anFlowInvoiceMeta{font-size:10px}.anFlowStatus{grid-template-columns:1fr}.anFlowStatus span{flex-direction:row;justify-content:center}}
+@page{size:A4 portrait;margin:12mm}
+@media print{body{background:white!important}.anFlowInvoicePage{padding:0;background:white}.anFlowInvoicePaper{width:100%;max-width:none;min-height:0;box-shadow:none;border:0;padding:0}.anFlowInvoiceToolbar,.anAnnouncement,.anHeader,.anFooter,.noPrint{display:none!important}.anFlowInvoiceParties{grid-template-columns:1fr 1fr}.anFlowInvoiceMeta{grid-template-columns:repeat(3,1fr)}.anFlowInvoicePaper th{-webkit-print-color-adjust:exact;print-color-adjust:exact}.anFlowInvoicePaper tr{break-inside:avoid}}
