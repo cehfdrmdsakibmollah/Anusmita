@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useState} from 'react';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {Heart,ShoppingBag,Trash2,ArrowRight,Minus,Plus,LockKeyhole,Truck} from 'lucide-react';
+import {Heart,ShoppingBag,Trash2,ArrowRight,Minus,Plus,LockKeyhole,Truck,ChevronRight,MapPin,Check,Wallet,CreditCard,ShieldCheck} from 'lucide-react';
 import CommerceSteps from '@/components/commerce-steps';
 import {sheetCatalogue} from '@/lib/sheet-catalogue';
 import {emptyShopping,sanitizeShopping,shoppingKey,shoppingSubtotal,type ShoppingState} from '@/lib/shopping-storage';
@@ -30,6 +30,8 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
  const [codCustomer,setCodCustomer]=useState({name:'',phone:'',district:'',area:'',address:'',notes:''});
  const [codPending,setCodPending]=useState(false),[codError,setCodError]=useState('');
  const [codKey,setCodKey]=useState('');
+ const [deliveryRegion,setDeliveryRegion]=useState<'dhaka'|'outside'|'international'>('dhaka');
+ const [email,setEmail]=useState(''),[postal,setPostal]=useState('');
  const router=useRouter();
  const [remote,setRemote]=useState<DisplayProduct[]>([]);
  const [loading,setLoading]=useState(false);
@@ -67,7 +69,7 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
   }catch(error){setCodError(error instanceof Error?error.message:'Unable to place COD order');}finally{setCodPending(false)}
  }
 
- return <div className="anWide shoppingPage anFlowPage">{mode!=="wishlist"&&<CommerceSteps step={isCheckout?2:1}/>}<p className="anOverline">ANUSMITA · THOUGHTFULLY CURATED</p>
+ return <div className={"anWide shoppingPage anFlowPage"+(isCheckout?" anFlowCheckoutReference":"")}>{isCheckout&&<nav className="anCheckoutBreadcrumb" aria-label="Breadcrumb"><Link href="/">Home</Link><ChevronRight size={13}/><Link href="/cart">Shopping Bag</Link><ChevronRight size={13}/><span>Checkout</span></nav>}{mode!=="wishlist"&&<CommerceSteps step={isCheckout?2:1}/>}<p className="anOverline">ANUSMITA · THOUGHTFULLY CURATED</p>
   <h1>{mode==='wishlist'?'Your saved favourites.':isCheckout?'Checkout':'Your Shopping Bag'}</h1>
   {mode!=="wishlist"&&<p className="anFlowSubtitle">{isCheckout?"Almost there! Tell us where to deliver your favourites.":"A little more beautiful, one favourite at a time."}</p>}
   <nav className="shoppingNav"><Link href="/shop">Continue shopping</Link><Link href="/cart">Cart ({state.cart.reduce((n,l)=>n+l.quantity,0)})</Link><Link href="/wishlist">Wishlist ({state.wishlist.length})</Link></nav>
@@ -79,21 +81,40 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
     <ShoppingActions id={p.id}/>
    </article>)}</div>:<div className="sheetEmpty"><h2>Your wishlist is waiting.</h2><p>Tap the heart on a product to save it here.</p><Link href="/shop">Explore products →</Link></div>):
    (!lines.length?<div className="sheetEmpty"><h2>Your bag is empty.</h2><Link href="/shop">Find something lovely →</Link></div>:
-   <div className="shoppingLayout anFlowLayout"><section className="anFlowItems">{!isCheckout&&<div className="anFlowHero"><div><small>YOUR CURATED EDIT</small><h2>Your Shopping Bag</h2><p>Selected with care. Made for your moments.</p></div><img src="/brand/promo-reference.webp" alt="" loading="lazy"/></div>}{isCheckout&&<div className="anFlowCheckoutIntro"><h2>Delivery details</h2><p>Complete your details below. Your final order is subject to verified availability.</p></div>}{lines.map(({id,quantity,p})=><article className="shoppingLine anFlowItem" key={id}>
+   <div className="shoppingLayout anFlowLayout"><section className="anFlowItems">{!isCheckout&&<div className="anFlowHero"><div><small>YOUR CURATED EDIT</small><h2>Your Shopping Bag</h2><p>Selected with care. Made for your moments.</p></div><img src="/brand/promo-reference.webp" alt="" loading="lazy"/></div>}{isCheckout&&<div className="anFlowCheckoutIntro"><div><h2>Checkout</h2><p>Almost there! Tell us where to deliver your favourites.</p></div><span className="anCheckoutFloral" aria-hidden="true">✿ ❀ ✿</span></div>}{lines.map(({id,quantity,p})=><article className="shoppingLine anFlowItem" key={id}>
     <Link href={'/products/'+p.slug}>{p.image?<img src={p.image} alt={p.name}/>:<span className="shoppingImageFallback">A.</span>}</Link>
     <div><small>{p.category}</small><h2><Link href={'/products/'+p.slug}>{p.name}</Link></h2><p>{p.size}</p><p>{p.pricePaisa===null?'Price to be confirmed':money(p.pricePaisa)} · Availability confirmed before ordering</p>
      <div className="anFlowQty"><button type="button" disabled={quantity<=1} aria-label={"Reduce quantity of "+p.name} onClick={()=>update(x=>({...x,cart:x.cart.map(l=>l.id===id?{...l,quantity:Math.max(1,l.quantity-1)}:l)}))}><Minus size={14}/></button><output>{quantity}</output><button type="button" disabled={quantity>=20} aria-label={"Increase quantity of "+p.name} onClick={()=>update(x=>({...x,cart:x.cart.map(l=>l.id===id?{...l,quantity:Math.min(20,l.quantity+1)}:l)}))}><Plus size={14}/></button></div>
      <button className="shoppingRemove" aria-label={'Remove '+p.name} onClick={()=>update(s=>({...s,cart:s.cart.filter(l=>l.id!==id)}))}><Trash2 size={15}/> Remove</button>
     </div><strong>{p.pricePaisa===null?'Confirm price':money(p.pricePaisa*quantity)}</strong>
    </article>)}{isCheckout&&<form className="anCodForm anFlowCheckoutForm" onSubmit={submitCod}>
-     <h3><Truck size={18}/> Cash on Delivery</h3><p>Pay on delivery. Final charges are calculated by our server.</p>
-     {(['name','phone','district','area','address'] as const).map(k=><label key={k}>{k.charAt(0).toUpperCase()+k.slice(1)} *<input required type={k==='phone'?'tel':'text'} inputMode={k==='phone'?'tel':'text'} pattern={k==='phone'?'01[3-9][0-9]{8}':undefined} maxLength={k==='address'?400:100} value={codCustomer[k]} onChange={e=>{setCodCustomer(x=>({...x,[k]:e.target.value}));setCodKey('');}}/></label>)}
-     <label>Delivery notes<textarea rows={2} maxLength={400} value={codCustomer.notes} onChange={e=>setCodCustomer(x=>({...x,notes:e.target.value}))}/></label>
-     <label className="shoppingConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/> I confirm the details are correct and understand the order is unpaid until verified.</label>
-     {codError&&<p role="alert" className="error">{codError}</p>}
-     {!codEnabled&&<div className="anFlowClosed"><LockKeyhole size={18}/><strong>Checkout preview only</strong><p>COD orders are not accepted while ANUSMITA is in catalogue mode. No details entered here are submitted or saved to the server.</p></div>}
-     <button className="sheetPrimary" type="submit" disabled={!codEnabled||!consent||codPending||Boolean(loadError)||missing.length>0||unknown}>{codPending?'Submitting…':codEnabled?'Place COD Order →':'COD checkout unavailable'}</button>
-     </form>}</section>
+ <h3>Delivery Details</h3>
+ <div className="anCheckoutFieldGrid">
+ <label>Full Name <span>*</span><input required autoComplete="name" placeholder="Enter your full name" value={codCustomer.name} maxLength={100} onChange={e=>{setCodCustomer(x=>({...x,name:e.target.value}));setCodKey('');}}/></label>
+ <label>Phone Number <span>*</span><input required type="tel" inputMode="tel" autoComplete="tel" pattern="01[3-9][0-9]{8}" placeholder="01XXXXXXXXX" value={codCustomer.phone} maxLength={11} onChange={e=>{setCodCustomer(x=>({...x,phone:e.target.value}));setCodKey('');}}/></label>
+ <label className="anCheckoutFull">Email (optional)<input type="email" autoComplete="email" value={email} maxLength={150} placeholder="Enter your email address" onChange={e=>setEmail(e.target.value)}/></label>
+ <label className="anCheckoutFull">Street Address <span>*</span><input required autoComplete="street-address" placeholder="House number, road name, apartment (if any)" value={codCustomer.address} maxLength={400} onChange={e=>{setCodCustomer(x=>({...x,address:e.target.value}));setCodKey('');}}/></label>
+ <label>District / City <span>*</span><input required autoComplete="address-level1" placeholder="Enter district / city" value={codCustomer.district} maxLength={100} onChange={e=>{setCodCustomer(x=>({...x,district:e.target.value}));setCodKey('');}}/></label>
+ <label>Area / Thana <span>*</span><input required autoComplete="address-level2" placeholder="Enter area / thana" value={codCustomer.area} maxLength={100} onChange={e=>{setCodCustomer(x=>({...x,area:e.target.value}));setCodKey('');}}/></label>
+ <label>Postal Code (optional)<input inputMode="numeric" autoComplete="postal-code" placeholder="Enter postal code" value={postal} maxLength={10} onChange={e=>setPostal(e.target.value)}/></label>
+ <label>Order Notes (optional)<input placeholder="Any special instructions..." maxLength={400} value={codCustomer.notes} onChange={e=>setCodCustomer(x=>({...x,notes:e.target.value}))}/></label>
+ </div>
+ <h3 className="anCheckoutSectionHeading">Shipping Option</h3>
+ <div className="anCheckoutShippingOptions" role="group" aria-label="Shipping region">
+ <button type="button" aria-pressed={deliveryRegion==='dhaka'} onClick={()=>setDeliveryRegion('dhaka')} className={deliveryRegion==='dhaka'?'selected':''}><span className="anCheckoutRadio">{deliveryRegion==='dhaka'?<Check size={13}/>:null}</span><span><strong>Inside Dhaka</strong><small>Fee confirmed at order submission</small></span></button>
+ <button type="button" aria-pressed={deliveryRegion==='outside'} onClick={()=>setDeliveryRegion('outside')} className={deliveryRegion==='outside'?'selected':''}><span className="anCheckoutRadio">{deliveryRegion==='outside'?<Check size={13}/>:null}</span><span><strong>Outside Dhaka</strong><small>Fee confirmed at order submission</small></span></button>
+ <button type="button" aria-pressed={deliveryRegion==='international'} onClick={()=>setDeliveryRegion('international')} className={deliveryRegion==='international'?'selected':''}><span className="anCheckoutRadio">{deliveryRegion==='international'?<Check size={13}/>:null}</span><span><strong>Outside Bangladesh</strong><small>Quote required · ordering unavailable</small></span></button>
+ </div>
+ {deliveryRegion==='international'&&<p className="anFlowNotice" role="status">International shipping is not configured. Please contact ANUSMITA for a quote.</p>}
+ <h3 className="anCheckoutSectionHeading">Payment Method</h3>
+ <div className="anCheckoutPaymentOptions"><div aria-disabled="true"><CreditCard size={19}/><span>bKash</span><small>Not connected</small></div><div aria-disabled="true"><Wallet size={19}/><span>Nagad</span><small>Not connected</small></div><div className="selected"><Truck size={19}/><span>Cash on Delivery</span><small>Pay on delivery</small><Check size={15}/></div></div>
+ <div className="anCheckoutFormTotal"><strong>Order Summary</strong><span>{state.cart.reduce((n,l)=>n+l.quantity,0)} item(s)</span><div><span>Subtotal</span><b>{money(total)}</b></div><div><span>Delivery</span><b>{extraDelivery?'Confirmed by server':'Included'}</b></div><div className="anCheckoutFormGrand"><span>Product subtotal</span><b>{money(total)}</b></div></div>
+ <label className="shoppingConsent anCheckoutConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/> I confirm my details and agree to the applicable terms. COD payment is due on delivery.</label>
+ {codError&&<p role="alert" className="error">{codError}</p>}
+ {!codEnabled&&<div className="anFlowClosed"><LockKeyhole size={18}/><strong>Checkout preview only</strong><p>Live COD checkout has not been enabled. No customer details will be submitted from this preview.</p></div>}
+ <button className="sheetPrimary anFlowButton anCheckoutPlace" type="submit" disabled={!codEnabled||deliveryRegion==='international'||!consent||codPending||Boolean(loadError)||missing.length>0||unknown}>{codPending?'Submitting…':codEnabled?'Place COD Order':'COD checkout unavailable'} <ArrowRight size={16}/></button>
+ <small className="anCheckoutTrust"><ShieldCheck size={13}/> Secure order processing · No advance payment for COD</small>
+ </form>}</section>
    <aside className="shoppingSummary anFlowSummary"><h2>Order Summary</h2><p className="anFlowSummaryCaption">{state.cart.reduce((n,l)=>n+l.quantity,0)} item(s) in your bag</p><div><span>{unknown?'Known-price subtotal':'Product subtotal'}</span><strong>{money(total)}</strong></div>
     {unknown&&<p>Some items need a price confirmation and are not included in the subtotal.</p>}
     <div><span>Delivery</span><span>{extraDelivery?'To be confirmed':'Included'}</span></div>
