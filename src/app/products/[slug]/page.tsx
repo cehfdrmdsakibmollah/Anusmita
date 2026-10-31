@@ -120,7 +120,7 @@ export default async function ProductPage({params}:Props){
    availability:stock>0?"https://schema.org/InStock":"https://schema.org/OutOfStock",url
   }
  };
- return <div className="anPdp">
+ return <div className={"anPdp"+(preview?" anPdpDemo":" anPdpReal")}>
   <div className="anWide">
 
    <nav aria-label="Breadcrumb" className="anPdpBreadcrumb">
@@ -142,11 +142,12 @@ export default async function ProductPage({params}:Props){
      </div>
     </div>
    </div>
-   <ProductDetailsAccordion preview={preview} product={{
+   <nav className="anPdpDetailTabs" aria-label="Product page sections"><a href="#real-product-information">Details &amp; specifications</a><a href="#pdp-verified-reviews">Customer reviews</a><a href="#pdp-product-assistance">Delivery &amp; questions</a></nav>
+   <section id="real-product-information" className="anPdpDetailAnchor"><ProductDetailsAccordion preview={preview} product={{
     description:p.description,ingredients:p.ingredients,usageInstructions:p.usageInstructions,
     topNotes:p.topNotes,heartNotes:p.heartNotes,baseNotes:p.baseNotes,
     ...Object.fromEntries(["color", "colorHex", "material", "dimensions", "compatibility", "careInstructions", "warranty", "sizeGuide", "skinType", "benefits"].map(key=>[key,p[key as keyof ProductDetails]||""])),brand:p.brand,origin:p.origin,size:p.size||p.variantLabel,category:p.category,sku:p.sku
-   }}/>
+   }}/></section>
    <section className="anPdpVerifiedReviews" aria-labelledby="pdp-verified-reviews">
     <div className="anPdpRelatedTitle"><div><span className="anPdpOverline">CUSTOMER EXPERIENCE</span><h2 id="pdp-verified-reviews">Verified customer reviews</h2></div></div>
     {trust.reviews.length? <div className="anPdpVerifiedReviewGrid">{trust.reviews.map((review,i)=><article key={i} className="anPdpVerifiedReview"><strong aria-label={review.rating+" out of 5 stars"}>{"★".repeat(Math.max(1,Math.min(5,review.rating)))}</strong><p>{review.body}</p>{review.skinType&&<small>Skin type: {review.skinType}</small>}</article>)}</div>:<p className="anPdpReviewEmpty">{reviewEmptyLabel(0)} We only publish customer-submitted reviews with verification and permission.</p>}
@@ -158,7 +159,7 @@ export default async function ProductPage({params}:Props){
       <div className="anPdpRelatedCopy"><small>{item.category}</small><h3>{item.name}</h3><strong>{money(item.pricePaisa)}</strong></div>
     </Link>)}</div>
    </section>}
-   <ProductServicePanel name={p.name} slug={p.slug} size={p.size||p.variantLabel||""} color={p.color||""} available={stock} preview={preview}/>
+   <div id="pdp-product-assistance"><ProductServicePanel name={p.name} slug={p.slug} size={p.size||p.variantLabel||""} color={p.color||""} available={stock} preview={preview}/></div>
    {(related.length>0||preview)&&<section className="anPdpRelated" aria-label="Explore related collections">
     <div className="anPdpRelatedTitle"><div><span className="anPdpOverline">MORE TO EXPLORE</span>
       <h2>{preview?"You may also like":"You may also like"}</h2></div>
