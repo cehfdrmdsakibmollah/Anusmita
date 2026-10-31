@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState} from "react";
 import {ImagePlus,Layers,Tag,Search,Save,ArrowLeft,ArrowRight,Palette,Boxes} from "lucide-react";
 import ProductPhotoManager from "@/components/product-photo-manager";
+import ProductManager from "@/components/product-manager";
 type Item={_id:string;sku:string;name:string;slug:string;brand:string;category:string;size:string;color?:string;colorHex?:string;variantGroup?:string;variantLabel?:string;origin:string;description:string;pricePaisa:number;costPaisa:number;onHand:number;reserved:number;active:boolean;imageUrls:string[];updatedAt:string};
 type Page={products:Item[];page:number;pages:number;total:number};
 const choices=["Bangladesh","Japan","Korea","China","Other"];
@@ -57,5 +58,6 @@ export default function AdminProductWorkspace(){
  {feedback&&<p className={feedback.startsWith("Error")?"apFeedback apError":"apFeedback"} role="status">{feedback}</p>}
  {selected&&<div className="apPhotoManager"><ProductPhotoManager product={selected} onSaved={data=>{setSelected({...selected,...data});setVersion(v=>v+1);}}/></div>}
  <section className="apCard apSearch"><h3><Search size={19}/> Search & edit products</h3><div className="apCardBody"><label className="apField"><span>Search by product name, SKU or brand</span><input value={query} placeholder="Search 121+ real products…" onChange={e=>{setQuery(e.target.value);setPage(1)}}/></label><div className="apTableScroll"><table><thead><tr><th>Product</th><th>SKU</th><th>Price</th><th>Available</th><th>Status</th><th>Action</th></tr></thead><tbody>{items?.products.map(p=><tr key={p._id}><td><div className="apProductCell">{p.imageUrls?.[0]?<img src={p.imageUrls[0]} alt=""/>:<span className="apNoImage">No image</span>}<strong>{p.name}</strong></div></td><td>{p.sku}</td><td>{cash(p.pricePaisa)}</td><td>{p.onHand-p.reserved}</td><td><span className={p.active?"apPublished":"apDraft"}>{p.active?"Published":"Draft"}</span></td><td><button type="button" className="apEdit" onClick={()=>edit(p)}>Edit</button></td></tr>)}</tbody></table></div><div className="apPager"><button type="button" disabled={page<=1} onClick={()=>setPage(v=>v-1)}><ArrowLeft size={16}/> Previous</button><span>Page {page}/{items?.pages||1} · {items?.total||0} SKUs</span><button type="button" disabled={page>=(items?.pages||1)} onClick={()=>setPage(v=>v+1)}>Next <ArrowRight size={16}/></button></div></div></section>
+ <details className="apAdvanced"><summary>Advanced product fields · ingredients, care, materials, notes and SEO details</summary><p className="apHint">The full legacy editor remains available for all product specifications. Product galleries remain in the new R2 workspace above.</p><ProductManager/></details>
  </div>;
 }
