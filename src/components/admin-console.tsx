@@ -13,10 +13,11 @@ import HrWholesaleSource from "@/components/hr-wholesale-source";
 import ChatbotManager from "@/components/chatbot-manager";
 import HomepageManager from "@/components/homepage-manager";
 import CourierSetup from "@/components/courier-setup";
+import InventoryHealth from "@/components/inventory-health";
 type Overview={orderedPaisa:number;confirmedPaisa:number;deliveredSalesPaisa:number;recordedCollectionsPaisa:number;outstandingPaisa:number;supplierPayablePaisa:number;supplierPaidPaisa:number;cogsPaisa:number;recordedExpensePaisa:number;estimatedGrossProfitPaisa:number;estimatedOperatingProfitPaisa:number;unreconciled:boolean;placedOrders:number;deliveredOrders:number;lowStockSkus:number;reservedUnits:number;inventoryCostPaisa:number};
 type Order={_id:string;orderNumber:string;orderStatus:string;paymentStatus:string;collectedPaisa:number;totalPaisa:number;customer:{name:string;phone:string};createdAt:string};
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
-const tabs=["Overview","Assistant Replies","Homepage Studio","Orders","Courier Setup","Products","Inventory","Payments","Suppliers","Purchasing","Bulk Import","Canva Catalogue","HR Wholesale","Drive Images","Cloudinary","R2 Images","Launch Readiness"];
+const tabs=["Overview","Assistant Replies","Homepage Studio","Orders","Courier Setup","Products","Inventory","Inventory Health","Payments","Suppliers","Purchasing","Bulk Import","Canva Catalogue","HR Wholesale","Drive Images","Cloudinary","R2 Images","Launch Readiness"];
 export default function AdminConsole({role,initialTab}:{role:string;initialTab?:string}){
  const [tab,setTab]=useState(initialTab&&tabs.includes(initialTab)?initialTab:"Overview"),[overview,setOverview]=useState<Overview|null>(null),[orders,setOrders]=useState<Order[]>([]),[notice,setNotice]=useState(""),[pending,setPending]=useState(false);
  const load=useCallback(async()=>{
@@ -68,6 +69,7 @@ export default function AdminConsole({role,initialTab}:{role:string;initialTab?:
  <div className="field"><label>Quantity (negative when decreasing)</label><input name="quantity" type="number" required step="1"/></div>
  <div className="field"><label>Reason for audit log</label><textarea name="note" minLength={5} required/></div>
  <button className="button" disabled={pending}>Record stock movement</button></form>:<p className="notice">Stock adjustments require inventory permission.</p>}</div>}
+ {tab==="Inventory Health"&&(["owner","admin","inventory","purchasing"].includes(role)?<InventoryHealth/>:<p className="notice">Inventory or purchasing access required.</p>)}
  {tab==="Payments"&&<div className="adminCard"><h2>Manual payment reconciliation</h2><p className="smallprint">A customer screenshot is never sufficient proof. Independently verify funds with your merchant/bank account before using this form.</p>
  {canFinance?<form className="adminForm" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);void send("/api/admin/payments",{orderId:field(f,"orderId"),method:field(f,"method"),reference:field(f,"reference"),amountPaisa:Math.round(Number(field(f,"amount"))*100),note:field(f,"note"),verificationConfirmed:f.get("verified")==="on"});}}>
  <div className="field"><label>Order database ID</label><input name="orderId" required/></div>
