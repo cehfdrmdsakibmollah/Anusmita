@@ -6,7 +6,8 @@ import Link from "next/link";
 import {notFound} from "next/navigation";
 import {ArrowRight,ArrowUpRight,Heart,Package,ShieldCheck,Sparkles,Truck} from "lucide-react";
 import {db} from "@/lib/db";
-import {Product} from "@/lib/models";
+import {Product,ProductReview} from "@/lib/models";
+import {canPublishReview,complementaryCategories,reviewEmptyLabel} from "@/lib/product-trust";
 import {checkoutEnabled} from "@/lib/launch-config";
 import {isPerfumeCategory,shouldListGroup,type ProductVariant} from "@/lib/product-variants";
 import ProductImageGallery from "@/components/product-image-gallery";
@@ -97,6 +98,16 @@ export default async function ProductPage({params}:Props){
  if(!p)notFound();
  const preview=slug==="design-preview";
  const {variants,related}=await supporting(p);
+ const trust=preview?{reviews:[] as {rating:number;body:string;skinType:string}[],pairings:[] as DbProduct[]}:await (async()=>{
+  try{
+   const complements=complementaryCategories(p.category);
+   const [rawReviews,pairings]=await Promise.all([
+    ProductReview.find({productId:p._id,moderationStatus:"approved",consentToPublish:true,submittedByCustomer:true,verifiedPurchase:true,verifiedAt:{$type:"date"}}).select("rating body skinType consentToPublish submittedByCustomer verifiedPurchase moderationStatus verifiedAt -_id").sort({createdAt:-1}).limit(10).lean<any[]>(),
+    complements.length?Product.find({active:true,category:{$in:complements},_id:{$ne:p._id}}).select(projection).sort({createdAt:-1}).limit(4).lean<DbProduct[]>():Promise.resolve([] as DbProduct[])
+   ]);
+   return {reviews:rawReviews.filter(r=>canPublishReview(r)).map(r=>({rating:Number(r.rating),body:String(r.body),skinType:String(r.skinType||"")})),pairings};
+  }catch{return {reviews:[] as {rating:number;body:string;skinType:string}[],pairings:[] as DbProduct[]};}
+ })();
  const stock=Math.max(0,(p.onHand||0)-(p.reserved||0));
  const canOrder=!preview&&checkoutEnabled(process.env);
  const url=(process.env.NEXT_PUBLIC_SITE_URL||"http://localhost:3000").replace(/\/$/,"")+"/products/"+p.slug;
@@ -136,6 +147,17 @@ export default async function ProductPage({params}:Props){
     topNotes:p.topNotes,heartNotes:p.heartNotes,baseNotes:p.baseNotes,
     ...Object.fromEntries(["color", "colorHex", "material", "dimensions", "compatibility", "careInstructions", "warranty", "sizeGuide", "skinType", "benefits"].map(key=>[key,p[key as keyof ProductDetails]||""])),brand:p.brand,origin:p.origin,size:p.size||p.variantLabel,category:p.category,sku:p.sku
    }}/>
+   <section className="anPdpVerifiedReviews" aria-labelledby="pdp-verified-reviews">
+    <div className="anPdpRelatedTitle"><div><span className="anPdpOverline">CUSTOMER EXPERIENCE</span><h2 id="pdp-verified-reviews">Verified customer reviews</h2></div></div>
+    {trust.reviews.length? <div className="anPdpVerifiedReviewGrid">{trust.reviews.map((review,i)=><article key={i} className="anPdpVerifiedReview"><strong aria-label={review.rating+" out of 5 stars"}>{"★".repeat(Math.max(1,Math.min(5,review.rating)))}</strong><p>{review.body}</p>{review.skinType&&<small>Skin type: {review.skinType}</small>}</article>)}</div>:<p className="anPdpReviewEmpty">{reviewEmptyLabel(0)} We only publish customer-submitted reviews with verification and permission.</p>}
+   </section>
+   {!preview&&trust.pairings.length>0&&<section className="anPdpRelated" aria-label="Complete your look">
+    <div className="anPdpRelatedTitle"><div><span className="anPdpOverline">PAIR WITH YOUR PICK</span><h2>Explore complementary products</h2></div><p>Published catalogue suggestions · no bundle discount implied</p></div>
+    <div className="anPdpRelatedGrid">{trust.pairings.map(item=><Link key={String(item._id)} href={"/products/"+item.slug} className="anPdpRelatedCard">
+      <div className="anPdpRelatedImage">{item.imageUrls?.[0]?<img src={item.imageUrls[0]} alt={item.name} loading="lazy"/>:<div className="anPdpRelatedBlank">ANUSMITA</div>}</div>
+      <div className="anPdpRelatedCopy"><small>{item.category}</small><h3>{item.name}</h3><strong>{money(item.pricePaisa)}</strong></div>
+    </Link>)}</div>
+   </section>}
    <ProductServicePanel name={p.name} slug={p.slug} size={p.size||p.variantLabel||""} color={p.color||""} available={stock} preview={preview}/>
    {(related.length>0||preview)&&<section className="anPdpRelated" aria-label="Explore related collections">
     <div className="anPdpRelatedTitle"><div><span className="anPdpOverline">MORE TO EXPLORE</span>

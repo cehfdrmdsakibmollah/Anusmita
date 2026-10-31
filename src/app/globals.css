@@ -1702,3 +1702,15 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
 .anPdpReviewTruth p{font:12px/1.6 Arial,sans-serif;margin:0;color:#655b61}
 .anPdpServices :is(a,select,textarea,input):focus-visible{outline:3px solid #843651;outline-offset:3px}
 @media(max-width:700px){.anPdpServices{padding:16px;margin:22px 0}.anPdpServiceCards{grid-template-columns:1fr}.anPdpServiceSubmit{width:100%}}
+
+
+/* PDP verified-review and catalogue-backed pairings — no fake social proof. */
+.anPdpVerifiedReviews{margin:38px 0;padding:24px;background:#fffaf9;border:1px solid #f0e3e6;border-radius:10px}
+.anPdpVerifiedReviews .anPdpRelatedTitle{margin-bottom:14px}
+.anPdpReviewEmpty{font:14px/1.7 Arial,sans-serif;color:#76676c;margin:0}
+.anPdpVerifiedReviewGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.anPdpVerifiedReview{padding:18px;background:#fff;border:1px solid #f0e4e7;border-radius:8px}
+.anPdpVerifiedReview strong{color:#b44e68;letter-spacing:2px}
+.anPdpVerifiedReview p{font:14px/1.6 Arial,sans-serif;color:#382d34}
+.anPdpVerifiedReview small{color:#796a70;font-size:11px}
+@media(max-width:700px){.anPdpVerifiedReviews{padding:16px;margin:22px 0}.anPdpVerifiedReviewGrid{grid-template-columns:1fr}}
