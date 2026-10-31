@@ -21,7 +21,7 @@ export default function AdminProductWorkspace(){
   try{for(const file of batch){if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>3*1024*1024||file.size<1)throw Error(file.name+": JPEG, PNG or WebP up to 3MB only");if(current.imageUrls.length>=12)throw Error("Maximum 12 images per SKU");
    const data=new FormData();data.set("productId",current._id);data.set("expectedUpdatedAt",current.updatedAt);data.set("file",file);
    const r=await fetch("/api/admin/r2",{method:"POST",body:data});const j=await r.json();if(!r.ok)throw Error(j.error||"R2 upload failed");current={...current,imageUrls:j.imageUrls,updatedAt:j.updatedAt};setSelected(current);}
-  }return current;
+  return current;
   }finally{setUploading(false);setFiles([]);if(fileRef.current)fileRef.current.value="";}
  }
  async function save(e:React.FormEvent){e.preventDefault();if(busy||uploading)return;
