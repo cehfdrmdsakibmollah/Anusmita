@@ -20,12 +20,12 @@ export default function ProductImageGallery({urls,name,preview=false}:{urls:stri
   return()=>window.removeEventListener("keydown",onKey);
  },[zoom,safe.length]);
  return <div className={"anPdpGallery"+(preview?" isPreview":"")} aria-label={name+" photos"}>
-  {safe.length>1&&<div className="anPdpThumbs" aria-label="Select a product photo">{safe.map((src,i)=>
+  {safe.length>0&&<div className="anPdpThumbs" aria-label="Select a product photo">{safe.map((src,i)=>
    <button key={i} type="button" className={i===active?"active":""}
     aria-label={"Show product photo "+(i+1)} aria-pressed={i===active} onClick={()=>setIndex(i)}>
     <img src={src} alt="" loading="lazy" onError={()=>setBroken(old=>old.includes(src)?old:[...old,src])}/>
    </button>)}</div>}
-  <div className="anPdpMainImage">
+  <div className="anPdpMainImage anPdpStudioFrame">
    {preview&&<span className="anPdpImageTag">DESIGN PREVIEW</span>}
    {isBroken?<div className="anPdpImageFallback"><ImageOff size={38}/><p>Product image is not available yet</p><span>ANUSMITA</span></div>:
     <img src={url} alt={name+" — image "+(active+1)+" of "+safe.length} loading="eager"

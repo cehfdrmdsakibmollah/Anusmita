@@ -1778,3 +1778,25 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
 .anPdpReal :is(a,button):focus-visible{outline:3px solid #ac3f60;outline-offset:3px}
 @media(max-width:900px){.anPdpReal .anPdpMain{grid-template-columns:1fr}.anPdpReal .anPdpGallery{grid-template-columns:65px minmax(0,1fr)}}
 @media(max-width:600px){.anPdpReal .anPdpGallery{grid-template-columns:1fr}.anPdpReal .anPdpThumbs{display:flex;flex-direction:row;overflow-x:auto;max-height:none;order:2}.anPdpReal .anPdpMainImage{order:1}.anPdpReal .anPdpMainImage>img{padding:8px}.anPdpReal .anPdpThumbs button{flex:0 0 65px;width:65px;height:65px}.anPdpReal .anPdpDetailTabs{gap:6px}.anPdpReal .anPdpDetailTabs a{font-size:11px;padding:9px 10px}}
+
+
+/* Real product photo parity with Radiance preview.
+   Override the legacy image rule that can leave the main image off-canvas. */
+.anPdpReal .anPdpPhotoStudio{display:grid!important;grid-template-columns:74px minmax(0,1fr)!important;gap:14px!important;align-items:start;width:100%;min-width:0}
+.anPdpReal .anPdpPhotoStudio .anPdpThumbs{display:flex!important;flex-direction:column!important;gap:9px!important;max-height:560px;overflow-y:auto;order:0}
+.anPdpReal .anPdpPhotoStudio .anPdpThumbs button{display:block;flex:0 0 69px;width:69px;height:69px;padding:3px;overflow:hidden;background:#fff6f3;border:1px solid #eedbe1;border-radius:7px}
+.anPdpReal .anPdpPhotoStudio .anPdpThumbs button.active{border:2px solid #cc4d71}
+.anPdpReal .anPdpPhotoStudio .anPdpThumbs img{display:block;width:100%;height:100%;object-fit:contain}
+.anPdpReal .anPdpPhotoStudio .anPdpStudioFrame{display:flex!important;position:relative!important;flex-direction:column;align-items:center;justify-content:center;width:100%;min-width:0;min-height:370px;aspect-ratio:460/420;overflow:hidden;background:#fff7f3;border:1px solid #eadde0;border-radius:10px;order:1}
+.anPdpReal .anPdpPhotoStudio .anPdpStudioFrame>img{display:block!important;position:relative!important;inset:auto!important;width:100%!important;height:100%!important;min-height:0;max-width:100%;max-height:550px;object-fit:contain!important;mix-blend-mode:normal!important;opacity:1!important;visibility:visible!important;transform:none!important;padding:14px}
+.anPdpReal .anPdpPhotoStudio .anPdpStudioFrame:hover>img{transform:none!important}
+.anPdpReal .anPdpPhotoStudio .anPdpImageFallback{display:flex;min-height:350px;align-items:center;justify-content:center;flex-direction:column}
+.anPdpReal .anPdpPhotoStudio .anPdpImageCounter{z-index:3}
+.anPdpReal .anPdpPhotoStudio .anPdpGalleryPrev,.anPdpReal .anPdpPhotoStudio .anPdpGalleryNext,.anPdpReal .anPdpPhotoStudio .anPdpZoom{z-index:4}
+@media(max-width:700px){
+ .anPdpReal .anPdpPhotoStudio{grid-template-columns:minmax(0,1fr)!important}
+ .anPdpReal .anPdpPhotoStudio .anPdpThumbs{order:2;flex-direction:row!important;overflow-x:auto;overflow-y:hidden;max-height:none}
+ .anPdpReal .anPdpPhotoStudio .anPdpThumbs button{flex:0 0 64px;width:64px;height:64px}
+ .anPdpReal .anPdpPhotoStudio .anPdpStudioFrame{order:1;min-height:260px}
+ .anPdpReal .anPdpPhotoStudio .anPdpStudioFrame>img{padding:8px}
+}
