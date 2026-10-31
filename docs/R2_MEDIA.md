@@ -19,3 +19,7 @@ Worker source: workers/r2-media/index.mjs. Wrangler configuration: workers/r2-me
 ## Validation
 
 Worker tests cover unauthenticated writes, private-path reads, MIME mismatch, oversized files, conditional writes, cache headers and health authorization. Smoke-test with a generated disposable image and remove only that exact test key afterwards. Authenticated dashboard/product CRUD validation additionally requires the database and owner account.
+
+## Netlify production environment activation
+
+The live Netlify function requires both `R2_MEDIA_SECRET` (secret) and `R2_MEDIA_URL=https://anusmita-media.mdsakibmolla545.workers.dev/` (production). Changes to Netlify variables require a **fresh production deploy**, not merely refreshing the admin tab. The Worker `UPLOAD_SECRET` must match the Netlify secret. Never log or commit either secret. Confirm `/api/admin/r2` readiness while signed in, and upload a legitimate product image only after readiness succeeds.
