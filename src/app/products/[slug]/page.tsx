@@ -14,6 +14,7 @@ import ProductImageGallery from "@/components/product-image-gallery";
 import ProductDetailPurchase from "@/components/product-detail-purchase";
 import ProductDetailsAccordion from "@/components/product-details-accordion";
 import ProductServicePanel from "@/components/product-service-panel";
+import ProductRecommendationCard from "@/components/product-recommendation-card";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 type Props={params:Promise<{slug:string}>};
@@ -154,27 +155,18 @@ export default async function ProductPage({params}:Props){
    </section>
    {!preview&&trust.pairings.length>0&&<section className="anPdpRelated" aria-label="Complete your look">
     <div className="anPdpRelatedTitle"><div><span className="anPdpOverline">PAIR WITH YOUR PICK</span><h2>Explore complementary products</h2></div><p>Published catalogue suggestions · no bundle discount implied</p></div>
-    <div className="anPdpRelatedGrid">{trust.pairings.map(item=><Link key={String(item._id)} href={"/products/"+item.slug} className="anPdpRelatedCard">
-      <div className="anPdpRelatedImage">{item.imageUrls?.[0]?<img src={item.imageUrls[0]} alt={item.name} loading="lazy"/>:<div className="anPdpRelatedBlank">ANUSMITA</div>}</div>
-      <div className="anPdpRelatedCopy"><small>{item.category}</small><h3>{item.name}</h3><strong>{money(item.pricePaisa)}</strong></div>
-    </Link>)}</div>
+    <div className="anPdpRelatedGrid anPdpUpsellGrid">{trust.pairings.map(item=><ProductRecommendationCard key={String(item._id)} action="cart" product={{id:String(item._id),slug:item.slug,name:item.name,brand:item.brand||"ANUSMITA",category:item.category,image:item.imageUrls?.[0]||null,pricePaisa:item.pricePaisa}}/>)}</div>
    </section>}
    <div id="pdp-product-assistance"><ProductServicePanel name={p.name} slug={p.slug} size={p.size||p.variantLabel||""} color={p.color||""} available={stock} preview={preview}/></div>
    {(related.length>0||preview)&&<section className="anPdpRelated" aria-label="Explore related collections">
     <div className="anPdpRelatedTitle"><div><span className="anPdpOverline">MORE TO EXPLORE</span>
       <h2>{preview?"You may also like":"You may also like"}</h2></div>
      <Link href="/#shop">View all products <ArrowRight size={18}/></Link></div>
-    <div className="anPdpRelatedGrid">
+    <div className="anPdpRelatedGrid anPdpUpsellGrid">
      {preview?sampleCollections.map(item=><Link href={item.href} className="anPdpRelatedCard" key={item.title}>
       <div className="anPdpRelatedImage"><img src={item.image} alt="" loading="lazy"/><span className="anPdpRelatedArrow"><ArrowUpRight size={19}/></span></div>
       <div className="anPdpRelatedCopy"><small>DISCOVER THE EDIT</small><h3>{item.title}</h3><span>Explore collection →</span></div>
-     </Link>):related.map(item=><Link key={String(item._id)} href={"/products/"+item.slug} className="anPdpRelatedCard">
-      <div className="anPdpRelatedImage">{item.imageUrls?.[0]?<img src={item.imageUrls[0]} alt={item.name} loading="lazy"/>:<div className="anPdpRelatedBlank">ANUSMITA</div>}
-       <span className="anPdpRelatedArrow"><ArrowUpRight size={19}/></span>
-      </div>
-      <div className="anPdpRelatedCopy"><small>{item.brand||item.category}</small><h3>{item.name}</h3>
-       <strong>{money(item.pricePaisa)}</strong></div>
-     </Link>)}
+     </Link>):related.map(item=><ProductRecommendationCard key={String(item._id)} action="view" product={{id:String(item._id),slug:item.slug,name:item.name,brand:item.brand||"ANUSMITA",category:item.category,image:item.imageUrls?.[0]||null,pricePaisa:item.pricePaisa}}/>)}
     </div>
    </section>}
   </div>
