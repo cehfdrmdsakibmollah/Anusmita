@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {Heart,ShoppingBag,Trash2,ArrowRight,Minus,Plus,LockKeyhole,Truck,ChevronRight,MapPin,Check,Wallet,CreditCard,ShieldCheck} from 'lucide-react';
 import CommerceSteps from '@/components/commerce-steps';
+import {districtLocations,areaOptions,locationPairValid} from '@/lib/bd-locations';
 import {sheetCatalogue} from '@/lib/sheet-catalogue';
 import {emptyShopping,sanitizeShopping,shoppingKey,shoppingSubtotal,type ShoppingState} from '@/lib/shopping-storage';
 function read(){try{return sanitizeShopping(JSON.parse(localStorage.getItem(shoppingKey)||'null'))}catch{return emptyShopping}}
@@ -58,7 +59,7 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
  const unknown=lines.some(l=>l.p.pricePaisa===null);
  const extraDelivery=lines.some(l=>!l.p.deliveryIncluded);
  async function submitCod(event:React.FormEvent<HTMLFormElement>){
-  event.preventDefault();if(!codEnabled||!consent||codPending||loadError||missing.length||unknown||lines.some(l=>!/^[0-9a-f]{24}$/i.test(l.id)))return;
+  event.preventDefault();if(!codEnabled||!consent||codPending||loadError||missing.length||unknown||!locationPairValid(codCustomer.district,codCustomer.area)||deliveryRegion==="international"||lines.some(l=>!/^[0-9a-f]{24}$/i.test(l.id)))return;
   setCodPending(true);setCodError('');
   const key=codKey||crypto.randomUUID();setCodKey(key);
   try{
@@ -94,15 +95,15 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
  <label>Phone Number <span>*</span><input required type="tel" inputMode="tel" autoComplete="tel" pattern="01[3-9][0-9]{8}" placeholder="01XXXXXXXXX" value={codCustomer.phone} maxLength={11} onChange={e=>{setCodCustomer(x=>({...x,phone:e.target.value}));setCodKey('');}}/></label>
  <label className="anCheckoutFull">Email (optional)<input type="email" autoComplete="email" value={email} maxLength={150} placeholder="Enter your email address" onChange={e=>setEmail(e.target.value)}/></label>
  <label className="anCheckoutFull">Street Address <span>*</span><input required autoComplete="street-address" placeholder="House number, road name, apartment (if any)" value={codCustomer.address} maxLength={400} onChange={e=>{setCodCustomer(x=>({...x,address:e.target.value}));setCodKey('');}}/></label>
- <label>District / City <span>*</span><input required autoComplete="address-level1" placeholder="Enter district / city" value={codCustomer.district} maxLength={100} onChange={e=>{setCodCustomer(x=>({...x,district:e.target.value}));setCodKey('');}}/></label>
- <label>Area / Thana <span>*</span><input required autoComplete="address-level2" placeholder="Enter area / thana" value={codCustomer.area} maxLength={100} onChange={e=>{setCodCustomer(x=>({...x,area:e.target.value}));setCodKey('');}}/></label>
+ <label>District / City <span>*</span><select required autoComplete="address-level1" value={codCustomer.district} onChange={e=>{const district=e.target.value;setCodCustomer(x=>({...x,district,area:""}));setDeliveryRegion(district==="Dhaka"?"dhaka":district?"outside":"dhaka");setCodKey("");}}><option value="">Select district / city</option>{districtLocations.map(d=><option key={d.district} value={d.district}>{d.district}</option>)}</select></label>
+ <label>Area / Thana <span>*</span><select required autoComplete="address-level2" value={codCustomer.area} disabled={!codCustomer.district} onChange={e=>{setCodCustomer(x=>({...x,area:e.target.value}));setCodKey("");}}><option value="">{codCustomer.district?"Select area / thana":"Select district first"}</option>{areaOptions(codCustomer.district).map(area=><option key={area} value={area}>{area}</option>)}</select></label>
  <label>Postal Code (optional)<input inputMode="numeric" autoComplete="postal-code" placeholder="Enter postal code" value={postal} maxLength={10} onChange={e=>setPostal(e.target.value)}/></label>
  <label>Order Notes (optional)<input placeholder="Any special instructions..." maxLength={400} value={codCustomer.notes} onChange={e=>setCodCustomer(x=>({...x,notes:e.target.value}))}/></label>
  </div>
  <h3 className="anCheckoutSectionHeading">Shipping Option</h3>
  <div className="anCheckoutShippingOptions" role="group" aria-label="Shipping region">
- <button type="button" aria-pressed={deliveryRegion==='dhaka'} onClick={()=>setDeliveryRegion('dhaka')} className={deliveryRegion==='dhaka'?'selected':''}><span className="anCheckoutRadio">{deliveryRegion==='dhaka'?<Check size={13}/>:null}</span><span><strong>Inside Dhaka</strong><small>Fee confirmed at order submission</small></span></button>
- <button type="button" aria-pressed={deliveryRegion==='outside'} onClick={()=>setDeliveryRegion('outside')} className={deliveryRegion==='outside'?'selected':''}><span className="anCheckoutRadio">{deliveryRegion==='outside'?<Check size={13}/>:null}</span><span><strong>Outside Dhaka</strong><small>Fee confirmed at order submission</small></span></button>
+ <button type="button" aria-pressed={deliveryRegion==='dhaka'} onClick={()=>{setDeliveryRegion("dhaka");if(codCustomer.district&&codCustomer.district!=="Dhaka")setCodCustomer(x=>({...x,district:"",area:""}));}} className={deliveryRegion==='dhaka'?'selected':''}><span className="anCheckoutRadio">{deliveryRegion==='dhaka'?<Check size={13}/>:null}</span><span><strong>Inside Dhaka</strong><small>Fee confirmed at order submission</small></span></button>
+ <button type="button" aria-pressed={deliveryRegion==='outside'} onClick={()=>{setDeliveryRegion("outside");if(codCustomer.district==="Dhaka")setCodCustomer(x=>({...x,district:"",area:""}));}} className={deliveryRegion==='outside'?'selected':''}><span className="anCheckoutRadio">{deliveryRegion==='outside'?<Check size={13}/>:null}</span><span><strong>Outside Dhaka</strong><small>Fee confirmed at order submission</small></span></button>
  <button type="button" aria-pressed={deliveryRegion==='international'} onClick={()=>setDeliveryRegion('international')} className={deliveryRegion==='international'?'selected':''}><span className="anCheckoutRadio">{deliveryRegion==='international'?<Check size={13}/>:null}</span><span><strong>Outside Bangladesh</strong><small>Quote required · ordering unavailable</small></span></button>
  </div>
  {deliveryRegion==='international'&&<p className="anFlowNotice" role="status">International shipping is not configured. Please contact ANUSMITA for a quote.</p>}
@@ -112,7 +113,7 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
  <label className="shoppingConsent anCheckoutConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/> I confirm my details and agree to the applicable terms. COD payment is due on delivery.</label>
  {codError&&<p role="alert" className="error">{codError}</p>}
  {!codEnabled&&<div className="anFlowClosed"><LockKeyhole size={18}/><strong>Checkout preview only</strong><p>Live COD checkout has not been enabled. No customer details will be submitted from this preview.</p></div>}
- <button className="sheetPrimary anFlowButton anCheckoutPlace" type="submit" disabled={!codEnabled||deliveryRegion==='international'||!consent||codPending||Boolean(loadError)||missing.length>0||unknown}>{codPending?'Submitting…':codEnabled?'Place COD Order':'COD checkout unavailable'} <ArrowRight size={16}/></button>
+ <button className="sheetPrimary anFlowButton anCheckoutPlace" type="submit" disabled={!codEnabled||deliveryRegion==='international'||!locationPairValid(codCustomer.district,codCustomer.area)||!consent||codPending||Boolean(loadError)||missing.length>0||unknown}>{codPending?'Submitting…':codEnabled?'Place COD Order':'COD checkout unavailable'} <ArrowRight size={16}/></button>
  <small className="anCheckoutTrust"><ShieldCheck size={13}/> Secure order processing · No advance payment for COD</small>
  </form>}</section>
    <aside className="shoppingSummary anFlowSummary"><h2>Order Summary</h2><p className="anFlowSummaryCaption">{state.cart.reduce((n,l)=>n+l.quantity,0)} item(s) in your bag</p><div><span>{unknown?'Known-price subtotal':'Product subtotal'}</span><strong>{money(total)}</strong></div>
