@@ -43,10 +43,11 @@ export async function POST(request:Request){
    if(found!==locations.length)throw new HttpError(409,"Source or destination is not active");
    // Serialize concurrent allocations for the same SKU without changing onHand/reserved.
    await Product.updateOne({_id:data.productId},{$inc:{warehouseAllocationRevision:1}},{session});
+   const balances=await WarehouseBalance.find({productId:data.productId}).select("quantity").session(session).lean<any[]>();
+   const allocated=balances.reduce((n,b)=>n+Number(b.quantity||0),0);
+   const available=Math.max(0,Number(product.onHand||0)-Number(product.reserved||0));
+   if(allocated>available)throw new HttpError(409,"Global inventory changed: reconcile location balances before further movements");
    if(data.kind==="allocate"){
-    const balances=await WarehouseBalance.find({productId:data.productId}).select("quantity").session(session).lean<any[]>();
-    const allocated=balances.reduce((n,b)=>n+Number(b.quantity||0),0);
-    const available=Math.max(0,Number(product.onHand||0)-Number(product.reserved||0));
     if(allocated+data.quantity>available)throw new HttpError(409,"Cannot allocate more than available recorded physical stock");
    }else{
     const source=await WarehouseBalance.findOneAndUpdate({productId:data.productId,locationId:data.fromLocationId,quantity:{$gte:data.quantity}},{$inc:{quantity:-data.quantity}},{new:true,session});
