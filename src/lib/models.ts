@@ -153,6 +153,16 @@ const AuditSchema = new Schema({
  details:{type:Schema.Types.Mixed,default:{}}
 },opts);
 AuditSchema.index({createdAt:-1,entity:1});
+const SocialInboundSchema=new Schema({
+ provider:{type:String,enum:["messenger","instagram"],required:true},
+ eventId:{type:String,required:true,maxlength:180},
+ senderId:{type:String,required:true,maxlength:180},
+ text:{type:String,required:true,maxlength:2000},
+ receivedAt:{type:Date,required:true,default:Date.now},
+ eventAt:{type:Date,default:null}
+},{versionKey:false});
+SocialInboundSchema.index({provider:1,eventId:1},{unique:true});
+SocialInboundSchema.index({receivedAt:1},{expireAfterSeconds:2592000});
 const CounterSchema = new Schema({key:{type:String,unique:true},value:{type:Number,default:0}}, {versionKey:false});
 
 export const User = mongoose.models.User || mongoose.model("User",UserSchema);
@@ -167,6 +177,7 @@ export const SupplierPayment = mongoose.models.SupplierPayment || mongoose.model
 export const Expense = mongoose.models.Expense || mongoose.model("Expense",ExpenseSchema);
 export const Audit = mongoose.models.Audit || mongoose.model("Audit",AuditSchema);
 export const Counter = mongoose.models.Counter || mongoose.model("Counter",CounterSchema);
+export const SocialInbound=mongoose.models.SocialInbound||mongoose.model("SocialInbound",SocialInboundSchema);
 
 const CatalogImportSchema = new Schema({
  importKey:{type:String,required:true,unique:true},
