@@ -31,7 +31,7 @@ const ProductSchema = new Schema({
  topNotes:{type:String,default:""},heartNotes:{type:String,default:""},baseNotes:{type:String,default:""},
  pricePaisa:{type:Number,required:true,min:0},costPaisa:{type:Number,required:true,min:0},
  onHand:{type:Number,default:0,min:0},reserved:{type:Number,default:0,min:0},
- reorderLevel:{type:Number,default:5,min:0},active:{type:Boolean,default:false},
+ reorderLevel:{type:Number,default:5,min:0},warehouseAllocationRevision:{type:Number,default:0},active:{type:Boolean,default:false},
  expiryAt:{type:Date,default:null},batch:{type:String,default:""},
  supplierId:{type:Schema.Types.ObjectId,ref:"Supplier",default:null}
 },opts);
