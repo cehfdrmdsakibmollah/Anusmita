@@ -12,6 +12,7 @@ import {isPerfumeCategory,shouldListGroup,type ProductVariant} from "@/lib/produ
 import ProductImageGallery from "@/components/product-image-gallery";
 import ProductDetailPurchase from "@/components/product-detail-purchase";
 import ProductDetailsAccordion from "@/components/product-details-accordion";
+import ProductServicePanel from "@/components/product-service-panel";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 type Props={params:Promise<{slug:string}>};
@@ -135,6 +136,7 @@ export default async function ProductPage({params}:Props){
     topNotes:p.topNotes,heartNotes:p.heartNotes,baseNotes:p.baseNotes,
     ...Object.fromEntries(["color", "colorHex", "material", "dimensions", "compatibility", "careInstructions", "warranty", "sizeGuide", "skinType", "benefits"].map(key=>[key,p[key as keyof ProductDetails]||""])),brand:p.brand,origin:p.origin,size:p.size||p.variantLabel,category:p.category,sku:p.sku
    }}/>
+   <ProductServicePanel name={p.name} slug={p.slug} size={p.size||p.variantLabel||""} color={p.color||""} available={stock} preview={preview}/>
    {(related.length>0||preview)&&<section className="anPdpRelated" aria-label="Explore related collections">
     <div className="anPdpRelatedTitle"><div><span className="anPdpOverline">MORE TO EXPLORE</span>
       <h2>{preview?"You may also like":"You may also like"}</h2></div>
