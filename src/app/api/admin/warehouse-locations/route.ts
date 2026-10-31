@@ -1,4 +1,5 @@
 import {z} from "zod";
+import mongoose from "mongoose";
 import {authorize,apiError,assertOrigin,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {WarehouseLocation,Audit} from "@/lib/models";
@@ -22,8 +23,12 @@ export async function POST(request:Request){
   const code=body.code.toUpperCase();
   if(await WarehouseLocation.exists({code}))throw new HttpError(409,"Location code already registered");
   // This operation adds a location record only; no Product inventory fields are altered.
-  const location=await WarehouseLocation.create({...body,code,createdBy:actor.id,active:true});
-  try{await Audit.create({actorId:actor.id,action:"warehouse.location.created",entity:"WarehouseLocation",entityId:String(location._id),details:{code}});}catch(error){console.error("Warehouse audit write failed",error);throw new HttpError(500,"Location created but audit recording failed. Check the registry before retrying");}
-  return Response.json({id:String(location._id),code},{status:201});
+  const session=await mongoose.startSession();let id="";
+  try{await session.withTransaction(async()=>{
+   const [location]=await WarehouseLocation.create([{...body,code,createdBy:actor.id,active:true}],{session});
+   id=String(location._id);
+   await Audit.create([{actorId:actor.id,action:"warehouse.location.created",entity:"WarehouseLocation",entityId:id,details:{code}}],{session});
+  });}finally{await session.endSession();}
+  return Response.json({id,code},{status:201});
  }catch(e:any){if(e?.code===11000)return Response.json({error:"Location code already registered"},{status:409});return apiError(e);}
 }
