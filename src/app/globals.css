@@ -1953,3 +1953,40 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
 .anFlowCheckoutReference .anCheckoutFieldGrid select:invalid{color:#8c8187}
 .anFlowCheckoutReference .anCheckoutFieldGrid select option{color:#262126}
 .anFlowCheckoutReference .anCheckoutFieldGrid select:focus-visible{outline:3px solid #ba4d70;outline-offset:2px}
+
+
+/* ANUSMITA private portal. Reference-style editorial login; global storefront remains untouched. */
+.anOwnerLogin{--owner-wine:#74162b;--owner-rose:#b14f63;position:relative;isolation:isolate;overflow:hidden;padding:44px 24px 62px;min-height:min(720px,calc(100svh - 185px));display:grid;place-items:center;background:radial-gradient(ellipse at 0% 60%,#e9c5b6a8,transparent 38%),radial-gradient(ellipse at 100% 85%,#eabeb6b0,transparent 40%),linear-gradient(115deg,#fff7f1,#fffaf7 52%,#fcece7)}
+.anOwnerLogin:before,.anOwnerLogin:after{content:"";position:absolute;width:360px;height:390px;z-index:-1;opacity:.28;filter:blur(35px);background:radial-gradient(ellipse at 30% 30%,#bc816e,transparent 45%),radial-gradient(ellipse at 70% 65%,#eeb8a0,transparent 55%);pointer-events:none}
+.anOwnerLogin:before{left:-180px;bottom:-100px;transform:rotate(-32deg)}.anOwnerLogin:after{right:-140px;bottom:-145px;transform:rotate(35deg)}
+.anOwnerLoginCard{width:min(1136px,100%);display:grid;grid-template-columns:.94fr 1.06fr;min-height:600px;overflow:hidden;border-radius:19px;background:#fffcfa;box-shadow:0 16px 48px #804b3b24}
+.anOwnerLoginArt{min-height:600px;position:relative;background:linear-gradient(180deg,#edc7b7a8 0%,#f7ddd6a0 42%,#db9f9199 100%),url("/brand/hero-reference.webp") center/cover no-repeat;display:flex;justify-content:center;text-align:center;color:#5b192c}
+.anOwnerLoginArt:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#f9ddd5ad,transparent 52%,#a65d4b10);pointer-events:none}
+.anOwnerLoginArtContent{z-index:1;position:relative;margin-top:118px;padding:0 28px}
+.anOwnerLoginArtBrand{display:block;font:400 clamp(35px,4vw,46px)/1.1 Georgia,serif;letter-spacing:.085em}
+.anOwnerLoginArtBrand small{display:block;font:600 10px/1.6 Arial,sans-serif;letter-spacing:.28em;margin-top:10px}
+.anOwnerLoginArtRule{display:block;width:42px;border-top:1px solid #aa6f62;margin:35px auto 30px}
+.anOwnerLoginArtContent p{font:italic 21px/1.45 Georgia,serif;margin:0}
+.anOwnerLoginPanel{padding:65px clamp(29px,4vw,60px) 38px;display:flex;align-items:center;background:linear-gradient(135deg,#fffcfa,#fff8f5)}
+.anOwnerLoginPanelInner{width:100%;max-width:505px;margin:auto}
+.anOwnerLoginEyebrow{color:#a66c3f;font-size:12px;font-weight:700;letter-spacing:.26em;margin:0 0 22px}
+.anOwnerLoginPanel h1{font:400 clamp(41px,4vw,57px)/1.08 Georgia,serif;letter-spacing:-.015em;color:#381e29;margin:0 0 20px}
+.anOwnerLoginIntro{font-size:15px;line-height:1.55;color:#716a6b;margin:0 0 25px}
+.anOwnerLoginForm{display:grid;gap:20px}
+.anOwnerLoginField{display:grid;gap:9px}
+.anOwnerLoginField>label{font-size:15px;font-weight:700;color:#262022}
+.anOwnerLoginInputWrap{height:60px;display:flex;align-items:center;gap:18px;border:1px solid #e8c6c0;background:#fff8f7;border-radius:9px;padding:0 18px;color:#51232c}
+.anOwnerLoginInputWrap:focus-within{outline:3px solid #e9bfc7;outline-offset:2px;border-color:#ae6276}
+.anOwnerLoginInputWrap input{width:100%;min-width:0;flex:1;background:transparent;border:0!important;outline:none!important;box-shadow:none!important;color:#241f21;padding:0!important;font-size:15px}
+.anOwnerLoginReveal{border:0;background:transparent;color:#96888d;display:grid;place-items:center;padding:7px}
+.anOwnerLoginReveal:focus-visible{outline:2px solid #832d4a;border-radius:5px}
+.anOwnerLoginSubmit{width:100%;min-height:61px;border:0;border-radius:7px;background:linear-gradient(100deg,#94253e,#631326);color:#fff;display:flex;align-items:center;justify-content:center;gap:28px;letter-spacing:.17em;font-size:13px;font-weight:700;box-shadow:0 9px 20px #8b31413d;transition:filter .2s}
+.anOwnerLoginSubmit:hover{filter:brightness(1.12)}
+.anOwnerLoginSubmit:focus-visible{outline:3px solid #e1a8b4;outline-offset:3px}
+.anOwnerLoginNotice{margin-top:30px;text-align:center;font-size:12px;line-height:1.75;color:#777074}
+.anOwnerLoginNotice p{margin:14px 0 0}
+.anOwnerLoginLock{display:flex;align-items:center;gap:20px;justify-content:center;color:#6d3e49}
+.anOwnerLoginLock span{flex:1;height:1px;background:#e5cdc9}
+@media(max-width:800px){.anOwnerLogin{padding:28px 18px 45px}.anOwnerLoginCard{grid-template-columns:1fr;max-width:550px}.anOwnerLoginArt{min-height:265px}.anOwnerLoginArtContent{margin-top:43px}.anOwnerLoginArtRule{margin:17px auto}.anOwnerLoginPanel{padding:35px 28px}.anOwnerLoginPanel h1{font-size:42px}}
+@media(max-width:440px){.anOwnerLogin{padding:15px 10px 28px}.anOwnerLoginCard{border-radius:12px}.anOwnerLoginArt{min-height:230px}.anOwnerLoginArtBrand{font-size:31px}.anOwnerLoginArtContent p{font-size:17px}.anOwnerLoginPanel{padding:26px 18px}.anOwnerLoginPanel h1{font-size:37px}.anOwnerLoginInputWrap{height:55px}.anOwnerLoginSubmit{min-height:55px}}
+@media(prefers-reduced-motion:reduce){.anOwnerLoginSubmit{transition:none}}
