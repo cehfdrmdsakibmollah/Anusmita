@@ -15,7 +15,7 @@ export async function POST(request:Request){
   await db();
   const hash=createHash("sha256").update(data.token).digest("hex");
   const tokens=mongoose.connection.collection("owner_setup_tokens");
-  const claim=await tokens.findOneAndDelete({tokenHash:hash,expiresAt:{$gt:new Date()},used:false});
+  const claim=await tokens.findOneAndDelete({tokenHash:hash,expiresAt:{$gt:Date.now()},used:false});
   if(!claim)throw new HttpError(400,"Setup link is invalid or expired. Request a new secure link.");
   const passwordHash=await bcrypt.hash(data.password,12);
   const updated=await User.updateOne({email:claim.email,role:"owner",active:false},{$set:{passwordHash,active:true,loginFailures:0,lockedUntil:null}});
