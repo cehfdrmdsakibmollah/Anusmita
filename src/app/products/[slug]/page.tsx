@@ -1,6 +1,5 @@
 import {sheetCatalogue} from '@/lib/sheet-catalogue';
 import {SheetProductDetails} from '@/components/sheet-catalogue';
-import {ShoppingActions} from '@/components/catalogue-shopping';
 
 import type {Metadata} from "next";
 import Link from "next/link";
@@ -123,7 +122,6 @@ export default async function ProductPage({params}:Props){
      <ProductDetailPurchase key={p.slug} product={{
       ...variant(p),name:p.name,category:p.category,brand:p.brand,description:p.description,origin:p.origin,details:Object.fromEntries(["color", "colorHex", "material", "dimensions", "compatibility", "careInstructions", "warranty", "sizeGuide", "skinType", "benefits"].map(key=>[key,p[key as keyof ProductDetails]||""]))
      }} siblings={variants} canOrder={canOrder} preview={preview}/>
-     {!preview&&<ShoppingActions id={String(p._id)} detail/>}
      <div className="anPdpTrust" aria-label="Shopping information">
       <div><Sparkles size={22}/><span><strong>Curated with care</strong><small>Selected for ANUSMITA</small></span></div>
       <div><Package size={22}/><span><strong>Real sizes</strong><small>SKU-based pricing</small></span></div>
