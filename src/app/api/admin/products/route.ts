@@ -31,7 +31,7 @@ export async function GET(req:Request) {
   const q=(url.searchParams.get("q")||"").trim().slice(0,80);
   const filter:any=q?{$or:[{sku:{$regex:q.replace(/[^a-zA-Z0-9 _-]/g,""),$options:"i"}},{name:{$regex:q.replace(/[^a-zA-Z0-9 _-]/g,""),$options:"i"}},{brand:{$regex:q.replace(/[^a-zA-Z0-9 _-]/g,""),$options:"i"}}]}:{};
   const [products,total]=await Promise.all([
-   Product.find(filter).select("sku name slug brand category origin size variantGroup ingredients usageInstructions topNotes heartNotes baseNotes pricePaisa costPaisa onHand reserved active updatedAt reorderLevel description imageUrls").sort({updatedAt:-1}).skip((page-1)*30).limit(30).lean<any[]>(),
+   Product.find(filter).select("sku name slug brand category origin size color colorHex variantLabel variantGroup ingredients usageInstructions topNotes heartNotes baseNotes pricePaisa costPaisa onHand reserved active updatedAt reorderLevel description imageUrls").sort({updatedAt:-1}).skip((page-1)*30).limit(30).lean<any[]>(),
    Product.countDocuments(filter)
   ]);
   return Response.json({products:products.map(p=>({...p,_id:String(p._id)})),page,pages:Math.ceil(total/30),total},{headers:{"Cache-Control":"no-store"}});
