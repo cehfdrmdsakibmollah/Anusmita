@@ -153,6 +153,14 @@ const AuditSchema = new Schema({
  details:{type:Schema.Types.Mixed,default:{}}
 },opts);
 AuditSchema.index({createdAt:-1,entity:1});
+const StoreChromeSchema=new Schema({
+ key:{type:String,required:true,unique:true,default:"main"},
+ announcement:{type:String,default:"",maxlength:180},
+ footerNote:{type:String,default:"",maxlength:240},
+ enabled:{type:Boolean,default:false},
+ revision:{type:Number,default:0,min:0},
+ lastEditedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
+},opts);
 const CounterSchema = new Schema({key:{type:String,unique:true},value:{type:Number,default:0}}, {versionKey:false});
 
 export const User = mongoose.models.User || mongoose.model("User",UserSchema);
@@ -167,6 +175,7 @@ export const SupplierPayment = mongoose.models.SupplierPayment || mongoose.model
 export const Expense = mongoose.models.Expense || mongoose.model("Expense",ExpenseSchema);
 export const Audit = mongoose.models.Audit || mongoose.model("Audit",AuditSchema);
 export const Counter = mongoose.models.Counter || mongoose.model("Counter",CounterSchema);
+export const StoreChrome=mongoose.models.StoreChrome||mongoose.model("StoreChrome",StoreChromeSchema);
 
 const CatalogImportSchema = new Schema({
  importKey:{type:String,required:true,unique:true},
