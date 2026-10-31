@@ -1749,3 +1749,32 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
 .anOrderReceiptActions{display:flex;justify-content:center;gap:12px;margin:22px 0;flex-wrap:wrap}
 .anOrderReceiptActions a,.anOrderReceiptCard>a{display:inline-flex;align-items:center;gap:8px;padding:12px 15px;border-radius:5px;color:#fff;background:#a94965}
 @media(max-width:600px){.anOrderReceiptCard{padding:22px 14px}.anOrderReceipt{padding:20px 12px}}
+
+
+/* Real MongoDB product detail view: match the interactive product preview's visual composition.
+   Only stored product imagery, variants, prices, descriptions and verified reviews appear. */
+.anPdpReal .anPdpMain{grid-template-columns:minmax(0,1.19fr) minmax(360px,1fr);gap:clamp(22px,3vw,44px);align-items:start}
+.anPdpReal .anPdpGallery{grid-template-columns:70px minmax(0,1fr);gap:15px;align-items:start}
+.anPdpReal .anPdpMainImage{aspect-ratio:460/420;background:#fff7f3;border-radius:12px;border:1px solid #eadde0}
+.anPdpReal .anPdpMainImage>img{object-fit:contain;mix-blend-mode:normal;padding:clamp(8px,1.3vw,20px)}
+.anPdpReal .anPdpThumbs{gap:8px;max-height:560px}
+.anPdpReal .anPdpThumbs button{width:70px;height:70px;border-radius:8px;background:#fff7f3;border:1px solid #eadde0;padding:3px}
+.anPdpReal .anPdpThumbs button.active{border:2px solid #cb4f75}
+.anPdpReal .anPdpBuy{background:#fff;border:0;border-radius:0;padding:2px 0 16px;box-shadow:none}
+.anPdpReal .anPdpBuy h1{font:400 clamp(29px,2.9vw,43px)/1.12 Georgia,serif;letter-spacing:-.025em;margin-bottom:12px}
+.anPdpReal .anPdpPrice{margin-bottom:10px;font:700 clamp(28px,2.6vw,37px)/1.15 Georgia,serif}
+.anPdpReal .anPdpPriceCaption{margin-top:4px}
+.anPdpReal .anPdpDescription{font-size:13px;line-height:1.65;margin-bottom:17px;max-width:700px}
+.anPdpReal .anPdpSizeGrid{gap:7px}
+.anPdpReal .anPdpSizeCard{border-radius:7px}
+.anPdpReal .anPdpButtons{margin-top:10px}
+.anPdpReal .anPdpAdd{border-radius:8px;background:#b74764}
+.anPdpReal .anPdpBuyNow{display:flex;width:100%;justify-content:center;align-items:center;gap:10px;min-height:47px;border-radius:8px;border:1px solid #b74764;background:#fff;color:#a83759;font-size:13px;font-weight:700;margin:10px 0;cursor:pointer}
+.anPdpReal .anPdpBuyNow:hover{background:#fff1f5}
+.anPdpReal .anPdpDetailTabs{display:flex;flex-wrap:wrap;gap:12px;border-bottom:1px solid #eadde0;margin:32px 0 23px;padding-bottom:12px}
+.anPdpReal .anPdpDetailTabs a{font-weight:650;color:#77545f;font-size:13px;padding:10px 15px;border:1px solid #eddee3;border-radius:8px;background:#fffaf9}
+.anPdpReal .anPdpDetailTabs a:hover{color:#b74764;border-color:#b74764}
+.anPdpReal .anPdpDetailAnchor,.anPdpReal #pdp-verified-reviews,.anPdpReal #pdp-product-assistance{scroll-margin-top:120px}
+.anPdpReal :is(a,button):focus-visible{outline:3px solid #ac3f60;outline-offset:3px}
+@media(max-width:900px){.anPdpReal .anPdpMain{grid-template-columns:1fr}.anPdpReal .anPdpGallery{grid-template-columns:65px minmax(0,1fr)}}
+@media(max-width:600px){.anPdpReal .anPdpGallery{grid-template-columns:1fr}.anPdpReal .anPdpThumbs{display:flex;flex-direction:row;overflow-x:auto;max-height:none;order:2}.anPdpReal .anPdpMainImage{order:1}.anPdpReal .anPdpMainImage>img{padding:8px}.anPdpReal .anPdpThumbs button{flex:0 0 65px;width:65px;height:65px}.anPdpReal .anPdpDetailTabs{gap:6px}.anPdpReal .anPdpDetailTabs a{font-size:11px;padding:9px 10px}}
