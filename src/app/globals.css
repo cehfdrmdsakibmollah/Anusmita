@@ -1990,3 +1990,49 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
 @media(max-width:800px){.anOwnerLogin{padding:28px 18px 45px}.anOwnerLoginCard{grid-template-columns:1fr;max-width:550px}.anOwnerLoginArt{min-height:265px}.anOwnerLoginArtContent{margin-top:43px}.anOwnerLoginArtRule{margin:17px auto}.anOwnerLoginPanel{padding:35px 28px}.anOwnerLoginPanel h1{font-size:42px}}
 @media(max-width:440px){.anOwnerLogin{padding:15px 10px 28px}.anOwnerLoginCard{border-radius:12px}.anOwnerLoginArt{min-height:230px}.anOwnerLoginArtBrand{font-size:31px}.anOwnerLoginArtContent p{font-size:17px}.anOwnerLoginPanel{padding:26px 18px}.anOwnerLoginPanel h1{font-size:37px}.anOwnerLoginInputWrap{height:55px}.anOwnerLoginSubmit{min-height:55px}}
 @media(prefers-reduced-motion:reduce){.anOwnerLoginSubmit{transition:none}}
+
+
+/* Admin Products luxury workspace: scoped to prevent storefront regressions */
+.apWorkspace{--ap-burgundy:#971b48;--ap-stroke:#ead8db;--ap-muted:#6d6879;color:#171c2b;font-size:13px}
+.apHeading{display:flex;justify-content:space-between;gap:16px;align-items:center;margin:10px 0 22px}
+.apHeading h2{font:normal clamp(29px,3vw,39px)/1.2 Georgia,serif;margin:7px 0 4px;color:#15192a}
+.apHeading p{margin:0;color:var(--ap-muted)}.apHeading .apCrumb{font-size:12px}
+.apStatus{font-size:12px;padding:10px 13px;white-space:nowrap;border-radius:100px;background:#faeef1;color:#932850}
+.apTopGrid{display:grid;grid-template-columns:1.1fr .8fr 1.15fr;gap:12px}
+.apCard{border:1px solid var(--ap-stroke);border-radius:15px;background:#fffcfb;box-shadow:0 4px 15px #5d29330c;overflow:hidden;min-width:0}
+.apCard h3{display:flex;align-items:center;gap:10px;font:normal 19px/1.25 Georgia,serif;margin:0;padding:17px 17px;background:linear-gradient(110deg,#fff7f7,#fbeaf0);color:#222033}
+.apCard h3 svg{color:#ba315e;flex-shrink:0}
+.apCard h3 small{margin-left:auto;font:600 11px Arial,sans-serif;white-space:nowrap;color:#9c3055;background:#f7dce5;border-radius:30px;padding:6px}
+.apCardBody{padding:16px}
+.apField{display:flex;flex-direction:column;gap:6px;min-width:0;margin-bottom:12px}
+.apField span{font-size:12px;font-weight:700;color:#292230}
+.apField input,.apField textarea{border:1px solid #d9ced8;border-radius:7px;background:#fffdfd;color:#1b2031;padding:9px 11px;width:100%;min-width:0;outline:none}
+.apField input:focus,.apField textarea:focus{border-color:#bc4770;box-shadow:0 0 0 3px #f8e3e9}
+.apField small,.apHint{font-size:11px;color:var(--ap-muted);line-height:1.55}
+.apTwo{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.apGallery{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:10px 0}
+.apThumb,.apUploadTile{height:90px;border-radius:9px;overflow:hidden;position:relative;border:1px solid #e6d4d6;background:#f8eff0;display:flex;align-items:center;justify-content:center;text-align:center}
+.apThumb img{width:100%;height:100%;object-fit:cover}
+.apThumb span{position:absolute;bottom:0;left:0;right:0;font-size:10px;color:#fff;background:#98254b;padding:3px}
+.apThumb.apPending{display:flex;flex-direction:column;color:#973254;gap:4px;padding:5px}.apThumb.apPending small{font-size:9px;overflow:hidden;max-width:100%}.apThumb.apPending span{background:#aa7081}
+.apUploadTile{border:1px dashed #cb96a9;color:#a23259;cursor:pointer;flex-direction:column;gap:5px;font-size:11px}.apUploadTile input{position:absolute;inset:0;opacity:0;cursor:pointer;max-width:100%}
+.apUploadTile:focus-within{outline:3px solid #f5c0d3}.apLowerGrid{display:grid;grid-template-columns:1.7fr 1fr;gap:12px;margin:12px 0}
+.apVariantPills{display:flex;gap:8px;flex-wrap:wrap}.apVariantPills button,.apCountries button{border:1px solid #e8cdd5;border-radius:25px;padding:8px 12px;background:#fff7f9;color:#5d2d41;font-size:12px}
+.apVariantPills button.chosen,.apCountries button.chosen{background:#a92e59;color:white;border-color:#a92e59}
+.apCountries{display:flex;gap:7px;flex-wrap:wrap}
+.apDetailsBody{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;padding:18px}
+.apDetailsBody textarea{min-height:104px;resize:vertical}
+.apSaveBox{border-left:1px solid #e8d8da;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+.apPublish{display:flex;align-items:center;gap:10px;font-weight:700}.apPublish input{width:18px;height:18px;accent-color:#ac2450}
+.apPrimary,.apSecondary{border:0;border-radius:7px;padding:11px 14px;font-weight:700;display:flex;justify-content:center;align-items:center;gap:9px}
+.apPrimary{background:linear-gradient(95deg,#a82752,#7b133c);color:white}.apSecondary{background:#faeaef;color:#9b254b}.apPrimary:disabled{opacity:.55}
+.apFeedback{background:#e5f7ea;border:1px solid #b5dfc3;padding:12px;margin:12px 0;border-radius:8px;color:#255c36}.apError{background:#fff0f0;color:#9d2538;border-color:#f1b8c3}
+.apPhotoManager{margin:12px 0}.apPhotoManager .adminCard{border-radius:14px}
+.apSearch{margin-top:12px}.apTableScroll{overflow-x:auto}.apTableScroll table{font-size:12px;min-width:680px}.apTableScroll th{background:#fcf2f4}.apTableScroll td,.apTableScroll th{padding:10px}
+.apProductCell{display:flex;align-items:center;gap:9px;min-width:170px}.apProductCell img,.apNoImage{width:40px;height:46px;object-fit:cover;border-radius:5px;background:#f4eced}.apNoImage{display:flex;align-items:center;justify-content:center;text-align:center;font-size:9px}
+.apPublished,.apDraft{font-weight:600;padding:5px 9px;border-radius:20px}.apPublished{background:#ddf4e7;color:#12643d}.apDraft{background:#fff0df;color:#895018}
+.apEdit{padding:7px 13px;border:1px solid #e4adbf;color:#99254b;background:#fff6f8;border-radius:7px;font-weight:600}
+.apPager{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;color:#777;font-size:12px}.apPager button{background:#fff5f8;border:1px solid #edd3dc;padding:7px 10px;border-radius:7px;display:flex;align-items:center;gap:5px}.apPager button:disabled{opacity:.35}
+@media(max-width:1060px){.apTopGrid{grid-template-columns:1fr 1fr}.apMedia{grid-column:1/-1}.apGallery{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media(max-width:700px){.apHeading{align-items:flex-start;flex-direction:column}.apTopGrid,.apLowerGrid,.apDetailsBody{grid-template-columns:1fr}.apMedia{grid-column:auto}.apGallery{grid-template-columns:repeat(4,minmax(0,1fr))}.apSaveBox{border-left:0;border-top:1px solid #e8d8da;padding:14px 0 0}.apCard h3{font-size:17px}}
+@media(max-width:370px){.apTwo{grid-template-columns:1fr}.apGallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
