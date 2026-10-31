@@ -161,6 +161,23 @@ const WarehouseLocationSchema=new Schema({
  createdBy:{type:Schema.Types.ObjectId,ref:"User",required:true}
 },opts);
 WarehouseLocationSchema.index({active:1,name:1});
+const WarehouseBalanceSchema=new Schema({
+ productId:{type:Schema.Types.ObjectId,ref:"Product",required:true},
+ locationId:{type:Schema.Types.ObjectId,ref:"WarehouseLocation",required:true},
+ quantity:{type:Number,required:true,min:0,default:0}
+},opts);
+WarehouseBalanceSchema.index({productId:1,locationId:1},{unique:true});
+const WarehouseEventSchema=new Schema({
+ operationKey:{type:String,required:true,unique:true},
+ kind:{type:String,enum:["allocate","transfer"],required:true},
+ productId:{type:Schema.Types.ObjectId,ref:"Product",required:true},
+ fromLocationId:{type:Schema.Types.ObjectId,ref:"WarehouseLocation",default:null},
+ toLocationId:{type:Schema.Types.ObjectId,ref:"WarehouseLocation",required:true},
+ quantity:{type:Number,required:true,min:1},
+ actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ note:{type:String,required:true}
+},opts);
+WarehouseEventSchema.index({createdAt:-1});
 const CounterSchema = new Schema({key:{type:String,unique:true},value:{type:Number,default:0}}, {versionKey:false});
 
 export const User = mongoose.models.User || mongoose.model("User",UserSchema);
@@ -175,6 +192,8 @@ export const SupplierPayment = mongoose.models.SupplierPayment || mongoose.model
 export const Expense = mongoose.models.Expense || mongoose.model("Expense",ExpenseSchema);
 export const Audit = mongoose.models.Audit || mongoose.model("Audit",AuditSchema);
 export const Counter = mongoose.models.Counter || mongoose.model("Counter",CounterSchema);
+export const WarehouseBalance=mongoose.models.WarehouseBalance||mongoose.model("WarehouseBalance",WarehouseBalanceSchema);
+export const WarehouseEvent=mongoose.models.WarehouseEvent||mongoose.model("WarehouseEvent",WarehouseEventSchema);
 export const WarehouseLocation=mongoose.models.WarehouseLocation||mongoose.model("WarehouseLocation",WarehouseLocationSchema);
 
 const CatalogImportSchema = new Schema({
