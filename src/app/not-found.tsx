@@ -10,7 +10,7 @@ export default function NotFound(){
  return <section className="an404" aria-labelledby="an404-heading">
   <div className="an404-shell">
    <div className="an404-hero">
-    <div className="an404-photo" role="img" aria-label="ANUSMITA luxury beauty and lifestyle collection"/>
+    <div className="an404-photo" role="img" aria-label="ANUSMITA perfume, skincare, handbag, florals and wristwatch"><div className="an404-photo-caption" aria-hidden="true"><span>ANUSMITA</span><small>BEAUTY · FASHION · LIFESTYLE</small></div></div>
     <div className="an404-photo-wash" aria-hidden="true"/>
     <div className="an404-copy">
      <p className="an404-eyebrow">PAGE NOT FOUND</p>

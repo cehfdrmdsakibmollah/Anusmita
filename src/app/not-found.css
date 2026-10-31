@@ -72,3 +72,42 @@
  .anBody:has(.an404) .anFooterBottom{display:flex;justify-content:space-between;gap:12px;font-size:10px;padding:15px 0}
 }
 @media(prefers-reduced-motion:reduce){.an404-button{transition:none}}
+
+
+/* Right-side crop of the supplied 900x386 reference: keep products and handwriting,
+   exclude the model on the left. Works without duplicating binary assets. */
+.an404-photo{
+ position:absolute;
+ inset:0 0 0 42%;
+ overflow:hidden;
+ isolation:isolate;
+ background-image:url("/brand/hero-reference.webp");
+ background-repeat:no-repeat;
+ background-size:auto 100%;
+ background-position:right center;
+ background-color:#f2d3ce;
+}
+.an404-photo:after{
+ content:"";position:absolute;inset:0;
+ background:linear-gradient(180deg,rgba(59,28,35,.07),transparent 33%,transparent 68%,rgba(59,28,35,.1));
+ pointer-events:none;
+}
+.an404-photo-caption{
+ position:absolute;z-index:2;bottom:24px;right:22px;
+ padding:8px 12px;background:rgba(255,250,246,.82);
+ border:1px solid rgba(255,255,255,.58);border-radius:3px;
+ text-align:center;color:#56333c;
+ backdrop-filter:blur(5px);
+}
+.an404-photo-caption span{display:block;font:400 21px/1.15 Georgia,serif;letter-spacing:.08em}
+.an404-photo-caption small{display:block;font:8px/1.6 Arial,sans-serif;letter-spacing:.19em}
+@media(max-width:700px){
+ .an404-photo{
+  position:relative;inset:auto;order:0;width:100%;
+  aspect-ratio:1.52/1;
+  background-size:auto 100%;background-position:right center;
+ }
+ .an404-photo-caption{bottom:12px;right:12px;padding:5px 8px}
+ .an404-photo-caption span{font-size:14px}
+ .an404-photo-caption small{font-size:6px}
+}
