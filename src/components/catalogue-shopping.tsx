@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useState} from 'react';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {Heart,ShoppingBag,Trash2} from 'lucide-react';
+import {Heart,ShoppingBag,Trash2,ArrowRight,ChevronRight,ShieldCheck,Truck,Minus,Plus,LockKeyhole,CheckCircle2,MapPin} from 'lucide-react';
 import {sheetCatalogue} from '@/lib/sheet-catalogue';
 import {emptyShopping,sanitizeShopping,shoppingKey,shoppingSubtotal,type ShoppingState} from '@/lib/shopping-storage';
 function read(){try{return sanitizeShopping(JSON.parse(localStorage.getItem(shoppingKey)||'null'))}catch{return emptyShopping}}
@@ -66,8 +66,8 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
   }catch(error){setCodError(error instanceof Error?error.message:'Unable to place COD order');}finally{setCodPending(false)}
  }
 
- return <div className="anWide shoppingPage"><p className="anOverline">YOUR ANUSMITA SELECTION</p>
-  <h1>{mode==='wishlist'?'Your saved favourites.':isCheckout?'Review your order request.':'Your shopping bag.'}</h1>
+ return <div className="anWide shoppingPage anCommerceReference"><nav className="anCommerceBreadcrumb" aria-label="Breadcrumb"><Link href="/">Home</Link><ChevronRight size={15}/><Link href="/shop">Shop</Link><ChevronRight size={15}/><span>{isCheckout?"Checkout":mode==="wishlist"?"Wishlist":"Shopping Bag"}</span></nav><p className="anOverline">THE ANUSMITA EXPERIENCE</p>
+  <h1>{mode==='wishlist'?'Your saved favourites.':isCheckout?'Secure Checkout':'Your Shopping Bag'}</h1>
   <nav className="shoppingNav"><Link href="/shop">Continue shopping</Link><Link href="/cart">Cart ({state.cart.reduce((n,l)=>n+l.quantity,0)})</Link><Link href="/wishlist">Wishlist ({state.wishlist.length})</Link></nav>
   {!ready||loading?<p role="status">Loading your selection…</p>:<>
    {loadError&&<p className="error" role="alert">{loadError}</p>}
@@ -76,27 +76,27 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
     <Link href={'/products/'+p.slug}><div className="sheetPhoto">{p.image?<img src={p.image} alt={p.name} loading="lazy"/>:<span>ANUSMITA</span>}</div><div className="sheetCardCopy"><h3>{p.name}</h3><strong>{p.pricePaisa===null?'Confirm price':money(p.pricePaisa)}</strong></div></Link>
     <ShoppingActions id={p.id}/>
    </article>)}</div>:<div className="sheetEmpty"><h2>Your wishlist is waiting.</h2><p>Tap the heart on a product to save it here.</p><Link href="/shop">Explore products →</Link></div>):
-   (!lines.length?<div className="sheetEmpty"><h2>Your bag is empty.</h2><Link href="/shop">Find something lovely →</Link></div>:
-   <div className="shoppingLayout"><section>{lines.map(({id,quantity,p})=><article className="shoppingLine" key={id}>
+   (!lines.length?<div className="sheetEmpty anCommerceEmpty"><ShoppingBag size={44} strokeWidth={1.3}/><h2>Your Shopping Bag is Empty</h2><p>Find something lovely from our curated collections.</p><Link className="sheetPrimary" href="/shop">Explore Catalogue <ArrowRight size={16}/></Link></div>:
+   <div className="shoppingLayout anCommerceLayout"><section className="anCommerceItems"><header className="anCommerceItemsHeader"><div><h2>{isCheckout?"Review your items":"Selected products"}</h2><p>Review your selection before continuing.</p></div>{!isCheckout&&<button type="button" onClick={()=>{if(window.confirm("Remove all items from your bag?"))update(x=>({...x,cart:[]}))}}>Clear all items</button>}</header>{lines.map(({id,quantity,p})=><article className="shoppingLine anCommerceLine" key={id}>
     <Link href={'/products/'+p.slug}>{p.image?<img src={p.image} alt={p.name}/>:<span className="shoppingImageFallback">A.</span>}</Link>
-    <div><small>{id}</small><h2><Link href={'/products/'+p.slug}>{p.name}</Link></h2><p>{p.size}</p><p>{p.pricePaisa===null?'Price to be confirmed':money(p.pricePaisa)} · Availability confirmed before ordering</p>
-     <label>Quantity <input aria-label={'Quantity for '+p.name} type="number" min="1" max="20" value={quantity} onChange={e=>{const n=Number(e.target.value);if(Number.isInteger(n)&&n>0&&n<=20)update(s=>({...s,cart:s.cart.map(l=>l.id===id?{...l,quantity:n}:l)}))}}/></label>
+    <div className="anCommerceItemInfo"><small>{p.category}</small><h2><Link href={'/products/'+p.slug}>{p.name}</Link></h2><p>{p.size}</p><p>{p.pricePaisa===null?'Price to be confirmed':money(p.pricePaisa)} · Availability confirmed before ordering</p>
+     <div className="anCommerceQty" aria-label={"Quantity for "+p.name}><button type="button" aria-label={"Decrease quantity for "+p.name} disabled={quantity<=1} onClick={()=>update(s=>({...s,cart:s.cart.map(l=>l.id===id?{...l,quantity:Math.max(1,l.quantity-1)}:l)}))}><Minus size={15}/></button><output aria-label="Quantity">{quantity}</output><button type="button" aria-label={"Increase quantity for "+p.name} disabled={quantity>=20} onClick={()=>update(s=>({...s,cart:s.cart.map(l=>l.id===id?{...l,quantity:Math.min(20,l.quantity+1)}:l)}))}><Plus size={15}/></button></div>
      <button className="shoppingRemove" aria-label={'Remove '+p.name} onClick={()=>update(s=>({...s,cart:s.cart.filter(l=>l.id!==id)}))}><Trash2 size={15}/> Remove</button>
     </div><strong>{p.pricePaisa===null?'Confirm price':money(p.pricePaisa*quantity)}</strong>
    </article>)}</section>
-   <aside className="shoppingSummary"><h2>{isCheckout?'Order request':'Bag summary'}</h2><div><span>{unknown?'Known-price subtotal':'Product subtotal'}</span><strong>{money(total)}</strong></div>
+   <aside className="shoppingSummary anCommerceSummary"><h2>{isCheckout?"Your Order Summary":"Order Summary"}</h2><div><span>{unknown?'Known-price subtotal':'Product subtotal'}</span><strong>{money(total)}</strong></div>
     {unknown&&<p>Some items need a price confirmation and are not included in the subtotal.</p>}
     <div><span>Delivery</span><span>{extraDelivery?'To be confirmed':'Included'}</span></div>
-    <p>Stock is not reserved. We will confirm availability and the final total before accepting your request. No payment is collected here.</p>
+    <p className="anCommerceSafety"><ShieldCheck size={18}/> {codEnabled?"Final amounts are validated by the server before an order is recorded.":"Catalogue mode: no order or payment is accepted yet. Delivery and availability require confirmation."}</p>
     {isCheckout?<>{codEnabled?<form className="anCodForm" onSubmit={submitCod}>
-     <h3>Cash on Delivery</h3><p>No advance payment. Order total and delivery fee are calculated and validated by our server.</p>
+     <h3><Truck size={19}/> Cash on Delivery</h3><p>Pay when your order arrives. Prices, stock and delivery fees are validated by the server.</p>
      {(['name','phone','district','area','address'] as const).map(k=><label key={k}>{k.charAt(0).toUpperCase()+k.slice(1)} *<input required type={k==='phone'?'tel':'text'} inputMode={k==='phone'?'tel':'text'} pattern={k==='phone'?'01[3-9][0-9]{8}':undefined} maxLength={k==='address'?400:100} value={codCustomer[k]} onChange={e=>{setCodCustomer(x=>({...x,[k]:e.target.value}));setCodKey('');}}/></label>)}
      <label>Delivery notes<textarea rows={2} maxLength={400} value={codCustomer.notes} onChange={e=>setCodCustomer(x=>({...x,notes:e.target.value}))}/></label>
      <label className="shoppingConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/> I confirm the details are correct and understand the order is unpaid until verified.</label>
      {codError&&<p role="alert" className="error">{codError}</p>}
      <button className="sheetPrimary" type="submit" disabled={!consent||codPending||Boolean(loadError)||missing.length>0||unknown}>{codPending?'Submitting…':'Place COD Order →'}</button>
-     </form>:<div className="notice"><strong>COD checkout is not open yet.</strong><p>ANUSMITA is in catalogue mode. Verified stock and owner-controlled launch settings must be ready before orders are accepted.</p><Link href="/shop">Continue browsing</Link></div>}<Link href="/cart">Back to cart</Link></>:
-     <Link className="sheetPrimary" href="/checkout">Continue to COD checkout →</Link>}
+     </form>:<div className="notice anCommerceClosed"><LockKeyhole size={22}/><strong>COD checkout is not open yet.</strong><p>ANUSMITA is in catalogue mode. Verified stock and owner-controlled launch settings must be ready before orders are accepted.</p><Link href="/shop">Continue browsing</Link></div>}<Link href="/cart">Back to cart</Link></>:
+     <Link className="sheetPrimary anCommerceCta" href="/checkout">Continue to Checkout <ArrowRight size={18}/></Link>}
     <small>Your selections are saved on this browser.</small>
    </aside></div>)}
   </>}
