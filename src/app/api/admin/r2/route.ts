@@ -1,7 +1,7 @@
 import {randomUUID} from "node:crypto";
 import mongoose from "mongoose";
 import {z} from "zod";
-import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
+import {authorize,authorizePermission,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {Product,Audit} from "@/lib/models";
 import {mediaDailyQuota} from "@/lib/cloudinary-server";
@@ -17,7 +17,7 @@ function settings(){
 }
 export async function GET(){
  try{
-  await authorize(["owner","admin","inventory"]);
+  await authorizePermission(["owner","admin","inventory"],"products.view");
   const c=settings();const r=await fetch(c.base+"/health",{headers:c.headers,cache:"no-store",signal:AbortSignal.timeout(10000)});
   if(!r.ok)throw new HttpError(503,"R2 storage check failed");
   return Response.json({ready:true,maxBytes:MAX},{headers:{"Cache-Control":"no-store"}});
@@ -26,7 +26,7 @@ export async function GET(){
 export async function POST(req:Request){
  let uploadedUrl:string|undefined,config:ReturnType<typeof settings>|undefined;
  try{
-  assertOrigin(req);const actor=await authorize(["owner","admin","inventory"]);
+  assertOrigin(req);const actor=await authorizePermission(["owner","admin","inventory"],"products.edit");
   config=settings();
   const contentLength=Number(req.headers.get("content-length"));
   if(!contentLength||contentLength>MAX+16384)throw new HttpError(413,"Upload a JPEG, PNG or WebP under 3 MB");
