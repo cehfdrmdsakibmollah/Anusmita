@@ -8,7 +8,7 @@ const openPurchase={status:{$in:['submitted','partially_received','received']}};
 const dateGroup=(field:string)=>({$dateToString:{format:'%Y-%m-%d',date:field,timezone:'Asia/Dhaka'}});
 export async function GET(request:Request) {
  try {
-  await authorizePermission(['owner','admin','finance','analyst'],"finance.view");
+  await authorize(['owner','admin','finance','analyst'],"finance.view");
   const raw=new URL(request.url).searchParams.get('days')??'7';
   if(raw!=='7'&&raw!=='14')throw new HttpError(400,'Chart range must be 7 or 14 days');
   const days=Number(raw) as 7|14;

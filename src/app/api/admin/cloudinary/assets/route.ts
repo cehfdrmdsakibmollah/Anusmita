@@ -5,7 +5,7 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export async function GET(req:Request){
  try{
-  await authorizePermission(["owner","admin","inventory"],"products.view");
+  await authorize(["owner","admin","inventory"],"products.view");
   const c=mediaCredentials();
   const params=new URL(req.url).searchParams;
   const cursor=params.get("cursor")||"";

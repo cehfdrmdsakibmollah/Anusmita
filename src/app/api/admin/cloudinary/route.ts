@@ -9,7 +9,7 @@ const body=z.object({productId:z.string().regex(/^[a-f0-9]{24}$/i),url:z.url().m
  expectedUpdatedAt:z.iso.datetime({offset:true})}).strict();
 export async function POST(req:Request){
  try{
-  assertOrigin(req);const user=await authorizePermission(["owner","admin","inventory"],"products.edit");
+  assertOrigin(req);const user=await authorize(["owner","admin","inventory"],"products.edit");
   const data=body.parse(await req.json());
   const publicId=cloudinaryPublicId(data.url);
   if(!publicId||!managedAssetId(publicId))throw new HttpError(400,"Only verified, managed ANUSMITA Cloudinary assets are accepted");

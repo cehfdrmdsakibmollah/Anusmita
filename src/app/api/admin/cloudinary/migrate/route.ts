@@ -10,7 +10,7 @@ const schema=z.object({productId:z.string().regex(/^[a-f0-9]{24}$/i),
  confirmed:z.literal(true)}).strict();
 export async function POST(req:Request){
  try {
-  assertOrigin(req);const actor=await authorizePermission(["owner","admin","inventory"],"products.edit");
+  assertOrigin(req);const actor=await authorize(["owner","admin","inventory"],"products.edit");
   const data=schema.parse(await req.json());
   const source=findDriveMedia(data.fileId);
   if(!source)throw new HttpError(404,"Image is not in the indexed Google Drive collections");

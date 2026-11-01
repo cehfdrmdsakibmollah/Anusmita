@@ -4,7 +4,7 @@ import {Order} from "@/lib/models";
 export const dynamic="force-dynamic";
 export async function GET(request:Request){
  try{
-  await authorizePermission(["owner","admin","sales","support","analyst"],"customers.view");
+  await authorize(["owner","admin","sales","support","analyst"],"customers.view");
   const params=new URL(request.url).searchParams;
   const page=Math.min(100,Math.max(1,Number.parseInt(params.get("page")||"1",10)||1));
   await db();

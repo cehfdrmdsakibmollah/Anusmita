@@ -9,7 +9,7 @@ export const dynamic="force-dynamic";
 const headers={"Cache-Control":"private, no-store"};
 export async function GET(){
  try{
-  await authorizePermission(["owner","admin"],"settings.view");
+  await authorize(["owner","admin"],"settings.view");
   await db();
   const row=await HomePage.findOne({key:"main"}).lean<any>();
   return Response.json({
@@ -23,7 +23,7 @@ export async function GET(){
 export async function POST(req:Request){
  try{
   assertOrigin(req);
-  const actor=await authorizePermission(["owner","admin"],"settings.edit");
+  const actor=await authorize(["owner","admin"],"settings.edit");
   if(Number(req.headers.get("content-length")||0)>16000)throw new HttpError(413,"Homepage edit request too large");
   const command=cmsOperation.parse(await req.json());
   await db();

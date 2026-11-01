@@ -5,7 +5,7 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export async function GET(req:Request){
  try{
-  await authorizePermission(["owner","admin","inventory","purchasing"],"products.view");
+  await authorize(["owner","admin","inventory","purchasing"],"products.view");
   const format=new URL(req.url).searchParams.get("format");
   if(format==="csv")return new Response(canvaReviewCsv(),{headers:{
    "Content-Type":"text/csv; charset=utf-8",

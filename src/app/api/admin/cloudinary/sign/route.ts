@@ -13,7 +13,7 @@ const schema=z.object({productId:z.string().regex(/^[a-f0-9]{24}$/i),
  fileSize:z.number().int().positive(),contentType:z.string().max(80)}).strict();
 export async function POST(req:Request){
  try{
-  assertOrigin(req);const actor=await authorizePermission(["owner","admin","inventory"],"products.edit");
+  assertOrigin(req);const actor=await authorize(["owner","admin","inventory"],"products.edit");
   const data=schema.parse(await req.json());
   if(!supportedUpload(data.contentType,data.fileSize))throw new HttpError(400,"Choose a JPEG, PNG or WebP under 10 MB (convert HEIC first)");
   const creds=mediaCredentials();

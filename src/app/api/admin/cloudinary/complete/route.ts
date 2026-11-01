@@ -10,7 +10,7 @@ const schema=z.object({productId:z.string().regex(/^[a-f0-9]{24}$/i),
  uploadToken:z.string().length(64)}).strict();
 export async function POST(req:Request){
  try{
-  assertOrigin(req);const user=await authorizePermission(["owner","admin","inventory"],"products.edit");
+  assertOrigin(req);const user=await authorize(["owner","admin","inventory"],"products.edit");
   const data=schema.parse(await req.json());
   const now=Math.floor(Date.now()/1000);
   if(now-data.timestamp>900||data.timestamp>now+30)throw new HttpError(403,"Upload authorization expired");
