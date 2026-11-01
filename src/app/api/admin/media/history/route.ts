@@ -1,12 +1,12 @@
 
-import {authorize,apiError} from "@/lib/auth";
+import {authorize,authorizePermission,apiError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {Audit} from "@/lib/models";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export async function GET(){
  try{
-  await authorize(["owner","admin","inventory"]);
+  await authorizePermission(["owner","admin","inventory"],"products.view");
   await db();
   const entries=await Audit.find({action:"product.cloudinary_verified_asset","details.replacedDriveId":{$exists:true,$nin:[null,""]}})
    .sort({createdAt:-1}).limit(30).select("createdAt entityId details").lean<any[]>();
