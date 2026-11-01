@@ -1,3 +1,4 @@
+import "./product-seo-page.css";
 import Link from "next/link";
 import {redirect} from "next/navigation";
 import {currentUser} from "@/lib/auth";
