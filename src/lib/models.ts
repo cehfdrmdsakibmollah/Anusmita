@@ -267,6 +267,15 @@ const ProviderConnectionSchema=new Schema({
  lastTestResult:{type:String,enum:["verified","failed","not_tested"],default:"not_tested"}
 },opts);
 export const ProviderConnection=mongoose.models.ProviderConnection||mongoose.model("ProviderConnection",ProviderConnectionSchema);
+const ContentPageSchema=new Schema({
+ slug:{type:String,required:true,unique:true,lowercase:true,trim:true},
+ title:{type:String,required:true,maxlength:100},
+ description:{type:String,default:"",maxlength:160},
+ blocks:{type:[Schema.Types.Mixed],default:[]},
+ published:{type:Boolean,default:false},revision:{type:Number,default:0,min:0},
+ updatedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
+},opts);
+export const ContentPage=mongoose.models.ContentPage||mongoose.model("ContentPage",ContentPageSchema);
 const CatalogImportSchema = new Schema({
  importKey:{type:String,required:true,unique:true},
  actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},
