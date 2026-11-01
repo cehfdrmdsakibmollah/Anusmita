@@ -216,3 +216,15 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 .seoDashboard:has(.apReferenceGrid) .apPublishingInfo span{padding:7px 10px;background:#fff1f3;border:1px solid #efd3db;border-radius:7px;font-size:10px}
 @media(max-width:1100px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(230px,30%) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:850px){.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCard{grid-column:1!important;grid-row:auto!important}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apBasic .apCardBody{grid-template-columns:1fr}}
+
+/* Compact editor: keep controls readable without oversized reference-grid gaps */
+.seoDashboard:has(.apReferenceGrid) .apScheduleField{flex-basis:100%;min-width:0;border:1px solid #ead0d8;background:#fff9fa;border-radius:8px;padding:9px}
+.seoDashboard:has(.apReferenceGrid) .apScheduleField .apField{margin:0}
+.seoDashboard:has(.apReferenceGrid) .apScheduleField .apHint{margin:6px 0 0}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apHint{font-size:10px;line-height:1.3}
+.seoDashboard:has(.apReferenceGrid) .apVariantToolbar{flex-wrap:wrap}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCard{align-self:start}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apTwo{gap:7px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor :is(input,select,textarea){min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apVariantRow{min-width:280px}
+@media(max-width:1100px){.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apBasic .apCardBody{grid-template-columns:1fr 1fr}}
