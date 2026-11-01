@@ -27,9 +27,10 @@ export const productSchema = z.object({
  ingredients:z.string().trim().max(2000).default(""),usageInstructions:z.string().trim().max(1500).default(""),
  topNotes:z.string().trim().max(400).default(""),heartNotes:z.string().trim().max(400).default(""),baseNotes:z.string().trim().max(400).default(""),
  imageUrls:z.array(z.string().url().startsWith("https://")).max(12).default([]),
+ compareAtPaisa:z.number().int().min(0).default(0),wholesalePaisa:z.number().int().min(0).default(0),featured:z.boolean().default(false),barcode:z.string().trim().max(80).default(""),
  pricePaisa:z.number().int().min(1),costPaisa:z.number().int().min(0),
  onHand:z.number().int().min(0).default(0),reorderLevel:z.number().int().min(0).default(5),
- active:z.boolean().default(false),
+ active:z.boolean().default(false),archived:z.boolean().default(false),availabilityMode:z.enum(["now","preorder"]).default("now"),preorderEta:z.iso.datetime({offset:true}).nullable().default(null),discountPercent:z.number().min(0).max(100).default(0),salesChannels:z.array(z.enum(["online","app","marketplace"])).max(3).default(["online"]),scheduledPublishAt:z.iso.datetime({offset:true}).nullable().default(null),
 }).strict();
 export const paymentSchema = z.object({
  orderId:z.string().regex(/^[0-9a-f]{24}$/i),method:z.enum(["cash","cod","bank_transfer","bkash_manual","nagad_manual"]),

@@ -1,54 +1,3 @@
-body:has(.apReferenceGrid) .anHeader,body:has(.apReferenceGrid) .anFooter,body:has(.apReferenceGrid) .anAnnouncement{display:none!important}
-.seoDashboard:has(.apReferenceGrid) .seoDashboardMain{padding:18px 22px 48px}
-.seoDashboard .apWorkspace{width:100%;max-width:none;background:transparent;color:#351e28}
-.seoDashboard .apHeading{background:transparent;border:0;margin:0 0 16px;padding:3px 4px 16px;border-bottom:1px solid #ebd6dc;align-items:end}
-.seoDashboard .apHeading h2{font:38px Georgia,serif;color:#571b31;margin:4px 0 8px}.seoDashboard .apHeading p{font-size:13px;color:#805f6b}
-.apReferenceGrid{display:grid;grid-template-columns:minmax(250px,24%) minmax(400px,1fr) minmax(265px,23%);gap:14px;align-items:start}
-.apReferenceProducts,.apReferenceEditor,.apReferenceActions>section{border:1px solid #eed6dd;border-radius:14px;background:#fffaf9;box-shadow:0 6px 24px #7c14300a;min-width:0}
-.apReferenceProducts{padding:13px;position:sticky;top:12px}
-.apReferenceProducts .apSearch{border:0;background:none;box-shadow:none;padding:0;margin:0}
-.apReferenceProducts .apSearch>h3{font:24px Georgia,serif;color:#491e2a;padding:4px 6px 12px}
-.apReferenceProducts .apSearch .apCardBody{padding:0}
-.apReferenceProducts .apSearch .apTableScroll{overflow:visible}
-.apReferenceProducts .apSearch table,.apReferenceProducts .apSearch tbody,.apReferenceProducts .apSearch tr,.apReferenceProducts .apSearch td{display:block;width:100%;border:0}
-.apReferenceProducts .apSearch thead{display:none}
-.apReferenceProducts .apSearch tr{position:relative;margin-bottom:7px;padding:8px 10px;border-radius:10px;border:1px solid #f0dce1;background:#fff7f6}
-.apReferenceProducts .apSearch tr:hover{background:#f9e5e9;border-color:#d99baa}
-.apReferenceProducts .apSearch td:not(:first-child){display:none}
-.apReferenceProducts .apSearch .apProductCell{display:flex;align-items:center;gap:12px}
-.apReferenceProducts .apSearch .apProductCell img{width:57px;height:64px;object-fit:contain;border:1px solid #f0dadf;border-radius:9px;background:#fff}
-.apReferenceProducts .apSearch .apProductCell strong{font:600 13px Georgia,serif;line-height:1.3}
-.apReferenceProducts .apSearch .apPager{display:flex;gap:5px;justify-content:space-between;align-items:center;flex-wrap:wrap;font-size:11px;padding:14px 0 0}
-.apReferenceProducts .apSearch .apPager button{padding:8px 9px;border:1px solid #e9cbd3;border-radius:7px}
-.apReferenceProducts .apSearch .apField input{width:100%}
-.apReferenceProducts .apSearch td .apEdit{display:none}
-.apReferenceProducts .apSearch tr{cursor:pointer}
-.apReferenceEditor{padding:15px}
-.apReferenceSelected{display:flex;align-items:center;justify-content:space-between;gap:9px;min-height:85px;padding:5px 2px 13px;border-bottom:1px solid #eddae0}
-.apReferenceSelected>div{display:flex;align-items:center;gap:12px}
-.apReferenceSelected img{object-fit:contain;border:1px solid #f0dfe2;border-radius:9px;background:#fff}
-.apReferenceSelected strong{font:600 20px Georgia,serif}.apReferenceSelected p{font-size:12px;color:#7b6570;margin-top:5px}.apReferenceSelected a{font-size:11px;color:#8e1839;border:1px solid #ecccd4;padding:9px;border-radius:8px;white-space:nowrap}
-.apReferenceTabs{display:flex;gap:5px;flex-wrap:wrap;padding:13px 0;border-bottom:1px solid #efdae0;margin-bottom:15px}
-.apReferenceTabs :is(span,a){border:1px solid #efd5db;border-radius:7px;padding:9px 10px;font-size:11px;color:#643846;background:#fff7f7}
-.apReferenceTabs span:first-child{background:#8a1138;color:#fff}
-.apReferenceEditor form{max-width:none!important}
-.apReferenceEditor .apTopGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.apReferenceEditor .apBasic{grid-column:1/-1}
-.apReferenceEditor .apCard{border:1px solid #ecd8dd;border-radius:10px;background:#fffafa;min-width:0}
-.apReferenceEditor .apCard h3{font:16px Georgia,serif;color:#60233a}
-.apReferenceEditor .apField input,.apReferenceEditor .apField textarea{width:100%;background:#fffaf9;border:1px solid #e7cdd6;border-radius:7px;padding:10px}
-.apReferenceEditor .apLowerGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.apReferenceEditor .apDetails{margin-top:12px}
-.apReferenceEditor .apPrimary{background:#861039;border-color:#861039;color:#fff;border-radius:8px}
-.apReferenceActions{position:sticky;top:12px;display:grid;gap:12px}
-.apReferenceActions>section{padding:16px}.apReferenceActions h3{font:22px Georgia,serif;margin:0 0 13px;color:#552039}
-.apReferenceActions p{font-size:12px;color:#785d67;line-height:1.6}
-.apReferenceActions :is(a,button){display:block;width:100%;text-align:left;margin:7px 0;padding:11px;background:#fff6f7;color:#781b39;border:1px solid #efd7dd;border-radius:8px;font-size:12px}
-.apReferenceActions :is(a,button):hover{background:#f7e1e7;border-color:#c78197}
-.seoDashboard .apAdvanced{margin-top:18px}
-@media(max-width:1500px){.apReferenceGrid{grid-template-columns:250px minmax(0,1fr)}.apReferenceActions{position:static;grid-column:1/-1;grid-template-columns:repeat(3,1fr)}}
-@media(max-width:920px){.apReferenceGrid{grid-template-columns:1fr}.apReferenceProducts{position:static}.apReferenceActions{grid-column:auto;grid-template-columns:1fr}.apReferenceEditor .apTopGrid,.apReferenceEditor .apLowerGrid{grid-template-columns:1fr}}
-
 /* Shared product/SEO workspace navigation, scoped to this authenticated route */
 .apModeNavigation{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:0 0 16px;padding:10px 6px 18px;border-bottom:1px solid #edd8de}
 .apModeNavigation h1{font:normal clamp(30px,3vw,43px) Georgia,serif;color:#57172e;margin:6px 0}
@@ -74,3 +23,257 @@ body:has(.apReferenceGrid) .anHeader,body:has(.apReferenceGrid) .anFooter,body:h
 @media(max-width:860px){.apModeNavigation{align-items:start;flex-direction:column}.seoDashboardMain:has(.apModeNavigation) .an-seo-layout{grid-template-columns:1fr}.seoDashboardMain:has(.apModeNavigation) .an-seo-aside{grid-column:auto;grid-template-columns:1fr}}
 
 
+
+
+
+
+/* Product Editor — single scoped visual system */
+body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none!important}
+.seoDashboard:has(.apReferenceGrid){display:grid;grid-template-columns:190px minmax(0,1fr);background:#fff9f8;min-height:100vh;color:#321b23;font:12px Arial,sans-serif}
+.seoDashboard:has(.apReferenceGrid) .seoDashboardSidebar{padding:14px 12px;background:linear-gradient(155deg,#fff8f7,#fbe9ec);position:sticky;top:0;height:100vh;overflow:auto}
+.seoDashboard:has(.apReferenceGrid) .seoBrand{font:25px Georgia,serif;letter-spacing:1px;display:block;text-align:center;padding-bottom:17px;border-bottom:1px solid #eed5dd;margin:0 0 16px}
+.seoDashboard:has(.apReferenceGrid) .seoBrand small{font:8px Arial,sans-serif;display:block;letter-spacing:1.5px}
+.seoDashboard:has(.apReferenceGrid) .seoMenuLabel{font:600 11px Georgia,serif;color:#862f48;padding-top:12px;margin-top:18px;border-top:1px solid #eecfd8}
+.seoDashboard:has(.apReferenceGrid) .seoDashboardSidebar>a:not(.seoBrand){display:block;padding:10px 12px;margin:2px 0;font-size:12px;border-radius:8px;text-decoration:none;color:#43212d}
+.seoDashboard:has(.apReferenceGrid) .seoDashboardSidebar>a.seoMenuActive{background:linear-gradient(100deg,#9c1641,#73122f);color:white}
+.seoDashboard:has(.apReferenceGrid) .seoDashboardMain{min-width:0;padding:12px 14px 25px}
+.seoDashboard:has(.apReferenceGrid) .apModeNavigation{margin:3px 0 13px;padding:9px 5px 13px;border:0;align-items:center}
+.seoDashboard:has(.apReferenceGrid) .apModeNavigation h1{font:600 34px Georgia,serif;color:#6c1834;margin:5px 0}
+.seoDashboard:has(.apReferenceGrid) .apHeading{display:none}
+.seoDashboard:has(.apReferenceGrid) .apWorkspace{max-width:none;width:100%;padding:0;background:transparent}
+.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{display:grid;grid-template-columns:minmax(255px,22%) minmax(0,1fr) minmax(220px,20%);gap:10px;align-items:start}
+.seoDashboard:has(.apReferenceGrid) :is(.apReferenceProducts,.apReferenceActions>section,.apReferenceEditor .apCard){background:#fffbfa;border:1px solid #edcfd7;border-radius:11px;box-shadow:0 3px 10px #72304208;min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts{padding:9px;position:sticky;top:12px;min-height:655px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts .apSearch{border:0;box-shadow:none;padding:0;margin:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts .apSearch h3{display:flex;align-items:center;gap:8px;font:600 20px Georgia,serif;color:#591b34;margin:0 0 9px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts .apCardBody{padding:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts .apField input{width:100%;margin:6px 0 11px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts .apTableScroll{max-height:550px;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts table,.seoDashboard:has(.apReferenceGrid) .apReferenceProducts tbody,.seoDashboard:has(.apReferenceGrid) .apReferenceProducts tr,.seoDashboard:has(.apReferenceGrid) .apReferenceProducts td{display:block;width:100%;box-sizing:border-box;border:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts thead,.seoDashboard:has(.apReferenceGrid) .apReferenceProducts td:not(:first-child){display:none}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts tr{margin-bottom:7px;background:#fff7f8;border:1px solid #ecd6dd;border-radius:9px;padding:7px;cursor:pointer}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts tr:hover{background:#fbe8ee}
+.seoDashboard:has(.apReferenceGrid) .apProductCell{display:flex;align-items:center;gap:9px;min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apProductCell img{width:57px;height:62px;flex:none;object-fit:contain;border-radius:8px;background:white}
+.seoDashboard:has(.apReferenceGrid) .apProductText{min-width:0;display:block}
+.seoDashboard:has(.apReferenceGrid) .apProductText strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font:600 12px Georgia,serif;line-height:1.3}
+.seoDashboard:has(.apReferenceGrid) .apProductText small{display:block;color:#795965;font-size:10px;margin:4px 0}
+.seoDashboard:has(.apReferenceGrid) .apProductBadges{display:flex;gap:4px;flex-wrap:wrap}
+.seoDashboard:has(.apReferenceGrid) .apProductBadges em{font:600 10px Arial,sans-serif;border-radius:30px;padding:4px 7px;background:#def2de;color:#16742c}
+.seoDashboard:has(.apReferenceGrid) .apProductBadges em.apDraft{background:#f9e2e7;color:#9b4c5d}
+.seoDashboard:has(.apReferenceGrid) .apPager{display:flex;align-items:center;justify-content:space-between;gap:5px;flex-wrap:wrap;margin-top:13px;font-size:10px}
+.seoDashboard:has(.apReferenceGrid) .apPager button{font-size:10px;padding:7px;border:1px solid #e9ccd4;background:#fff;border-radius:7px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor{background:transparent;border:0;box-shadow:none;padding:0;min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceSelected{min-height:65px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ead3da;padding:0 8px 7px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceSelected>div{display:flex;gap:10px;align-items:center}
+.seoDashboard:has(.apReferenceGrid) .apReferenceSelected strong{font:600 18px Georgia,serif}.seoDashboard:has(.apReferenceGrid) .apReferenceSelected p{font-size:11px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceTabs{display:flex;gap:5px;flex-wrap:nowrap;overflow-x:auto;padding:8px 0;margin:0 0 10px;scrollbar-width:thin}
+.seoDashboard:has(.apReferenceGrid) .apReferenceTabs a{flex:none;font-size:10px;padding:9px 11px;border-radius:7px;border:1px solid #ecd0d8;color:#6e1d39;text-decoration:none;background:#fff7f8}
+.seoDashboard:has(.apReferenceGrid) .apReferenceTabs a:first-child{background:linear-gradient(#a8274e,#79082f);color:#fff}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{display:grid;grid-template-columns:1.12fr .88fr;gap:10px;align-items:start;grid-auto-flow:row dense;max-width:none!important}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor :is(.apTopGrid,.apLowerGrid){display:contents}
+.seoDashboard:has(.apReferenceGrid) .apBasic{grid-column:1;grid-row:1}
+.seoDashboard:has(.apReferenceGrid) .apPricing{grid-column:2;grid-row:1}
+.seoDashboard:has(.apReferenceGrid) #ap-variants{grid-column:1;grid-row:2}
+.seoDashboard:has(.apReferenceGrid) .apMedia{grid-column:2;grid-row:2}
+.seoDashboard:has(.apReferenceGrid) .apLowerGrid>section:not(#ap-variants){grid-column:2;grid-row:3}
+.seoDashboard:has(.apReferenceGrid) .apPriceDetail{grid-column:1;grid-row:3}.apDetails{grid-column:2;grid-row:4;margin:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCard{overflow:hidden;margin:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCard h3{display:flex;align-items:center;gap:9px;background:#fbedef;padding:10px 12px;margin:0;font:600 16px Georgia,serif;color:#7c1d3c}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCardBody{padding:10px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apField{display:block;font-size:11px;font-weight:600;margin-bottom:8px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apField span{display:block;margin:0 0 4px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor :is(input,textarea,select){max-width:100%;min-width:0;width:100%;box-sizing:border-box;background:#fff;border:1px solid #e7c7d0;border-radius:6px;padding:7px;font-size:11px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apTwo{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.seoDashboard:has(.apReferenceGrid) .apTaxonomyFields{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:end}
+.seoDashboard:has(.apReferenceGrid) .apTaxButtons{display:flex;gap:3px;padding-bottom:7px}
+.seoDashboard:has(.apReferenceGrid) .apTaxButtons button{border:1px solid #eccad3;background:#fff5f6;border-radius:5px;font-size:9px;padding:6px 5px;color:#861938;cursor:pointer}
+.seoDashboard:has(.apReferenceGrid) .apTaxButtons button:disabled{opacity:.4;cursor:not-allowed}
+.seoDashboard:has(.apReferenceGrid) .apStockIndicator{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#f1f9ed;padding:9px;border-radius:7px;font-size:11px}
+.seoDashboard:has(.apReferenceGrid) .apStockIndicator strong{color:#08772b}
+.seoDashboard:has(.apReferenceGrid) .apGallery{display:flex;flex-wrap:wrap;gap:7px}
+.seoDashboard:has(.apReferenceGrid) .apGallery .apThumb{width:64px;height:72px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceActions{display:grid;grid-column:3;position:static;grid-template-columns:1fr;gap:9px;align-content:start}
+.seoDashboard:has(.apReferenceGrid) .apReferenceActions>section{padding:12px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceActions h3{font:600 17px Georgia,serif;color:#7b1b3a;margin:0 0 9px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceActions p{font-size:11px;margin:5px 0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceActions :is(a,button){display:block;width:100%;box-sizing:border-box;border:1px solid #edcdd6;background:#fff6f8;color:#7b1434;border-radius:7px;padding:8px;text-align:left;text-decoration:none;font-size:11px;margin:5px 0;cursor:pointer}
+.seoDashboard:has(.apReferenceGrid) .apReferenceActions :is(a,button):disabled{opacity:.4}
+.seoDashboard:has(.apReferenceGrid) .apAdvanced{margin-top:12px}
+.apTaxDialog{position:fixed;inset:0;background:#30152099;z-index:200;display:grid;place-items:center;padding:20px}
+.apTaxDialog form{background:#fffafb;padding:23px;border-radius:12px;width:min(400px,100%);box-shadow:0 20px 70px #0003}
+.apTaxDialog label{display:grid;gap:8px}.apTaxDialog input{padding:10px;border:1px solid #e5c6d0}
+.apTaxDialog button{padding:9px;border:1px solid #e5c6d0;background:#fff;border-radius:7px}
+.apTaxDialog form>div{display:flex;gap:8px;justify-content:end;margin-top:16px}
+.apTaxDialog button[type=submit]{background:#841337;color:white}
+@media(max-width:1200px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(220px,28%) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:850px){.seoDashboard:has(.apReferenceGrid){display:block}.seoDashboard:has(.apReferenceGrid) .seoDashboardSidebar{position:static;height:auto}.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceProducts{position:static;min-height:0}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:auto;grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form>.apCard,.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apLowerGrid>section{grid-column:1;grid-row:auto}.seoDashboard:has(.apReferenceGrid) .apTaxonomyFields{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-template-columns:1fr}}
+
+/* Compact reference-page density, card positioning and SKU controls */
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-template-rows:auto auto auto auto;align-content:start}
+.seoDashboard:has(.apReferenceGrid) .apBasic{grid-row:1;grid-column:1}
+.seoDashboard:has(.apReferenceGrid) .apPricing{grid-row:1;grid-column:2}
+.seoDashboard:has(.apReferenceGrid) #ap-variants{grid-row:2;grid-column:1}
+.seoDashboard:has(.apReferenceGrid) .apMedia{grid-row:2;grid-column:2}
+.seoDashboard:has(.apReferenceGrid) .apPriceDetail{grid-row:3;grid-column:1}
+.seoDashboard:has(.apReferenceGrid) .apDetails{grid-row:3;grid-column:2}
+.seoDashboard:has(.apReferenceGrid) .apLowerGrid>section:not(#ap-variants){display:none}
+.seoDashboard:has(.apReferenceGrid) .apStockPills{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 14px}
+.seoDashboard:has(.apReferenceGrid) .apStockPills span{font-size:10px;padding:6px 8px;border:1px solid #eacbd5;border-radius:50px;color:#6a4c56;background:#fff}
+.seoDashboard:has(.apReferenceGrid) .apStockPills span.selected{background:#d8f4db;border-color:#b7e8c0;color:#0b752a;font-weight:bold}
+.seoDashboard:has(.apReferenceGrid) .apVariantRows{display:grid;gap:5px;margin:10px 0}
+.seoDashboard:has(.apReferenceGrid) .apVariantRows button{display:flex;align-items:center;gap:8px;border:1px solid #eddae0;border-radius:7px;padding:7px;background:#fff;text-align:left;min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apVariantRows img{width:30px;height:35px;object-fit:contain}
+.seoDashboard:has(.apReferenceGrid) .apVariantRows strong{flex:1;font-size:11px;min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apVariantRows small{font-size:10px}
+.seoDashboard:has(.apReferenceGrid) .apDetailsBody{display:block;padding:10px}
+.seoDashboard:has(.apReferenceGrid) .apDetailsBody textarea{min-height:78px;width:100%}
+.seoDashboard:has(.apReferenceGrid) .apSaveBox{border:0;padding:9px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.seoDashboard:has(.apReferenceGrid) .apSaveBox .apHint{flex:1;min-width:170px}
+.seoDashboard:has(.apReferenceGrid) .apSaveBox .apPrimary{border:0;border-radius:7px;background:#851037;color:white;padding:10px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceActions>section{margin:0}
+.seoDashboard:has(.apReferenceGrid) .apProductText{width:100%}
+@media(max-width:1300px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(235px,26%) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form .apCard{grid-column:1!important;grid-row:auto!important}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-template-columns:1fr}}
+
+.seoDashboard:has(.apReferenceGrid) .apCatalogFilters{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.seoDashboard:has(.apReferenceGrid) .apCatalogFilters button{background:#fff6f8;border:1px solid #e9cbd4;border-radius:7px;color:#81203c;font-size:10px;padding:6px 9px;cursor:pointer}
+.seoDashboard:has(.apReferenceGrid) .apCatalogFilters button.selected{background:#8d1238;border-color:#8d1238;color:#fff}
+
+/* Reference framing: desktop masthead, sidebar and reliable 3-column layout */
+.seoDashboard:has(.apReferenceGrid){grid-template-columns:190px minmax(0,1fr)}
+.seoDashboard:has(.apReferenceGrid) .seoDashboardMain{padding:0 14px 28px}
+.seoDashboard:has(.apReferenceGrid) .seoBreadcrumb{display:none}
+.seoDashboard:has(.apReferenceGrid) .apTopbar{height:43px;display:flex;align-items:center;gap:20px;margin:0 -14px 0;padding:0 16px;border-bottom:1px solid #ebd3da;background:#fffafa}
+.seoDashboard:has(.apReferenceGrid) .apTopbarTrail{display:flex;align-items:center;gap:9px;white-space:nowrap;font-size:11px}
+.seoDashboard:has(.apReferenceGrid) .apTopbarTrail a{text-decoration:none;color:#54253a}
+.seoDashboard:has(.apReferenceGrid) .apTopbarSearch{margin-left:auto;border:1px solid #ead1d9;background:#fff9fa;border-radius:30px;padding:8px 14px;display:flex;gap:10px;align-items:center;color:#8b6674;width:min(360px,32%);font-size:11px}
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount{display:flex;align-items:center;gap:13px;font-size:11px;white-space:nowrap}
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount span{height:29px;width:29px;display:grid;place-items:center;border-radius:50%;background:#ac4761;color:#fff}
+.seoDashboard:has(.apReferenceGrid) .seoDashboardSidebar>a:not(.seoBrand){display:flex;align-items:center;gap:11px}
+.seoDashboard:has(.apReferenceGrid) .apModeNavigation{margin:0 0 9px;padding:6px 6px 11px;min-height:80px}
+.seoDashboard:has(.apReferenceGrid) .apModeNavigation h1{font-size:34px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(255px,23%) minmax(0,1fr) minmax(215px,21%);gap:10px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apBasic{grid-column:1;grid-row:1}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apPricing{grid-column:2;grid-row:1}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor #ap-variants{grid-column:1;grid-row:2}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apMedia{grid-column:2;grid-row:2}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apPriceDetail{grid-column:1;grid-row:3}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apDetails{grid-column:2;grid-row:3}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts .apTableScroll{max-height:565px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts{min-height:690px}
+@media(max-width:1100px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(220px,27%) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:850px){.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form .apCard{grid-column:1!important;grid-row:auto!important}.seoDashboard:has(.apReferenceGrid) .apTopbarSearch{display:none}}
+@media(max-width:700px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apTopbarAccount strong{display:none}}
+
+.seoDashboard:has(.apReferenceGrid) .apSelectedActions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.seoDashboard:has(.apReferenceGrid) .apSelectedActions :is(a,button){border:1px solid #e6cad2;background:#fff8f9;color:#7d1a39;border-radius:7px;padding:8px 10px;font-size:10px;font-weight:700;text-decoration:none;cursor:pointer;white-space:nowrap}
+.seoDashboard:has(.apReferenceGrid) .apSelectedActions button:last-child{background:#8b0e35;color:#fff}
+.seoDashboard:has(.apReferenceGrid) .apReferenceSelected>div:first-child{min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceSelected>div:first-child>div{min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceSelected strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+@media(max-width:1320px){.seoDashboard:has(.apReferenceGrid) .apSelectedActions{max-width:190px}.seoDashboard:has(.apReferenceGrid) .apSelectedActions :is(a,button){font-size:9px;padding:6px}}
+
+/* Reference composition refinements, scoped to authenticated Product Editor */
+.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(260px,23%) minmax(0,1fr) minmax(220px,20%);gap:12px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-template-columns:minmax(0,1.13fr) minmax(0,1fr);gap:10px;align-items:start}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apBasic{grid-column:1;grid-row:1}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apPricing{grid-column:2;grid-row:1}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor #ap-variants{grid-column:1;grid-row:2}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apMedia{grid-column:2;grid-row:2}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apPriceDetail{grid-column:1;grid-row:3}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apDetails{grid-column:2;grid-row:3}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apPublishing{grid-column:1/-1;grid-row:4}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCard h3{font-size:15px;padding:8px 11px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCardBody{padding:9px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apBasic .apCardBody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 9px}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apTwo,.seoDashboard:has(.apReferenceGrid) .apBasic .apTaxonomyFields,.seoDashboard:has(.apReferenceGrid) .apBasic .apHint{grid-column:1/-1}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apCardBody>.apField{margin:0}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apCardBody>.apField:nth-last-child(1){grid-column:2}
+.seoDashboard:has(.apReferenceGrid) .apInventoryRow{display:grid;grid-template-columns:1fr 1.2fr;gap:10px;align-items:end}
+.seoDashboard:has(.apReferenceGrid) .apInventoryRow strong,.seoDashboard:has(.apReferenceGrid) .apAvailabilityRow strong{display:block;font-size:11px;margin-bottom:8px}
+.seoDashboard:has(.apReferenceGrid) .apStockPills{margin:0 0 9px;gap:3px;flex-wrap:nowrap}
+.seoDashboard:has(.apReferenceGrid) .apStockPills span{font-size:9px;padding:5px}
+.seoDashboard:has(.apReferenceGrid) .apAvailabilityRow{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;padding:8px 0;border-bottom:1px solid #efd9df;font-size:10px}
+.seoDashboard:has(.apReferenceGrid) .apAvailabilityRow strong{flex-basis:100%;margin:0}
+.seoDashboard:has(.apReferenceGrid) .apAvailabilityRow label{display:flex;gap:5px;align-items:center}
+.seoDashboard:has(.apReferenceGrid) .apAvailabilityRow input{width:auto;accent-color:#891239}
+.seoDashboard:has(.apReferenceGrid) .apInventoryFields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.seoDashboard:has(.apReferenceGrid) .apUploadDrop{border:1px dashed #e6a7b8;border-radius:9px;background:#fffafa;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;min-height:94px;color:#8d1641;font-size:10px}
+.seoDashboard:has(.apReferenceGrid) .apUploadDrop button{background:#881138;color:white;border:0;border-radius:7px;padding:7px 14px;cursor:pointer}
+.seoDashboard:has(.apReferenceGrid) .apUploadDrop button:disabled{opacity:.5}
+.seoDashboard:has(.apReferenceGrid) .apVariantToolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10px;margin:0 0 8px}
+.seoDashboard:has(.apReferenceGrid) .apVariantToolbar label{margin-left:8px}
+.seoDashboard:has(.apReferenceGrid) .apVariantToolbar input{width:auto;accent-color:#8d153e}
+.seoDashboard:has(.apReferenceGrid) .apVariantToolbar button{border:1px solid #e6c5cf;background:#fff7f8;color:#831a3a;border-radius:6px;padding:6px;white-space:nowrap}
+.seoDashboard:has(.apReferenceGrid) .apVariantRows{display:grid;gap:3px;overflow-x:auto}
+.seoDashboard:has(.apReferenceGrid) .apVariantRow{display:grid!important;grid-template-columns:36px minmax(76px,1fr) minmax(64px,.9fr) 38px 37px;gap:5px!important;align-items:center;width:100%;font-size:10px}
+.seoDashboard:has(.apReferenceGrid) .apVariantRow img{width:30px;height:33px}
+.seoDashboard:has(.apReferenceGrid) .apVariantHead{padding:6px;background:#f9e9ed;font-weight:bold}
+.seoDashboard:has(.apReferenceGrid) .apVariantRow strong{font-size:10px}
+.seoDashboard:has(.apReferenceGrid) .apPublishingInfo{padding:10px;display:flex;flex-wrap:wrap;gap:8px}
+.seoDashboard:has(.apReferenceGrid) .apPublishingInfo span{padding:7px 10px;background:#fff1f3;border:1px solid #efd3db;border-radius:7px;font-size:10px}
+@media(max-width:1100px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(230px,30%) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:850px){.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCard{grid-column:1!important;grid-row:auto!important}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apBasic .apCardBody{grid-template-columns:1fr}}
+
+/* Compact editor: keep controls readable without oversized reference-grid gaps */
+.seoDashboard:has(.apReferenceGrid) .apScheduleField{flex-basis:100%;min-width:0;border:1px solid #ead0d8;background:#fff9fa;border-radius:8px;padding:9px}
+.seoDashboard:has(.apReferenceGrid) .apScheduleField .apField{margin:0}
+.seoDashboard:has(.apReferenceGrid) .apScheduleField .apHint{margin:6px 0 0}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apHint{font-size:10px;line-height:1.3}
+.seoDashboard:has(.apReferenceGrid) .apVariantToolbar{flex-wrap:wrap}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCard{align-self:start}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apTwo{gap:7px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor :is(input,select,textarea){min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apVariantRow{min-width:280px}
+@media(max-width:1100px){.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apBasic .apCardBody{grid-template-columns:1fr 1fr}}
+
+/* Reference top action bar and compact editorial rhythm */
+.seoDashboard:has(.apReferenceGrid) .apModeButtons{display:none}
+.seoDashboard:has(.apReferenceGrid) .apWorkspace{position:relative;padding-top:0}
+.seoDashboard:has(.apReferenceGrid) .apToolbarActions{position:absolute;right:0;top:-64px;display:flex;align-items:center;gap:8px;z-index:2}
+.seoDashboard:has(.apReferenceGrid) .apToolbarActions :is(a,button){display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 12px;border:1px solid #e6cbd2;border-radius:7px;background:#fffafa;color:#79213b;font-weight:600;font-size:11px;text-decoration:none;cursor:pointer;white-space:nowrap}
+.seoDashboard:has(.apReferenceGrid) .apToolbarActions button:last-child{background:linear-gradient(180deg,#b12c58,#79092b);border-color:#79092b;color:#fff;box-shadow:0 2px 6px #75163522}
+.seoDashboard:has(.apReferenceGrid) .apToolbarActions button:disabled{opacity:.48;cursor:not-allowed}
+.seoDashboard:has(.apReferenceGrid) .apReferenceSelected{display:none}
+.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(265px,22%) minmax(0,1fr) minmax(222px,19%);gap:10px;align-items:start}
+.seoDashboard:has(.apReferenceGrid) .apReferenceTabs{margin-top:0;margin-bottom:8px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{gap:9px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCard h3{min-height:28px;padding:6px 10px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCardBody{padding:8px 9px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apField{gap:3px;margin-bottom:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apField span{font-size:10px;line-height:1.12}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apField :is(input,select){min-height:26px;height:27px;padding:4px 7px;font-size:10px}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apCardBody{gap:5px 7px}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apHint{display:none}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apTaxonomyFields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:5px}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apTaxButtons{display:flex;gap:3px;align-self:end}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apTaxButtons button{padding:4px 5px;font-size:9px;min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apInventoryRow,.seoDashboard:has(.apReferenceGrid) .apInventoryFields{gap:6px}
+.seoDashboard:has(.apReferenceGrid) .apInventoryFields .apField span{font-size:9px}
+.seoDashboard:has(.apReferenceGrid) .apPricing .apHint{font-size:9px;line-height:1.25}
+.seoDashboard:has(.apReferenceGrid) .apStockIndicator{padding:6px;margin:5px 0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceActions section{padding:9px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceActions section h3{font-size:14px;margin-bottom:7px}
+@media(max-width:1220px){.seoDashboard:has(.apReferenceGrid) .apToolbarActions{position:static;justify-content:flex-end;flex-wrap:wrap;margin-bottom:8px}.seoDashboard:has(.apReferenceGrid) .apModeNavigation{margin-bottom:8px}.seoDashboard:has(.apReferenceGrid) .apBasic .apTaxonomyFields{grid-template-columns:1fr}}
+@media(max-width:900px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(220px,32%) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Final reference-density pass: align cards and prevent oversized vertical spacing */
+.seoDashboard:has(.apReferenceGrid){background:#faf3f3}
+.seoDashboard:has(.apReferenceGrid) .seoDashboardMain{background:#faf3f3}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts,.seoDashboard:has(.apReferenceGrid) .apReferenceActions section,.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCard{background:#fffafa;border:1px solid #eedddd;border-radius:10px;box-shadow:0 2px 8px #80243a08}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-auto-flow:row;align-items:start}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apTaxonomyFields{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:end}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apTaxonomyFields>.apField{min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apTaxButtons{min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apTaxButtons button{line-height:1.1;flex:1}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apCardBody>.apField:nth-last-child(1){grid-column:auto}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apHint{margin:4px 0;font-size:9px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apField:has(textarea){min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor textarea{font-size:10px;line-height:1.35}
+.seoDashboard:has(.apReferenceGrid) .apMedia .apUploadDrop{min-height:87px}
+.seoDashboard:has(.apReferenceGrid) .apGallery .apThumb{width:52px;height:52px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apPublishingInfo{padding:7px;gap:5px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apPublishingInfo span{padding:5px 7px}
+@media(min-width:1400px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(270px,22%) minmax(0,1fr) minmax(235px,19%)}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCardBody{padding:8px}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-template-columns:1.12fr 1fr}}
