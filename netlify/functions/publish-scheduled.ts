@@ -9,7 +9,7 @@ export default async function handler(){
   let processed=0;
   try{
     await db();
-    const due=await Product.find({active:false,scheduledPublishAt:{$ne:null,$lte:now}})
+    const due=await Product.find({active:false,archived:{$ne:true},scheduledPublishAt:{$ne:null,$lte:now}})
       .select("_id scheduledPublishAt").sort({scheduledPublishAt:1}).limit(50).lean();
     for(const p of due){
       const session=await mongoose.startSession();
