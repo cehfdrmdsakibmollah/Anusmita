@@ -9,7 +9,7 @@ const schema=z.object({status:z.enum(["confirmed","packed","shipped","delivered"
 export async function PATCH(request:Request,ctx:{params:Promise<{id:string}>}) {
  try {
   assertOrigin(request);
-  const actor=await authorizePermission(["owner","admin","sales"],"orders.edit");
+  const actor=await authorize(["owner","admin","sales"],"orders.edit");
   const {id}=await ctx.params;
   if(!mongoose.isValidObjectId(id)) throw new HttpError(400,"Invalid order ID");
   const {status,trackingReference}=schema.parse(await request.json());

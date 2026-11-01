@@ -7,7 +7,7 @@ import { productSchema } from "@/lib/validation";
 export async function POST(request:Request) {
  try {
   assertOrigin(request);
-  const actor=await authorizePermission(["owner","admin","inventory"],"products.edit");
+  const actor=await authorize(["owner","admin","inventory"],"products.edit");
   const data=productSchema.parse(await request.json());
   await db();
   let created:any;const session=await mongoose.startSession();
@@ -25,7 +25,7 @@ export async function POST(request:Request) {
 
 export async function GET(req:Request) {
  try {
-  await authorizePermission(["owner","admin","inventory","purchasing"],"products.view");
+  await authorize(["owner","admin","inventory","purchasing"],"products.view");
   await db();
   const url=new URL(req.url),page=Math.max(1,Math.min(10000,Number(url.searchParams.get("page"))||1));
   const q=(url.searchParams.get("q")||"").trim().slice(0,80);

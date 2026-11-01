@@ -8,7 +8,7 @@ import { paymentStatus } from "@/lib/money";
 export async function POST(request:Request) {
  try {
   assertOrigin(request);
-  const actor=await authorizePermission(["owner","admin","finance"],"finance.edit");
+  const actor=await authorize(["owner","admin","finance"],"finance.edit");
   const raw=await request.json();
   if(raw.verificationConfirmed!==true) throw new HttpError(400,"Confirm independent transaction verification before recording funds");
   const {verificationConfirmed: _operatorAttestation, ...payload}=raw;

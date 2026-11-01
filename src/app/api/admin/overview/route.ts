@@ -5,7 +5,7 @@ import { Order,Product,Payment,Expense,PurchaseOrder,SupplierPayment } from "@/l
 export const dynamic="force-dynamic";
 export async function GET() {
  try{
-  await authorizePermission(["owner","admin","finance","analyst"],"finance.view");
+  await authorize(["owner","admin","finance","analyst"],"finance.view");
   await db();
   const [orders,products,collections,expenses,payables,supplierPayments]=await Promise.all([
    Order.find({isTest:false}).select("orderStatus subtotalPaisa shippingPaisa totalPaisa collectedPaisa lines").lean(),

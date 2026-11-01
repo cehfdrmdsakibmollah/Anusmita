@@ -14,7 +14,7 @@ const definitions=[
 ] as const;
 export async function GET(){
  try{
-  await authorizePermission(["owner","admin"],"settings.view");
+  await authorize(["owner","admin"],"settings.view");
   const integrations:Integration[]=definitions.map(d=>{
    const missing=d.keys.filter(k=>!process.env[k]||(k==="META_INBOX_ENABLED"&&process.env[k]!=="true"));
    return {id:d.id,name:d.name,group:d.group,configured:missing.length===0,verified:false,missing,instructions:d.instructions};

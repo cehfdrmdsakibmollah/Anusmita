@@ -6,7 +6,7 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export async function GET(){
  try{
-  await authorizePermission(["owner","admin","inventory"],"products.view");
+  await authorize(["owner","admin","inventory"],"products.view");
   await db();
   const entries=await Audit.find({action:"product.cloudinary_verified_asset","details.replacedDriveId":{$exists:true,$nin:[null,""]}})
    .sort({createdAt:-1}).limit(30).select("createdAt entityId details").lean<any[]>();

@@ -4,7 +4,7 @@ import {Product,Order} from "@/lib/models";
 export const dynamic="force-dynamic";
 export async function GET(){
  try{
-  await authorizePermission(["owner","admin","inventory","purchasing","finance","analyst"],"inventory.view");
+  await authorize(["owner","admin","inventory","purchasing","finance","analyst"],"inventory.view");
   await db();
   const [inventory,customerCounts]=await Promise.all([
    Product.aggregate([

@@ -13,7 +13,7 @@ const bodySchema=z.object({expectedUpdatedAt:z.iso.datetime({offset:true}),chang
 export async function PATCH(req:Request,ctx:{params:Promise<{id:string}>}){
  try{
   assertOrigin(req);
-  const actor=await authorizePermission(["owner","admin","inventory"],"products.edit");
+  const actor=await authorize(["owner","admin","inventory"],"products.edit");
   const {id}=await ctx.params;
   if(!mongoose.isValidObjectId(id))throw new HttpError(400,"Invalid product ID");
   const {expectedUpdatedAt,changes}=bodySchema.parse(await req.json());

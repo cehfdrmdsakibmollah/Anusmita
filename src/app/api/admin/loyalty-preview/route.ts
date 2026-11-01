@@ -4,7 +4,7 @@ import {Order} from "@/lib/models";
 export const dynamic="force-dynamic";
 export async function GET(){
  try{
-  await authorizePermission(["owner","admin","finance","analyst"],"customers.view");
+  await authorize(["owner","admin","finance","analyst"],"customers.view");
   await db();
   const records=await Order.aggregate([
    {$match:{isTest:false,orderStatus:"delivered",paymentStatus:"paid","customer.phone":{$type:"string",$ne:""}}},

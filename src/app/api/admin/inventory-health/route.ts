@@ -4,7 +4,7 @@ import {Product} from "@/lib/models";
 export const dynamic="force-dynamic";
 export async function GET(request:Request){
  try{
-  await authorizePermission(["owner","admin","inventory","purchasing"],"inventory.view");
+  await authorize(["owner","admin","inventory","purchasing"],"inventory.view");
   const params=new URL(request.url).searchParams;
   const page=Math.min(1000,Math.max(1,Number.parseInt(params.get("page")||"1",10)||1));
   const filter=params.get("filter")||"low";
