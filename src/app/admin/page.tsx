@@ -14,7 +14,7 @@ export default async function AdminPage({searchParams}:{searchParams:Promise<{ta
  if(!user)redirect("/admin/login");
  if(params.tab==="Product SEO")redirect("/admin/products/seo");
  if(!params.tab){
-  if(["owner","admin","finance","analyst"].includes(user.role)&&user.permissions?.["finance.view"]!==false)return <div className="anAdminHome"><AdminOverview name={user.name}/></div>;
+  if(["owner","admin","finance","analyst"].includes(user.role)&&user.permissions?.["finance.view"]!==false)return <div className="anAdminHome"><AdminOverview name={user.name}/><div className="anAdminHomeLogout"><LogoutButton/></div></div>;
   const defaultTab:Record<string,string>={sales:"Orders",inventory:"Inventory",purchasing:"Purchasing",support:"Social Inbox"};
   redirect("/admin?tab="+encodeURIComponent(defaultTab[user.role]||"Orders"));
  }
