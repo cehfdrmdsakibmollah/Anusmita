@@ -5,6 +5,8 @@ import { SignJWT, jwtVerify } from "jose";
 import { db } from "@/lib/db";
 import { User } from "@/lib/models";
 export const SESSION = "anusmita_session";
+export const PERMISSIONS=["orders.view","orders.edit","products.view","products.edit","finance.view","inventory.view","inventory.edit"] as const;
+export type Permission=typeof PERMISSIONS[number];
 export const ROLES = ["owner","admin","sales","finance","inventory","purchasing","support","analyst"] as const;
 export type Role = typeof ROLES[number];
 function key() {
@@ -22,13 +24,18 @@ export async function currentUser() {
   const {payload}=await jwtVerify(raw,key());
   if (!payload.sub || !/^[0-9a-f]{24}$/i.test(payload.sub)) return null;
   await db();
-  const user=await User.findById(payload.sub).select("name email role active").lean<any>();
-  return user && user.active?{id:String(user._id),name:user.name as string,email:user.email as string,role:user.role as Role}:null;
+  const user=await User.findById(payload.sub).select("name email role active permissions").lean<any>();
+  return user && user.active?{id:String(user._id),name:user.name as string,email:user.email as string,role:user.role as Role,permissions:Object.fromEntries(user.permissions instanceof Map?user.permissions:new Map(Object.entries(user.permissions||{})))}:null;
  } catch { return null; }
 }
 export async function authorize(roles: Role[]) {
  const user=await currentUser();
  if (!user || !roles.includes(user.role)) throw new HttpError(403,"Access denied");
+ return user;
+}
+export async function authorizePermission(roles:Role[],permission:Permission){
+ const user=await authorize(roles);
+ if(user.role!=="owner" && user.permissions[permission]===false)throw new HttpError(403,"Permission denied");
  return user;
 }
 export class HttpError extends Error { constructor(public status:number,message:string){ super(message); } }
