@@ -5,7 +5,7 @@ import { SignJWT, jwtVerify } from "jose";
 import { db } from "@/lib/db";
 import { User } from "@/lib/models";
 export const SESSION = "anusmita_session";
-export const PERMISSIONS=["orders.view","orders.edit","products.view","products.edit","finance.view","inventory.view","inventory.edit","finance.edit","purchasing.view","purchasing.edit"] as const;
+export const PERMISSIONS=["orders.view","orders.edit","products.view","products.edit","finance.view","inventory.view","inventory.edit","finance.edit","purchasing.view","purchasing.edit","settings.view","settings.edit","customers.view","support.view"] as const;
 export type Permission=typeof PERMISSIONS[number];
 export const ROLES = ["owner","admin","sales","finance","inventory","purchasing","support","analyst"] as const;
 export type Role = typeof ROLES[number];
