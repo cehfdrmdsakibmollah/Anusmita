@@ -256,6 +256,15 @@ const JournalEntrySchema=new Schema({
 },opts);
 JournalEntrySchema.index({transactionDate:-1,createdAt:-1});
 export const JournalEntry=mongoose.models.JournalEntry||mongoose.model("JournalEntry",JournalEntrySchema);
+const ContentPageSchema=new Schema({
+ slug:{type:String,required:true,unique:true,lowercase:true,trim:true},
+ title:{type:String,required:true,maxlength:100},
+ description:{type:String,default:"",maxlength:160},
+ blocks:{type:[Schema.Types.Mixed],default:[]},
+ published:{type:Boolean,default:false},revision:{type:Number,default:0,min:0},
+ updatedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
+},opts);
+export const ContentPage=mongoose.models.ContentPage||mongoose.model("ContentPage",ContentPageSchema);
 const CatalogImportSchema = new Schema({
  importKey:{type:String,required:true,unique:true},
  actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},
