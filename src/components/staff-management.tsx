@@ -1,0 +1,24 @@
+"use client";
+import {useEffect,useState} from "react";
+type Staff={id:string;name:string;email:string;role:string;active:boolean;createdAt:string};
+const roles=[["admin","Manager / Admin"],["sales","Order Manager"],["inventory","Inventory Keeper"],["finance","Accountant"],["purchasing","Purchasing"],["support","Support Staff"],["analyst","Analyst"]] as const;
+export default function StaffManagement(){
+ const [users,setUsers]=useState<Staff[]>([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
+ const [name,setName]=useState(""),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[role,setRole]=useState("support");
+ async function load(){setLoading(true);try{const res=await fetch("/api/admin/staff",{cache:"no-store"}),data=await res.json();if(!res.ok)throw new Error(data.error||"Cannot load staff");setUsers(data.users||[]);}catch(e){setMessage("Error: "+String(e));}finally{setLoading(false);}}
+ useEffect(()=>{void load();},[]);
+ async function create(e:React.FormEvent){e.preventDefault();setBusy(true);setMessage("");try{const r=await fetch("/api/admin/staff",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,email,password,role})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Creation failed");setPassword("");setName("");setEmail("");setMessage("Staff account created. Share login details securely; require a password change before broader rollout.");await load();}catch(e){setMessage("Error: "+String(e));}finally{setBusy(false);}}
+ async function update(user:Staff,changes:{role?:string;active?:boolean}){if(!window.confirm("Apply staff access change to "+user.email+"?"))return;setBusy(true);setMessage("");try{const r=await fetch("/api/admin/staff",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:user.id,...changes})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Update failed");setMessage("Staff access updated and audited.");await load();}catch(e){setMessage("Error: "+String(e));}finally{setBusy(false);}}
+ return <section className="adminCard"><h2>Staff & User Management</h2><p className="smallprint">Owner-only workspace. Roles map to existing server-enforced permissions; this is not a per-user custom permissions editor. Disabled users lose access when their session is checked against the database.</p>
+ {message&&<p role="status">{message}</p>}
+ <form className="adminForm" onSubmit={e=>void create(e)}><h3>Add Staff Member</h3>
+ <div className="field"><label htmlFor="staff-name">Full name</label><input id="staff-name" required minLength={2} maxLength={100} value={name} onChange={e=>setName(e.target.value)}/></div>
+ <div className="field"><label htmlFor="staff-email">Email</label><input id="staff-email" type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></div>
+ <div className="field"><label htmlFor="staff-password">Temporary password (12+ characters)</label><input id="staff-password" type="password" autoComplete="new-password" minLength={12} required value={password} onChange={e=>setPassword(e.target.value)}/></div>
+ <div className="field"><label htmlFor="staff-role">Role</label><select id="staff-role" value={role} onChange={e=>setRole(e.target.value)}>{roles.map(([id,label])=><option value={id} key={id}>{label}</option>)}</select></div>
+ <button className="button" type="submit" disabled={busy}>Create staff account</button></form>
+ <h3>Staff Accounts</h3><button className="button small light" type="button" onClick={()=>void load()} disabled={loading||busy}>Refresh</button>
+ {loading&&<p role="status">Loading staff records…</p>}
+ <div style={{overflowX:"auto"}}><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>{users.map(u=><tr key={u.id}><td>{u.name}</td><td>{u.email}</td><td>{u.role==="owner"?"Super Admin / Owner":u.role}</td><td>{u.active?"Active":"Disabled"}</td><td>{u.role!=="owner"?<div style={{display:"flex",gap:8,flexWrap:"wrap"}}><select aria-label={"Role for "+u.email} value={u.role} disabled={busy} onChange={e=>void update(u,{role:e.target.value})}>{roles.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select><button type="button" className="button small light" disabled={busy} onClick={()=>void update(u,{active:!u.active})}>{u.active?"Deactivate":"Activate"}</button></div>:<span className="smallprint">Protected owner</span>}</td></tr>)}</tbody></table></div>
+ <p className="smallprint">This module does not grant arbitrary Super Admin permissions, expose password hashes, or permit staff to change their own access. Existing business APIs remain role-gated by the server.</p></section>;
+}
