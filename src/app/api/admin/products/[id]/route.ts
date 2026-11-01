@@ -6,6 +6,7 @@ import {db} from "@/lib/db";
 import {Product,Audit} from "@/lib/models";
 import {productSchema} from "@/lib/validation";
 import {publicationState,assertFutureSchedule} from "@/lib/publication-state";
+import {validateCommercialState} from "@/lib/commercial-state";
 export const runtime="nodejs";
 const editable=productSchema.omit({onHand:true,sku:true}).partial();
 const bodySchema=z.object({expectedUpdatedAt:z.iso.datetime({offset:true}),changes:editable}).strict()
@@ -20,6 +21,7 @@ export async function PATCH(req:Request,ctx:{params:Promise<{id:string}>}){
   const {expectedUpdatedAt,changes}=bodySchema.parse(await req.json());
   publicationState.parse(changes);
   assertFutureSchedule(changes.scheduledPublishAt);
+  validateCommercialState(changes);
   if(changes.archived===true){changes.active=false;changes.scheduledPublishAt=null;}
   await db();
   const session=await mongoose.startSession();let updated:any;
