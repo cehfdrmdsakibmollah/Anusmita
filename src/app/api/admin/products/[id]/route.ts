@@ -20,6 +20,7 @@ export async function PATCH(req:Request,ctx:{params:Promise<{id:string}>}){
   const {expectedUpdatedAt,changes}=bodySchema.parse(await req.json());
   publicationState.parse(changes);
   assertFutureSchedule(changes.scheduledPublishAt);
+  if(changes.archived===true){changes.active=false;changes.scheduledPublishAt=null;}
   await db();
   const session=await mongoose.startSession();let updated:any;
   try{
