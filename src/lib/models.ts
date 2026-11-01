@@ -256,6 +256,17 @@ const JournalEntrySchema=new Schema({
 },opts);
 JournalEntrySchema.index({transactionDate:-1,createdAt:-1});
 export const JournalEntry=mongoose.models.JournalEntry||mongoose.model("JournalEntry",JournalEntrySchema);
+const ProviderConnectionSchema=new Schema({
+ provider:{type:String,enum:["steadfast","whatsapp"],required:true,unique:true},
+ payloadCipher:{type:String,required:true,select:false},
+ iv:{type:String,required:true,select:false},
+ tag:{type:String,required:true,select:false},
+ configurationVerifiedAt:{type:Date,default:null},
+ enabled:{type:Boolean,default:false},
+ updatedBy:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ lastTestResult:{type:String,enum:["verified","failed","not_tested"],default:"not_tested"}
+},opts);
+export const ProviderConnection=mongoose.models.ProviderConnection||mongoose.model("ProviderConnection",ProviderConnectionSchema);
 const CatalogImportSchema = new Schema({
  importKey:{type:String,required:true,unique:true},
  actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},
