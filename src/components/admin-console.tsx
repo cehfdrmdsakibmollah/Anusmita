@@ -23,10 +23,11 @@ import OrderQuality from "@/components/order-quality";
 import FinanceAudit from "@/components/finance-audit";
 import WarehouseLedger from "@/components/warehouse-ledger";
 import OperationsRoadmap from "@/components/operations-roadmap";
+import StaffManagement from "@/components/staff-management";
 type Overview={orderedPaisa:number;confirmedPaisa:number;deliveredSalesPaisa:number;recordedCollectionsPaisa:number;outstandingPaisa:number;supplierPayablePaisa:number;supplierPaidPaisa:number;cogsPaisa:number;recordedExpensePaisa:number;estimatedGrossProfitPaisa:number;estimatedOperatingProfitPaisa:number;unreconciled:boolean;placedOrders:number;deliveredOrders:number;lowStockSkus:number;reservedUnits:number;inventoryCostPaisa:number};
 type Order={_id:string;orderNumber:string;orderStatus:string;paymentStatus:string;collectedPaisa:number;totalPaisa:number;customer:{name:string;phone:string};createdAt:string};
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
-const tabs=["Overview","Enterprise Modules","Warehouse Transfers","Assistant Replies","Homepage Studio","Orders","Courier Setup","Products","Inventory","Payments","Suppliers","Purchasing","Bulk Import","Canva Catalogue","HR Wholesale","Drive Images","Cloudinary","R2 Images","Launch Readiness","Finance Audit","Order Quality","Integration Hub","Activity Logs","Customers","Inventory Health","Header & Footer","Social Inbox"];
+const tabs=["Overview","Staff Management","Enterprise Modules","Warehouse Transfers","Assistant Replies","Homepage Studio","Orders","Courier Setup","Products","Inventory","Payments","Suppliers","Purchasing","Bulk Import","Canva Catalogue","HR Wholesale","Drive Images","Cloudinary","R2 Images","Launch Readiness","Finance Audit","Order Quality","Integration Hub","Activity Logs","Customers","Inventory Health","Header & Footer","Social Inbox"];
 export default function AdminConsole({role,initialTab}:{role:string;initialTab?:string}){
  const [tab,setTab]=useState(initialTab&&tabs.includes(initialTab)?initialTab:"Overview"),[overview,setOverview]=useState<Overview|null>(null),[orders,setOrders]=useState<Order[]>([]),[notice,setNotice]=useState(""),[pending,setPending]=useState(false);
  const load=useCallback(async()=>{
@@ -76,6 +77,7 @@ export default function AdminConsole({role,initialTab}:{role:string;initialTab?:
  {tab==="Inventory Health"&&(["owner","admin","inventory","purchasing"].includes(role)?<InventoryHealth/>:<p className="notice">Permission required.</p>)}
  {tab==="Header & Footer"&&(["owner","admin"].includes(role)?<StoreChromeEditor/>:<p className="notice">Permission required.</p>)}
  {tab==="Social Inbox"&&(["owner","admin","support"].includes(role)?<SocialInbox/>:<p className="notice">Permission required.</p>)}
+ {tab==="Staff Management"&&(role==="owner"?<StaffManagement/>:<p className="notice">Owner access required.</p>)}
  {tab==="Homepage Studio"&&(["owner","admin"].includes(role)?<HomepageManager/>:<p className="notice">Owner or admin permission required.</p>)}
  {tab==="Courier Setup"&&<CourierSetup role={role}/>}
  {tab==="Orders"&&<div className="adminCard"><h2>Order queue</h2><p className="smallprint">Payment status and shipment status are separate. Mark an order shipped only after courier acceptance.</p>
