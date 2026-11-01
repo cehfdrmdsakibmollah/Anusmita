@@ -299,6 +299,7 @@ LoyaltyEventSchema.index({customerPhone:1,createdAt:-1});
 export const LoyaltyWallet=mongoose.models.LoyaltyWallet||mongoose.model("LoyaltyWallet",LoyaltyWalletSchema);
 export const LoyaltyEvent=mongoose.models.LoyaltyEvent||mongoose.model("LoyaltyEvent",LoyaltyEventSchema);
 const ProductSeoSchema=new Schema({
+ schemaEnabled:{type:Boolean,default:true},
  productId:{type:Schema.Types.ObjectId,ref:"Product",required:true,unique:true},
  metaTitle:{type:String,default:"",maxlength:70},
  metaDescription:{type:String,default:"",maxlength:160},
