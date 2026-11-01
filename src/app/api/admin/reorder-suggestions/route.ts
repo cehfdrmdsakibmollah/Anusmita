@@ -1,10 +1,10 @@
-import {authorize,apiError} from "@/lib/auth";
+import {authorize,authorizePermission,apiError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {Product} from "@/lib/models";
 export const dynamic="force-dynamic";
 export async function GET(){
  try{
-  await authorize(["owner","admin","purchasing"]);
+  await authorizePermission(["owner","admin","purchasing"],"purchasing.view");
   await db();
   const products=await Product.find({active:true,supplierId:{$ne:null},$expr:{$lt:[{$subtract:["$onHand","$reserved"]},"$reorderLevel"]}})
    .select("sku name costPaisa onHand reserved reorderLevel supplierId").sort({sku:1}).limit(100).lean<any[]>();
