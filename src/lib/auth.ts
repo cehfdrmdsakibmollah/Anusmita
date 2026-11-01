@@ -52,7 +52,7 @@ export function assertOrigin(request: Request) {
  const normalized=(value:string|null)=>value?.trim().toLowerCase()||"";
  const publicHost=normalized(request.headers.get("host"));
  const forwardedHost=normalized(request.headers.get("x-forwarded-host"));
- const isApprovedNetlifyHost=(host:string)=>host==="anusmita.netlify.app"||/^deploy-preview-[0-9]+--anusmita\\.netlify\\.app$/.test(host);
+ const isApprovedNetlifyHost=(host:string)=>host==="anusmita.netlify.app"||/^deploy-preview-[0-9]+--anusmita\.netlify\.app$/.test(host);
  const sameInternalOrigin=received.host===expected.host&&received.protocol===expected.protocol;
  // On Netlify, request.url can be rewritten to an internal server host while the browser
  // sends Origin from the public preview URL. Trust only the exact public Host supplied by
