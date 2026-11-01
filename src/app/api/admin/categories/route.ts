@@ -5,11 +5,11 @@ import {db} from "@/lib/db";
 import {CatalogCategory,Product,Audit} from "@/lib/models";
 export const dynamic="force-dynamic";
 const id=z.string().regex(/^[a-f\d]{24}$/i);
-const base=z.object({name:z.string().trim().min(2).max(90),slug:z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),parentId:id.nullable(),active:z.boolean(),position:z.number().int().min(0).max(99999),description:z.string().max(500),seoTitle:z.string().max(70),seoDescription:z.string().max(160)}).strict();
+const base=z.object({name:z.string().trim().min(2).max(90),slug:z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),parentId:id.nullable(),active:z.boolean(),position:z.number().int().min(0).max(99999),description:z.string().max(500),seoTitle:z.string().max(70),seoDescription:z.string().max(160),imageUrl:z.string().max(500).refine(v=>!v||(/^https:\/\/anusmita-media\.mdsakibmolla545\.workers\.dev\/public\/categories\/[a-zA-Z0-9/_-]+\.(?:webp|png|jpg|jpeg)$/.test(v))||/^\/brand\/categories\/[a-z0-9-]+\.webp$/.test(v),"Only approved category R2 or brand images are allowed")}).strict();
 export async function GET(){
  try{await authorize(["owner","admin","inventory","purchasing"],"products.view");await db();
- const rows=await CatalogCategory.find({}).select("name slug parentId active position description seoTitle seoDescription").sort({position:1,name:1}).limit(500).lean<any[]>();
- return Response.json({categories:rows.map(x=>({id:String(x._id),name:x.name,slug:x.slug,parentId:x.parentId?String(x.parentId):null,active:x.active,position:x.position,description:x.description||"",seoTitle:x.seoTitle||"",seoDescription:x.seoDescription||""})),note:"Existing Product.category strings are unchanged; this is a new taxonomy registry, not yet a migration of storefront category routing."},{headers:{"Cache-Control":"private, no-store"}});
+ const rows=await CatalogCategory.find({}).select("name slug parentId active position description seoTitle seoDescription imageUrl").sort({position:1,name:1}).limit(500).lean<any[]>();
+ return Response.json({categories:rows.map(x=>({id:String(x._id),name:x.name,slug:x.slug,parentId:x.parentId?String(x.parentId):null,active:x.active,position:x.position,description:x.description||"",seoTitle:x.seoTitle||"",seoDescription:x.seoDescription||"",imageUrl:x.imageUrl||""})),note:"Existing Product.category strings are unchanged; this is a new taxonomy registry, not yet a migration of storefront category routing."},{headers:{"Cache-Control":"private, no-store"}});
  }catch(e){return apiError(e);}
 }
 export async function POST(request:Request){
@@ -29,7 +29,7 @@ export async function PATCH(request:Request){
   while(ancestor){if(seen.has(ancestor))throw new HttpError(409,"Category hierarchy cycle");seen.add(ancestor);if(++depth>50)throw new HttpError(409,"Hierarchy too deep");const parent:{parentId?:unknown}|null=await CatalogCategory.findById(ancestor).select("parentId").lean<any>();if(!parent)throw new HttpError(404,"Parent not found");ancestor=parent.parentId?String(parent.parentId):null;}
  }
  const session=await mongoose.startSession();
- try{await session.withTransaction(async()=>{const updated=await CatalogCategory.updateOne({_id:data.id},{$set:{name:data.name,slug:data.slug,parentId:data.parentId,active:data.active,position:data.position,description:data.description,seoTitle:data.seoTitle,seoDescription:data.seoDescription}},{session,runValidators:true});if(!updated.matchedCount)throw new HttpError(404,"Category not found");
+ try{await session.withTransaction(async()=>{const updated=await CatalogCategory.updateOne({_id:data.id},{$set:{name:data.name,slug:data.slug,parentId:data.parentId,active:data.active,position:data.position,description:data.description,seoTitle:data.seoTitle,seoDescription:data.seoDescription,imageUrl:data.imageUrl}},{session,runValidators:true});if(!updated.matchedCount)throw new HttpError(404,"Category not found");
  await Audit.create([{actorId:actor.id,action:"catalog.category.updated",entity:"CatalogCategory",entityId:data.id,details:{slug:data.slug}}],{session});});}finally{await session.endSession();}
  return Response.json({updated:true});
  }catch(e:any){if(e?.code===11000)return Response.json({error:"Category slug exists"},{status:409});return apiError(e);}
