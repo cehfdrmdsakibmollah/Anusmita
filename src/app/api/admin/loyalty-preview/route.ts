@@ -1,10 +1,10 @@
-import {authorize,apiError} from "@/lib/auth";
+import {authorize,authorizePermission,apiError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {Order} from "@/lib/models";
 export const dynamic="force-dynamic";
 export async function GET(){
  try{
-  await authorize(["owner","admin","finance","analyst"]);
+  await authorizePermission(["owner","admin","finance","analyst"],"customers.view");
   await db();
   const records=await Order.aggregate([
    {$match:{isTest:false,orderStatus:"delivered",paymentStatus:"paid","customer.phone":{$type:"string",$ne:""}}},
