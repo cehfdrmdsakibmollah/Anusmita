@@ -228,3 +228,33 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 .seoDashboard:has(.apReferenceGrid) .apReferenceEditor :is(input,select,textarea){min-width:0}
 .seoDashboard:has(.apReferenceGrid) .apVariantRow{min-width:280px}
 @media(max-width:1100px){.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apBasic .apCardBody{grid-template-columns:1fr 1fr}}
+
+/* Reference top action bar and compact editorial rhythm */
+.seoDashboard:has(.apReferenceGrid) .apModeButtons{display:none}
+.seoDashboard:has(.apReferenceGrid) .apWorkspace{position:relative;padding-top:0}
+.seoDashboard:has(.apReferenceGrid) .apToolbarActions{position:absolute;right:0;top:-64px;display:flex;align-items:center;gap:8px;z-index:2}
+.seoDashboard:has(.apReferenceGrid) .apToolbarActions :is(a,button){display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 12px;border:1px solid #e6cbd2;border-radius:7px;background:#fffafa;color:#79213b;font-weight:600;font-size:11px;text-decoration:none;cursor:pointer;white-space:nowrap}
+.seoDashboard:has(.apReferenceGrid) .apToolbarActions button:last-child{background:linear-gradient(180deg,#b12c58,#79092b);border-color:#79092b;color:#fff;box-shadow:0 2px 6px #75163522}
+.seoDashboard:has(.apReferenceGrid) .apToolbarActions button:disabled{opacity:.48;cursor:not-allowed}
+.seoDashboard:has(.apReferenceGrid) .apReferenceSelected{display:none}
+.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(265px,22%) minmax(0,1fr) minmax(222px,19%);gap:10px;align-items:start}
+.seoDashboard:has(.apReferenceGrid) .apReferenceTabs{margin-top:0;margin-bottom:8px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{gap:9px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCard h3{min-height:28px;padding:6px 10px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCardBody{padding:8px 9px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apField{gap:3px;margin-bottom:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apField span{font-size:10px;line-height:1.12}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apField :is(input,select){min-height:26px;height:27px;padding:4px 7px;font-size:10px}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apCardBody{gap:5px 7px}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apHint{display:none}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apTaxonomyFields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:5px}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apTaxButtons{display:flex;gap:3px;align-self:end}
+.seoDashboard:has(.apReferenceGrid) .apBasic .apTaxButtons button{padding:4px 5px;font-size:9px;min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apInventoryRow,.seoDashboard:has(.apReferenceGrid) .apInventoryFields{gap:6px}
+.seoDashboard:has(.apReferenceGrid) .apInventoryFields .apField span{font-size:9px}
+.seoDashboard:has(.apReferenceGrid) .apPricing .apHint{font-size:9px;line-height:1.25}
+.seoDashboard:has(.apReferenceGrid) .apStockIndicator{padding:6px;margin:5px 0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceActions section{padding:9px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceActions section h3{font-size:14px;margin-bottom:7px}
+@media(max-width:1220px){.seoDashboard:has(.apReferenceGrid) .apToolbarActions{position:static;justify-content:flex-end;flex-wrap:wrap;margin-bottom:8px}.seoDashboard:has(.apReferenceGrid) .apModeNavigation{margin-bottom:8px}.seoDashboard:has(.apReferenceGrid) .apBasic .apTaxonomyFields{grid-template-columns:1fr}}
+@media(max-width:900px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(220px,32%) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}}
