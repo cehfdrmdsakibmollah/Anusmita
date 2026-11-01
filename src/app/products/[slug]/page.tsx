@@ -81,8 +81,9 @@ export async function generateMetadata({params}:Props):Promise<Metadata>{
   index:!isPreview&&checkoutEnabled(process.env)&&(custom?.robotsIndex!==false),
   follow:!isPreview&&checkoutEnabled(process.env)&&(custom?.robotsFollow!==false)
  },alternates:{canonical:"/products/"+slug},
-  openGraph:{title:custom?.ogTitle||title,description:custom?.ogDescription||description,type:"website",
-   images:!isPreview&&p.imageUrls?.[0]?[{url:p.imageUrls[0],alt:custom?.imageAltTexts?.[0]||p.name}]:undefined}};
+  openGraph:{title:custom?.ogTitle||title,description:custom?.ogDescription||description,type:"website",url:"/products/"+slug,
+   images:!isPreview&&p.imageUrls?.[0]?[{url:p.imageUrls[0],alt:custom?.imageAltTexts?.[0]||p.name}]:undefined},
+  twitter:{card:"summary_large_image",title:custom?.ogTitle||title,description:custom?.ogDescription||description,images:!isPreview&&p.imageUrls?.[0]?[p.imageUrls[0]]:undefined}};
 }
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
 const sampleCollections=[
