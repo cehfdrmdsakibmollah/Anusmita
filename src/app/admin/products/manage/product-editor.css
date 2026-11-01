@@ -166,3 +166,11 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 @media(max-width:1100px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(220px,27%) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:850px){.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form .apCard{grid-column:1!important;grid-row:auto!important}.seoDashboard:has(.apReferenceGrid) .apTopbarSearch{display:none}}
 @media(max-width:700px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apTopbarAccount strong{display:none}}
+
+.seoDashboard:has(.apReferenceGrid) .apSelectedActions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.seoDashboard:has(.apReferenceGrid) .apSelectedActions :is(a,button){border:1px solid #e6cad2;background:#fff8f9;color:#7d1a39;border-radius:7px;padding:8px 10px;font-size:10px;font-weight:700;text-decoration:none;cursor:pointer;white-space:nowrap}
+.seoDashboard:has(.apReferenceGrid) .apSelectedActions button:last-child{background:#8b0e35;color:#fff}
+.seoDashboard:has(.apReferenceGrid) .apReferenceSelected>div:first-child{min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceSelected>div:first-child>div{min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apReferenceSelected strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+@media(max-width:1320px){.seoDashboard:has(.apReferenceGrid) .apSelectedActions{max-width:190px}.seoDashboard:has(.apReferenceGrid) .apSelectedActions :is(a,button){font-size:9px;padding:6px}}
