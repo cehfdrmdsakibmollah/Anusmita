@@ -2,7 +2,7 @@ import {authorize,authorizePermission,apiError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {Audit} from "@/lib/models";
 export const dynamic="force-dynamic";
-const allowedEntities=["Order","Product","Payment","Supplier","PurchaseOrder"] as const;
+const allowedEntities=["Order","Product","Payment","Supplier","PurchaseOrder","User"] as const;
 export async function GET(request:Request){
  try{
   await authorizePermission(["owner","admin","analyst"],"settings.view");
