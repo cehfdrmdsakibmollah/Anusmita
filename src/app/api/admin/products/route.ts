@@ -4,11 +4,14 @@ import { authorize,authorizePermission,assertOrigin,apiError,HttpError } from "@
 import { db } from "@/lib/db";
 import { Product,StockMovement,Audit } from "@/lib/models";
 import { productSchema } from "@/lib/validation";
+import {publicationState,assertFutureSchedule} from "@/lib/publication-state";
 export async function POST(request:Request) {
  try {
   assertOrigin(request);
   const actor=await authorize(["owner","admin","inventory"],"products.edit");
   const data=productSchema.parse(await request.json());
+  publicationState.parse(data);
+  assertFutureSchedule(data.scheduledPublishAt);
   await db();
   let created:any;const session=await mongoose.startSession();
   try {
