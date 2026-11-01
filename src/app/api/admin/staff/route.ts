@@ -7,7 +7,7 @@ import {User,Audit} from "@/lib/models";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const STAFF=["admin","sales","finance","inventory","purchasing","support","analyst"] as const;
-const permissionsSchema=z.record(z.enum(PERMISSIONS),z.boolean()).default({});
+const permissionsSchema=z.partialRecord(z.enum(PERMISSIONS),z.boolean()).default({});
 const createSchema=z.object({permissions:permissionsSchema,name:z.string().trim().min(2).max(100),email:z.email().max(254),password:z.string().min(12).max(128),role:z.enum(STAFF)}).strict();
 const updateSchema=z.object({id:z.string().regex(/^[a-f0-9]{24}$/i),role:z.enum(STAFF).optional(),permissions:permissionsSchema.optional(),active:z.boolean().optional()}).strict().refine(x=>x.role!==undefined||x.active!==undefined||x.permissions!==undefined);
 export async function GET(){
