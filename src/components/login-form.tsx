@@ -8,7 +8,7 @@ export default function LoginForm(){
  try{const response=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password})});
  const data=await response.json();if(!response.ok)throw new Error(data.error||"Invalid credentials");
  const role=String(data.role||"");
- const next=["owner","admin","finance","analyst"].includes(role)?"/admin/dashboard":role==="sales"?"/admin?tab=Orders":role==="inventory"?"/admin?tab=Inventory":role==="purchasing"?"/admin?tab=Purchasing":role==="support"?"/admin?tab=Social%20Inbox":"/admin";
+ const next=["owner","admin","finance","analyst"].includes(role)?"/admin":role==="sales"?"/admin?tab=Orders":role==="inventory"?"/admin?tab=Inventory":role==="purchasing"?"/admin?tab=Purchasing":role==="support"?"/admin?tab=Social%20Inbox":"/admin";
  window.location.assign(next);}catch(e){setError(e instanceof Error?e.message:"Login failed");}finally{setLoading(false);}}
  return <form className="anOwnerLoginForm" onSubmit={submit}>
  <div className="anOwnerLoginField"><label htmlFor="email">Email</label><div className="anOwnerLoginInputWrap"><Mail size={19} aria-hidden="true"/><input id="email" type="email" required autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)}/></div></div>
