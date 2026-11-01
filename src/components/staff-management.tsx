@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useState} from "react";
 type Staff={id:string;name:string;email:string;role:string;active:boolean;permissions:Record<string,boolean>;createdAt:string};
-const permissionKeys=[["orders.view","Orders: view"],["orders.edit","Orders: edit"],["products.view","Products: view"],["products.edit","Products: edit"],["finance.view","Finance: view"],["inventory.view","Inventory: view"],["inventory.edit","Inventory: edit"]] as const;
+const permissionKeys=[["orders.view","Orders: view"],["orders.edit","Orders: edit"],["products.view","Products: view"],["products.edit","Products: edit"],["finance.view","Finance: view"],["inventory.view","Inventory: view"],["inventory.edit","Inventory: edit"],["finance.edit","Finance: edit"],["purchasing.view","Purchasing: view"],["purchasing.edit","Purchasing: edit"]] as const;
 const roles=[["admin","Manager / Admin"],["sales","Order Manager"],["inventory","Inventory Keeper"],["finance","Accountant"],["purchasing","Purchasing"],["support","Support Staff"],["analyst","Analyst"]] as const;
 export default function StaffManagement(){
  const [users,setUsers]=useState<Staff[]>([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
