@@ -1,7 +1,7 @@
 
 import mongoose from "mongoose";
 import {z} from "zod";
-import {assertOrigin,authorize,authorizePermission,authorizePermission,apiError,HttpError} from "@/lib/auth";
+import {assertOrigin,authorize,authorizePermission,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {Product,Audit} from "@/lib/models";
 import {productSchema} from "@/lib/validation";
