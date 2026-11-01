@@ -136,3 +136,7 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 .seoDashboard:has(.apReferenceGrid) .apProductText{width:100%}
 @media(max-width:1300px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(235px,26%) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:700px){.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form .apCard{grid-column:1!important;grid-row:auto!important}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-template-columns:1fr}}
+
+.seoDashboard:has(.apReferenceGrid) .apCatalogFilters{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.seoDashboard:has(.apReferenceGrid) .apCatalogFilters button{background:#fff6f8;border:1px solid #e9cbd4;border-radius:7px;color:#81203c;font-size:10px;padding:6px 9px;cursor:pointer}
+.seoDashboard:has(.apReferenceGrid) .apCatalogFilters button.selected{background:#8d1238;border-color:#8d1238;color:#fff}
