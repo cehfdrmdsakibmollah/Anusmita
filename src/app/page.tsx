@@ -5,7 +5,7 @@ import HomepageDiscover from "@/components/homepage-discover";
 
 import {ArrowRight,ArrowUpRight,Heart,Package,ShieldCheck,Sparkles,Truck} from "lucide-react";
 import {db} from "@/lib/db";
-import {Product,HomePage,Order} from "@/lib/models";
+import {Product,HomePage,Order,CatalogCategory} from "@/lib/models";
 import {checkoutEnabled} from "@/lib/launch-config";
 import {homeStarterBlocks,homeStarterSections,publicBlocks,type HomeBlock,type HomeSection} from "@/lib/home-content";
 import HomepageCarousel from "@/components/homepage-carousel";
@@ -23,6 +23,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
  const queryItem=(await searchParams).item||"";
  let configured=false,products:ShopProduct[]=[],shelves:FeaturedShelf[]=[];
  let blocks:HomeBlock[]=homeStarterBlocks;
+ let registryCategories:Array<{name:string;slug:string;imageUrl:string;position:number;description:string}>=[];
  let sections:HomeSection[]=homeStarterSections;
  if(process.env.MONGODB_URI)try{
   await db();configured=true;
@@ -31,6 +32,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
    Product.find({active:true}).select("name slug brand category origin imageUrls size variantLabel pricePaisa onHand reserved")
     .sort({createdAt:-1}).limit(48).lean<any[]>()
   ]);
+  registryCategories=await CatalogCategory.find({active:true,parentId:null}).select("name slug imageUrl position description").sort({position:1,name:1}).limit(80).lean<any[]>();
   if(settings){
    blocks=settings.blocks as HomeBlock[];
    sections=settings.sections as HomeSection[];
@@ -73,7 +75,8 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
  const latest=selectCatalogue().slice(0,8);
  const active=publicBlocks(blocks);
  const slides=active.filter(x=>x.kind==="hero");
- const categories=active.filter(x=>x.kind==="category");
+ const homepageCategories=active.filter(x=>x.kind==="category");
+ const categories:HomeBlock[]=[...homepageCategories.map(c=>{const match=registryCategories.find(x=>x.name.toLowerCase()===c.title.toLowerCase());return match?{...c,imageUrl:match.imageUrl||c.imageUrl,href:"/shop?category="+encodeURIComponent(match.name)}:c;}),...registryCategories.filter(x=>!homepageCategories.some(c=>c.title.toLowerCase()===x.name.toLowerCase())).map((x,i)=>({id:"registry-"+x.slug,kind:"category" as const,title:x.name,subtitle:x.description||"",label:"COLLECTION",imageUrl:x.imageUrl||"",href:"/shop?category="+encodeURIComponent(x.name),cta:"Explore "+x.name,enabled:true,position:homepageCategories.length+i,startsAt:null,endsAt:null}))];
  const promos=active.filter(x=>x.kind==="promotion");
  const editorial=active.filter(x=>x.kind==="editorial");
  const announcement=active.find(x=>x.kind==="announcement");
