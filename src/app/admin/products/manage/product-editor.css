@@ -29,7 +29,7 @@
 
 /* Product Editor — single scoped visual system */
 body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none!important}
-.seoDashboard:has(.apReferenceGrid){display:grid;grid-template-columns:185px minmax(0,1fr);background:#fff9f8;min-height:100vh;color:#321b23;font:12px Arial,sans-serif}
+.seoDashboard:has(.apReferenceGrid){display:grid;grid-template-columns:190px minmax(0,1fr);background:#fff9f8;min-height:100vh;color:#321b23;font:12px Arial,sans-serif}
 .seoDashboard:has(.apReferenceGrid) .seoDashboardSidebar{padding:14px 12px;background:linear-gradient(155deg,#fff8f7,#fbe9ec);position:sticky;top:0;height:100vh;overflow:auto}
 .seoDashboard:has(.apReferenceGrid) .seoBrand{font:25px Georgia,serif;letter-spacing:1px;display:block;text-align:center;padding-bottom:17px;border-bottom:1px solid #eed5dd;margin:0 0 16px}
 .seoDashboard:has(.apReferenceGrid) .seoBrand small{font:8px Arial,sans-serif;display:block;letter-spacing:1.5px}
@@ -41,7 +41,7 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 .seoDashboard:has(.apReferenceGrid) .apModeNavigation h1{font:600 34px Georgia,serif;color:#6c1834;margin:5px 0}
 .seoDashboard:has(.apReferenceGrid) .apHeading{display:none}
 .seoDashboard:has(.apReferenceGrid) .apWorkspace{max-width:none;width:100%;padding:0;background:transparent}
-.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{display:grid;grid-template-columns:minmax(225px,22%) minmax(0,1fr) minmax(195px,19%);gap:10px;align-items:start}
+.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{display:grid;grid-template-columns:minmax(255px,22%) minmax(0,1fr) minmax(220px,20%);gap:10px;align-items:start}
 .seoDashboard:has(.apReferenceGrid) :is(.apReferenceProducts,.apReferenceActions>section,.apReferenceEditor .apCard){background:#fffbfa;border:1px solid #edcfd7;border-radius:11px;box-shadow:0 3px 10px #72304208;min-width:0}
 .seoDashboard:has(.apReferenceGrid) .apReferenceProducts{padding:9px;position:sticky;top:12px;min-height:655px}
 .seoDashboard:has(.apReferenceGrid) .apReferenceProducts .apSearch{border:0;box-shadow:none;padding:0;margin:0}
@@ -70,14 +70,14 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 .seoDashboard:has(.apReferenceGrid) .apReferenceTabs{display:flex;gap:5px;flex-wrap:nowrap;overflow-x:auto;padding:8px 0;margin:0 0 10px;scrollbar-width:thin}
 .seoDashboard:has(.apReferenceGrid) .apReferenceTabs a{flex:none;font-size:10px;padding:9px 11px;border-radius:7px;border:1px solid #ecd0d8;color:#6e1d39;text-decoration:none;background:#fff7f8}
 .seoDashboard:has(.apReferenceGrid) .apReferenceTabs a:first-child{background:linear-gradient(#a8274e,#79082f);color:#fff}
-.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{display:grid;grid-template-columns:1.08fr .92fr;gap:10px;max-width:none!important}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{display:grid;grid-template-columns:1.12fr .88fr;gap:10px;align-items:start;grid-auto-flow:row dense;max-width:none!important}
 .seoDashboard:has(.apReferenceGrid) .apReferenceEditor :is(.apTopGrid,.apLowerGrid){display:contents}
 .seoDashboard:has(.apReferenceGrid) .apBasic{grid-column:1;grid-row:1}
 .seoDashboard:has(.apReferenceGrid) .apPricing{grid-column:2;grid-row:1}
 .seoDashboard:has(.apReferenceGrid) #ap-variants{grid-column:1;grid-row:2}
 .seoDashboard:has(.apReferenceGrid) .apMedia{grid-column:2;grid-row:2}
-.seoDashboard:has(.apReferenceGrid) .apLowerGrid>section:not(#ap-variants){grid-column:1;grid-row:3}
-.seoDashboard:has(.apReferenceGrid) .apDetails{grid-column:2;grid-row:3;margin:0}
+.seoDashboard:has(.apReferenceGrid) .apLowerGrid>section:not(#ap-variants){grid-column:2;grid-row:3}
+.seoDashboard:has(.apReferenceGrid) .apPriceDetail{grid-column:1;grid-row:3}.apDetails{grid-column:2;grid-row:4;margin:0}
 .seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCard{overflow:hidden;margin:0}
 .seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCard h3{display:flex;align-items:center;gap:9px;background:#fbedef;padding:10px 12px;margin:0;font:600 16px Georgia,serif;color:#7c1d3c}
 .seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCardBody{padding:10px}
@@ -109,3 +109,30 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 @media(max-width:1200px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(220px,28%) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:850px){.seoDashboard:has(.apReferenceGrid){display:block}.seoDashboard:has(.apReferenceGrid) .seoDashboardSidebar{position:static;height:auto}.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceProducts{position:static;min-height:0}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:auto;grid-template-columns:1fr 1fr}}
 @media(max-width:650px){.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form>.apCard,.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apLowerGrid>section{grid-column:1;grid-row:auto}.seoDashboard:has(.apReferenceGrid) .apTaxonomyFields{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-template-columns:1fr}}
+
+/* Compact reference-page density, card positioning and SKU controls */
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-template-rows:auto auto auto auto;align-content:start}
+.seoDashboard:has(.apReferenceGrid) .apBasic{grid-row:1;grid-column:1}
+.seoDashboard:has(.apReferenceGrid) .apPricing{grid-row:1;grid-column:2}
+.seoDashboard:has(.apReferenceGrid) #ap-variants{grid-row:2;grid-column:1}
+.seoDashboard:has(.apReferenceGrid) .apMedia{grid-row:2;grid-column:2}
+.seoDashboard:has(.apReferenceGrid) .apPriceDetail{grid-row:3;grid-column:1}
+.seoDashboard:has(.apReferenceGrid) .apDetails{grid-row:3;grid-column:2}
+.seoDashboard:has(.apReferenceGrid) .apLowerGrid>section:not(#ap-variants){display:none}
+.seoDashboard:has(.apReferenceGrid) .apStockPills{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 14px}
+.seoDashboard:has(.apReferenceGrid) .apStockPills span{font-size:10px;padding:6px 8px;border:1px solid #eacbd5;border-radius:50px;color:#6a4c56;background:#fff}
+.seoDashboard:has(.apReferenceGrid) .apStockPills span.selected{background:#d8f4db;border-color:#b7e8c0;color:#0b752a;font-weight:bold}
+.seoDashboard:has(.apReferenceGrid) .apVariantRows{display:grid;gap:5px;margin:10px 0}
+.seoDashboard:has(.apReferenceGrid) .apVariantRows button{display:flex;align-items:center;gap:8px;border:1px solid #eddae0;border-radius:7px;padding:7px;background:#fff;text-align:left;min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apVariantRows img{width:30px;height:35px;object-fit:contain}
+.seoDashboard:has(.apReferenceGrid) .apVariantRows strong{flex:1;font-size:11px;min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apVariantRows small{font-size:10px}
+.seoDashboard:has(.apReferenceGrid) .apDetailsBody{display:block;padding:10px}
+.seoDashboard:has(.apReferenceGrid) .apDetailsBody textarea{min-height:78px;width:100%}
+.seoDashboard:has(.apReferenceGrid) .apSaveBox{border:0;padding:9px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.seoDashboard:has(.apReferenceGrid) .apSaveBox .apHint{flex:1;min-width:170px}
+.seoDashboard:has(.apReferenceGrid) .apSaveBox .apPrimary{border:0;border-radius:7px;background:#851037;color:white;padding:10px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceActions>section{margin:0}
+.seoDashboard:has(.apReferenceGrid) .apProductText{width:100%}
+@media(max-width:1300px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(235px,26%) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form .apCard{grid-column:1!important;grid-row:auto!important}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-template-columns:1fr}}
