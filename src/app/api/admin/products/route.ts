@@ -40,7 +40,7 @@ export async function GET(req:Request) {
   if(status==="published")filter.active=true;
   if(status==="draft")filter.active=false;
   const [products,total,categories]=await Promise.all([
-   Product.find(filter).select("sku name slug brand category origin size color colorHex variantLabel variantGroup ingredients usageInstructions topNotes heartNotes baseNotes pricePaisa costPaisa onHand reserved active updatedAt reorderLevel description imageUrls").sort({updatedAt:-1}).skip((page-1)*pageSize).limit(pageSize).lean<any[]>(),
+   Product.find(filter).select("sku name slug brand category origin size color colorHex variantLabel variantGroup ingredients usageInstructions topNotes heartNotes baseNotes pricePaisa costPaisa compareAtPaisa wholesalePaisa featured barcode onHand reserved active updatedAt reorderLevel description imageUrls").sort({updatedAt:-1}).skip((page-1)*pageSize).limit(pageSize).lean<any[]>(),
    Product.countDocuments(filter),
    Product.distinct("category")
   ]);
