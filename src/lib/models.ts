@@ -236,7 +236,8 @@ const CatalogCategorySchema=new Schema({
  active:{type:Boolean,default:true},position:{type:Number,default:0,min:0},
  description:{type:String,default:"",maxlength:500},
  seoTitle:{type:String,default:"",maxlength:70},
- seoDescription:{type:String,default:"",maxlength:160}
+ seoDescription:{type:String,default:"",maxlength:160},
+ imageUrl:{type:String,default:"",maxlength:500}
 },opts);
 CatalogCategorySchema.index({parentId:1,position:1});
 export const CatalogCategory=mongoose.models.CatalogCategory||mongoose.model("CatalogCategory",CatalogCategorySchema);
