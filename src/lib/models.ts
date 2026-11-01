@@ -276,6 +276,27 @@ const ContentPageSchema=new Schema({
  updatedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
 },opts);
 export const ContentPage=mongoose.models.ContentPage||mongoose.model("ContentPage",ContentPageSchema);
+const LoyaltyWalletSchema=new Schema({
+ customerPhone:{type:String,required:true,unique:true},
+ balancePoints:{type:Number,default:0},
+ earnedPoints:{type:Number,default:0,min:0},
+ redeemedPoints:{type:Number,default:0,min:0}
+},opts);
+const LoyaltyEventSchema=new Schema({
+ eventKey:{type:String,required:true,unique:true},
+ kind:{type:String,enum:["earned","redeemed","reversed"],required:true},
+ customerPhone:{type:String,required:true},
+ orderId:{type:Schema.Types.ObjectId,ref:"Order",default:null},
+ reference:{type:String,required:true,maxlength:100},
+ points:{type:Number,required:true,min:1},
+ note:{type:String,required:true,maxlength:500},
+ verifiedBy:{type:Schema.Types.ObjectId,ref:"User",required:true}
+},opts);
+LoyaltyEventSchema.index({kind:1,orderId:1},{unique:true,partialFilterExpression:{kind:{$in:["earned","reversed"]}}});
+LoyaltyEventSchema.index({kind:1,reference:1},{unique:true,partialFilterExpression:{kind:"redeemed"}});
+LoyaltyEventSchema.index({customerPhone:1,createdAt:-1});
+export const LoyaltyWallet=mongoose.models.LoyaltyWallet||mongoose.model("LoyaltyWallet",LoyaltyWalletSchema);
+export const LoyaltyEvent=mongoose.models.LoyaltyEvent||mongoose.model("LoyaltyEvent",LoyaltyEventSchema);
 const CatalogImportSchema = new Schema({
  importKey:{type:String,required:true,unique:true},
  actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},
