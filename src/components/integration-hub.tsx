@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState} from "react";
+import ProviderConnect from "@/components/provider-connect";
 type Integration={id:string;name:string;group:string;configured:boolean;verified:boolean;missing:string[];instructions:string};
 export default function IntegrationHub(){
  const [items,setItems]=useState<Integration[]>([]);
@@ -24,6 +25,7 @@ export default function IntegrationHub(){
  }
  return <section className="adminCard" aria-label="External integrations">
   <h2>Integration Hub</h2>
+  <ProviderConnect/>
   <p className="smallprint">Connect external services safely after receiving official provider credentials. This hub checks configuration names only: it does not claim live connectivity, create consignments, send messages, charge payments, or enable checkout.</p>
   <p className="notice">All integrations remain disabled until their official API adapter, permissions, authentication, webhook signature validation, duplicate-event protection and test transactions have been verified.</p>
   <p><a href="https://app.netlify.com/projects/anusmita/configuration/env" target="_blank" rel="noreferrer">Manage secrets in Netlify environment settings</a> (never paste private API keys into a storefront form).</p>
@@ -44,6 +46,6 @@ export default function IntegrationHub(){
    </article>)}
    </div>
   </div>)}
-  <p className="smallprint">Names are onboarding conventions, not a guarantee an adapter currently consumes them. This page intentionally has no unsafe generic script injection, credential storage or one-click live activation.</p>
+  <p className="smallprint">Names are onboarding conventions, not a guarantee an adapter currently consumes them. This page offers secure encrypted credential verification for supported providers, but does not activate business workflows or allow arbitrary script injection.</p>
  </section>;
 }
