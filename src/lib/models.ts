@@ -153,6 +153,15 @@ const AuditSchema = new Schema({
  details:{type:Schema.Types.Mixed,default:{}}
 },opts);
 AuditSchema.index({createdAt:-1,entity:1});
+const ReturnInspectionSchema=new Schema({
+ orderId:{type:Schema.Types.ObjectId,ref:"Order",required:true,unique:true},
+ condition:{type:String,enum:["pending","sellable","damaged","quarantine"],default:"pending",required:true},
+ note:{type:String,required:true,maxlength:500},
+ inspectedBy:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ inspectedAt:{type:Date,required:true,default:Date.now},
+ revision:{type:Number,default:1,min:1}
+},opts);
+ReturnInspectionSchema.index({inspectedAt:-1});
 const WarehouseLocationSchema=new Schema({
  code:{type:String,required:true,unique:true,uppercase:true,trim:true,maxlength:24},
  name:{type:String,required:true,trim:true,maxlength:100},
@@ -211,6 +220,7 @@ export const PurchaseReceipt = mongoose.models.PurchaseReceipt || mongoose.model
 export const SupplierPayment = mongoose.models.SupplierPayment || mongoose.model("SupplierPayment",SupplierPaymentSchema);
 export const Expense = mongoose.models.Expense || mongoose.model("Expense",ExpenseSchema);
 export const Audit = mongoose.models.Audit || mongoose.model("Audit",AuditSchema);
+export const ReturnInspection=mongoose.models.ReturnInspection||mongoose.model("ReturnInspection",ReturnInspectionSchema);
 export const Counter = mongoose.models.Counter || mongoose.model("Counter",CounterSchema);
 export const SocialInbound=mongoose.models.SocialInbound||mongoose.model("SocialInbound",SocialInboundSchema);
 export const StoreChrome=mongoose.models.StoreChrome||mongoose.model("StoreChrome",StoreChromeSchema);
