@@ -22,7 +22,7 @@ function key() {
 export async function signSession(id:string) {
  return new SignJWT({sub:id}).setProtectedHeader({alg:"HS256"}).setIssuedAt().setExpirationTime("12h").sign(key());
 }
-export async function currentUser() {
+export async function currentUser():Promise<{id:string;name:string;email:string;role:Role;permissions?:Record<string,boolean>}|null> {
  const raw=(await cookies()).get(SESSION)?.value;
  if (!raw) return null;
  try {
@@ -36,7 +36,7 @@ export async function currentUser() {
 export async function authorize(roles: Role[],permission?:Permission) {
  const user=await currentUser();
  if (!user || !roles.includes(user.role)) throw new HttpError(403,"Access denied");
- if(permission && user.role!=="owner" && user.permissions[permission]===false)throw new HttpError(403,"Permission denied");
+ if(permission && user.role!=="owner" && user.permissions?.[permission]===false)throw new HttpError(403,"Permission denied");
  return user;
 }
 export async function authorizePermission(roles:Role[],permission:Permission){
