@@ -1,0 +1,23 @@
+/* /admin-only reference styling. The /admin/dashboard route is intentionally untouched. */
+body:has(.anAdminHome) .anHeader,body:has(.anAdminHome) .anFooter,body:has(.anAdminHome) .anAnnouncement{display:none!important}
+body:has(.anAdminHome){background:#fff8f7}
+.anAdminHome{width:100%;min-height:100vh}
+.anAdminHome .ao{width:100%;min-height:100vh;max-width:none;margin:0;border:0;border-radius:0;grid-template-columns:242px minmax(0,1fr)}
+.anAdminHome .ao-sidebar{background:linear-gradient(162deg,#fff4f2,#fce6e8);border-right:1px solid #ead1d9}
+.anAdminHome .ao-content{width:100%;max-width:none;padding:22px 25px}
+.anAdminHome .ao-top{background:#fff9f8}
+.anAdminHome .ao-kpis{grid-template-columns:repeat(7,minmax(0,1fr));gap:9px}
+.anAdminHome .ao-kpi{min-width:0}
+.anAdminHome .ao-kpi strong{overflow-wrap:anywhere}
+.anAdminHome .ao-charts{grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr)}
+.anAdminHome .ao-lower{grid-template-columns:minmax(0,1.6fr) minmax(310px,.95fr)}
+.anAdminHome .ao-actions>div{grid-template-columns:repeat(3,minmax(0,1fr))}
+.anAdminHome .ao-module-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.anAdminHome .ao-card{border:1px solid #ecd6dc;box-shadow:0 4px 17px #7e16320a}
+.anAdminHome .ao-export{background:#81123a;color:#fff}
+.anAdminHome .ao-sidebar nav button.selected{background:linear-gradient(100deg,#821035,#a94d63)}
+@media(max-width:1500px){.anAdminHome .ao-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.anAdminHome .ao-module-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1100px){.anAdminHome .ao{grid-template-columns:205px minmax(0,1fr)}.anAdminHome .ao-charts,.anAdminHome .ao-lower{grid-template-columns:1fr}.anAdminHome .ao-module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.anAdminHome .ao{display:block}.anAdminHome .ao-content{padding:14px 11px}.anAdminHome .ao-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.anAdminHome .ao-module-grid{grid-template-columns:1fr 1fr}.anAdminHome .ao-actions>div{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.anAdminHomeLogout{position:fixed;left:15px;bottom:15px;z-index:40;width:208px;background:#fff7f7ee;border:1px solid #e5bcc9;border-radius:10px;padding:5px;box-shadow:0 3px 14px #7b29411a}.anAdminHomeLogout button{width:100%}@media(max-width:700px){.anAdminHomeLogout{position:static;width:auto;margin:0 12px 82px}}
