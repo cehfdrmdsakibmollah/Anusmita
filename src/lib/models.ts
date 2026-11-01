@@ -298,6 +298,22 @@ LoyaltyEventSchema.index({kind:1,reference:1},{unique:true,partialFilterExpressi
 LoyaltyEventSchema.index({customerPhone:1,createdAt:-1});
 export const LoyaltyWallet=mongoose.models.LoyaltyWallet||mongoose.model("LoyaltyWallet",LoyaltyWalletSchema);
 export const LoyaltyEvent=mongoose.models.LoyaltyEvent||mongoose.model("LoyaltyEvent",LoyaltyEventSchema);
+const ProductSeoSchema=new Schema({
+ schemaEnabled:{type:Boolean,default:true},
+ productId:{type:Schema.Types.ObjectId,ref:"Product",required:true,unique:true},
+ metaTitle:{type:String,default:"",maxlength:70},
+ metaDescription:{type:String,default:"",maxlength:160},
+ focusKeyword:{type:String,default:"",maxlength:80},
+ keywords:{type:[String],default:[]},
+ imageAltTexts:{type:[String],default:[]},
+ ogTitle:{type:String,default:"",maxlength:70},
+ ogDescription:{type:String,default:"",maxlength:160},
+ robotsIndex:{type:Boolean,default:true},
+ robotsFollow:{type:Boolean,default:true},
+ revision:{type:Number,default:0,min:0},
+ updatedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
+},opts);
+export const ProductSeo=mongoose.models.ProductSeo||mongoose.model("ProductSeo",ProductSeoSchema);
 const CatalogImportSchema = new Schema({
  importKey:{type:String,required:true,unique:true},
  actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},

@@ -6,7 +6,7 @@ import Link from "next/link";
 import {notFound} from "next/navigation";
 import {ArrowRight,ArrowUpRight,Heart,Package,ShieldCheck,Sparkles,Truck} from "lucide-react";
 import {db} from "@/lib/db";
-import {Product,ProductReview} from "@/lib/models";
+import {Product,ProductReview,ProductSeo} from "@/lib/models";
 import {canPublishReview,complementaryCategories,reviewEmptyLabel} from "@/lib/product-trust";
 import {checkoutEnabled} from "@/lib/launch-config";
 import {isPerfumeCategory,shouldListGroup,type ProductVariant} from "@/lib/product-variants";
@@ -43,6 +43,7 @@ async function getProduct(slug:string):Promise<DbProduct|null>{
   return await Product.findOne({slug,active:true}).select(projection).lean<DbProduct>();
  }catch{return null;}
 }
+async function seoFor(p:DbProduct){if(p.slug==="design-preview")return null;try{await db();return await ProductSeo.findOne({productId:p._id}).select("metaTitle metaDescription focusKeyword keywords imageAltTexts ogTitle ogDescription robotsIndex robotsFollow schemaEnabled").lean<any>();}catch{return null;}}
 const variant=(p:DbProduct):ProductVariant=>({
  id:String(p._id),slug:p.slug,sku:p.sku||"",color:p.color,colorHex:p.colorHex,size:p.size||p.variantLabel||"",
  pricePaisa:p.pricePaisa,available:Math.max(0,(p.onHand||0)-(p.reserved||0))
@@ -73,14 +74,16 @@ export async function generateMetadata({params}:Props):Promise<Metadata>{
  const p=await getProduct(slug);
  if(!p)return {title:"Product not available",robots:{index:false,follow:false}};
  const isPreview=slug==="design-preview";
- const title=isPreview?"Product details design preview":p.name;
- const description=String(p.description||("Discover "+p.name+" at ANUSMITA Bangladesh")).slice(0,155);
+ const custom=await seoFor(p);
+ const title=isPreview?"Product details design preview":(custom?.metaTitle||p.name);
+ const description=String(custom?.metaDescription||p.description||("Discover "+p.name+" at ANUSMITA Bangladesh")).slice(0,160);
  return {title,description,robots:{
-  index:!isPreview&&checkoutEnabled(process.env),
-  follow:!isPreview&&checkoutEnabled(process.env)
+  index:!isPreview&&checkoutEnabled(process.env)&&(custom?.robotsIndex!==false),
+  follow:!isPreview&&checkoutEnabled(process.env)&&(custom?.robotsFollow!==false)
  },alternates:{canonical:"/products/"+slug},
-  openGraph:{title,description,type:"website",
-   images:!isPreview&&p.imageUrls?.[0]?[{url:p.imageUrls[0],alt:p.name}]:undefined}};
+  openGraph:{title:custom?.ogTitle||title,description:custom?.ogDescription||description,type:"website",url:"/products/"+slug,
+   images:!isPreview&&p.imageUrls?.[0]?[{url:p.imageUrls[0],alt:custom?.imageAltTexts?.[0]||p.name}]:undefined},
+  twitter:{card:"summary_large_image",title:custom?.ogTitle||title,description:custom?.ogDescription||description,images:!isPreview&&p.imageUrls?.[0]?[p.imageUrls[0]]:undefined}};
 }
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
 const sampleCollections=[
@@ -99,6 +102,7 @@ export default async function ProductPage({params}:Props){
  if(!p)notFound();
  const preview=slug==="design-preview";
  const {variants,related}=await supporting(p);
+ const customSeo=await seoFor(p);
  const trust=preview?{reviews:[] as {rating:number;body:string;skinType:string}[],pairings:[] as DbProduct[]}:await (async()=>{
   try{
    const complements=complementaryCategories(p.category);
@@ -112,7 +116,7 @@ export default async function ProductPage({params}:Props){
  const stock=Math.max(0,(p.onHand||0)-(p.reserved||0));
  const canOrder=!preview&&checkoutEnabled(process.env);
  const url=(process.env.NEXT_PUBLIC_SITE_URL||"http://localhost:3000").replace(/\/$/,"")+"/products/"+p.slug;
- const structured=preview?null:{
+ const structured=preview||customSeo?.schemaEnabled===false?null:{
   "@context":"https://schema.org","@type":"Product",name:p.name,
   sku:p.sku||undefined,description:p.description||p.name,
   brand:p.brand?{"@type":"Brand",name:p.brand}:undefined,
@@ -130,7 +134,7 @@ export default async function ProductPage({params}:Props){
     {preview&&<span className="anPdpDemoChip" title="No real product, price, review, stock or order">Design preview · Not for sale</span>}
    </nav>
    <div className="anPdpMain">
-    <ProductImageGallery key={p.slug} urls={p.imageUrls||[]} name={p.name} preview={preview}/>
+    <ProductImageGallery key={p.slug} urls={p.imageUrls||[]} name={p.name} preview={preview} altTexts={customSeo?.imageAltTexts||[]}/>
     <div className="anPdpRight">
      <ProductDetailPurchase key={p.slug} product={{
       ...variant(p),name:p.name,category:p.category,brand:p.brand,description:p.description,origin:p.origin,details:Object.fromEntries(["color", "colorHex", "material", "dimensions", "compatibility", "careInstructions", "warranty", "sizeGuide", "skinType", "benefits"].map(key=>[key,p[key as keyof ProductDetails]||""]))
