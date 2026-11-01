@@ -46,8 +46,20 @@ export class HttpError extends Error { constructor(public status:number,message:
 export function assertOrigin(request: Request) {
  const origin=request.headers.get("origin");
  if (!origin) return; // Non-browser clients must authenticate separately.
- const expected=new URL(request.url), received=new URL(origin);
- if (expected.host!==received.host || received.protocol!==expected.protocol) throw new HttpError(403,"Cross-origin request rejected");
+ let received:URL;
+ try{received=new URL(origin);}catch{throw new HttpError(403,"Cross-origin request rejected");}
+ const expected=new URL(request.url);
+ const normalized=(value:string|null)=>value?.trim().toLowerCase()||"";
+ const publicHost=normalized(request.headers.get("host"));
+ const forwardedHost=normalized(request.headers.get("x-forwarded-host"));
+ const isApprovedNetlifyHost=(host:string)=>host==="anusmita.netlify.app"||/^deploy-preview-[0-9]+--anusmita\\.netlify\\.app$/.test(host);
+ const sameInternalOrigin=received.host===expected.host&&received.protocol===expected.protocol;
+ // On Netlify, request.url can be rewritten to an internal server host while the browser
+ // sends Origin from the public preview URL. Trust only the exact public Host supplied by
+ // Netlify or an exact Netlify deploy-preview hostname in its forwarding metadata.
+ const samePublicHost=received.protocol==="https:"&&isApprovedNetlifyHost(received.host)&&
+   (received.host===publicHost||(received.host===forwardedHost&&isApprovedNetlifyHost(forwardedHost)));
+ if(!sameInternalOrigin&&!samePublicHost)throw new HttpError(403,"Cross-origin request rejected");
 }
 export function apiError(error: unknown) {
  if (error instanceof HttpError) return Response.json({error:error.message},{status:error.status});
