@@ -5,6 +5,7 @@ import {assertOrigin,authorize,authorizePermission,apiError,HttpError} from "@/l
 import {db} from "@/lib/db";
 import {Product,Audit} from "@/lib/models";
 import {productSchema} from "@/lib/validation";
+import {publicationState,assertFutureSchedule} from "@/lib/publication-state";
 export const runtime="nodejs";
 const editable=productSchema.omit({onHand:true,sku:true}).partial();
 const bodySchema=z.object({expectedUpdatedAt:z.iso.datetime({offset:true}),changes:editable}).strict()
@@ -17,6 +18,8 @@ export async function PATCH(req:Request,ctx:{params:Promise<{id:string}>}){
   const {id}=await ctx.params;
   if(!mongoose.isValidObjectId(id))throw new HttpError(400,"Invalid product ID");
   const {expectedUpdatedAt,changes}=bodySchema.parse(await req.json());
+  publicationState.parse(changes);
+  assertFutureSchedule(changes.scheduledPublishAt);
   await db();
   const session=await mongoose.startSession();let updated:any;
   try{
