@@ -29,6 +29,7 @@ const ProductSchema = new Schema({
  benefits:{type:String,default:""},
  ingredients:{type:String,default:""},usageInstructions:{type:String,default:""},
  topNotes:{type:String,default:""},heartNotes:{type:String,default:""},baseNotes:{type:String,default:""},
+ compareAtPaisa:{type:Number,default:0,min:0},wholesalePaisa:{type:Number,default:0,min:0},featured:{type:Boolean,default:false},barcode:{type:String,default:""},
  pricePaisa:{type:Number,required:true,min:0},costPaisa:{type:Number,required:true,min:0},
  onHand:{type:Number,default:0,min:0},reserved:{type:Number,default:0,min:0},
  reorderLevel:{type:Number,default:5,min:0},warehouseAllocationRevision:{type:Number,default:0},active:{type:Boolean,default:false},
