@@ -15,7 +15,7 @@ export async function GET(){
   await authorize(["owner"]);
   await db();
   const users=await User.find({}).select("name email role active permissions createdAt updatedAt").sort({createdAt:-1}).limit(150).lean<any[]>();
-  return Response.json({users:users.map(u=>({id:String(u._id),name:u.name,email:u.email,role:u.role,active:u.active,permissions:Object.fromEntries(u.permissions||[]),createdAt:u.createdAt})),roles:STAFF},{headers:{"Cache-Control":"private, no-store"}});
+  return Response.json({users:users.map(u=>({id:String(u._id),name:u.name,email:u.email,role:u.role,active:u.active,permissions:u.permissions instanceof Map?Object.fromEntries(u.permissions):u.permissions||{},createdAt:u.createdAt})),roles:STAFF},{headers:{"Cache-Control":"private, no-store"}});
  }catch(e){return apiError(e);}
 }
 export async function POST(request:Request){
