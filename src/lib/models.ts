@@ -228,6 +228,18 @@ export const WarehouseBalance=mongoose.models.WarehouseBalance||mongoose.model("
 export const WarehouseEvent=mongoose.models.WarehouseEvent||mongoose.model("WarehouseEvent",WarehouseEventSchema);
 export const WarehouseLocation=mongoose.models.WarehouseLocation||mongoose.model("WarehouseLocation",WarehouseLocationSchema);
 
+const JournalEntrySchema=new Schema({
+ entryKey:{type:String,required:true,unique:true},
+ transactionDate:{type:Date,required:true},
+ reference:{type:String,required:true,maxlength:100},
+ note:{type:String,required:true,maxlength:500},
+ lines:{type:[new Schema({account:{type:String,required:true},debitPaisa:{type:Number,required:true,min:0},creditPaisa:{type:Number,required:true,min:0}},{_id:false})],required:true},
+ totalPaisa:{type:Number,required:true,min:1},
+ createdBy:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ status:{type:String,enum:["posted"],default:"posted"}
+},opts);
+JournalEntrySchema.index({transactionDate:-1,createdAt:-1});
+export const JournalEntry=mongoose.models.JournalEntry||mongoose.model("JournalEntry",JournalEntrySchema);
 const CatalogImportSchema = new Schema({
  importKey:{type:String,required:true,unique:true},
  actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},
