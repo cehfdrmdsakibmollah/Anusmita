@@ -32,7 +32,10 @@ export async function GET(req:Request) {
   const pageSize=url.searchParams.get("perPage")==="10"?10:30;
   const category=(url.searchParams.get("category")||"").trim().slice(0,80);
   const status=url.searchParams.get("status")||"all";
+  const variantGroup=(url.searchParams.get("variantGroup")||"").trim().toLowerCase().slice(0,100);
+  if(variantGroup&&!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variantGroup))throw new HttpError(400,"Invalid variant group");
   const filter:any=q?{$or:[{sku:{$regex:q.replace(/[^a-zA-Z0-9 _-]/g,""),$options:"i"}},{name:{$regex:q.replace(/[^a-zA-Z0-9 _-]/g,""),$options:"i"}},{brand:{$regex:q.replace(/[^a-zA-Z0-9 _-]/g,""),$options:"i"}}]}:{};
+  if(variantGroup)filter.variantGroup=variantGroup;
   if(category&&category!=="all")filter.category=category;
   if(status==="published")filter.active=true;
   if(status==="draft")filter.active=false;
