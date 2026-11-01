@@ -1,0 +1,50 @@
+body:has(.apReferenceGrid) .anHeader,body:has(.apReferenceGrid) .anFooter,body:has(.apReferenceGrid) .anAnnouncement{display:none!important}
+.seoDashboard:has(.apReferenceGrid) .seoDashboardMain{padding:18px 22px 48px}
+.seoDashboard .apWorkspace{width:100%;max-width:none;background:transparent;color:#351e28}
+.seoDashboard .apHeading{background:transparent;border:0;margin:0 0 16px;padding:3px 4px 16px;border-bottom:1px solid #ebd6dc;align-items:end}
+.seoDashboard .apHeading h2{font:38px Georgia,serif;color:#571b31;margin:4px 0 8px}.seoDashboard .apHeading p{font-size:13px;color:#805f6b}
+.apReferenceGrid{display:grid;grid-template-columns:minmax(250px,24%) minmax(400px,1fr) minmax(265px,23%);gap:14px;align-items:start}
+.apReferenceProducts,.apReferenceEditor,.apReferenceActions>section{border:1px solid #eed6dd;border-radius:14px;background:#fffaf9;box-shadow:0 6px 24px #7c14300a;min-width:0}
+.apReferenceProducts{padding:13px;position:sticky;top:12px}
+.apReferenceProducts .apSearch{border:0;background:none;box-shadow:none;padding:0;margin:0}
+.apReferenceProducts .apSearch>h3{font:24px Georgia,serif;color:#491e2a;padding:4px 6px 12px}
+.apReferenceProducts .apSearch .apCardBody{padding:0}
+.apReferenceProducts .apSearch .apTableScroll{overflow:visible}
+.apReferenceProducts .apSearch table,.apReferenceProducts .apSearch tbody,.apReferenceProducts .apSearch tr,.apReferenceProducts .apSearch td{display:block;width:100%;border:0}
+.apReferenceProducts .apSearch thead{display:none}
+.apReferenceProducts .apSearch tr{position:relative;margin-bottom:7px;padding:8px 10px;border-radius:10px;border:1px solid #f0dce1;background:#fff7f6}
+.apReferenceProducts .apSearch tr:hover{background:#f9e5e9;border-color:#d99baa}
+.apReferenceProducts .apSearch td:not(:first-child){display:none}
+.apReferenceProducts .apSearch .apProductCell{display:flex;align-items:center;gap:12px}
+.apReferenceProducts .apSearch .apProductCell img{width:57px;height:64px;object-fit:contain;border:1px solid #f0dadf;border-radius:9px;background:#fff}
+.apReferenceProducts .apSearch .apProductCell strong{font:600 13px Georgia,serif;line-height:1.3}
+.apReferenceProducts .apSearch .apPager{display:flex;gap:5px;justify-content:space-between;align-items:center;flex-wrap:wrap;font-size:11px;padding:14px 0 0}
+.apReferenceProducts .apSearch .apPager button{padding:8px 9px;border:1px solid #e9cbd3;border-radius:7px}
+.apReferenceProducts .apSearch .apField input{width:100%}
+.apReferenceProducts .apSearch td .apEdit{display:none}
+.apReferenceProducts .apSearch tr{cursor:pointer}
+.apReferenceEditor{padding:15px}
+.apReferenceSelected{display:flex;align-items:center;justify-content:space-between;gap:9px;min-height:85px;padding:5px 2px 13px;border-bottom:1px solid #eddae0}
+.apReferenceSelected>div{display:flex;align-items:center;gap:12px}
+.apReferenceSelected img{object-fit:contain;border:1px solid #f0dfe2;border-radius:9px;background:#fff}
+.apReferenceSelected strong{font:600 20px Georgia,serif}.apReferenceSelected p{font-size:12px;color:#7b6570;margin-top:5px}.apReferenceSelected a{font-size:11px;color:#8e1839;border:1px solid #ecccd4;padding:9px;border-radius:8px;white-space:nowrap}
+.apReferenceTabs{display:flex;gap:5px;flex-wrap:wrap;padding:13px 0;border-bottom:1px solid #efdae0;margin-bottom:15px}
+.apReferenceTabs :is(span,a){border:1px solid #efd5db;border-radius:7px;padding:9px 10px;font-size:11px;color:#643846;background:#fff7f7}
+.apReferenceTabs span:first-child{background:#8a1138;color:#fff}
+.apReferenceEditor form{max-width:none!important}
+.apReferenceEditor .apTopGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.apReferenceEditor .apBasic{grid-column:1/-1}
+.apReferenceEditor .apCard{border:1px solid #ecd8dd;border-radius:10px;background:#fffafa;min-width:0}
+.apReferenceEditor .apCard h3{font:16px Georgia,serif;color:#60233a}
+.apReferenceEditor .apField input,.apReferenceEditor .apField textarea{width:100%;background:#fffaf9;border:1px solid #e7cdd6;border-radius:7px;padding:10px}
+.apReferenceEditor .apLowerGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.apReferenceEditor .apDetails{margin-top:12px}
+.apReferenceEditor .apPrimary{background:#861039;border-color:#861039;color:#fff;border-radius:8px}
+.apReferenceActions{position:sticky;top:12px;display:grid;gap:12px}
+.apReferenceActions>section{padding:16px}.apReferenceActions h3{font:22px Georgia,serif;margin:0 0 13px;color:#552039}
+.apReferenceActions p{font-size:12px;color:#785d67;line-height:1.6}
+.apReferenceActions :is(a,button){display:block;width:100%;text-align:left;margin:7px 0;padding:11px;background:#fff6f7;color:#781b39;border:1px solid #efd7dd;border-radius:8px;font-size:12px}
+.apReferenceActions :is(a,button):hover{background:#f7e1e7;border-color:#c78197}
+.seoDashboard .apAdvanced{margin-top:18px}
+@media(max-width:1500px){.apReferenceGrid{grid-template-columns:250px minmax(0,1fr)}.apReferenceActions{position:static;grid-column:1/-1;grid-template-columns:repeat(3,1fr)}}
+@media(max-width:920px){.apReferenceGrid{grid-template-columns:1fr}.apReferenceProducts{position:static}.apReferenceActions{grid-column:auto;grid-template-columns:1fr}.apReferenceEditor .apTopGrid,.apReferenceEditor .apLowerGrid{grid-template-columns:1fr}}
