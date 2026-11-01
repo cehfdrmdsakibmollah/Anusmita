@@ -55,3 +55,29 @@
 @media(max-width:1150px){.seoDashboard:has(.an-seo-workspace) .an-seo-layout{grid-template-columns:minmax(230px,35%) minmax(0,1fr)}.seoDashboard:has(.an-seo-workspace) .an-seo-aside{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}.seoDashboard:has(.an-seo-workspace) .apModeNavigation{flex-wrap:wrap}.seoDashboard:has(.an-seo-workspace) .seoTopbar form{width:30%}}
 @media(max-width:800px){.seoDashboard:has(.an-seo-workspace){display:block}.seoDashboard:has(.an-seo-workspace) .seoDashboardSidebar{position:static;height:auto;display:flex;flex-wrap:wrap;gap:4px;padding:8px}.seoDashboard:has(.an-seo-workspace) .seoBrand{width:100%;margin:0 0 5px;padding:8px}.seoDashboard:has(.an-seo-workspace) .seoMenuLabel,.seoDashboard:has(.an-seo-workspace) .seoSidebarIdentity{display:none}.seoDashboard:has(.an-seo-workspace) .seoDashboardSidebar>a:not(.seoBrand){font-size:10px;padding:7px}.seoDashboard:has(.an-seo-workspace) .an-seo-layout{grid-template-columns:1fr}.seoDashboard:has(.an-seo-workspace) .an-seo-aside{grid-column:auto;grid-template-columns:1fr}.seoDashboard:has(.an-seo-workspace) .seoTopbarUser{display:none}.seoDashboard:has(.an-seo-workspace) .seoTopbar form{width:55%}}
 @media(max-width:520px){.seoDashboard:has(.an-seo-workspace) .an-seo-double,.seoDashboard:has(.an-seo-workspace) .an-seo-url-row{grid-template-columns:1fr}.seoDashboard:has(.an-seo-workspace) .an-seo-product{flex-wrap:wrap}.seoDashboard:has(.an-seo-workspace) .seoTopbar form{display:none}.seoDashboard:has(.an-seo-workspace) .apModeNavigation h1{font-size:29px}}
+
+/* SEO dashboard: compact three-column reference layout */
+.seoDashboard:has(.an-seo-workspace) .an-seo-layout{grid-template-columns:minmax(250px,24%) minmax(0,1fr) minmax(245px,23%);gap:10px;align-items:start}
+.seoDashboard:has(.an-seo-workspace) .an-seo-catalog{grid-column:1;grid-row:1;position:sticky;top:8px;align-self:start}
+.seoDashboard:has(.an-seo-workspace) .an-seo-editor{grid-column:2;grid-row:1;align-self:start}
+.seoDashboard:has(.an-seo-workspace) .an-seo-aside{grid-column:3;grid-row:1;display:flex;flex-direction:column;gap:9px;align-self:start}
+.seoDashboard:has(.an-seo-workspace) .an-seo-panel{padding:10px;border-radius:10px;box-shadow:0 1px 5px #7d293008}
+.seoDashboard:has(.an-seo-workspace) .an-seo-panel h3{font-size:17px;margin-bottom:7px}
+.seoDashboard:has(.an-seo-workspace) .an-seo-editor .field{margin-bottom:8px}
+.seoDashboard:has(.an-seo-workspace) .an-seo-editor .field :is(input,textarea){margin-top:3px;padding:7px;font-size:11px}
+.seoDashboard:has(.an-seo-workspace) .an-seo-editor textarea{min-height:64px}
+.seoDashboard:has(.an-seo-workspace) .an-seo-product{gap:9px;padding-bottom:8px}
+.seoDashboard:has(.an-seo-workspace) .an-seo-product>img{width:52px;height:57px}
+.seoDashboard:has(.an-seo-workspace) .an-seo-product h3{font-size:14px}
+.seoDashboard:has(.an-seo-workspace) .an-seo-section-tabs{margin-bottom:7px;padding-bottom:7px}
+.seoDashboard:has(.an-seo-workspace) .an-seo-section-tabs :is(span,a){padding:7px 5px;font-size:9px}
+.seoDashboard:has(.an-seo-workspace) .an-seo-score-row{flex-direction:column;gap:6px}
+.seoDashboard:has(.an-seo-workspace) .an-seo-score{width:76px;height:76px}
+.seoDashboard:has(.an-seo-workspace) .an-seo-score>span{width:60px;height:60px;font-size:22px}
+.seoDashboard:has(.an-seo-workspace) .an-seo-checks{width:100%}
+.seoDashboard:has(.an-seo-workspace) .an-seo-checks p{margin:3px 0}
+.seoDashboard:has(.an-seo-workspace) .an-seo-social img{width:58px;height:66px}
+.seoDashboard:has(.an-seo-workspace) .an-seo-tool-link{padding:7px 9px;margin:4px 0}
+.seoDashboard:has(.an-seo-workspace) .an-seo-aside .an-seo-panel{height:auto;min-height:0}
+@media(max-width:1180px){.seoDashboard:has(.an-seo-workspace) .an-seo-layout{grid-template-columns:minmax(230px,31%) minmax(0,1fr)}.seoDashboard:has(.an-seo-workspace) .an-seo-catalog{grid-column:1;grid-row:1}.seoDashboard:has(.an-seo-workspace) .an-seo-editor{grid-column:2;grid-row:1}.seoDashboard:has(.an-seo-workspace) .an-seo-aside{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){.seoDashboard:has(.an-seo-workspace) .an-seo-layout{grid-template-columns:1fr}.seoDashboard:has(.an-seo-workspace) .an-seo-catalog,.seoDashboard:has(.an-seo-workspace) .an-seo-editor,.seoDashboard:has(.an-seo-workspace) .an-seo-aside{grid-column:1;grid-row:auto;position:static}.seoDashboard:has(.an-seo-workspace) .an-seo-aside{grid-template-columns:1fr}}
