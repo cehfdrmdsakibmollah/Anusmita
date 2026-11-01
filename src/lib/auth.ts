@@ -7,6 +7,11 @@ import { User } from "@/lib/models";
 export const SESSION = "anusmita_session";
 export const PERMISSIONS=["orders.view","orders.edit","products.view","products.edit","finance.view","inventory.view","inventory.edit","finance.edit","purchasing.view","purchasing.edit","settings.view","settings.edit","customers.view","support.view"] as const;
 export type Permission=typeof PERMISSIONS[number];
+export function encodePermissionKey(key:Permission):string{return key.replace(".","_");}
+export function decodePermissionMap(input:unknown):Record<string,boolean>{
+ const entries=input instanceof Map?[...input.entries()]:input&&typeof input==="object"?Object.entries(input):[];
+ return Object.fromEntries(entries.map(([k,v])=>[String(k).replace("_","."),v===true]));
+}
 export const ROLES = ["owner","admin","sales","finance","inventory","purchasing","support","analyst"] as const;
 export type Role = typeof ROLES[number];
 function key() {
@@ -25,7 +30,7 @@ export async function currentUser() {
   if (!payload.sub || !/^[0-9a-f]{24}$/i.test(payload.sub)) return null;
   await db();
   const user=await User.findById(payload.sub).select("name email role active permissions").lean<any>();
-  return user && user.active?{id:String(user._id),name:user.name as string,email:user.email as string,role:user.role as Role,permissions:Object.fromEntries(user.permissions instanceof Map?user.permissions:new Map(Object.entries(user.permissions||{})))}:null;
+  return user && user.active?{id:String(user._id),name:user.name as string,email:user.email as string,role:user.role as Role,permissions:decodePermissionMap(user.permissions)}:null;
  } catch { return null; }
 }
 export async function authorize(roles: Role[]) {
