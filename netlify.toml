@@ -7,3 +7,7 @@
 [build.environment]
   NODE_VERSION = "22"
   STORE_MODE = "catalog"
+
+# Scheduled publication uses the existing guarded MongoDB connection.
+[functions."publish-scheduled"]
+  schedule = "*/5 * * * *"
