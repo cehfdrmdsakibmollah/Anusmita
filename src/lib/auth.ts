@@ -33,15 +33,14 @@ export async function currentUser() {
   return user && user.active?{id:String(user._id),name:user.name as string,email:user.email as string,role:user.role as Role,permissions:decodePermissionMap(user.permissions)}:null;
  } catch { return null; }
 }
-export async function authorize(roles: Role[]) {
+export async function authorize(roles: Role[],permission?:Permission) {
  const user=await currentUser();
  if (!user || !roles.includes(user.role)) throw new HttpError(403,"Access denied");
+ if(permission && user.role!=="owner" && user.permissions[permission]===false)throw new HttpError(403,"Permission denied");
  return user;
 }
 export async function authorizePermission(roles:Role[],permission:Permission){
- const user=await authorize(roles);
- if(user.role!=="owner" && user.permissions[permission]===false)throw new HttpError(403,"Permission denied");
- return user;
+ return authorize(roles,permission);
 }
 export class HttpError extends Error { constructor(public status:number,message:string){ super(message); } }
 export function assertOrigin(request: Request) {
