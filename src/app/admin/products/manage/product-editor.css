@@ -140,3 +140,29 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 .seoDashboard:has(.apReferenceGrid) .apCatalogFilters{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
 .seoDashboard:has(.apReferenceGrid) .apCatalogFilters button{background:#fff6f8;border:1px solid #e9cbd4;border-radius:7px;color:#81203c;font-size:10px;padding:6px 9px;cursor:pointer}
 .seoDashboard:has(.apReferenceGrid) .apCatalogFilters button.selected{background:#8d1238;border-color:#8d1238;color:#fff}
+
+/* Reference framing: desktop masthead, sidebar and reliable 3-column layout */
+.seoDashboard:has(.apReferenceGrid){grid-template-columns:190px minmax(0,1fr)}
+.seoDashboard:has(.apReferenceGrid) .seoDashboardMain{padding:0 14px 28px}
+.seoDashboard:has(.apReferenceGrid) .seoBreadcrumb{display:none}
+.seoDashboard:has(.apReferenceGrid) .apTopbar{height:43px;display:flex;align-items:center;gap:20px;margin:0 -14px 0;padding:0 16px;border-bottom:1px solid #ebd3da;background:#fffafa}
+.seoDashboard:has(.apReferenceGrid) .apTopbarTrail{display:flex;align-items:center;gap:9px;white-space:nowrap;font-size:11px}
+.seoDashboard:has(.apReferenceGrid) .apTopbarTrail a{text-decoration:none;color:#54253a}
+.seoDashboard:has(.apReferenceGrid) .apTopbarSearch{margin-left:auto;border:1px solid #ead1d9;background:#fff9fa;border-radius:30px;padding:8px 14px;display:flex;gap:10px;align-items:center;color:#8b6674;width:min(360px,32%);font-size:11px}
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount{display:flex;align-items:center;gap:13px;font-size:11px;white-space:nowrap}
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount span{height:29px;width:29px;display:grid;place-items:center;border-radius:50%;background:#ac4761;color:#fff}
+.seoDashboard:has(.apReferenceGrid) .seoDashboardSidebar>a:not(.seoBrand){display:flex;align-items:center;gap:11px}
+.seoDashboard:has(.apReferenceGrid) .apModeNavigation{margin:0 0 9px;padding:6px 6px 11px;min-height:80px}
+.seoDashboard:has(.apReferenceGrid) .apModeNavigation h1{font-size:34px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(265px,22%) minmax(0,1fr) minmax(225px,20%);gap:11px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apBasic{grid-column:1;grid-row:1}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apPricing{grid-column:2;grid-row:1}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor #ap-variants{grid-column:1;grid-row:2}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apMedia{grid-column:2;grid-row:2}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apPriceDetail{grid-column:1;grid-row:3}
+.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apDetails{grid-column:2;grid-row:3}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts .apTableScroll{max-height:565px}
+.seoDashboard:has(.apReferenceGrid) .apReferenceProducts{min-height:690px}
+@media(max-width:1460px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(250px,24%) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1050px){.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form .apCard{grid-column:1!important;grid-row:auto!important}.seoDashboard:has(.apReferenceGrid) .apTopbarSearch{display:none}}
+@media(max-width:700px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apReferenceActions{grid-template-columns:1fr}.seoDashboard:has(.apReferenceGrid) .apTopbarAccount strong{display:none}}
