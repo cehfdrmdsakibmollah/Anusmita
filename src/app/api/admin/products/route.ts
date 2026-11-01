@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { Product,StockMovement,Audit } from "@/lib/models";
 import { productSchema } from "@/lib/validation";
 import {publicationState,assertFutureSchedule} from "@/lib/publication-state";
+import {validateCommercialState} from "@/lib/commercial-state";
 export async function POST(request:Request) {
  try {
   assertOrigin(request);
@@ -12,6 +13,7 @@ export async function POST(request:Request) {
   const data=productSchema.parse(await request.json());
   publicationState.parse(data);
   assertFutureSchedule(data.scheduledPublishAt);
+  validateCommercialState(data);
   await db();
   let created:any;const session=await mongoose.startSession();
   try {
