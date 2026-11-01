@@ -1,6 +1,6 @@
 
 import mongoose from "mongoose";
-import { assertOrigin,authorize,apiError,HttpError } from "@/lib/auth";
+import { assertOrigin,authorize,authorizePermission,apiError,HttpError } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Order,Payment,Audit } from "@/lib/models";
 import { paymentSchema } from "@/lib/validation";
@@ -8,7 +8,7 @@ import { paymentStatus } from "@/lib/money";
 export async function POST(request:Request) {
  try {
   assertOrigin(request);
-  const actor=await authorize(["owner","admin","finance"]);
+  const actor=await authorizePermission(["owner","admin","finance"],"finance.edit");
   const raw=await request.json();
   if(raw.verificationConfirmed!==true) throw new HttpError(400,"Confirm independent transaction verification before recording funds");
   const {verificationConfirmed: _operatorAttestation, ...payload}=raw;
