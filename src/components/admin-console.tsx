@@ -28,7 +28,8 @@ type Overview={orderedPaisa:number;confirmedPaisa:number;deliveredSalesPaisa:num
 type Order={_id:string;orderNumber:string;orderStatus:string;paymentStatus:string;collectedPaisa:number;totalPaisa:number;customer:{name:string;phone:string};createdAt:string};
 const money=(n:number)=>new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(n/100);
 const tabs=["Overview","Staff Management","Enterprise Modules","Warehouse Transfers","Assistant Replies","Homepage Studio","Orders","Courier Setup","Products","Inventory","Payments","Suppliers","Purchasing","Bulk Import","Canva Catalogue","HR Wholesale","Drive Images","Cloudinary","R2 Images","Launch Readiness","Finance Audit","Order Quality","Integration Hub","Activity Logs","Customers","Inventory Health","Header & Footer","Social Inbox"];
-export default function AdminConsole({role,initialTab}:{role:string;initialTab?:string}){
+const tabRequirements:Record<string,string>={"Orders":"orders.view","Order Quality":"orders.view","Products":"products.view","Canva Catalogue":"products.view","Drive Images":"products.view","Cloudinary":"products.view","R2 Images":"products.view","Inventory":"inventory.view","Inventory Health":"inventory.view","Warehouse Transfers":"inventory.view","Finance Audit":"finance.view","Payments":"finance.view","Overview":"finance.view","Purchasing":"purchasing.view","Suppliers":"purchasing.view","HR Wholesale":"purchasing.view","Customers":"customers.view","Social Inbox":"support.view","Assistant Replies":"support.view","Header & Footer":"settings.view","Homepage Studio":"settings.view","Integration Hub":"settings.view","Activity Logs":"settings.view","Launch Readiness":"settings.view"};
+export default function AdminConsole({role,initialTab,permissions={}}:{role:string;initialTab?:string;permissions?:Record<string,boolean>}){
  const [tab,setTab]=useState(initialTab&&tabs.includes(initialTab)?initialTab:"Overview"),[overview,setOverview]=useState<Overview|null>(null),[orders,setOrders]=useState<Order[]>([]),[notice,setNotice]=useState(""),[pending,setPending]=useState(false);
  const load=useCallback(async()=>{
   if(["owner","admin","finance","analyst"].includes(role)){
@@ -57,10 +58,12 @@ export default function AdminConsole({role,initialTab}:{role:string;initialTab?:
   await send("/api/admin/orders/"+order._id,{status,trackingReference},"PATCH");
  }
  function field(form:FormData,name:string){return String(form.get(name)||"").trim();}
- const canFinance=["owner","admin","finance"].includes(role),canStock=["owner","admin","inventory"].includes(role),canOrders=["owner","admin","sales"].includes(role);
+ const allowedTab=(t:string)=>role==="owner"||permissions[tabRequirements[t]]!==false;
+ const canFinance=["owner","admin","finance"].includes(role)&&(role==="owner"||permissions["finance.edit"]!==false),canStock=["owner","admin","inventory"].includes(role)&&(role==="owner"||permissions["inventory.edit"]!==false),canOrders=["owner","admin","sales"].includes(role)&&(role==="owner"||permissions["orders.edit"]!==false);
  const canSuppliers=["owner","admin","purchasing"].includes(role);
+ if(!allowedTab(tab))return <div className="adminCard"><p role="alert">This section is restricted by your staff permissions.</p><button type="button" onClick={()=>setTab("Overview")}>Back to Overview</button></div>;
  return <div className={tab==="Products"?"apConsole":""}>
- <div className="tabbar" role="tablist" aria-label="ERP sections">{tabs.map(t=><button key={t} className={tab===t?"active":""} role="tab" aria-selected={tab===t} onClick={()=>setTab(t)}>{t}</button>)}</div>
+ <div className="tabbar" role="tablist" aria-label="ERP sections">{tabs.filter(allowedTab).map(t=><button key={t} className={tab===t?"active":""} role="tab" aria-selected={tab===t} onClick={()=>setTab(t)}>{t}</button>)}</div>
  {tab==="Assistant Replies"&&(["owner","admin"].includes(role)?<ChatbotManager/>:<p>Owner or admin access required.</p>)}
  {notice&&<p role="status" className={notice.startsWith("Error")?"error":"success"}>{notice}</p>}
  {tab==="Overview"&&<><p className="muted">Financial totals show actual recorded orders and manually verified payments. Profit is an estimate until reconciliation.</p>
