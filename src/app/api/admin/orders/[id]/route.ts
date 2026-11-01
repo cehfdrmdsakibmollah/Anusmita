@@ -1,7 +1,7 @@
 
 import mongoose from "mongoose";
 import { z } from "zod";
-import { authorize,assertOrigin,apiError,HttpError } from "@/lib/auth";
+import { authorize,authorizePermission,assertOrigin,apiError,HttpError } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Order,Product,StockMovement,Audit } from "@/lib/models";
 const transitions:Record<string,string[]>={placed:["confirmed","cancelled"],confirmed:["packed","cancelled"],packed:["shipped","cancelled"],shipped:["delivered"]};
@@ -9,7 +9,7 @@ const schema=z.object({status:z.enum(["confirmed","packed","shipped","delivered"
 export async function PATCH(request:Request,ctx:{params:Promise<{id:string}>}) {
  try {
   assertOrigin(request);
-  const actor=await authorize(["owner","admin","sales"]);
+  const actor=await authorize(["owner","admin","sales"],"orders.edit");
   const {id}=await ctx.params;
   if(!mongoose.isValidObjectId(id)) throw new HttpError(400,"Invalid order ID");
   const {status,trackingReference}=schema.parse(await request.json());

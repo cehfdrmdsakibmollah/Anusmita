@@ -1,6 +1,6 @@
 
 import mongoose from "mongoose";
-import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
+import {authorize,authorizePermission,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {HomePage,Audit} from "@/lib/models";
 import {cmsOperation,homeStarterBlocks,homeStarterSections,uniqueSections} from "@/lib/home-content";
@@ -9,7 +9,7 @@ export const dynamic="force-dynamic";
 const headers={"Cache-Control":"private, no-store"};
 export async function GET(){
  try{
-  await authorize(["owner","admin"]);
+  await authorize(["owner","admin"],"settings.view");
   await db();
   const row=await HomePage.findOne({key:"main"}).lean<any>();
   return Response.json({
@@ -23,7 +23,7 @@ export async function GET(){
 export async function POST(req:Request){
  try{
   assertOrigin(req);
-  const actor=await authorize(["owner","admin"]);
+  const actor=await authorize(["owner","admin"],"settings.edit");
   if(Number(req.headers.get("content-length")||0)>16000)throw new HttpError(413,"Homepage edit request too large");
   const command=cmsOperation.parse(await req.json());
   await db();

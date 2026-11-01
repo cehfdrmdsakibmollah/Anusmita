@@ -1,7 +1,7 @@
 
 import {createHash} from "node:crypto";
 import mongoose from "mongoose";
-import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
+import {authorize,authorizePermission,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {PurchaseOrder,PurchaseReceipt,Product,StockMovement,Audit} from "@/lib/models";
 import {receiptSchema,receivePlan} from "@/lib/procurement";
@@ -11,7 +11,7 @@ type Out={id:string;receiptId:string;status:string;receivedUnits:number;alreadyA
 export async function POST(req:Request,ctx:{params:Promise<{id:string}>}){
  try{
   assertOrigin(req);
-  const actor=await authorize(["owner","admin","inventory","purchasing"]);
+  const actor=await authorize(["owner","admin","inventory","purchasing"],"inventory.edit");
   const {id}=await ctx.params;
   if(!mongoose.isValidObjectId(id))throw new HttpError(400,"Invalid PO identifier");
   if(Number(req.headers.get("content-length")||0)>16000)throw new HttpError(413,"Goods receipt too large");
@@ -81,7 +81,7 @@ export async function POST(req:Request,ctx:{params:Promise<{id:string}>}){
 
 export async function GET(_req:Request,ctx:{params:Promise<{id:string}>}){
  try{
-  await authorize(["owner","admin","purchasing","inventory","finance"]);
+  await authorize(["owner","admin","purchasing","inventory","finance"],"purchasing.view");
   const {id}=await ctx.params;
   if(!mongoose.isValidObjectId(id))throw new HttpError(400,"Invalid purchase order ID");
   await db();

@@ -1,10 +1,10 @@
-import {authorize,apiError} from "@/lib/auth";
+import {authorize,authorizePermission,apiError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {Order} from "@/lib/models";
 export const dynamic="force-dynamic";
 export async function GET(request:Request){
  try{
-  await authorize(["owner","admin","sales","support","analyst"]);
+  await authorize(["owner","admin","sales","support","analyst"],"customers.view");
   const params=new URL(request.url).searchParams;
   const page=Math.min(100,Math.max(1,Number.parseInt(params.get("page")||"1",10)||1));
   await db();

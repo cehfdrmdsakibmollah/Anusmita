@@ -1,6 +1,6 @@
 import {z} from "zod";
 import mongoose from "mongoose";
-import {authorize,apiError,assertOrigin,HttpError} from "@/lib/auth";
+import {authorize,authorizePermission,apiError,assertOrigin,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {StoreChrome,Audit} from "@/lib/models";
 export const dynamic="force-dynamic";
@@ -8,7 +8,7 @@ const order=(required:string[])=>z.array(z.string()).length(required.length).ref
 const schema=z.object({headerOrder:order(["logo","navigation","search","tools"]),footerOrder:order(["brand","shop","care"]),announcement:z.string().trim().max(180),footerNote:z.string().trim().max(240),enabled:z.boolean(),revision:z.number().int().nonnegative()}).strict();
 export async function GET(){
  try{
-  await authorize(["owner","admin"]);
+  await authorize(["owner","admin"],"settings.view");
   await db();
   const config=await StoreChrome.findOne({key:"main"}).select("announcement footerNote enabled revision headerOrder footerOrder").lean<any>();
   return Response.json({announcement:config?.announcement||"",footerNote:config?.footerNote||"",headerOrder:config?.headerOrder?.length===4?config.headerOrder:["logo","navigation","search","tools"],footerOrder:config?.footerOrder?.length===3?config.footerOrder:["brand","shop","care"],enabled:config?.enabled||false,revision:config?.revision||0},{headers:{"Cache-Control":"private, no-store"}});
@@ -17,7 +17,7 @@ export async function GET(){
 export async function POST(request:Request){
  try{
   assertOrigin(request);
-  const user=await authorize(["owner","admin"]);
+  const user=await authorize(["owner","admin"],"settings.edit");
   const input=schema.parse(await request.json());
   await db();
   const session=await mongoose.startSession();let nextRevision=0;

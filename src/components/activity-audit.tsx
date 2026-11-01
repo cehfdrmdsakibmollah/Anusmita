@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useState} from "react";
 type Event={id:string;actorId:string|null;action:string;entity:string;entityId:string;createdAt:string};
-const entities=["","Order","Product","Payment","Supplier","PurchaseOrder"];
+const entities=["","Order","Product","Payment","Supplier","PurchaseOrder","User"];
 export default function ActivityAudit(){
  const [rows,setRows]=useState<Event[]>([]),[entity,setEntity]=useState(""),[page,setPage]=useState(1);
  const [busy,setBusy]=useState(true),[error,setError]=useState("");

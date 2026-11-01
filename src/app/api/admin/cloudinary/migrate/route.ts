@@ -1,6 +1,6 @@
 
 import {z} from "zod";
-import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
+import {authorize,authorizePermission,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {findDriveMedia} from "@/lib/drive-media";
 import {mediaCredentials,mediaDailyQuota,assetDetails,uploadDriveAsset,attachManagedAsset} from "@/lib/cloudinary-server";
 export const runtime="nodejs";
@@ -10,7 +10,7 @@ const schema=z.object({productId:z.string().regex(/^[a-f0-9]{24}$/i),
  confirmed:z.literal(true)}).strict();
 export async function POST(req:Request){
  try {
-  assertOrigin(req);const actor=await authorize(["owner","admin","inventory"]);
+  assertOrigin(req);const actor=await authorize(["owner","admin","inventory"],"products.edit");
   const data=schema.parse(await req.json());
   const source=findDriveMedia(data.fileId);
   if(!source)throw new HttpError(404,"Image is not in the indexed Google Drive collections");

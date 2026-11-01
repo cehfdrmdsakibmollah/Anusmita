@@ -1,5 +1,5 @@
 
-import {authorize,apiError} from "@/lib/auth";
+import {authorize,authorizePermission,apiError} from "@/lib/auth";
 import {launchFlags,checkoutEnabled} from "@/lib/launch-config";
 import {db} from "@/lib/db";
 import {User,Product} from "@/lib/models";
@@ -8,7 +8,7 @@ export const dynamic="force-dynamic";
 type Check={key:string;label:string;ready:boolean;detail:string;required:boolean};
 export async function GET(){
  try{
-  await authorize(["owner","admin"]);
+  await authorize(["owner","admin"],"settings.view");
   const flags=launchFlags(process.env);
   const checks:Check[]=[
    {key:"mode",label:"Checkout launch switch",ready:flags.mode==="live",required:true,detail:flags.mode==="live"?"Explicit live mode":"Catalog mode; public orders are intentionally disabled"},

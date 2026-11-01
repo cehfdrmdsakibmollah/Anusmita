@@ -1,7 +1,7 @@
 
 import mongoose from "mongoose";
 import {z} from "zod";
-import {assertOrigin,authorize,apiError,HttpError} from "@/lib/auth";
+import {assertOrigin,authorize,authorizePermission,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {Product,Audit} from "@/lib/models";
 import {productSchema} from "@/lib/validation";
@@ -13,7 +13,7 @@ const bodySchema=z.object({expectedUpdatedAt:z.iso.datetime({offset:true}),chang
 export async function PATCH(req:Request,ctx:{params:Promise<{id:string}>}){
  try{
   assertOrigin(req);
-  const actor=await authorize(["owner","admin","inventory"]);
+  const actor=await authorize(["owner","admin","inventory"],"products.edit");
   const {id}=await ctx.params;
   if(!mongoose.isValidObjectId(id))throw new HttpError(400,"Invalid product ID");
   const {expectedUpdatedAt,changes}=bodySchema.parse(await req.json());

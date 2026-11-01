@@ -1,7 +1,7 @@
 
 import mongoose from "mongoose";
 import {z} from "zod";
-import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
+import {authorize,authorizePermission,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {PurchaseOrder,Audit} from "@/lib/models";
 export const runtime="nodejs";
@@ -9,7 +9,7 @@ const actionSchema=z.object({action:z.enum(["submit","cancel"]),expectedUpdatedA
 export async function PATCH(req:Request,ctx:{params:Promise<{id:string}>}){
  try{
   assertOrigin(req);
-  const actor=await authorize(["owner","admin","purchasing"]);
+  const actor=await authorize(["owner","admin","purchasing"],"purchasing.edit");
   const {id}=await ctx.params;
   if(!mongoose.isValidObjectId(id))throw new HttpError(400,"Invalid purchase order ID");
   const data=actionSchema.parse(await req.json());

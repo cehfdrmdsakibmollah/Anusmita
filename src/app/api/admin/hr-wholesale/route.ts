@@ -1,7 +1,7 @@
 
 import {createHash} from "node:crypto";
 import mongoose from "mongoose";
-import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
+import {authorize,authorizePermission,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {Audit,HrSupplierCandidate} from "@/lib/models";
 import {parseHrSupplierCsv,hrWholesaleSourceCsv,hrSupplierTemplate,hrWholesalePublic} from "@/lib/hr-supplier";
@@ -17,7 +17,7 @@ const csvHeaders=(name:string)=>({
 });
 export async function GET(req:Request){
  try{
-  const actor=await authorize(["owner","admin","inventory","purchasing"]);
+  const actor=await authorize(["owner","admin","inventory","purchasing"],"purchasing.view");
   const params=new URL(req.url).searchParams;
   const mode=params.get("mode")||"public";
   if(mode==="template")return new Response(hrSupplierTemplate(),{headers:csvHeaders("HR-Wholesale-Supplier-Quote-Template.csv")});
@@ -45,7 +45,7 @@ export async function GET(req:Request){
 export async function POST(req:Request){
  try{
   assertOrigin(req);
-  const actor=await authorize(["owner","admin","purchasing"]);
+  const actor=await authorize(["owner","admin","purchasing"],"purchasing.edit");
   const raw=await req.text();
   if(raw.length>310_000)throw new HttpError(413,"Supplier CSV request is too large");
   const data=JSON.parse(raw) as {mode?:unknown;csv?:unknown;previewHash?:unknown};

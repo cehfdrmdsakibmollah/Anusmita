@@ -1,13 +1,13 @@
 import {z} from "zod";
 import mongoose from "mongoose";
-import {authorize,apiError,assertOrigin,HttpError} from "@/lib/auth";
+import {authorize,authorizePermission,apiError,assertOrigin,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {WarehouseLocation,Audit} from "@/lib/models";
 export const dynamic="force-dynamic";
 const schema=z.object({code:z.string().trim().regex(/^[A-Za-z0-9_-]{2,24}$/),name:z.string().trim().min(2).max(100),address:z.string().trim().max(250).default("")}).strict();
 export async function GET(){
  try{
-  await authorize(["owner","admin","inventory","purchasing"]);
+  await authorize(["owner","admin","inventory","purchasing"],"inventory.view");
   await db();
   const rows=await WarehouseLocation.find({}).select("code name address active createdAt").sort({createdAt:-1}).limit(100).lean<any[]>();
   return Response.json({locations:rows.map(x=>({id:String(x._id),code:x.code,name:x.name,address:x.address,active:x.active,createdAt:x.createdAt})),
@@ -17,7 +17,7 @@ export async function GET(){
 export async function POST(request:Request){
  try{
   assertOrigin(request);
-  const actor=await authorize(["owner","admin"]);
+  const actor=await authorize(["owner","admin"],"inventory.edit");
   const body=schema.parse(await request.json());
   await db();
   const code=body.code.toUpperCase();

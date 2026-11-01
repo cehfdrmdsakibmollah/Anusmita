@@ -6,7 +6,7 @@ const UserSchema = new Schema({
  email: {type:String,required:true,unique:true,lowercase:true,trim:true},
  name: {type:String,required:true}, passwordHash: {type:String,required:true,select:false},
  role:{type:String,enum:["owner","admin","sales","finance","inventory","purchasing","support","analyst"],required:true},
- active:{type:Boolean,default:true}, loginFailures:{type:Number,default:0},
+ active:{type:Boolean,default:true}, permissions:{type:Map,of:Boolean,default:{}}, loginFailures:{type:Number,default:0},
  lockedUntil:{type:Date,default:null}
 }, opts);
 

@@ -1,6 +1,6 @@
 
 import {z} from "zod";
-import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
+import {authorize,authorizePermission,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {cloudinaryPublicId} from "@/lib/cloudinary-media";
 import {managedAssetId} from "@/lib/cloudinary-signature";
 import {attachManagedAsset,assetDetails} from "@/lib/cloudinary-server";
@@ -9,7 +9,7 @@ const body=z.object({productId:z.string().regex(/^[a-f0-9]{24}$/i),url:z.url().m
  expectedUpdatedAt:z.iso.datetime({offset:true})}).strict();
 export async function POST(req:Request){
  try{
-  assertOrigin(req);const user=await authorize(["owner","admin","inventory"]);
+  assertOrigin(req);const user=await authorize(["owner","admin","inventory"],"products.edit");
   const data=body.parse(await req.json());
   const publicId=cloudinaryPublicId(data.url);
   if(!publicId||!managedAssetId(publicId))throw new HttpError(400,"Only verified, managed ANUSMITA Cloudinary assets are accepted");

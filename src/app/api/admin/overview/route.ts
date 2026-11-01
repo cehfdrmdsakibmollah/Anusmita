@@ -1,11 +1,11 @@
 
-import { authorize,apiError } from "@/lib/auth";
+import { authorize,authorizePermission,apiError } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Order,Product,Payment,Expense,PurchaseOrder,SupplierPayment } from "@/lib/models";
 export const dynamic="force-dynamic";
 export async function GET() {
  try{
-  await authorize(["owner","admin","finance","analyst"]);
+  await authorize(["owner","admin","finance","analyst"],"finance.view");
   await db();
   const [orders,products,collections,expenses,payables,supplierPayments]=await Promise.all([
    Order.find({isTest:false}).select("orderStatus subtotalPaisa shippingPaisa totalPaisa collectedPaisa lines").lean(),

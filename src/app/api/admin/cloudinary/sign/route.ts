@@ -2,7 +2,7 @@
 import {randomUUID} from "node:crypto";
 import mongoose from "mongoose";
 import {z} from "zod";
-import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
+import {authorize,authorizePermission,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {Product} from "@/lib/models";
 import {cloudinarySignature,uploadReceiptToken,supportedUpload} from "@/lib/cloudinary-signature";
@@ -13,7 +13,7 @@ const schema=z.object({productId:z.string().regex(/^[a-f0-9]{24}$/i),
  fileSize:z.number().int().positive(),contentType:z.string().max(80)}).strict();
 export async function POST(req:Request){
  try{
-  assertOrigin(req);const actor=await authorize(["owner","admin","inventory"]);
+  assertOrigin(req);const actor=await authorize(["owner","admin","inventory"],"products.edit");
   const data=schema.parse(await req.json());
   if(!supportedUpload(data.contentType,data.fileSize))throw new HttpError(400,"Choose a JPEG, PNG or WebP under 10 MB (convert HEIC first)");
   const creds=mediaCredentials();

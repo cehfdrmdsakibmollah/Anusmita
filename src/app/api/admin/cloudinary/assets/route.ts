@@ -1,11 +1,11 @@
 
-import {authorize,apiError,HttpError} from "@/lib/auth";
+import {authorize,authorizePermission,apiError,HttpError} from "@/lib/auth";
 import {mediaCredentials} from "@/lib/cloudinary-server";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export async function GET(req:Request){
  try{
-  await authorize(["owner","admin","inventory"]);
+  await authorize(["owner","admin","inventory"],"products.view");
   const c=mediaCredentials();
   const params=new URL(req.url).searchParams;
   const cursor=params.get("cursor")||"";

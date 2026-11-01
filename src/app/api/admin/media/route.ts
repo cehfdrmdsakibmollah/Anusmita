@@ -1,7 +1,7 @@
 
 import mongoose from "mongoose";
 import {z} from "zod";
-import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
+import {authorize,authorizePermission,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {Product,Audit} from "@/lib/models";
 import {driveImages,findDriveMedia,driveImageUrl,driveViewUrl} from "@/lib/drive-media";
@@ -16,7 +16,7 @@ const attachSchema=z.object({
 
 export async function GET(req:Request){
  try {
-  await authorize(["owner","admin","inventory"]);
+  await authorize(["owner","admin","inventory"],"products.view");
   const params=new URL(req.url).searchParams;
   const q=(params.get("q")||"").toLocaleLowerCase().trim().slice(0,90);
   const origin=params.get("origin")||"All";
@@ -31,7 +31,7 @@ export async function GET(req:Request){
 export async function POST(req:Request){
  try{
   assertOrigin(req);
-  const actor=await authorize(["owner","admin","inventory"]);
+  const actor=await authorize(["owner","admin","inventory"],"products.edit");
   const data=attachSchema.parse(await req.json());
   const media=findDriveMedia(data.fileId);
   if(!media)throw new HttpError(404,"This file is not in the reviewed ANUSMITA Drive media index");

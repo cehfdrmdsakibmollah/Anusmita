@@ -1,4 +1,4 @@
-import {authorize,apiError,HttpError} from '@/lib/auth';
+import {authorize,authorizePermission,apiError,HttpError} from '@/lib/auth';
 import {db} from '@/lib/db';
 import {Order,Product,Payment,PurchaseOrder} from '@/lib/models';
 import {dashboardWindow,fillDailySeries} from '@/lib/dashboard-metrics';
@@ -8,7 +8,7 @@ const openPurchase={status:{$in:['submitted','partially_received','received']}};
 const dateGroup=(field:string)=>({$dateToString:{format:'%Y-%m-%d',date:field,timezone:'Asia/Dhaka'}});
 export async function GET(request:Request) {
  try {
-  await authorize(['owner','admin','finance','analyst']);
+  await authorize(['owner','admin','finance','analyst'],"finance.view");
   const raw=new URL(request.url).searchParams.get('days')??'7';
   if(raw!=='7'&&raw!=='14')throw new HttpError(400,'Chart range must be 7 or 14 days');
   const days=Number(raw) as 7|14;

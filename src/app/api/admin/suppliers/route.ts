@@ -1,6 +1,6 @@
 
 import { z } from "zod";
-import { assertOrigin,authorize,apiError } from "@/lib/auth";
+import { assertOrigin,authorize,authorizePermission,apiError } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Supplier,Audit } from "@/lib/models";
 const schema=z.object({
@@ -12,7 +12,7 @@ const schema=z.object({
 export async function POST(req:Request) {
  try{
   assertOrigin(req);
-  const actor=await authorize(["owner","admin","purchasing"]);
+  const actor=await authorize(["owner","admin","purchasing"],"purchasing.edit");
   const data=schema.parse(await req.json());await db();
   const supplier=await Supplier.create(data);
   await Audit.create({actorId:actor.id,action:"supplier.created",entity:"Supplier",entityId:String(supplier._id)});
@@ -20,7 +20,7 @@ export async function POST(req:Request) {
  }catch(e){return apiError(e);}
 }
 export async function GET() {
- try {await authorize(["owner","admin","purchasing","finance"]);await db();
+ try {await authorize(["owner","admin","purchasing","finance"],"purchasing.view");await db();
   return Response.json({suppliers:await Supplier.find({active:true}).sort({createdAt:-1}).limit(100).lean()});
  }catch(e){return apiError(e);}
 }

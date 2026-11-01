@@ -10,6 +10,6 @@ export default async function AdminPage({searchParams}:{searchParams:Promise<{ta
  const user=await currentUser();
  if(!user)redirect("/admin/login");
  return <div className="adminWrap"><div className="adminTitle"><div><p className="eyebrow">ANUSMITA · BUSINESS OPERATIONS</p><h1>Business dashboard</h1><p className="muted">Signed in as {user.name} · {user.role}</p></div><div className="noPrint"><LogoutButton/></div></div>
- <p><a href="/admin/dashboard">Open business overview →</a></p><AdminConsole role={user.role} initialTab={params.tab}/></div>;
+ <p><a href="/admin/dashboard">Open business overview →</a></p><AdminConsole role={user.role} permissions={user.permissions} initialTab={params.tab}/></div>;
 }
 
