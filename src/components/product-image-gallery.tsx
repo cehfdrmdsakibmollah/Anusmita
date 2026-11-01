@@ -2,7 +2,7 @@
 "use client";
 import {useEffect,useState} from "react";
 import {ArrowLeft,ArrowRight,Expand,ImageOff,X,ZoomIn} from "lucide-react";
-export default function ProductImageGallery({urls,name,preview=false}:{urls:string[];name:string;preview?:boolean}){
+export default function ProductImageGallery({urls,name,preview=false,altTexts=[]}:{urls:string[];name:string;preview?:boolean;altTexts?:string[]}){
  const safe=urls.filter(Boolean).slice(0,12);
  const [index,setIndex]=useState(0),[broken,setBroken]=useState<string[]>([]),[zoom,setZoom]=useState(false);
  const active=Math.min(index,Math.max(0,safe.length-1));
@@ -28,7 +28,7 @@ export default function ProductImageGallery({urls,name,preview=false}:{urls:stri
   <div className="anPdpMainImage anPdpStudioFrame">
    {preview&&<span className="anPdpImageTag">DESIGN PREVIEW</span>}
    {isBroken?<div className="anPdpImageFallback"><ImageOff size={38}/><p>Product image is not available yet</p><span>ANUSMITA</span></div>:
-    <img src={url} alt={name+" — image "+(active+1)+" of "+safe.length} loading="eager"
+    <img src={url} alt={altTexts[active]?.trim()||name+" — image "+(active+1)+" of "+safe.length} loading="eager"
      onError={()=>setBroken(old=>old.includes(url)?old:[...old,url])}/>}
    {safe.length>1&&<>
     <button className="anPdpGalleryPrev" type="button" aria-label="Previous product photo" onClick={()=>advance(-1)}><ArrowLeft size={20}/></button>
@@ -40,7 +40,7 @@ export default function ProductImageGallery({urls,name,preview=false}:{urls:stri
   {zoom&&!isBroken&&<div className="anPdpLightbox" role="dialog" aria-modal="true" aria-label={name+" enlarged photo"}
    onMouseDown={e=>{if(e.target===e.currentTarget)setZoom(false);}}>
    <button type="button" className="anPdpLightboxClose" aria-label="Close enlarged product photo" onClick={()=>setZoom(false)} autoFocus><X size={23}/></button>
-   <img src={url} alt={name+" — enlarged photo"}/>
+   <img src={url} alt={altTexts[active]?.trim()||name+" — enlarged photo"}/>
    <div className="anPdpLightboxHelp"><ZoomIn size={15}/> Photo {active+1} / {safe.length} · Press Esc to close</div>
    {safe.length>1&&<div className="anPdpLightboxNav"><button type="button" aria-label="Previous photo" onClick={()=>advance(-1)}><ArrowLeft/></button><button type="button" aria-label="Next photo" onClick={()=>advance(1)}><ArrowRight/></button></div>}
   </div>}
