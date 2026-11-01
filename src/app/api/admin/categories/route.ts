@@ -26,7 +26,7 @@ export async function PATCH(request:Request){
  if(data.parentId===data.id)throw new HttpError(400,"Category cannot be its own parent");
  if(data.parentId){
   let ancestor:string|null=data.parentId;const seen=new Set<string>([data.id]);let depth=0;
-  while(ancestor){if(seen.has(ancestor))throw new HttpError(409,"Category hierarchy cycle");seen.add(ancestor);if(++depth>50)throw new HttpError(409,"Hierarchy too deep");const parent=await CatalogCategory.findById(ancestor).select("parentId").lean<any>();if(!parent)throw new HttpError(404,"Parent not found");ancestor=parent.parentId?String(parent.parentId):null;}
+  while(ancestor){if(seen.has(ancestor))throw new HttpError(409,"Category hierarchy cycle");seen.add(ancestor);if(++depth>50)throw new HttpError(409,"Hierarchy too deep");const parent:{parentId?:unknown}|null=await CatalogCategory.findById(ancestor).select("parentId").lean<any>();if(!parent)throw new HttpError(404,"Parent not found");ancestor=parent.parentId?String(parent.parentId):null;}
  }
  const session=await mongoose.startSession();
  try{await session.withTransaction(async()=>{const updated=await CatalogCategory.updateOne({_id:data.id},{$set:{name:data.name,slug:data.slug,parentId:data.parentId,active:data.active,position:data.position,description:data.description,seoTitle:data.seoTitle,seoDescription:data.seoDescription}},{session,runValidators:true});if(!updated.matchedCount)throw new HttpError(404,"Category not found");
