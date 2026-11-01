@@ -277,3 +277,11 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 .seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apPublishingInfo{padding:7px;gap:5px}
 .seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apPublishingInfo span{padding:5px 7px}
 @media(min-width:1400px){.seoDashboard:has(.apReferenceGrid) .apReferenceGrid{grid-template-columns:minmax(270px,22%) minmax(0,1fr) minmax(235px,19%)}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor .apCardBody{padding:8px}.seoDashboard:has(.apReferenceGrid) .apReferenceEditor form{grid-template-columns:1.12fr 1fr}}
+
+/* Clear, auditable inventory and publication choices */
+.seoDashboard:has(.apReferenceGrid) .apStockManageLink{display:inline-block;margin-top:5px;font-size:10px;font-weight:700;color:#871436;text-decoration:underline;text-underline-offset:2px}
+.seoDashboard:has(.apReferenceGrid) .apStockPills span{cursor:default}
+.seoDashboard:has(.apReferenceGrid) .apPublishQuick{display:flex;flex-wrap:wrap;gap:6px;padding:7px 0}
+.seoDashboard:has(.apReferenceGrid) .apPublishQuick button{border:1px solid #ebc6d1;border-radius:7px;background:#fff7f9;color:#801338;font-size:10px;padding:7px 10px;cursor:pointer;font-weight:700}
+.seoDashboard:has(.apReferenceGrid) .apPublishQuick button.chosen{background:#8d1238;border-color:#8d1238;color:#fff}
+.seoDashboard:has(.apReferenceGrid) .apScheduleField{width:100%}
