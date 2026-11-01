@@ -40,10 +40,12 @@ export async function GET(req:Request) {
   const filter:any=q?{$or:[{sku:{$regex:q.replace(/[^a-zA-Z0-9 _-]/g,""),$options:"i"}},{name:{$regex:q.replace(/[^a-zA-Z0-9 _-]/g,""),$options:"i"}},{brand:{$regex:q.replace(/[^a-zA-Z0-9 _-]/g,""),$options:"i"}}]}:{};
   if(variantGroup)filter.variantGroup=variantGroup;
   if(category&&category!=="all")filter.category=category;
-  if(status==="published")filter.active=true;
-  if(status==="draft")filter.active=false;
+  if(status==="published"){filter.active=true;filter.archived={$ne:true};}
+  if(status==="draft"){filter.active=false;filter.archived={$ne:true};}
+  if(status==="archived")filter.archived=true;
+  if(status==="all")filter.archived={$ne:true};
   const [products,total,categories]=await Promise.all([
-   Product.find(filter).select("sku name slug brand category origin size color colorHex variantLabel variantGroup ingredients usageInstructions topNotes heartNotes baseNotes pricePaisa costPaisa compareAtPaisa wholesalePaisa featured barcode scheduledPublishAt onHand reserved active updatedAt reorderLevel description imageUrls").sort({updatedAt:-1}).skip((page-1)*pageSize).limit(pageSize).lean<any[]>(),
+   Product.find(filter).select("sku name slug brand category origin size color colorHex variantLabel variantGroup ingredients usageInstructions topNotes heartNotes baseNotes pricePaisa costPaisa compareAtPaisa wholesalePaisa featured barcode archived scheduledPublishAt onHand reserved active updatedAt reorderLevel description imageUrls").sort({updatedAt:-1}).skip((page-1)*pageSize).limit(pageSize).lean<any[]>(),
    Product.countDocuments(filter),
    Product.distinct("category")
   ]);
