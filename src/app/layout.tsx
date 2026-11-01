@@ -11,7 +11,9 @@ import "./catalogue-refresh.css";
 import StoreNavigation from "@/components/store-navigation";
 import StorefrontHelp from "@/components/storefront-help";
 import {publicChrome} from "@/lib/public-store-chrome";
-export const metadata:Metadata={
+import {db} from "@/lib/db";
+import {SiteSeo} from "@/lib/models";
+const defaultMetadata:Metadata={
  title:{default:"ANUSMITA | Fashion · Jewellery · Beauty",template:"%s | ANUSMITA"},
  description:"Discover ANUSMITA's curated collection of beauty, skincare, fashion, jewellery, watches, bags, perfume, home and everyday accessories in Bangladesh.",
  robots:{index:checkoutEnabled(process.env),follow:checkoutEnabled(process.env)},
@@ -19,6 +21,12 @@ export const metadata:Metadata={
  metadataBase:new URL(process.env.NEXT_PUBLIC_SITE_URL||"http://localhost:3000"),
  openGraph:{type:"website",title:"ANUSMITA",description:"Beauty · Fashion · Lifestyle",siteName:"ANUSMITA"}
 };
+export async function generateMetadata():Promise<Metadata>{
+ let record:{title?:string;description?:string}|null=null;
+ try{await db();record=await SiteSeo.findOne({key:"main",enabled:true}).select("title description").lean<any>();}catch{ /* Keep the existing store metadata if optional SEO config is unavailable. */ }
+ if(!record?.title||!record.description)return defaultMetadata;
+ return {...defaultMetadata,title:{default:record.title,template:"%s | ANUSMITA"},description:record.description,openGraph:{type:"website",siteName:"ANUSMITA",title:record.title,description:record.description}};
+}
 export default async function RootLayout({children}:{children:React.ReactNode}){
  const chrome=await publicChrome();
  return <html lang="en"><body className="anBody"><a className="anSkipLink" href="#main-content">Skip to content</a>

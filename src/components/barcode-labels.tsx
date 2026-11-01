@@ -1,0 +1,18 @@
+"use client";
+import {useEffect,useState} from "react";
+type Product={_id:string;sku:string;name:string};
+const patterns:Record<string,string>={"0":"nnnwwnwnn","1":"wnnwnnnnw","2":"nnwwnnnnw","3":"wnwwnnnnn","4":"nnnwwnnnw","5":"wnnwwnnnn","6":"nnwwwnnnn","7":"nnnwnnwnw","8":"wnnwnnwnn","9":"nnwwnnwnn","A":"wnnnnwnnw","B":"nnwnnwnnw","C":"wnwnnwnnn","D":"nnnnwwnnw","E":"wnnnwwnnn","F":"nnwnwwnnn","G":"nnnnnwwnw","H":"wnnnnwwnn","I":"nnwnnwwnn","J":"nnnnwwwnn","K":"wnnnnnnww","L":"nnwnnnnww","M":"wnwnnnnwn","N":"nnnnwnnww","O":"wnnnwnnwn","P":"nnwnwnnwn","Q":"nnnnnnwww","R":"wnnnnnwwn","S":"nnwnnnwwn","T":"nnnnwnwwn","-":"nwnnnnwnw",".":"wwnnnnwnn"," ":"nwwnnnwnn","*":"nwnnwnwnn"};
+function Bars({sku}:{sku:string}){const value="*"+sku.toUpperCase()+"*";const rects:{x:number;width:number}[]=[];let x=8;for(const char of value){const pattern=patterns[char];if(!pattern)return <span>Unsupported SKU characters</span>;for(let i=0;i<9;i++){const w=pattern[i]==="w"?5:2;if(i%2===0)rects.push({x,width:w});x+=w;}x+=2;}return <svg role="img" aria-label={"Code 39 barcode for "+sku} viewBox={"0 0 "+(x+8)+" 74"} preserveAspectRatio="xMidYMid meet" style={{width:"100%",height:72}}>{rects.map((r,i)=><rect key={i} x={r.x} y={3} width={r.width} height={63} fill="#111"/>)}</svg>;}
+export default function BarcodeLabels(){
+ const [products,setProducts]=useState<Product[]>([]),[query,setQuery]=useState(""),[selected,setSelected]=useState<string[]>([]),[notice,setNotice]=useState("");
+ async function search(){setNotice("");try{const response=await fetch("/api/admin/products?"+new URLSearchParams({q:query,page:"1"}),{cache:"no-store"});const d=await response.json();if(!response.ok)throw Error(d.error||"Unable to search catalog");setProducts((d.products||[]).filter((p:Product)=>/^[A-Z0-9 .-]+$/i.test(p.sku)));}catch(e){setNotice(String(e));}}
+ useEffect(()=>{void search();},[]);
+ const printable=products.filter(x=>selected.includes(x._id));
+ return <section className="adminCard"><h2>Printable Product Barcode Labels</h2><p className="smallprint">Scannable Code 39 for eligible recorded SKUs; no third-party service and no inventory changes. Verify scanner support for Code 39. First 30 matching products per search.</p>
+ <form onSubmit={e=>{e.preventDefault();void search();}}><input aria-label="Search SKU or product" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search by SKU or product"/><button className="button small" type="submit">Search</button></form>{notice&&<p role="alert">{notice}</p>}
+ <div style={{display:"grid",gap:8,marginTop:12}}>{products.map(p=><label key={p._id}><input type="checkbox" checked={selected.includes(p._id)} onChange={e=>setSelected(old=>e.target.checked?[...new Set([...old,p._id])]:old.filter(id=>id!==p._id))}/> {p.sku} — {p.name}</label>)}</div>
+ <button type="button" className="button" disabled={!printable.length} onClick={()=>window.print()}>Print selected labels ({printable.length})</button>
+ <div className="anBarcodePrintArea" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:12,marginTop:20}}>{printable.map(p=><div className="anBarcodeLabel" key={p._id} style={{background:"#fff",border:"1px solid #ccc",padding:12,color:"#111",pageBreakInside:"avoid"}}><b>ANUSMITA</b><p style={{fontSize:12,margin:"4px 0"}}>{p.name.slice(0,55)}</p><Bars sku={p.sku}/><div style={{textAlign:"center",fontSize:13}}>{p.sku}</div></div>)}</div>
+ <style>{'@media print{body *{visibility:hidden!important}.anBarcodePrintArea,.anBarcodePrintArea *{visibility:visible!important}.anBarcodePrintArea{position:absolute;top:0;left:0;width:100%;display:grid!important;grid-template-columns:repeat(3,1fr)!important}.anBarcodeLabel{break-inside:avoid}}'}</style>
+ </section>;
+}
