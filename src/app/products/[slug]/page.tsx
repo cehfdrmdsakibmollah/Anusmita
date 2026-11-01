@@ -43,7 +43,7 @@ async function getProduct(slug:string):Promise<DbProduct|null>{
   return await Product.findOne({slug,active:true}).select(projection).lean<DbProduct>();
  }catch{return null;}
 }
-async function seoFor(p:DbProduct){if(p.slug==="design-preview")return null;try{await db();return await ProductSeo.findOne({productId:p._id}).select("metaTitle metaDescription focusKeyword keywords imageAltTexts ogTitle ogDescription robotsIndex robotsFollow").lean<any>();}catch{return null;}}
+async function seoFor(p:DbProduct){if(p.slug==="design-preview")return null;try{await db();return await ProductSeo.findOne({productId:p._id}).select("metaTitle metaDescription focusKeyword keywords imageAltTexts ogTitle ogDescription robotsIndex robotsFollow schemaEnabled").lean<any>();}catch{return null;}}
 const variant=(p:DbProduct):ProductVariant=>({
  id:String(p._id),slug:p.slug,sku:p.sku||"",color:p.color,colorHex:p.colorHex,size:p.size||p.variantLabel||"",
  pricePaisa:p.pricePaisa,available:Math.max(0,(p.onHand||0)-(p.reserved||0))
@@ -115,7 +115,7 @@ export default async function ProductPage({params}:Props){
  const stock=Math.max(0,(p.onHand||0)-(p.reserved||0));
  const canOrder=!preview&&checkoutEnabled(process.env);
  const url=(process.env.NEXT_PUBLIC_SITE_URL||"http://localhost:3000").replace(/\/$/,"")+"/products/"+p.slug;
- const structured=preview?null:{
+ const structured=preview||customSeo?.schemaEnabled===false?null:{
   "@context":"https://schema.org","@type":"Product",name:p.name,
   sku:p.sku||undefined,description:p.description||p.name,
   brand:p.brand?{"@type":"Brand",name:p.brand}:undefined,
