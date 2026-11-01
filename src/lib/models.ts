@@ -280,7 +280,8 @@ const LoyaltyWalletSchema=new Schema({
  customerPhone:{type:String,required:true,unique:true},
  balancePoints:{type:Number,default:0},
  earnedPoints:{type:Number,default:0,min:0},
- redeemedPoints:{type:Number,default:0,min:0}
+ redeemedPoints:{type:Number,default:0,min:0},
+ reversedPoints:{type:Number,default:0,min:0}
 },opts);
 const LoyaltyEventSchema=new Schema({
  eventKey:{type:String,required:true,unique:true},
