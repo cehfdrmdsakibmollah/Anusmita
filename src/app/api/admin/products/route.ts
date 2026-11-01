@@ -36,10 +36,11 @@ export async function GET(req:Request) {
   if(category&&category!=="all")filter.category=category;
   if(status==="published")filter.active=true;
   if(status==="draft")filter.active=false;
-  const [products,total]=await Promise.all([
+  const [products,total,categories]=await Promise.all([
    Product.find(filter).select("sku name slug brand category origin size color colorHex variantLabel variantGroup ingredients usageInstructions topNotes heartNotes baseNotes pricePaisa costPaisa onHand reserved active updatedAt reorderLevel description imageUrls").sort({updatedAt:-1}).skip((page-1)*pageSize).limit(pageSize).lean<any[]>(),
-   Product.countDocuments(filter)
+   Product.countDocuments(filter),
+   Product.distinct("category")
   ]);
-  return Response.json({products:products.map(p=>({...p,_id:String(p._id)})),page,pages:Math.ceil(total/pageSize),total,perPage:pageSize},{headers:{"Cache-Control":"no-store"}});
+  return Response.json({products:products.map(p=>({...p,_id:String(p._id)})),page,pages:Math.ceil(total/pageSize),total,perPage:pageSize,categories:categories.filter((x:unknown):x is string=>typeof x==="string"&&x.length>0).sort()},{headers:{"Cache-Control":"no-store"}});
  } catch(e){return apiError(e);}
 }
