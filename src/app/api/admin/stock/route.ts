@@ -1,7 +1,7 @@
 
 import mongoose from "mongoose";
 import { z } from "zod";
-import { assertOrigin,authorize,authorizePermission,authorizePermission,apiError,HttpError } from "@/lib/auth";
+import { assertOrigin,authorize,authorizePermission,apiError,HttpError } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Product,StockMovement,Audit } from "@/lib/models";
 const schema=z.object({productId:z.string().regex(/^[a-f0-9]{24}$/i),type:z.enum(["receive","damage","adjust"]),quantity:z.number().int().min(-100000).max(100000),note:z.string().trim().min(5).max(300)}).strict();
