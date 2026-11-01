@@ -228,6 +228,25 @@ export const WarehouseBalance=mongoose.models.WarehouseBalance||mongoose.model("
 export const WarehouseEvent=mongoose.models.WarehouseEvent||mongoose.model("WarehouseEvent",WarehouseEventSchema);
 export const WarehouseLocation=mongoose.models.WarehouseLocation||mongoose.model("WarehouseLocation",WarehouseLocationSchema);
 
+const CatalogCategorySchema=new Schema({
+ name:{type:String,required:true,trim:true,maxlength:90},
+ slug:{type:String,required:true,unique:true,lowercase:true,trim:true},
+ parentId:{type:Schema.Types.ObjectId,ref:"CatalogCategory",default:null},
+ active:{type:Boolean,default:true},position:{type:Number,default:0,min:0},
+ description:{type:String,default:"",maxlength:500},
+ seoTitle:{type:String,default:"",maxlength:70},
+ seoDescription:{type:String,default:"",maxlength:160}
+},opts);
+CatalogCategorySchema.index({parentId:1,position:1});
+export const CatalogCategory=mongoose.models.CatalogCategory||mongoose.model("CatalogCategory",CatalogCategorySchema);
+const SiteSeoSchema=new Schema({
+ key:{type:String,required:true,unique:true,default:"main"},
+ title:{type:String,required:true,maxlength:70},
+ description:{type:String,required:true,maxlength:160},
+ revision:{type:Number,default:0,min:0},
+ enabled:{type:Boolean,default:false}
+},opts);
+export const SiteSeo=mongoose.models.SiteSeo||mongoose.model("SiteSeo",SiteSeoSchema);
 const CatalogImportSchema = new Schema({
  importKey:{type:String,required:true,unique:true},
  actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},
