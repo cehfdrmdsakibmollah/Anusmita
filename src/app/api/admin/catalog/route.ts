@@ -3,7 +3,7 @@ import "server-only";
 import {createHash} from "node:crypto";
 import mongoose from "mongoose";
 import {z} from "zod";
-import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
+import {authorize,authorizePermission,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {Product,StockMovement,Audit,CatalogImport} from "@/lib/models";
 import {csvRows,csvSerialize,CSV_HEADERS,CSV_TEMPLATE,safeSlug,CsvError,type CatalogRow} from "@/lib/catalog-csv";
@@ -38,7 +38,7 @@ function revision(csv:string,rows:CatalogRow[],current:Map<string,Existing>){
 }
 export async function GET(req:Request){
  try{
-  await authorize(["owner","admin","inventory","purchasing"]);
+  await authorizePermission(["owner","admin","inventory","purchasing"],"products.view");
   const url=new URL(req.url);
   if(url.searchParams.get("mode")==="template"){
    return new Response("\uFEFF"+CSV_TEMPLATE,{headers:{"Content-Type":"text/csv; charset=utf-8","Content-Disposition":'attachment; filename="anusmita-product-import-template.csv"',"Cache-Control":"no-store"}});
@@ -55,7 +55,7 @@ export async function GET(req:Request){
 export async function POST(req:Request){
  try{
   assertOrigin(req);
-  const actor=await authorize(["owner","admin","inventory"]);
+  const actor=await authorizePermission(["owner","admin","inventory"],"products.edit");
   if(Number(req.headers.get("content-length")||0)>145_000)throw new HttpError(413,"CSV payload too large");
   const body=requestSchema.parse(await req.json());
   let rows:CatalogRow[];
