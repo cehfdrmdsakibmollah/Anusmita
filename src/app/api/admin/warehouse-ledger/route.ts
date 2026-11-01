@@ -13,7 +13,7 @@ const input=z.object({
 }).strict();
 export async function GET(){
  try{
-  await authorizePermission(["owner","admin","inventory","purchasing"],"inventory.view");
+  await authorize(["owner","admin","inventory","purchasing"],"inventory.view");
   await db();
   const [balances,events]=await Promise.all([
    WarehouseBalance.find({quantity:{$gt:0}}).populate("productId","sku name onHand reserved").populate("locationId","code name").limit(100).lean<any[]>(),
@@ -27,7 +27,7 @@ export async function GET(){
 export async function POST(request:Request){
  try{
   assertOrigin(request);
-  const actor=await authorizePermission(["owner","admin","inventory"],"inventory.edit");
+  const actor=await authorize(["owner","admin","inventory"],"inventory.edit");
   const data=input.parse(await request.json());
   if(data.kind==="transfer"&&(!data.fromLocationId||data.fromLocationId===data.toLocationId))throw new HttpError(400,"A transfer needs two different locations");
   if(data.kind==="allocate"&&data.fromLocationId)throw new HttpError(400,"Allocation must not have a source location");

@@ -10,7 +10,7 @@ export const dynamic="force-dynamic";
 
 export async function GET(req:Request){
  try{
-  await authorizePermission(["owner","admin","purchasing","inventory","finance"],"purchasing.view");
+  await authorize(["owner","admin","purchasing","inventory","finance"],"purchasing.view");
   const q=new URL(req.url).searchParams;
   const page=Math.max(1,Math.min(10000,Number(q.get("page"))||1));
   const statuses=["draft","submitted","partially_received","received","cancelled"];
@@ -29,7 +29,7 @@ export async function GET(req:Request){
 export async function POST(req:Request){
  try{
   assertOrigin(req);
-  const actor=await authorizePermission(["owner","admin","purchasing"],"purchasing.edit");
+  const actor=await authorize(["owner","admin","purchasing"],"purchasing.edit");
   if(Number(req.headers.get("content-length")||0)>16000)throw new HttpError(413,"Purchase request too large");
   const data=createPurchaseSchema.parse(await req.json());
   let total:number;

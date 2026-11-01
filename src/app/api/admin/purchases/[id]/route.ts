@@ -9,7 +9,7 @@ const actionSchema=z.object({action:z.enum(["submit","cancel"]),expectedUpdatedA
 export async function PATCH(req:Request,ctx:{params:Promise<{id:string}>}){
  try{
   assertOrigin(req);
-  const actor=await authorizePermission(["owner","admin","purchasing"],"purchasing.edit");
+  const actor=await authorize(["owner","admin","purchasing"],"purchasing.edit");
   const {id}=await ctx.params;
   if(!mongoose.isValidObjectId(id))throw new HttpError(400,"Invalid purchase order ID");
   const data=actionSchema.parse(await req.json());

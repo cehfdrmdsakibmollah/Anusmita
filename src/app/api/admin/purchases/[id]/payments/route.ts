@@ -10,7 +10,7 @@ export const dynamic="force-dynamic";
 
 export async function GET(_req:Request,ctx:{params:Promise<{id:string}>}){
  try{
-  await authorizePermission(["owner","admin","finance","purchasing"],"finance.view");
+  await authorize(["owner","admin","finance","purchasing"],"finance.view");
   const {id}=await ctx.params;
   if(!mongoose.isValidObjectId(id))throw new HttpError(400,"Invalid purchase ID");
   await db();
@@ -28,7 +28,7 @@ export async function GET(_req:Request,ctx:{params:Promise<{id:string}>}){
 export async function POST(req:Request,ctx:{params:Promise<{id:string}>}){
  try{
   assertOrigin(req);
-  const actor=await authorizePermission(["owner","admin","finance"],"finance.edit");
+  const actor=await authorize(["owner","admin","finance"],"finance.edit");
   const {id}=await ctx.params;
   if(!mongoose.isValidObjectId(id))throw new HttpError(400,"Invalid purchase ID");
   if(Number(req.headers.get("content-length")||"0")>12000)throw new HttpError(413,"Payment request too large");

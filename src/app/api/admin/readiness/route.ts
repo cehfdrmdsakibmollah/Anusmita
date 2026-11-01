@@ -8,7 +8,7 @@ export const dynamic="force-dynamic";
 type Check={key:string;label:string;ready:boolean;detail:string;required:boolean};
 export async function GET(){
  try{
-  await authorizePermission(["owner","admin"],"settings.view");
+  await authorize(["owner","admin"],"settings.view");
   const flags=launchFlags(process.env);
   const checks:Check[]=[
    {key:"mode",label:"Checkout launch switch",ready:flags.mode==="live",required:true,detail:flags.mode==="live"?"Explicit live mode":"Catalog mode; public orders are intentionally disabled"},

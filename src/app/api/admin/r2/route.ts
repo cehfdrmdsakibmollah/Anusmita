@@ -17,7 +17,7 @@ function settings(){
 }
 export async function GET(){
  try{
-  await authorizePermission(["owner","admin","inventory"],"products.view");
+  await authorize(["owner","admin","inventory"],"products.view");
   const c=settings();const r=await fetch(c.base+"/health",{headers:c.headers,cache:"no-store",signal:AbortSignal.timeout(10000)});
   if(!r.ok)throw new HttpError(503,"R2 storage check failed");
   return Response.json({ready:true,maxBytes:MAX},{headers:{"Cache-Control":"no-store"}});
@@ -26,7 +26,7 @@ export async function GET(){
 export async function POST(req:Request){
  let uploadedUrl:string|undefined,config:ReturnType<typeof settings>|undefined;
  try{
-  assertOrigin(req);const actor=await authorizePermission(["owner","admin","inventory"],"products.edit");
+  assertOrigin(req);const actor=await authorize(["owner","admin","inventory"],"products.edit");
   config=settings();
   const contentLength=Number(req.headers.get("content-length"));
   if(!contentLength||contentLength>MAX+16384)throw new HttpError(413,"Upload a JPEG, PNG or WebP under 3 MB");

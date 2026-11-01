@@ -4,7 +4,7 @@ import {SocialInbound} from "@/lib/models";
 export const dynamic="force-dynamic";
 export async function GET(){
  try{
-  await authorizePermission(["owner","admin","support"],"support.view");
+  await authorize(["owner","admin","support"],"support.view");
   await db();
   const rows=await SocialInbound.find({}).sort({receivedAt:-1}).limit(50).select("provider senderId text eventAt receivedAt").lean<any[]>();
   return Response.json({messages:rows.map(x=>({id:String(x._id),provider:String(x.provider),senderId:String(x.senderId),

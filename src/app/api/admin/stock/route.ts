@@ -8,7 +8,7 @@ const schema=z.object({productId:z.string().regex(/^[a-f0-9]{24}$/i),type:z.enum
 export async function POST(req:Request) {
  try{
   assertOrigin(req);
-  const actor=await authorizePermission(["owner","admin","inventory"],"inventory.edit");
+  const actor=await authorize(["owner","admin","inventory"],"inventory.edit");
   const data=schema.parse(await req.json());
   if(data.quantity===0 || (data.type==="receive"&&data.quantity<0) || (data.type==="damage"&&data.quantity>0)) throw new HttpError(400,"Quantity sign does not match action");
   await db();
