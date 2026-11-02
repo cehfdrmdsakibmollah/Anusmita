@@ -430,6 +430,7 @@ export const SocialConversationState=mongoose.models.SocialConversationState||mo
 const SocialOutboundSchema=new Schema({
  provider:{type:String,enum:["whatsapp"],required:true},
  inboundEventId:{type:String,required:true},
+ requestId:{type:String,required:true},
  recipient:{type:String,required:true,maxlength:32},
  text:{type:String,required:true,maxlength:2000},
  state:{type:String,enum:["processing","sent","needs_review"],default:"processing"},
@@ -437,5 +438,5 @@ const SocialOutboundSchema=new Schema({
  actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},
  error:{type:String,default:""}
 },opts);
-SocialOutboundSchema.index({provider:1,inboundEventId:1},{unique:true});
+SocialOutboundSchema.index({requestId:1},{unique:true});
 export const SocialOutbound=mongoose.models.SocialOutbound||mongoose.model("SocialOutbound",SocialOutboundSchema);
