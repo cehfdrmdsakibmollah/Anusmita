@@ -1,0 +1,8 @@
+import {z} from "zod";
+import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
+import {db} from "@/lib/db";
+import {SocialInbound,SocialInternalNote,Audit} from "@/lib/models";
+export const dynamic="force-dynamic";
+const identifier=z.object({provider:z.enum(["messenger","instagram"]),senderId:z.string().trim().min(1).max(180)});
+export async function GET(req:Request){try{await authorize(["owner","admin","support"],"support.view");const p=identifier.parse(Object.fromEntries(new URL(req.url).searchParams));await db();const notes=await SocialInternalNote.find(p).sort({createdAt:-1}).limit(30).select("text createdAt").lean<any[]>();return Response.json({notes:notes.map(n=>({id:String(n._id),text:n.text,createdAt:n.createdAt}))},{headers:{"Cache-Control":"private, no-store"}})}catch(e){return apiError(e)}}
+export async function POST(req:Request){try{assertOrigin(req);const actor=await authorize(["owner","admin","support"],"support.view");const p=identifier.extend({text:z.string().trim().min(5).max(1000)}).strict().parse(await req.json());await db();if(!await SocialInbound.exists({provider:p.provider,senderId:p.senderId}))throw new HttpError(404,"No recorded inbound conversation for this channel and sender");const note=await SocialInternalNote.create({...p,actorId:actor.id});await Audit.create({actorId:actor.id,action:"social.note.created",entity:"SocialInternalNote",entityId:String(note._id),details:{provider:p.provider,noteLength:p.text.length}});return Response.json({saved:true,id:String(note._id)},{status:201,headers:{"Cache-Control":"no-store"}})}catch(e){return apiError(e)}}
