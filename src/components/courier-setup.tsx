@@ -1,18 +1,12 @@
 "use client";
-import {useState} from "react";
-const couriers=[{name:"Pathao Courier",code:"pathao"},{name:"Steadfast",code:"steadfast"},{name:"REDX",code:"redx"}] as const;
+import {useEffect,useState} from "react";
+type Provider={id:string;name:string;configured:boolean;missing:string[]};
 export default function CourierSetup({role}:{role:string}){
- const [selection,setSelection]=useState<string>("pathao");
- if(!["owner","admin","sales","support"].includes(role))return <p>Courier configuration requires authorized staff.</p>;
- return <section className="adminCard" aria-labelledby="courier-setup-heading">
-  <h2 id="courier-setup-heading">Courier integration setup</h2>
-  <p className="smallprint">Providers are prepared as future integration options. No merchant credentials have been entered, API connection verified, courier order submitted, or tracking reference generated.</p>
-  <label htmlFor="courier-provider">Courier provider</label>
-  <select id="courier-provider" value={selection} onChange={e=>setSelection(e.target.value)}>
-   {couriers.map(x=><option key={x.code} value={x.code}>{x.name}</option>)}
-  </select>
-  <dl className="courierProviderStatus"><div><dt>Selected provider</dt><dd>{couriers.find(x=>x.code===selection)?.name}</dd></div><div><dt>API status</dt><dd>Not connected</dd></div><div><dt>Shipment creation</dt><dd>Disabled</dd></div><div><dt>Tracking updates</dt><dd>Awaiting verified provider credentials</dd></div></dl>
-  <p>Next setup: verify the merchant account, official API terms, credentials, status mapping, webhook authentication, idempotency and a provider test shipment. Keep tokens server-side; do not paste them into this page.</p>
-  <a href="/admin?tab=Orders">Manage orders manually until a courier is connected →</a>
- </section>;
+ const [providers,setProviders]=useState<Provider[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState("");
+ const allowed=["owner","admin"].includes(role);
+ async function refresh(){setLoading(true);setError("");try{const r=await fetch("/api/admin/courier-readiness",{cache:"no-store"});const d=await r.json();if(!r.ok)throw Error(d.error||"Cannot check integrations");setProviders(d.providers||[]);}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setLoading(false)}}
+ useEffect(()=>{if(allowed)void refresh()},[allowed]);
+ if(!allowed)return <p>Courier credentials are restricted to owner/admin. Staff can manage orders via the Orders workspace.</p>;
+ return <section className="adminCard" aria-label="Courier integration readiness"><h2>Courier integration setup</h2><p>Configure the required secret environment variables in your Netlify project (Functions scope) and redeploy. Credentials remain server-side; do not paste API secrets into public URLs, webhooks, or support chats.</p><button type="button" onClick={()=>void refresh()} disabled={loading}>{loading?"Checking…":"Recheck configuration"}</button>{error&&<p role="alert">{error}</p>}<div className="kpiGrid">{providers.map(p=><article className="kpi" key={p.id}><h3>{p.name}</h3><p><strong>{p.configured?"Credentials present (unverified)":"Not configured"}</strong></p>{!p.configured&&<p>Missing server keys: <code>{p.missing.join(", ")}</code></p>}</article>)}</div><p className="notice"><strong>Not yet connected:</strong> Credential presence is not an API authentication test. Parcel booking, webhook acceptance, live tracking and COD remittance stay disabled until individual provider adapters are verified with merchant access and signed callback rules.</p><p>After configuration, test credentials with each courier's official merchant API. Then enable booking through a dedicated idempotent server endpoint; never mark shipments delivered or funds collected solely from an unverified callback.</p><a href="/admin/orders">Open Orders command center →</a></section>;
+
 }
