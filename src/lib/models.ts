@@ -199,7 +199,7 @@ const StoreChromeSchema=new Schema({
  lastEditedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
 },opts);
 const SocialInboundSchema=new Schema({
- provider:{type:String,enum:["messenger","instagram"],required:true},
+ provider:{type:String,enum:["messenger","instagram","whatsapp"],required:true},
  eventId:{type:String,required:true,maxlength:180},
  senderId:{type:String,required:true,maxlength:180},
  text:{type:String,required:true,maxlength:2000},
@@ -406,7 +406,7 @@ CustomerCRMNoteSchema.index({customerPhone:1,createdAt:-1});
 export const CustomerCRMNote=mongoose.models.CustomerCRMNote||mongoose.model("CustomerCRMNote",CustomerCRMNoteSchema);
 
 const SocialInternalNoteSchema=new Schema({
- provider:{type:String,enum:["messenger","instagram"],required:true},
+ provider:{type:String,enum:["messenger","instagram","whatsapp"],required:true},
  senderId:{type:String,required:true,trim:true,maxlength:180},
  text:{type:String,required:true,trim:true,maxlength:1000},
  actorId:{type:Schema.Types.ObjectId,ref:"User",required:true}
@@ -426,3 +426,16 @@ const SocialConversationStateSchema=new Schema({
 },opts);
 SocialConversationStateSchema.index({provider:1,senderId:1},{unique:true});
 export const SocialConversationState=mongoose.models.SocialConversationState||mongoose.model("SocialConversationState",SocialConversationStateSchema);
+
+const SocialOutboundSchema=new Schema({
+ provider:{type:String,enum:["whatsapp"],required:true},
+ inboundEventId:{type:String,required:true},
+ recipient:{type:String,required:true,maxlength:32},
+ text:{type:String,required:true,maxlength:2000},
+ state:{type:String,enum:["processing","sent","needs_review"],default:"processing"},
+ providerMessageId:{type:String,default:""},
+ actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ error:{type:String,default:""}
+},opts);
+SocialOutboundSchema.index({provider:1,inboundEventId:1},{unique:true});
+export const SocialOutbound=mongoose.models.SocialOutbound||mongoose.model("SocialOutbound",SocialOutboundSchema);
