@@ -394,3 +394,13 @@ const CourierShipmentSchema=new Schema({
 },opts);
 CourierShipmentSchema.index({state:1,createdAt:-1});
 export const CourierShipment=mongoose.models.CourierShipment||mongoose.model("CourierShipment",CourierShipmentSchema);
+
+/** Staff-entered CRM notes; order phone is an unverified contact identifier. */
+const CustomerCRMNoteSchema=new Schema({
+ customerPhone:{type:String,required:true,trim:true,maxlength:32},
+ note:{type:String,required:true,trim:true,maxlength:1000},
+ tags:{type:[String],default:[]},
+ actorId:{type:Schema.Types.ObjectId,ref:"User",required:true}
+},opts);
+CustomerCRMNoteSchema.index({customerPhone:1,createdAt:-1});
+export const CustomerCRMNote=mongoose.models.CustomerCRMNote||mongoose.model("CustomerCRMNote",CustomerCRMNoteSchema);
