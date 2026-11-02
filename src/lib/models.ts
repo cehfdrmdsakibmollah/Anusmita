@@ -385,6 +385,8 @@ const CourierShipmentSchema=new Schema({
  state:{type:String,enum:["processing","booked","needs_review"],required:true,default:"processing"},
  consignmentId:{type:String,default:"",maxlength:120},
  trackingCode:{type:String,default:"",maxlength:120},
+ deliveryStatus:{type:String,default:"",maxlength:80},
+ statusCheckedAt:{type:Date,default:null},
  codPaisa:{type:Number,required:true,min:0},
  requestedBy:{type:Schema.Types.ObjectId,ref:"User",required:true},
  errorCode:{type:String,default:"",maxlength:100},
