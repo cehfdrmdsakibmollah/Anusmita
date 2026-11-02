@@ -404,3 +404,12 @@ const CustomerCRMNoteSchema=new Schema({
 },opts);
 CustomerCRMNoteSchema.index({customerPhone:1,createdAt:-1});
 export const CustomerCRMNote=mongoose.models.CustomerCRMNote||mongoose.model("CustomerCRMNote",CustomerCRMNoteSchema);
+
+const SocialInternalNoteSchema=new Schema({
+ provider:{type:String,enum:["messenger","instagram"],required:true},
+ senderId:{type:String,required:true,trim:true,maxlength:180},
+ text:{type:String,required:true,trim:true,maxlength:1000},
+ actorId:{type:Schema.Types.ObjectId,ref:"User",required:true}
+},opts);
+SocialInternalNoteSchema.index({provider:1,senderId:1,createdAt:-1});
+export const SocialInternalNote=mongoose.models.SocialInternalNote||mongoose.model("SocialInternalNote",SocialInternalNoteSchema);
