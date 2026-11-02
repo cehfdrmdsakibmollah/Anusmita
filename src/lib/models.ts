@@ -413,3 +413,16 @@ const SocialInternalNoteSchema=new Schema({
 },opts);
 SocialInternalNoteSchema.index({provider:1,senderId:1,createdAt:-1});
 export const SocialInternalNote=mongoose.models.SocialInternalNote||mongoose.model("SocialInternalNote",SocialInternalNoteSchema);
+
+/** Internal conversation operations, never a verified customer identity or outbound message. */
+const SocialConversationStateSchema=new Schema({
+ provider:{type:String,enum:["messenger","instagram"],required:true},
+ senderId:{type:String,required:true,trim:true,maxlength:180},
+ assignedAgentId:{type:Schema.Types.ObjectId,ref:"User",default:null},
+ priority:{type:String,enum:["normal","high","urgent"],default:"normal"},
+ status:{type:String,enum:["open","pending","resolved"],default:"open"},
+ starred:{type:Boolean,default:false},
+ updatedBy:{type:Schema.Types.ObjectId,ref:"User",required:true}
+},opts);
+SocialConversationStateSchema.index({provider:1,senderId:1},{unique:true});
+export const SocialConversationState=mongoose.models.SocialConversationState||mongoose.model("SocialConversationState",SocialConversationStateSchema);
