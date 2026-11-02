@@ -376,3 +376,19 @@ const ProductReviewSchema=new Schema({
 ProductReviewSchema.index({productId:1,moderationStatus:1,createdAt:-1});
 ProductReviewSchema.index({orderId:1,productId:1},{unique:true});
 export const ProductReview=mongoose.models.ProductReview||mongoose.model("ProductReview",ProductReviewSchema);
+
+/** Durable idempotency barrier for external courier booking. Never silently retry
+ * ambiguous provider requests or infer payment settlement from delivery status. */
+const CourierShipmentSchema=new Schema({
+ orderId:{type:Schema.Types.ObjectId,ref:"Order",required:true,unique:true},
+ provider:{type:String,enum:["steadfast"],required:true},
+ state:{type:String,enum:["processing","booked","needs_review"],required:true,default:"processing"},
+ consignmentId:{type:String,default:"",maxlength:120},
+ trackingCode:{type:String,default:"",maxlength:120},
+ codPaisa:{type:Number,required:true,min:0},
+ requestedBy:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ errorCode:{type:String,default:"",maxlength:100},
+ responseAt:{type:Date,default:null}
+},opts);
+CourierShipmentSchema.index({state:1,createdAt:-1});
+export const CourierShipment=mongoose.models.CourierShipment||mongoose.model("CourierShipment",CourierShipmentSchema);
