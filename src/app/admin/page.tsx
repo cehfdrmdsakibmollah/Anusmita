@@ -12,6 +12,7 @@ export default async function AdminPage({searchParams}:{searchParams:Promise<{ta
  const params=await searchParams;
  const user=await currentUser();
  if(!user)redirect("/admin/login");
+ if(params.tab==="Social Inbox")redirect("/admin/social-inbox");
  if(params.tab==="Customers")redirect("/admin/customers");
  if(params.tab==="Inventory")redirect("/admin/inventory");
  if(params.tab==="Orders")redirect("/admin/orders");
