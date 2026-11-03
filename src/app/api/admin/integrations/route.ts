@@ -7,10 +7,14 @@ const definitions=[
  {id:"redx",name:"REDX",group:"Courier & COD",keys:["REDX_API_TOKEN"],instructions:"Verify official API permissions and authenticated tracking callbacks"},
  {id:"meta",name:"Meta Pixel / CAPI",group:"Marketing",keys:["META_PIXEL_ID","META_CAPI_ACCESS_TOKEN"],instructions:"Verify test events and deduplication before enabling purchase events"},
  {id:"ga4",name:"GA4",group:"Marketing",keys:["NEXT_PUBLIC_GA_MEASUREMENT_ID"],instructions:"Verify event consent and Realtime DebugView"},
- {id:"whatsapp",name:"WhatsApp Cloud API",group:"Social Inbox",keys:["WHATSAPP_ACCESS_TOKEN","WHATSAPP_PHONE_NUMBER_ID"],instructions:"Requires approved WhatsApp business account, subscriptions and webhook verification"},
+ {id:"whatsapp",name:"WhatsApp Cloud API",group:"Social Inbox",keys:["WHATSAPP_ACCESS_TOKEN","WHATSAPP_PHONE_NUMBER_ID","WHATSAPP_VERIFY_TOKEN","META_APP_SECRET"],instructions:"Signed inbound receiver and guarded agent reply implemented; Meta webhook subscription and live messaging test required"},
  {id:"messenger",name:"Messenger / Instagram inbound",group:"Social Inbox",keys:["META_INBOX_ENABLED","META_APP_SECRET","META_WEBHOOK_VERIFY_TOKEN"],instructions:"Inbound receiver exists; set META_INBOX_ENABLED=true only after Meta app review and signed webhook testing. No reply API connected."},
  {id:"sms",name:"SMS / OTP",group:"Customer messaging",keys:["SMS_PROVIDER_API_KEY"],instructions:"Requires approved provider, verified sender and consent policy"},
- {id:"payment",name:"Payment Gateway",group:"Payment & COD",keys:["PAYMENT_GATEWAY_API_KEY"],instructions:"Requires independent merchant verification, callback signatures and reconciliation testing"}
+ {id:"payment",name:"Payment Gateway",group:"Payment & COD",keys:["PAYMENT_GATEWAY_API_KEY"],instructions:"Requires independent merchant verification, callback signatures and reconciliation testing"},
+ {id:"r2",name:"Cloudflare R2 media",group:"Cloud & Storage",keys:["R2_MEDIA_SECRET","R2_MEDIA_URL"],instructions:"Existing image storage; validate upload and access through the media management workflow"},
+ {id:"nagad",name:"Nagad",group:"Payment & COD",keys:["NAGAD_MERCHANT_ID"],instructions:"Merchant integration is not enabled; secure credentials and reconciliation required"},
+ {id:"bkash",name:"bKash",group:"Payment & COD",keys:["BKASH_APP_KEY"],instructions:"Merchant API is not verified; no automatic charge or capture"},
+ {id:"searchconsole",name:"Google Search Console",group:"Marketing",keys:["GOOGLE_SITE_VERIFICATION"],instructions:"Verify domain ownership, property and indexing reports separately"}
 ] as const;
 export async function GET(){
  try{
