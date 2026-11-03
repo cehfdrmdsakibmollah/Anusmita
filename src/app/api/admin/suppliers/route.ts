@@ -25,10 +25,11 @@ export async function GET(req:Request){
  try{
   await authorize(["owner","admin","purchasing","finance"],"purchasing.view");
   const q=new URL(req.url).searchParams;
+  const paged=q.get("paged")==="1";
   const page=Math.max(1,Math.min(10000,Number(q.get("page"))||1));
   const size=10;
-  const search=(q.get("q")||"").trim().slice(0,100);
-  const state=q.get("state")||"active";
+  const search=paged?(q.get("q")||"").trim().slice(0,100):"";
+  const state=paged?(q.get("state")||"active"):"active";
   if(!["all","active","inactive"].includes(state))throw new HttpError(400,"Invalid filter");
   await db();
   const filter:any={archivedAt:null};
@@ -36,9 +37,10 @@ export async function GET(req:Request){
   if(state==="inactive")filter.active=false;
   if(search)filter.$or=[{name:{$regex:escapeRegex(search),$options:"i"}},{contact:{$regex:escapeRegex(search),$options:"i"}},{phone:{$regex:escapeRegex(search),$options:"i"}},{country:{$regex:escapeRegex(search),$options:"i"}}];
   const [rows,total]=await Promise.all([
-   Supplier.find(filter).sort({createdAt:-1,_id:-1}).skip((page-1)*size).limit(size).lean<any[]>(),
+   Supplier.find(filter).sort({createdAt:-1,_id:-1}).skip(paged?(page-1)*size:0).limit(paged?size:100).lean<any[]>(),
    Supplier.countDocuments(filter)
   ]);
+  if(!paged)return Response.json({suppliers:rows},{headers}); // Preserve existing API contract for purchase-order selectors.
   return Response.json({suppliers:rows.map(x=>({...x,_id:String(x._id)})),total,page,pages:Math.max(1,Math.ceil(total/size))},{headers});
  }catch(e){return apiError(e)}
 }
