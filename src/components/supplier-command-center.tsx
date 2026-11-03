@@ -11,7 +11,7 @@ const nav=[["Overview","/admin/dashboard"],["Orders","/admin/orders"],["Products
 export default function SupplierCommandCenter({canEdit,isOwner}:{canEdit:boolean;isOwner:boolean}){
  const [rows,setRows]=useState<Supplier[]>([]),[summary,setSummary]=useState<Summary|null>(null),[page,setPage]=useState(1),[pages,setPages]=useState(1),[total,setTotal]=useState(0),[search,setSearch]=useState(""),[submitted,setSubmitted]=useState(""),[state,setState]=useState("active"),[loading,setLoading]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[editing,setEditing]=useState<Supplier|null|undefined>(undefined),[form,setForm]=useState<FormState>(blank),[busy,setBusy]=useState(false),[focused,setFocused]=useState<Supplier|null>(null);
  const load=useCallback(async()=>{setLoading(true);setError("");try{
- const [listRes,summaryRes]=await Promise.all([fetch("/api/admin/suppliers?"+new URLSearchParams({page:String(page),q:submitted,state}),{cache:"no-store"}),fetch("/api/admin/suppliers/summary",{cache:"no-store"})]);
+ const [listRes,summaryRes]=await Promise.all([fetch("/api/admin/suppliers?"+new URLSearchParams({paged:"1",page:String(page),q:submitted,state}),{cache:"no-store"}),fetch("/api/admin/suppliers/summary",{cache:"no-store"})]);
  const [list,metrics]=await Promise.all([listRes.json(),summaryRes.json()]);
  if(!listRes.ok)throw Error(list.error||"Suppliers unavailable");if(!summaryRes.ok)throw Error(metrics.error||"Supplier metrics unavailable");
  setRows(list.suppliers||[]);setTotal(list.total||0);setPages(list.pages||1);setSummary(metrics);
