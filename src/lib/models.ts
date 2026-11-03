@@ -440,3 +440,19 @@ const SocialOutboundSchema=new Schema({
 },opts);
 SocialOutboundSchema.index({requestId:1},{unique:true});
 export const SocialOutbound=mongoose.models.SocialOutbound||mongoose.model("SocialOutbound",SocialOutboundSchema);
+
+/** Metadata-only custom connector definitions; never executes arbitrary URLs or stores secrets. */
+const IntegrationConnectorSchema=new Schema({
+ name:{type:String,required:true,trim:true,maxlength:80},
+ slug:{type:String,required:true,unique:true,lowercase:true,trim:true,maxlength:90},
+ category:{type:String,required:true,enum:["Payment & COD","Courier & COD","Social Inbox","Customer messaging","Cloud & Storage","Marketing"]},
+ mode:{type:String,enum:["sandbox","production"],default:"sandbox"},
+ description:{type:String,default:"",maxlength:400},
+ webhookUrl:{type:String,default:"",maxlength:300},
+ enabled:{type:Boolean,default:false},
+ archivedAt:{type:Date,default:null},
+ createdBy:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ updatedBy:{type:Schema.Types.ObjectId,ref:"User",required:true}
+},opts);
+IntegrationConnectorSchema.index({archivedAt:1,createdAt:-1});
+export const IntegrationConnector=mongoose.models.IntegrationConnector||mongoose.model("IntegrationConnector",IntegrationConnectorSchema);
