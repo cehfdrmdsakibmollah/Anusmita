@@ -39,7 +39,7 @@ export async function POST(req:Request){
   const session=await mongoose.startSession();
   try{
    await session.withTransaction(async()=>{
-    const supplier=await Supplier.findOne({_id:data.supplierId,active:true}).session(session).lean<any>();
+    const supplier=await Supplier.findOne({_id:data.supplierId,active:true,riskStatus:{$ne:"blocked"}}).session(session).lean<any>();
     if(!supplier)throw new HttpError(404,"Supplier is missing or inactive");
     const products=await Product.find({_id:{$in:data.items.map(x=>x.productId)}}).select("sku name supplierId").session(session).lean<any[]>();
     if(products.length!==data.items.length)throw new HttpError(400,"One or more product IDs do not exist");

@@ -88,7 +88,12 @@ StockMovementSchema.index({productId:1,createdAt:-1});
 const SupplierSchema = new Schema({
  name:{type:String,required:true,trim:true},contact:{type:String,default:""},phone:{type:String,default:""},
  email:{type:String,default:""},country:{type:String,default:""},paymentTerms:{type:String,default:""},
- notes:{type:String,default:""},active:{type:Boolean,default:true}
+ notes:{type:String,default:""},active:{type:Boolean,default:true},
+ category:{type:String,default:"General",maxlength:80},
+ tags:{type:[String],default:[]},
+ leadTimeDays:{type:Number,default:null,min:0,max:365},
+ riskStatus:{type:String,enum:["normal","watchlist","blocked"],default:"normal"},
+ archivedAt:{type:Date,default:null}
 },opts);
 
 const PurchaseLineSchema = new Schema({
