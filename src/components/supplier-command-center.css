@@ -19,3 +19,9 @@ body:has(.sv)>#main-content{padding:0!important;margin:0!important;max-width:non
 @media(max-width:1550px){.svKpis{grid-template-columns:repeat(4,minmax(0,1fr))}.svUpper{grid-template-columns:1.2fr 1fr}.svAlerts{grid-column:1/-1}.svUpper .svPanel{min-height:175px}}
 @media(max-width:1050px){.svGrid{grid-template-columns:1fr}.svUpper{grid-template-columns:repeat(2,minmax(0,1fr))}.svDirectoryControls{flex-wrap:wrap}.svDirectoryControls .svSearch{flex:1}}
 @media(max-width:700px){.svKpis{grid-template-columns:repeat(2,minmax(0,1fr))}.svUpper{grid-template-columns:1fr}.svAlerts{grid-column:auto}.svDirectoryControls{display:block}.svDirectoryControls .svSearch{width:100%;margin-top:10px}.svPager{flex-wrap:wrap}}
+
+/* Shared Business Dashboard navigation: its width must match the original admin layout. */
+.sv{grid-template-columns:270px minmax(0,1fr)}
+@media(max-width:1500px){.sv{grid-template-columns:230px minmax(0,1fr)}}
+@media(max-width:1050px){.sv{grid-template-columns:195px minmax(0,1fr)}}
+@media(max-width:700px){.sv{display:block}}
