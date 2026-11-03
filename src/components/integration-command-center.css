@@ -52,3 +52,12 @@ body:has(.ih)>.anAnnouncement,body:has(.ih)>.anHeader,body:has(.ih)>.anFooter{di
 @media(max-width:1120px){.ihContent{grid-template-columns:1fr}.ihRail{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:720px){.ihStats{grid-template-columns:repeat(2,minmax(0,1fr))}.ihCards{grid-template-columns:repeat(2,minmax(0,1fr))}.ihHead h1{font-size:27px}.ihTitleIcon{font-size:28px}.ihPro{font-size:9px}}
 @media(max-width:420px){.ihCards,.ihRail{grid-template-columns:1fr}}
+
+.ihCustomDescription{color:#806071;padding:0 4px 10px!important;font-size:11px}
+.ihConnectorForm{display:grid;gap:14px;margin-top:16px}
+.ihConnectorForm label{display:grid;gap:6px;color:#6d2341;font-weight:600}
+.ihConnectorForm input,.ihConnectorForm textarea,.ihConnectorForm select{width:100%;border:1px solid #e6bfcb;border-radius:8px;padding:10px;background:#fff;color:#4d1b33}
+.ihConnectorForm textarea{min-height:75px;resize:vertical}
+.ihConnectorForm .ihCheck{display:flex;align-items:center;gap:8px}
+.ihConnectorForm .ihCheck input{width:auto}
+.ihConnectorForm>button{border:0;background:#8a0d3d;color:#fff;padding:12px;border-radius:8px}
