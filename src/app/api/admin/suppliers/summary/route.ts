@@ -7,16 +7,19 @@ export async function GET(){
  try{
   await authorize(["owner","admin","purchasing","finance"],"purchasing.view");
   await db();
-  const [total,active,openOrders,commitment,topSuppliers,receipts,paid]=await Promise.all([
+  const [total,active,openOrders,commitment,topSuppliers,receipts,paid,watchlist,blocked,trend]=await Promise.all([
    Supplier.countDocuments({archivedAt:null}),
    Supplier.countDocuments({active:true,archivedAt:null}),
    PurchaseOrder.countDocuments({status:{$in:["draft","submitted","partially_received"]}}),
    PurchaseOrder.aggregate([{$match:{status:{$ne:"cancelled"}}},{$group:{_id:null,total:{$sum:"$invoiceTotalPaisa"},plannedPaid:{$sum:"$paidPaisa"}}}]),
    PurchaseOrder.aggregate([{$match:{status:{$ne:"cancelled"}}},{$group:{_id:"$supplierId",totalPaisa:{$sum:"$invoiceTotalPaisa"},paidPaisa:{$sum:"$paidPaisa"},orders:{$sum:1},lastOrderAt:{$max:"$createdAt"}}},{$sort:{totalPaisa:-1}},{$limit:15},{$lookup:{from:Supplier.collection.name,localField:"_id",foreignField:"_id",as:"supplier"}},{$unwind:{path:"$supplier",preserveNullAndEmptyArrays:true}},{$project:{id:{$toString:"$_id"},name:"$supplier.name",totalPaisa:1,paidPaisa:1,orders:1,lastOrderAt:1}}]),
    PurchaseReceipt.countDocuments(),
-   SupplierPayment.aggregate([{$match:{status:"verified"}},{$group:{_id:null,amount:{$sum:"$amountPaisa"},count:{$sum:1}}}])
+   SupplierPayment.aggregate([{$match:{status:"verified"}},{$group:{_id:null,amount:{$sum:"$amountPaisa"},count:{$sum:1}}}]),
+   Supplier.countDocuments({riskStatus:"watchlist",archivedAt:null}),
+   Supplier.countDocuments({riskStatus:"blocked",archivedAt:null}),
+   PurchaseOrder.aggregate([{$match:{status:{$ne:"cancelled"},createdAt:{$gte:new Date(new Date().getFullYear()-1,new Date().getMonth()+1,1)}}},{$group:{_id:{$dateToString:{format:"%Y-%m",date:"$createdAt",timezone:"Asia/Dhaka"}},commitmentPaisa:{$sum:"$invoiceTotalPaisa"},paidPaisa:{$sum:"$paidPaisa"},count:{$sum:1}}},{$sort:{_id:1}}])
   ]);
   const c=commitment[0]||{total:0,plannedPaid:0};
-  return Response.json({total,active,openOrders,plannedPurchasePaisa:c.total||0,recordedPoPaidPaisa:c.plannedPaid||0,remainingCommitmentPaisa:Math.max(0,(c.total||0)-(c.plannedPaid||0)),verifiedPaymentPaisa:paid[0]?.amount||0,verifiedPaymentCount:paid[0]?.count||0,receiptsRecorded:receipts,topSuppliers,note:"PO values are commitments, not verified vendor invoices or reconciled accounts payable. Supplier grading, on-time delivery, live FX and forecasts are unverified until event data exists."},{headers:{"Cache-Control":"private, no-store"}});
+  return Response.json({total,active,openOrders,watchlist,blocked,trend,plannedPurchasePaisa:c.total||0,recordedPoPaidPaisa:c.plannedPaid||0,remainingCommitmentPaisa:Math.max(0,(c.total||0)-(c.plannedPaid||0)),verifiedPaymentPaisa:paid[0]?.amount||0,verifiedPaymentCount:paid[0]?.count||0,receiptsRecorded:receipts,topSuppliers,note:"PO values are commitments, not verified vendor invoices or reconciled accounts payable. Supplier grading, on-time delivery, live FX and forecasts are unverified until event data exists."},{headers:{"Cache-Control":"private, no-store"}});
  }catch(e){return apiError(e)}
 }
