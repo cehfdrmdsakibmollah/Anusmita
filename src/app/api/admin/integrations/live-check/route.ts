@@ -3,6 +3,21 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 type Probe={id:string;state:"missing_credentials"|"verified_read_only"|"failed"|"not_supported";checkedAt:string|null;message:string;latencyMs:number|null};
 function environmentReady(keys:string[]){return keys.every(k=>Boolean(process.env[k]));}
+async function checkR2():Promise<Probe>{
+ const id="r2";
+ const base=process.env.R2_MEDIA_URL,secret=process.env.R2_MEDIA_SECRET;
+ if(!base||!secret||secret.length<32)return{id,state:"missing_credentials",checkedAt:null,message:"R2 media secret or URL is missing/invalid. Redeploy after configuration.",latencyMs:null};
+ const checkedAt=new Date().toISOString();
+ let url:URL;
+ try{url=new URL(base)}catch{return{id,state:"failed",checkedAt,message:"Invalid R2 media URL.",latencyMs:null}}
+ if(url.origin!=="https://anusmita-media.mdsakibmolla545.workers.dev"||url.pathname!=="/"||url.search||url.hash)
+  return{id,state:"failed",checkedAt,message:"R2 media URL does not match the application's allowed storage origin.",latencyMs:null};
+ const start=performance.now();
+ try{
+  const res=await fetch(url.origin+"/health",{method:"GET",headers:{Authorization:"Bearer "+secret},cache:"no-store",redirect:"error",signal:AbortSignal.timeout(7000)});
+  return{id,state:res.ok?"verified_read_only":"failed",checkedAt,latencyMs:Math.round(performance.now()-start),message:res.ok?"R2 media Worker authenticated health endpoint responded successfully. Image upload/read delivery is not end-to-end tested.":"R2 Worker health check was rejected or unavailable. Verify Worker deployment and secret match."};
+ }catch{return{id,state:"failed",checkedAt,latencyMs:Math.round(performance.now()-start),message:"R2 health probe timed out or could not reach the configured Worker."}}
+}
 async function check(id:"whatsapp"|"steadfast"):Promise<Probe>{
  const checkedAt=new Date().toISOString();
  const keys=id==="whatsapp"?["WHATSAPP_ACCESS_TOKEN","WHATSAPP_PHONE_NUMBER_ID"]:["STEADFAST_API_KEY","STEADFAST_SECRET_KEY"];
@@ -27,7 +42,7 @@ async function check(id:"whatsapp"|"steadfast"):Promise<Probe>{
 export async function GET(){
  try{
   await authorize(["owner","admin"],"settings.view");
-  const results=await Promise.all([check("whatsapp"),check("steadfast")]);
-  return Response.json({checks:results,automaticActivation:false,note:"Only these two official read-only probes are supported. Every other provider still requires specific approved integration and validation."},{headers:{"Cache-Control":"private, no-store"}});
+  const results=await Promise.all([check("whatsapp"),check("steadfast"),checkR2()]);
+  return Response.json({checks:results,automaticActivation:false,note:"WhatsApp, Steadfast and authenticated R2 Worker health are checked read-only. All other providers require specific approved verification."},{headers:{"Cache-Control":"private, no-store"}});
  }catch(e){return apiError(e)}
 }
