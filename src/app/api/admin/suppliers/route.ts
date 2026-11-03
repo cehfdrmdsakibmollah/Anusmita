@@ -27,7 +27,8 @@ export async function GET(req:Request){
   const q=new URL(req.url).searchParams;
   const paged=q.get("paged")==="1";
   const page=Math.max(1,Math.min(10000,Number(q.get("page"))||1));
-  const size=10;
+  const requestedSize=Number(q.get("size"));
+  const size=paged&&[8,10,20].includes(requestedSize)?requestedSize:10;
   const search=paged?(q.get("q")||"").trim().slice(0,100):"";
   const state=paged?(q.get("state")||"active"):"active";
   if(!["all","active","inactive"].includes(state))throw new HttpError(400,"Invalid filter");
@@ -45,7 +46,9 @@ export async function GET(req:Request){
    Supplier.countDocuments(filter)
   ]);
   if(!paged)return Response.json({suppliers:rows},{headers}); // Preserve existing API contract for purchase-order selectors.
-  return Response.json({suppliers:rows.map(x=>({...x,_id:String(x._id)})),total,page,pages:Math.max(1,Math.ceil(total/size))},{headers});
+  const sums=rows.length?await PurchaseOrder.aggregate([{$match:{supplierId:{$in:rows.map(x=>x._id)},status:{$ne:"cancelled"}}},{$group:{_id:"$supplierId",total:{$sum:"$invoiceTotalPaisa"},paid:{$sum:"$paidPaisa"},orders:{$sum:1}}}]):[];
+  const summaryById=new Map(sums.map(x=>[String(x._id),x]));
+  return Response.json({suppliers:rows.map(x=>({...x,_id:String(x._id),purchaseStats:summaryById.has(String(x._id))?{purchasePaisa:summaryById.get(String(x._id)).total,paidPaisa:summaryById.get(String(x._id)).paid,orders:summaryById.get(String(x._id)).orders}:null})),total,page,pages:Math.max(1,Math.ceil(total/size))},{headers});
  }catch(e){return apiError(e)}
 }
 function escapeRegex(s:string){return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}
