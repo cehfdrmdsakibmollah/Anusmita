@@ -1,6 +1,8 @@
-import {authorize,authorizePermission,apiError} from "@/lib/auth";
+import {authorize,apiError} from "@/lib/auth";
+import {db} from "@/lib/db";
+import {ProviderConnection} from "@/lib/models";
 export const dynamic="force-dynamic";
-type Integration={id:string;name:string;group:string;configured:boolean;verified:false;missing:string[];instructions:string};
+type Integration={id:string;name:string;group:string;configured:boolean;verified:boolean;missing:string[];instructions:string;credentialTested:boolean};
 const definitions=[
  {id:"pathao",name:"Pathao",group:"Courier & COD",keys:["PATHAO_CLIENT_ID","PATHAO_CLIENT_SECRET"],instructions:"Official merchant account, verified callback signatures and sandbox shipment required"},
  {id:"steadfast",name:"Steadfast",group:"Courier & COD",keys:["STEADFAST_API_KEY","STEADFAST_SECRET_KEY"],instructions:"Verify API access, idempotency and settlement mapping before activation"},
@@ -19,10 +21,14 @@ const definitions=[
 export async function GET(){
  try{
   await authorize(["owner","admin"],"settings.view");
+  await db();
+  const providerRecords=await ProviderConnection.find({provider:{$in:["steadfast","whatsapp"]}}).select("provider configurationVerifiedAt lastTestResult").lean<any[]>();
   const integrations:Integration[]=definitions.map(d=>{
    const missing=d.keys.filter(k=>!process.env[k]||(k==="META_INBOX_ENABLED"&&process.env[k]!=="true"));
-   return {id:d.id,name:d.name,group:d.group,configured:missing.length===0,verified:false,missing,instructions:d.instructions};
+   const stored=providerRecords.find(p=>p.provider===d.id);
+   const credentialTested=Boolean(stored?.configurationVerifiedAt && stored?.lastTestResult==="verified");
+   return {id:d.id,name:d.name,group:d.group,configured:missing.length===0,verified:false,credentialTested,missing,instructions:d.instructions};
   });
-  return Response.json({integrations,notes:"Credential presence is not a successful API connection. No credential values are returned. No service is activated by this page."},{headers:{"Cache-Control":"private, no-store"}});
+  return Response.json({integrations,notes:"Credential presence is not a successful API connection. No credential values are returned. A read-only credential test is not proof of live service health. No service is activated by this page."},{headers:{"Cache-Control":"private, no-store"}});
  }catch(e){return apiError(e);}
 }
