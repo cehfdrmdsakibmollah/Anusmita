@@ -3,7 +3,7 @@ import {z} from 'zod';
 import {authorize,authorizePermission,apiError,HttpError} from '@/lib/auth';
 import {db} from '@/lib/db';
 import {Audit} from '@/lib/models';
-import {ChatbotSettings} from '@/lib/chatbot-model';
+import {ChatbotSettings,ChatbotRevision} from '@/lib/chatbot-model';
 import {answersSchema} from '@/lib/chatbot';
 import {boundedJson,assertChatOrigin} from '@/lib/chatbot-server';
 export const runtime='nodejs';
@@ -16,6 +16,7 @@ export async function PUT(req:Request){try{
  await ChatbotSettings.updateOne({key:'main'},{$setOnInsert:{key:'main',revision:0,answers:[]}},{upsert:true,session});
  const result=await ChatbotSettings.updateOne({key:'main',revision:data.revision},{$set:{answers:data.answers,editedBy:actor.id},$inc:{revision:1}},{session});
  if(result.modifiedCount!==1)throw new HttpError(409,'Replies changed in another session. Reload before saving.');
+ await ChatbotRevision.create([{key:'main',revision:data.revision+1,answers:data.answers,editedBy:actor.id}],{session});
  await Audit.create([{actorId:actor.id,action:'chatbot.replies.update',entity:'ChatbotSettings',entityId:'main',details:{revision:data.revision+1,count:data.answers.length}}],{session});
  });}finally{await session.endSession();}
  return Response.json({revision:data.revision+1,answers:data.answers},{headers});
