@@ -1,14 +1,14 @@
 "use client";
 import Link from "next/link";
 import {useState} from "react";
-import {Home,ShoppingCart,ShoppingBag,Package,UserRound,Truck,CreditCard,PanelsTopLeft,MessageCircle,ChartNoAxesColumnIncreasing,Settings,Users,ShieldCheck,Link2,Clock3,Activity,LayoutDashboard,FileText,ChevronRight,Menu,X} from "lucide-react";
+import {Home,ShoppingCart,ShoppingBag,Package,UserRound,Building2,Truck,CreditCard,PanelsTopLeft,MessageCircle,ChartNoAxesColumnIncreasing,Settings,Users,ShieldCheck,Link2,Clock3,Activity,LayoutDashboard,FileText,ChevronRight,Menu,X} from "lucide-react";
 const navigation=[
  ["Overview",Home,"/admin/dashboard","Administration"],
  ["Orders",ShoppingCart,"/admin?tab=Orders","Administration"],
  ["Products",ShoppingBag,"/admin/products/manage","Administration"],
  ["Inventory",Package,"/admin/inventory","Administration"],
  ["Customers",UserRound,"/admin?tab=Customers","Administration"],
- ["Suppliers",Truck,"/admin/suppliers","Administration"],
+ ["Suppliers",Building2,"/admin/suppliers","Administration"],
  ["Payments",CreditCard,"/admin/payments","Administration"],
  ["Couriers",Truck,"/admin?tab=Courier%20Setup","Administration"],
  ["Homepage Studio",PanelsTopLeft,"/admin?tab=Homepage%20Studio","Content & Engagement"],
