@@ -39,7 +39,7 @@ export async function GET(req:Request){
   const region=paged?q.get("region")||"all":"all";
   if(!["all","domestic","international"].includes(region))throw new HttpError(400,"Invalid region");
   if(region==="domestic")filter.country={$regex:/^bangladesh$/i};
-  if(region==="international")filter.country={$nin:["","Bangladesh","bangladesh","BANGLADESH"]};
+  if(region==="international")filter.country={$regex:/^(?!bangladesh$).+/i};
   if(search)filter.$or=[{name:{$regex:escapeRegex(search),$options:"i"}},{contact:{$regex:escapeRegex(search),$options:"i"}},{phone:{$regex:escapeRegex(search),$options:"i"}},{country:{$regex:escapeRegex(search),$options:"i"}}];
   const [rows,total]=await Promise.all([
    Supplier.find(filter).sort({createdAt:-1,_id:-1}).skip(paged?(page-1)*size:0).limit(paged?size:100).lean<any[]>(),
