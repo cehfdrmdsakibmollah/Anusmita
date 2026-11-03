@@ -32,7 +32,7 @@ export async function GET(request:Request){
    matches=orders.map(x=>x._id);
    filter.$or=[{reference:expr},{orderId:{$in:matches}}];
   }
-  const [payments,total,overview,byMethod,orderSummary,supplierPaid,trend,exceptions]=await Promise.all([
+  const [payments,total,overview,byMethod,orderSummary,supplierPaid,trend,exceptions,heatmap,refundedTrend]=await Promise.all([
    Payment.find(filter).sort({verifiedAt:-1,_id:-1}).skip((page-1)*size).limit(size).populate({path:"orderId",select:"orderNumber totalPaisa collectedPaisa paymentStatus customer.name customer.phone"}).lean<any[]>(),
    Payment.countDocuments(filter),
    Payment.aggregate([{$group:{_id:{direction:"$direction",status:"$status"},amount:{$sum:"$amountPaisa"},count:{$sum:1}}}]),
@@ -40,7 +40,9 @@ export async function GET(request:Request){
    Order.aggregate([{$match:{isTest:{$ne:true},orderStatus:{$nin:["cancelled"]}}},{$group:{_id:null,total:{$sum:"$totalPaisa"},collected:{$sum:"$collectedPaisa"},unpaidOrders:{$sum:{$cond:[{$lt:["$collectedPaisa","$totalPaisa"]},1,0]}}}}]),
    SupplierPayment.aggregate([{$match:{status:"verified"}},{$group:{_id:null,amount:{$sum:"$amountPaisa"},count:{$sum:1}}}]),
    Payment.aggregate([{$match:{direction:"collection",status:"verified",verifiedAt:{$gte:new Date(new Date().getFullYear()-1,new Date().getMonth()+1,1)}}},{$group:{_id:{$dateToString:{format:"%Y-%m",date:"$verifiedAt",timezone:"Asia/Dhaka"}},amount:{$sum:"$amountPaisa"},count:{$sum:1}}},{$sort:{_id:1}}]),
-   Order.countDocuments({isTest:{$ne:true},orderStatus:{$nin:["cancelled"]},paymentStatus:{$in:["unpaid","partial"]}})
+   Order.countDocuments({isTest:{$ne:true},orderStatus:{$nin:["cancelled"]},paymentStatus:{$in:["unpaid","partial"]}}),
+   Payment.aggregate([{$match:{direction:"collection",status:"verified",verifiedAt:{$gte:new Date(Date.now()-90*86400000)}}},{$group:{_id:{day:{$dayOfWeek:{date:"$verifiedAt",timezone:"Asia/Dhaka"}},hour:{$hour:{date:"$verifiedAt",timezone:"Asia/Dhaka"}}},amount:{$sum:"$amountPaisa"},count:{$sum:1}}},{$sort:{"_id.day":1,"_id.hour":1}}]),
+   Payment.aggregate([{$match:{direction:"refund",status:"verified",verifiedAt:{$gte:new Date(new Date().getFullYear()-1,new Date().getMonth()+1,1)}}},{$group:{_id:{$dateToString:{format:"%Y-%m",date:"$verifiedAt",timezone:"Asia/Dhaka"}},amount:{$sum:"$amountPaisa"}}},{$sort:{_id:1}}])
   ]);
   const collection=overview.find(x=>x._id.direction==="collection"&&x._id.status==="verified")?.amount||0;
   const refunds=overview.filter(x=>x._id.direction==="refund"&&x._id.status==="verified").reduce((sum,x)=>sum+x.amount,0);
@@ -48,7 +50,7 @@ export async function GET(request:Request){
   return Response.json({
    rows:payments.map(x=>({id:String(x._id),orderId:x.orderId?._id?String(x.orderId._id):String(x.orderId||""),orderNumber:x.orderId?.orderNumber||"Order unavailable",customerName:x.orderId?.customer?.name||"",customerPhone:x.orderId?.customer?.phone||"",method:x.method,reference:x.reference,amountPaisa:x.amountPaisa,direction:x.direction,status:x.status,verifiedAt:x.verifiedAt,note:x.note||"",balancePaisa:typeof x.orderId?.totalPaisa==="number"?Math.max(0,x.orderId.totalPaisa-(x.orderId.collectedPaisa||0)):null})),
    total,page,size,pages:Math.max(1,Math.ceil(total/size)),
-   metrics:{verifiedCollectionsPaisa:collection,recordedRefundsPaisa:refunds,netRecordedPaisa:collection-refunds,reversedPaisa:reversed,unpaidOrderCount:exceptions,orderBalancePaisa:Math.max(0,(orderSummary[0]?.total||0)-(orderSummary[0]?.collected||0)),supplierVerifiedPaidPaisa:supplierPaid[0]?.amount||0,methodBreakdown:byMethod,trend,recordCount:overview.reduce((sum,x)=>sum+x.count,0)},
+   metrics:{verifiedCollectionsPaisa:collection,recordedRefundsPaisa:refunds,netRecordedPaisa:collection-refunds,reversedPaisa:reversed,unpaidOrderCount:exceptions,orderBalancePaisa:Math.max(0,(orderSummary[0]?.total||0)-(orderSummary[0]?.collected||0)),supplierVerifiedPaidPaisa:supplierPaid[0]?.amount||0,methodBreakdown:byMethod,trend,heatmap,refundedTrend,recordCount:overview.reduce((sum,x)=>sum+x.count,0)},
    readiness:{gatewayReconciliation:"not_verified",bankSettlement:"not_verified",gatewayFees:"not_configured",pendingManualClaims:"no_verified_claim_source"},
    note:"This is an internal recorded-payment ledger. Manual verified means staff attested to provider/cash evidence; it is not independent gateway verification. No gateway payouts, reconciliation, net bank settlement or fees are inferred."
   },{headers});
