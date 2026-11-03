@@ -4,7 +4,7 @@ export type Language='bn'|'en';
 export type ChatProduct={id:string;name:string;slug:string;category:string;size:string;pricePaisa:number;available:number;description:string;usage:string;imageUrl?:string;color?:string;facts?:{label:string;value:string}[]};
 export type ChatReply={reply:string;products?:ChatProduct[];suggestions?:string[];links?:{label:string;href:string}[];context?:string};
 export const chatSchema=z.object({message:z.string().trim().min(1).max(600),language:z.enum(['bn','en']).default('bn'),context:z.string().max(100).default(''),productSlug:z.string().max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional()}).strict();
-export const answerSchema=z.object({id:z.uuid(),keywords:z.array(z.string().trim().min(2).max(60)).min(1).max(12),bn:z.string().trim().min(1).max(1200),en:z.string().trim().min(1).max(1200),enabled:z.boolean()}).strict();
+export const answerSchema=z.object({id:z.uuid(),keywords:z.array(z.string().trim().min(2).max(60)).min(1).max(12),bn:z.string().trim().min(1).max(1200),en:z.string().trim().min(1).max(1200),enabled:z.boolean(),category:z.enum(['General','Skincare','Fashion','Payment','Delivery','Support']).optional(),priority:z.number().int().min(0).max(100).optional()}).strict();
 export const answersSchema=z.array(answerSchema).max(60).refine(a=>new Set(a.map(x=>x.id)).size===a.length,'Duplicate IDs');
 export type CustomAnswer=z.infer<typeof answerSchema>;
 export const normalise=(s:string)=>s.normalize('NFKC').toLowerCase().trim().replace(/\s+/g,' ');
@@ -31,7 +31,7 @@ export function searchTerms(message:string,context=''){
  const aliases:Record<string,string>={'স্কিনকেয়ার':'skincare','পারফিউম':'perfume','ব্যাগ':'bag','ঘড়ি':'watch','বেডশিট':'bed','সানস্ক্রিন':'sunscreen','অয়েলি':'oily','শুষ্ক':'dry','সেনসিটিভ':'sensitive','ফ্যাশন':'fashion'};
  return q.split(/[^\p{L}\p{N}-]+/u).map(t=>aliases[t]||t).filter(t=>t.length>=2&&!['show','me','please','price','stock','skin','দাম','কত','আছে','দেখাও','জন্য','the','for','product','products','want','need'].includes(t)).slice(0,6);
 }
-export function matchCustom(message:string,rows:CustomAnswer[],language:Language){return rows.find(r=>r.enabled&&r.keywords.some(k=>keywordMatch(message,k)))?.[language];}
+export function matchCustom(message:string,rows:CustomAnswer[],language:Language){return [...rows].filter(r=>r.enabled).sort((a,b)=>(b.priority||0)-(a.priority||0)).find(r=>r.keywords.some(k=>keywordMatch(message,k)))?.[language];}
 export function enquiryLink(items:{product:ChatProduct;quantity:number}[]){
  const text='Hello ANUSMITA, please confirm availability, current price and delivery for:\n'+items.map(({product:p,quantity:q})=>`${p.name}${p.color?' · '+p.color:''}${p.size?' ('+p.size+')':''} × ${q}`).join('\n')+'\nThis is an enquiry, not a confirmed order.';
  return contact.whatsapp+'?text='+encodeURIComponent(text);

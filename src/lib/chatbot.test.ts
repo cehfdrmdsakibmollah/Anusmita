@@ -7,5 +7,13 @@ describe('shopping assistant',()=>{
  it('rejects forged user IDs, oversized messages and invalid languages',()=>{expect(chatSchema.safeParse({message:'hi',userId:'someone-else'}).success).toBe(false);expect(chatSchema.safeParse({message:'x'.repeat(601)}).success).toBe(false);expect(chatSchema.safeParse({message:'hi',language:'xx'}).success).toBe(false);});
  it('uses bounded literal terms and follow-up context',()=>{expect(searchTerms('price','Round Lab')).toEqual(['Round Lab']);expect(searchTerms('show me oily skin')).toEqual(['oily']);expect(new RegExp(escapeRegex('a.*')).test('abc')).toBe(false);});
  it('matches only enabled complete FAQ keywords',()=>{const a={id:'cd8fe6bf-fdaf-4d67-9382-8aafaf409567',keywords:['gift wrap'],bn:'হ্যাঁ',en:'Yes',enabled:true};expect(matchCustom('Is gift wrap available?',[a],'en')).toBe('Yes');expect(matchCustom('gift wrapping',[a],'en')).toBeUndefined();expect(matchCustom('gift wrap',[{...a,enabled:false}],'en')).toBeUndefined();expect(answersSchema.safeParse([a,a]).success).toBe(false);});
+ it('accepts legacy replies without category and prioritises explicit intent rules',()=>{
+  const base={id:'cd8fe6bf-fdaf-4d67-9382-8aafaf409567',keywords:['shipping'],bn:'কম',en:'Standard',enabled:true};
+  const preferred={...base,id:'dd8fe6bf-fdaf-4d67-9382-8aafaf409567',priority:90,category:'Delivery' as const,en:'Priority'};
+  expect(answersSchema.safeParse([base,preferred]).success).toBe(true);
+  expect(matchCustom('shipping',[base,preferred],'en')).toBe('Priority');
+  expect(matchCustom('shipping',[{...preferred,enabled:false},base],'en')).toBe('Standard');
+  expect(answersSchema.safeParse([{...base,priority:101}]).success).toBe(false);
+ });
  it('encodes enquiries without confirming or sending an order',()=>{const u=new URL(enquiryLink([{product:{id:'a',name:'A & B',slug:'a',category:'Beauty',size:'5ml',pricePaisa:15000,available:1,description:'',usage:''},quantity:2}]));expect(u.hostname).toBe('wa.me');expect(u.pathname).toBe('/8801310339192');expect([...u.searchParams.keys()]).toEqual(['text']);expect(u.searchParams.get('text')).toContain('not a confirmed order');expect(u.searchParams.get('text')).toContain('A & B (5ml) × 2');});
 });
