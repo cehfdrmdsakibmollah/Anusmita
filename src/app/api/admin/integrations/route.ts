@@ -21,8 +21,9 @@ const definitions=[
 export async function GET(){
  try{
   await authorize(["owner","admin"],"settings.view");
-  await db();
-  const providerRecords=await ProviderConnection.find({provider:{$in:["steadfast","whatsapp"]}}).select("provider configurationVerifiedAt lastTestResult").lean<any[]>();
+  let providerRecords:any[]=[];
+  try{await db();providerRecords=await ProviderConnection.find({provider:{$in:["steadfast","whatsapp"]}}).select("provider configurationVerifiedAt lastTestResult").lean<any[]>();}
+  catch{providerRecords=[];} // No unverified provider is ever marked as tested during an outage.
   const integrations:Integration[]=definitions.map(d=>{
    const missing=d.keys.filter(k=>!process.env[k]||(k==="META_INBOX_ENABLED"&&process.env[k]!=="true"));
    const stored=providerRecords.find(p=>p.provider===d.id);
