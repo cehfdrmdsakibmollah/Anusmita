@@ -92,3 +92,4 @@ body:has(.ih)>.anAnnouncement,body:has(.ih)>.anHeader,body:has(.ih)>.anFooter{di
 .ihWizardFooter button:last-child{background:#8c0d3b;color:white}
 .ihWizardFooter button:disabled{opacity:.4}
 @media(max-width:650px){.ihWizard{padding:13px}.ihWizardSteps{grid-template-columns:repeat(3,1fr)}.ihServiceDrawer{padding:15px}.ihDrawerTabs button{font-size:10px;padding:9px 6px}}
+.ihMetric{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #f0dde4;font-size:11px}.ihMetric strong{text-transform:capitalize}.ihMetric small{color:#876c79}.ihMetric span{overflow-wrap:anywhere}
