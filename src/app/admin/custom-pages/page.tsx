@@ -10,7 +10,7 @@ const navigation=[
  {group:"Administration",items:[
   ["Overview","/admin/dashboard",LayoutDashboard],["Orders","/admin/orders",ShoppingCart],["Products","/admin/products/manage",Package],["Inventory","/admin/inventory",Boxes],["Customers","/admin/customers",Users],["Staff & Users","/admin/staff",UserCog]]},
  {group:"Content & Engagement",items:[
-  ["Homepage Studio","/admin?tab=Homepage%20Studio",Layers3],["Custom Pages","/admin/custom-pages",FileText],["Banners & Media","/admin?tab=R2%20Images",Images],["Blog / Journal","/admin?tab=Accounting%20Journal",BookOpen],["Deals & Campaigns","/admin?tab=Homepage%20Studio",Tag]]},
+  ["Homepage Studio","/admin?tab=Homepage%20Studio",Layers3],["Custom Pages","/admin/custom-pages",FileText],["Banners & Media","/admin?tab=R2%20Images",Images],["Blog / Journal","/journal/design-preview",BookOpen],["Deals & Campaigns","/admin?tab=Homepage%20Studio",Tag]]},
  {group:"Insights & Operations",items:[
   ["Reports & Analytics","/admin?tab=Finance%20Audit",BarChart3],["Audit Logs","/admin?tab=Activity%20Logs",ScrollText],["System Settings","/admin/integrations",Settings]]}
 ] as const;
