@@ -281,6 +281,7 @@ const ContentPageSchema=new Schema({
  seoTitle:{type:String,default:"",maxlength:70},noIndex:{type:Boolean,default:false},
  archived:{type:Boolean,default:false},publishedAt:{type:Date,default:null},
  blocks:{type:[Schema.Types.Mixed],default:[]},
+ draftContent:{type:Schema.Types.Mixed,default:null},
  published:{type:Boolean,default:false},revision:{type:Number,default:0,min:0},
  updatedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
 },opts);
