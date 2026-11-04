@@ -5,7 +5,8 @@ import HomepageDiscover from "@/components/homepage-discover";
 
 import {ArrowRight,ArrowUpRight,Heart,Package,ShieldCheck,Sparkles,Truck} from "lucide-react";
 import {db} from "@/lib/db";
-import {Product,HomePage,Order} from "@/lib/models";
+import {Product,HomePage,HomePageStyle,Order} from "@/lib/models";
+import {buildHomeStyleCss,defaultHomeStyle,homeStyleSchema} from "@/lib/homepage-styles";
 import {checkoutEnabled} from "@/lib/launch-config";
 import {homeStarterBlocks,homeStarterSections,publicBlocks,type HomeBlock,type HomeSection} from "@/lib/home-content";
 import HomepageCarousel from "@/components/homepage-carousel";
@@ -24,13 +25,16 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
  let configured=false,products:ShopProduct[]=[],shelves:FeaturedShelf[]=[];
  let blocks:HomeBlock[]=homeStarterBlocks;
  let sections:HomeSection[]=homeStarterSections;
+ let css="";
  if(process.env.MONGODB_URI)try{
   await db();configured=true;
-  const [settings,data]=await Promise.all([
+  const [settings,data,siteStyles]=await Promise.all([
    HomePage.findOne({key:"main"}).lean<any>(),
    Product.find({active:true}).select("name slug brand category origin imageUrls size variantLabel pricePaisa onHand reserved")
-    .sort({createdAt:-1}).limit(48).lean<any[]>()
+    .sort({createdAt:-1}).limit(48).lean<any[]>(),
+   HomePageStyle.findOne({key:"main"}).lean<any>().catch(()=>null)
   ]);
+  if(siteStyles)try{const record=homeStyleSchema.parse(Object.fromEntries(Object.keys(defaultHomeStyle).map(k=>[k,siteStyles[k]??(defaultHomeStyle as any)[k]])));css=buildHomeStyleCss(record);}catch{/* Untrusted or obsolete styles never block storefront */}
   if(settings){
    blocks=settings.blocks as HomeBlock[];
    sections=settings.sections as HomeSection[];
@@ -78,7 +82,8 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
  const editorial=active.filter(x=>x.kind==="editorial");
  const announcement=active.find(x=>x.kind==="announcement");
  const canOrder=configured&&checkoutEnabled(process.env);
- return <>
+ return <div className="anHomeStyleScope">
+  {css&&<style>{css}</style>}
   <HomepageMotion/>
   <HomepageCarousel slides={slides}/>
   <div className="anTrustBar" aria-label="Shopping experience">
@@ -120,5 +125,5 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
   </div></section>}
   <HomepageDiscover/>
   <div className="anPromise"><span>✦</span><h2>{announcement?.title||"Beautiful discoveries. Thoughtfully yours."}</h2><p>ANUSMITA — Fashion · Jewellery · Beauty · Lifestyle</p></div>
- </>;
+ </div>;
 }

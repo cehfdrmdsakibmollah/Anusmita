@@ -5,6 +5,7 @@ import {Home,ShoppingCart,Package,Boxes,Users,Settings,BookOpen,Image,Layers,Lay
 import type {HomeBlock,HomeSection} from "@/lib/home-content";
 import {blockSchema} from "@/lib/home-content";
 import HomepageManager from "@/components/homepage-manager";
+import HomepageStyleEditor from "@/components/homepage-style-editor";
 import HomepageCountdown from "@/components/homepage-countdown";
 import StudioMultiPage from "@/components/studio-multipage";
 import "./homepage-studio-v2.css";
@@ -27,6 +28,7 @@ export default function HomepageStudioV2(){
  const [offerOpen,setOfferOpen]=useState(true);
  const importRef=useRef<HTMLInputElement|null>(null);
  const [showHelp,setShowHelp]=useState(false);
+ const [stylePanel,setStylePanel]=useState<"global"|"css"|null>(null);
  async function load(){
   const res=await fetch("/api/admin/homepage",{cache:"no-store"});
   const data=await res.json();if(!res.ok)throw Error(data.error||"Unable to load homepage");
@@ -150,7 +152,8 @@ export default function HomepageStudioV2(){
      </div>:<div className="avs-placeholder"><SlidersHorizontal size={27}/><strong>Select a section to edit</strong><p>Click any hero, category card or left-side section to open its settings.</p></div>}
     </section>
    </div>
-   <div className="avs-bottom-tools"><strong>✧ Quick Tools:</strong><button onClick={()=>setInspector("style")}><Palette size={15}/> Theme Design</button><button onClick={()=>setInspector("style")}>Global Styles</button><button onClick={()=>setMessage("Custom CSS/JS injection is deliberately disabled until sandbox validation is added.")}><Code2 size={15}/> Custom CSS</button><button onClick={()=>setMessage("A/B testing needs verified traffic allocation and conversion tracking.")}>A/B Test</button><button onClick={()=>setMessage("Heatmaps need privacy-aware analytics integration before activation.")}>Heatmap</button><button onClick={()=>setMessage("Scheduled publishing needs a separate draft version and publish scheduler.")}>Schedule Publish</button><button onClick={exportJson}><Download size={15}/> Asset Backup</button><button onClick={()=>setLegacyOpen(v=>!v)}><PanelLeft size={15}/> {legacyOpen?"Hide":"Open"} Classic CMS</button><span className="avs-saved"><CheckCircle2 size={14}/> Revision {config.revision} saved</span></div>
+   <div className="avs-bottom-tools"><strong>✧ Quick Tools:</strong><button onClick={()=>setStylePanel(v=>v==="global"?null:"global")}><Palette size={15}/> Theme Design</button><button onClick={()=>setStylePanel(v=>v==="global"?null:"global")}>Global Styles</button><button onClick={()=>setStylePanel(v=>v==="css"?null:"css")}><Code2 size={15}/> Custom CSS</button><button onClick={()=>setMessage("A/B testing needs verified traffic allocation and conversion tracking.")}>A/B Test</button><button onClick={()=>setMessage("Heatmaps need privacy-aware analytics integration before activation.")}>Heatmap</button><button onClick={()=>setMessage("Scheduled publishing needs a separate draft version and publish scheduler.")}>Schedule Publish</button><button onClick={exportJson}><Download size={15}/> Asset Backup</button><button onClick={()=>setLegacyOpen(v=>!v)}><PanelLeft size={15}/> {legacyOpen?"Hide":"Open"} Classic CMS</button><span className="avs-saved"><CheckCircle2 size={14}/> Revision {config.revision} saved</span></div>
+   {stylePanel&&<HomepageStyleEditor key={stylePanel} mode={stylePanel} onClose={()=>setStylePanel(null)}/>}
    </>}
    {legacyOpen&&<div className="avs-classic-note"><h3>Classic CMS controls</h3><p>Manage product shelf SKUs and original homepage cards using the existing editor. This is connected to the same CMS API. Reload the studio after changes to refresh its snapshot.</p><HomepageManager/><p><a href="/admin?tab=Categories">Open Categories Manager →</a> · <a href="/admin?tab=Products">Open Products Manager →</a></p></div>}
   </main>
