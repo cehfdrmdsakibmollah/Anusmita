@@ -1,3 +1,4 @@
+import {validateProductSubcategory} from "@/lib/product-taxonomy-validation";
 
 import mongoose from "mongoose";
 import {z} from "zod";
@@ -24,6 +25,11 @@ export async function PATCH(req:Request,ctx:{params:Promise<{id:string}>}){
   validateCommercialState(changes);
   if(changes.archived===true){changes.active=false;changes.scheduledPublishAt=null;}
   await db();
+  if(Object.prototype.hasOwnProperty.call(changes,"subcategoryId")){
+   const current=await Product.findById(id).select("category").lean<{category:string}|null>();
+   if(!current)throw new HttpError(404,"Product not found");
+   await validateProductSubcategory(changes.category||current.category,changes.subcategoryId);
+  }
   const session=await mongoose.startSession();let updated:any;
   try{
    await session.withTransaction(async()=>{
