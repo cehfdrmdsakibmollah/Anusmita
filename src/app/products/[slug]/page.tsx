@@ -22,7 +22,7 @@ import type {ProductDetails} from "@/lib/product-experience";
 type DbProduct=ProductDetails&{
  _id:any;name:string;slug:string;sku:string;brand:string;category:string;origin:string;
  description:string;imageUrls:string[];size:string;variantLabel:string;variantGroup:string;
- pricePaisa:number;onHand:number;reserved:number;ingredients:string;usageInstructions:string;
+ pricePaisa:number;quantityDiscounts?:{minQty:2|3|5;percent:number}[];onHand:number;reserved:number;ingredients:string;usageInstructions:string;
  topNotes:string;heartNotes:string;baseNotes:string
 };
 const projection="name slug sku brand category origin description imageUrls size variantLabel variantGroup pricePaisa onHand reserved ingredients usageInstructions topNotes heartNotes baseNotes color colorHex material dimensions compatibility careInstructions warranty sizeGuide skinType benefits";
