@@ -1,6 +1,6 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
-import {Archive,ArrowDown,ArrowUp,BookOpen,Check,ChevronDown,Copy,Eye,FilePlus2,FileText,Globe2,LayoutList,LockKeyhole,Plus,Printer,Save,Search,ShieldCheck,Trash2} from "lucide-react";
+import {useEffect,useMemo,useRef,useState} from "react";
+import {Archive,ArrowDown,ArrowUp,BookOpen,Check,ChevronDown,Copy,Eye,FilePlus2,FileText,Globe2,LayoutList,LockKeyhole,Plus,Printer,Save,Search,ShieldCheck,Trash2,Bold,Italic,Underline,Undo2,Heading1,Heading2,Heading3,List,Quote,ExternalLink,Layers,History} from "lucide-react";
 import "./custom-pages.css";
 type Type="heading"|"paragraph"|"callout"|"bullet"|"numbered"|"faq"|"quote"|"divider";
 type Block={id:string;type:Type;text:string;textBn?:string;answer?:string;answerBn?:string};
@@ -13,6 +13,7 @@ const payloadFor=(p:Page)=>({slug:p.slug,title:p.title,titleBn:p.titleBn,descrip
 const autoSlug=(value:string)=>value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,80);
 function describeBlock(b:Block,language:"en"|"bn"){const raw=language==="bn"&&b.textBn?.trim()?b.textBn:b.text;return raw||"Empty block";}
 export default function CustomPages(){
+ const editorRef=useRef<HTMLTextAreaElement|null>(null);
  const [pages,setPages]=useState<Page[]>([]),[page,setPage]=useState<Page|null>(null),[lastSaved,setLastSaved]=useState(""),[search,setSearch]=useState(""),[filter,setFilter]=useState<"all"|"published"|"draft"|"archived">("all");
  const [lang,setLang]=useState<"en"|"bn">("en"),[selected,setSelected]=useState<string|null>(null),[tab,setTab]=useState<"settings"|"seo"|"preview">("settings"),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false),[showAdd,setShowAdd]=useState(false);
  const dirty=!!page&&JSON.stringify(page)!==lastSaved;
@@ -25,6 +26,24 @@ export default function CustomPages(){
  function create(){if(dirty&&!window.confirm("Discard unsaved changes?"))return;const next=blank();setPage(next);setLastSaved(JSON.stringify(next));setSelected(next.blocks[0].id);setTab("settings");setNotice("");}
  function patch(change:Partial<Page>){setPage(p=>p?{...p,...change}:p);}
  function updateBlock(id:string,patch:Partial<Block>){setPage(p=>p?{...p,blocks:p.blocks.map(b=>b.id===id?{...b,...patch}:b)}:p);}
+ function formatSelected(left:string,right=left){
+  const b=page?.blocks.find(x=>x.id===selected);
+  const el=editorRef.current;if(!b||!el)return;
+  const field=lang==="bn"?"textBn":"text";
+  const old=(b[field]||"");
+  const start=el.selectionStart,end=el.selectionEnd;
+  const text=old.slice(start,end)||"text";
+  updateBlock(b.id,{[field]:old.slice(0,start)+left+text+right+old.slice(end)});
+  requestAnimationFrame(()=>{el.focus();el.setSelectionRange(start+left.length,start+left.length+text.length);});
+ }
+ function handleTextShortcut(event:React.KeyboardEvent<HTMLTextAreaElement>,id:string){
+  if(id!==selected)setSelected(id);
+  if(!(event.ctrlKey||event.metaKey)||event.altKey)return;
+  const key=event.key.toLowerCase();
+  if(key==="b"||key==="i"||key==="u"){
+   event.preventDefault();formatSelected(key==="b"?"**":key==="u"?"++":"*",key==="b"?"**":key==="u"?"++":"*");
+  }
+ }
  function move(i:number,dir:number){setPage(p=>{if(!p||i+dir<0||i+dir>=p.blocks.length)return p;const blocks=[...p.blocks];[blocks[i],blocks[i+dir]]=[blocks[i+dir],blocks[i]];return {...p,blocks};});}
  function add(type:Type){if(!page||page.blocks.length>=30)return;const b=makeBlock(type);patch({blocks:[...page.blocks,b]});setSelected(b.id);setShowAdd(false);}
  async function save(publish:boolean){if(!page||busy)return;if(!page.title.trim()||!page.slug.trim()){setNotice("Page title and slug are required.");return;}if(!page.blocks.length){setNotice("Add at least one block.");return;}
@@ -44,6 +63,13 @@ export default function CustomPages(){
  return <section className="anPolicyStudio">
   <header className="anPsHeader"><div className="anPsTitle"><span className="anPsBrandIcon"><FileText size={25}/></span><div><div className="anPsBreadcrumb">Admin / Content & Engagement / Custom Pages</div><h1>Custom Pages & Policy Builder <small>PRO</small></h1><p>Create, edit, preview and publish secure content pages without changing existing storefront policies.</p></div></div>
    <div className="anPsHeaderActions"><a href="/" target="_blank" rel="noreferrer"><Eye size={15}/> View Live Site</a><button type="button" className="primary" onClick={create}><Plus size={17}/> New Custom Page</button></div></header>
+  <nav className="anPsMasterRibbon" aria-label="Page builder tools">
+   <button type="button" className="active" onClick={()=>setTab("settings")}><Layers size={15}/> Pages Builder</button>
+   <button type="button" onClick={()=>setTab("seo")}><FileText size={15}/> SEO & OpenGraph</button>
+   <button type="button" onClick={()=>{setShowAdd(true);setTab("settings");}}><LayoutList size={15}/> Blocks Library</button>
+   <button type="button" onClick={()=>setTab("preview")}><Eye size={15}/> Live Draft Preview</button>
+   <a href="/admin?tab=Activity%20Logs"><History size={15}/> Audit Logs</a>
+  </nav>
   <div className="anPsCapabilities"><span><ShieldCheck size={14}/> Text-only secure</span><span><Globe2 size={14}/> Bangla & English</span><span><BookOpen size={14}/> Reading tools</span><span><LockKeyhole size={14}/> Admin protected</span><span><FileText size={14}/> SEO & Publishing</span></div>
   <div className="anPsMetrics"><div><small>Custom Pages</small><strong>{pages.length}</strong></div><div><small>Published</small><strong>{pages.filter(p=>p.published&&!p.archived).length}</strong></div><div><small>Drafts</small><strong>{pages.filter(p=>!p.published&&!p.archived).length}</strong></div><div><small>Archived</small><strong>{pages.filter(p=>p.archived).length}</strong></div></div>
   <div className="anPsColumns">
@@ -53,15 +79,21 @@ export default function CustomPages(){
     <button type="button" className="anPsNewSide" onClick={create}><Plus size={17}/> Create New Page</button>
    </aside>
    {page?<section className="anPsEditor">
-    <div className="anPsEditorTop"><strong>{page.title||"Untitled page"}</strong><span className={page.archived?"archived":page.published?"published":"draft"}>{page.archived?"Archived":page.published?"Published":"Draft"}</span><small>Revision {page.revision}</small></div>
+    <div className="anPsEditorTop"><label className="anPsPagePicker">Edit Page: <select value={page.slug} onChange={e=>{const p=pages.find(v=>v.slug===e.target.value);if(p)choose(p);}}><option value={page.slug}>{page.title||"New page"}</option>{pages.filter(p=>p.slug!==page.slug).map(p=><option key={p.slug} value={p.slug}>{p.title}</option>)}</select></label><span className={page.archived?"archived":page.published?"published":"draft"}>{page.archived?"Archived":page.published?"Published":"Draft"}</span><small>Revision {page.revision}</small></div>
     <div className="anPsLang"><button type="button" className={lang==="en"?"active":""} onClick={()=>setLang("en")}>🇬🇧 English</button><button type="button" className={lang==="bn"?"active":""} onClick={()=>setLang("bn")}>🇧🇩 বাংলা</button><span>Manual bilingual editing · no automatic translation</span></div>
     <div className="anPsFields"><label>Page title {lang==="en"?"(English)":"(Bangla)"}<input required maxLength={lang==="en"?100:120} value={lang==="en"?page.title:page.titleBn} onChange={e=>{if(lang==="bn")patch({titleBn:e.target.value});else patch({title:e.target.value,slug:page.revision===0?autoSlug(e.target.value):page.slug});}}/></label>
      <label>Page URL slug <input value={page.slug} required disabled={page.revision>0} pattern="[a-z0-9]+(-[a-z0-9]+)*" maxLength={80} onChange={e=>patch({slug:e.target.value.toLowerCase()})}/></label></div>
-    <div className="anPsBlockHeader"><div><h2>Content Blocks</h2><small>Reorder and edit safely · {page.blocks.length}/30</small></div><button type="button" onClick={()=>setShowAdd(v=>!v)}><Plus size={15}/> Add Block <ChevronDown size={14}/></button></div>
+    <div className="anPsFormattingToolbar" role="toolbar" aria-label="Selected block text formatting">
+  <button type="button" onClick={()=>formatSelected("**")} title="Bold (Ctrl+B)"><Bold size={16}/></button>
+  <button type="button" onClick={()=>formatSelected("*")} title="Italic (Ctrl+I)"><Italic size={16}/></button>
+  <button type="button" onClick={()=>formatSelected("++")} title="Underline (Ctrl+U)"><Underline size={16}/></button>
+  <span className="anPsToolbarHelp">Select words in a block and use formatting. Ctrl+B / I / U</span>
+ </div>
+ <div className="anPsBlockHeader"><div><h2>Content Blocks</h2><small>Reorder and edit safely · {page.blocks.length}/30</small></div><button type="button" onClick={()=>setShowAdd(v=>!v)}><Plus size={15}/> Add Block <ChevronDown size={14}/></button></div>
     {showAdd&&<div className="anPsAddGrid">{types.map(t=><button key={t} type="button" onClick={()=>add(t)}>{labels[t]}</button>)}</div>}
     <div className="anPsBlockList">{page.blocks.map((b,i)=><div key={b.id} className={"anPsBlock"+(selected===b.id?" selected":"")}><div className="anPsBlockTop"><span>{i+1}. {labels[b.type]}</span><div><button type="button" title="Move up" disabled={i===0} onClick={()=>move(i,-1)}><ArrowUp size={15}/></button><button type="button" title="Move down" disabled={i===page.blocks.length-1} onClick={()=>move(i,1)}><ArrowDown size={15}/></button><button type="button" title="Duplicate" disabled={page.blocks.length>=30} onClick={()=>{const dup={...b,id:crypto.randomUUID()};patch({blocks:[...page.blocks.slice(0,i+1),dup,...page.blocks.slice(i+1)]});setSelected(dup.id);}}><Copy size={15}/></button><button type="button" title="Remove" disabled={page.blocks.length===1} onClick={()=>{patch({blocks:page.blocks.filter(x=>x.id!==b.id)});if(selected===b.id)setSelected(null);}}><Trash2 size={15}/></button></div></div>
       <div className="anPsBlockInner"><label>Block type<select value={b.type} onChange={e=>updateBlock(b.id,{type:e.target.value as Type})}>{types.map(t=><option key={t} value={t}>{labels[t]}</option>)}</select></label>
-       {b.type!=="divider"&&<label>{b.type==="faq"?"Question":b.type==="bullet"||b.type==="numbered"?"One item per line":"Content"} ({lang==="en"?"English":"Bangla"})<textarea rows={b.type==="paragraph"||b.type==="bullet"||b.type==="numbered"?4:2} maxLength={3000} value={b[key]||""} onFocus={()=>setSelected(b.id)} onChange={e=>updateBlock(b.id,{[key]:e.target.value})}/></label>}
+       {b.type!=="divider"&&<label>{b.type==="faq"?"Question":b.type==="bullet"||b.type==="numbered"?"One item per line":"Content"} ({lang==="en"?"English":"Bangla"})<textarea ref={selected===b.id?editorRef:undefined} onKeyDown={e=>handleTextShortcut(e,b.id)} rows={b.type==="paragraph"||b.type==="bullet"||b.type==="numbered"?4:2} maxLength={3000} value={b[key]||""} onFocus={()=>setSelected(b.id)} onChange={e=>updateBlock(b.id,{[key]:e.target.value})}/></label>}
        {b.type==="faq"&&<label>Answer ({lang==="en"?"English":"Bangla"})<textarea rows={3} maxLength={3000} value={(lang==="bn"?b.answerBn:b.answer)||""} onChange={e=>updateBlock(b.id,{[lang==="bn"?"answerBn":"answer"]:e.target.value})}/></label>}
        {b.type==="divider"&&<p className="anPsMuted">A decorative divider will appear between sections.</p>}
       </div></div>)}</div>
