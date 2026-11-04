@@ -2,20 +2,31 @@ import type {Metadata} from "next";
 import {notFound} from "next/navigation";
 import {db} from "@/lib/db";
 import {ContentPage} from "@/lib/models";
+import PublicPolicyReader from "@/components/public-policy-reader";
 export const dynamic="force-dynamic";
 async function load(slug:string){
  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)||slug.length>80)return null;
- await db();return ContentPage.findOne({slug,published:true}).select("title description blocks").lean<any>();
+ await db();
+ return ContentPage.findOne({slug,published:true,archived:{$ne:true}})
+  .select("title titleBn description descriptionBn seoTitle noIndex blocks updatedAt publishedAt")
+  .lean<any>();
 }
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{
- const {slug}=await params;try{const p=await load(slug);return p?{title:p.title,description:p.description||undefined,robots:{index:true,follow:true}}:{title:"Page not found",robots:{index:false,follow:false}};}catch{return {title:"Unavailable",robots:{index:false,follow:false}};}
+ const {slug}=await params;
+ try{
+  const p=await load(slug);
+  return p?{title:p.seoTitle||p.title,description:p.description||undefined,alternates:{canonical:"/pages/"+slug},robots:{index:!p.noIndex,follow:!p.noIndex}}:{title:"Page not found",robots:{index:false,follow:false}};
+ }catch{return {title:"Unavailable",robots:{index:false,follow:false}};}
 }
 export default async function ContentPageView({params}:{params:Promise<{slug:string}>}){
- const {slug}=await params;const p=await load(slug);if(!p)notFound();
- const blocks=Array.isArray(p.blocks)?p.blocks.slice(0,30):[];
- return <article className="anWide" style={{maxWidth:900,margin:"40px auto 70px",padding:"0 20px",minHeight:"55vh"}}>
- <p style={{fontSize:12,letterSpacing:2,color:"#8b173a"}}>ANUSMITA · INFORMATION</p>
- <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(32px,5vw,52px)",margin:"15px 0 25px"}}>{p.title}</h1>
- {blocks.map((b:any,i:number)=>{if(typeof b?.text!=="string")return null;const t=b.text.slice(0,3000);return <section key={typeof b.id==="string"?b.id:i} style={{whiteSpace:"pre-wrap",lineHeight:1.8,margin:"20px 0",padding:b.type==="callout"?20:0,border:b.type==="callout"?"1px solid #eddadd":undefined,background:b.type==="callout"?"#fff4f5":undefined}}>{b.type==="heading"?<h2 style={{fontFamily:"Georgia,serif",fontSize:27}}>{t}</h2>:<p>{t}</p>}</section>;})}
- </article>;
+ const {slug}=await params;
+ const p=await load(slug);
+ if(!p)notFound();
+ const allowed=new Set(["heading","paragraph","callout","bullet","numbered","faq","quote","divider"]);
+ const blocks=(Array.isArray(p.blocks)?p.blocks:[]).slice(0,30).filter((b:any)=>typeof b?.text==="string"&&allowed.has(b.type)).map((b:any)=>({
+  id:String(b.id||""),type:b.type,text:b.text.slice(0,3000),textBn:typeof b.textBn==="string"?b.textBn.slice(0,3000):"",
+  answer:typeof b.answer==="string"?b.answer.slice(0,3000):"",answerBn:typeof b.answerBn==="string"?b.answerBn.slice(0,3000):""
+ }));
+ return <PublicPolicyReader title={p.title} titleBn={p.titleBn||""} description={p.description||""}
+  descriptionBn={p.descriptionBn||""} blocks={blocks} updatedAt={p.publishedAt?.toISOString?.()||p.updatedAt?.toISOString?.()}/>;
 }
