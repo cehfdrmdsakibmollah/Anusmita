@@ -341,3 +341,12 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 .seoDashboard:has(.apReferenceGrid) .apUploadFooter button{background:#86163e;color:white;border:none;border-radius:7px;padding:10px;font-size:11px;cursor:pointer}
 .seoDashboard:has(.apReferenceGrid) .apUploadFooter button:disabled{opacity:.5;cursor:not-allowed}
 .seoDashboard:has(.apReferenceGrid) .apUploadDrop{padding:10px;min-height:104px}
+
+
+.seoDashboard:has(.apReferenceGrid) .apQuantityTiers{border:1px solid #e9c1d0;border-radius:10px;padding:12px;margin-top:12px;background:#fffafd}
+.seoDashboard:has(.apReferenceGrid) .apQuantityTiers legend{padding:0 7px;color:#84183f;font:700 15px Georgia,serif}
+.seoDashboard:has(.apReferenceGrid) .apQuantityTiers>p,.seoDashboard:has(.apReferenceGrid) .apQuantityTiers>small{font-size:10px;line-height:1.5;color:#846375}
+.seoDashboard:has(.apReferenceGrid) .apQuantityTierGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0}
+.seoDashboard:has(.apReferenceGrid) .apQuantityTierGrid label{font-size:12px;font-weight:700;color:#702044;display:grid;gap:6px;min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apQuantityTierGrid span{font-size:10px;font-weight:400}
+.seoDashboard:has(.apReferenceGrid) .apQuantityTierGrid input{width:100%;min-width:0;padding:8px;background:#fff;border:1px solid #e5bed0;border-radius:6px}
