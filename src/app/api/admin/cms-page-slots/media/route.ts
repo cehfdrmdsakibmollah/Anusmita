@@ -26,6 +26,7 @@ export async function POST(req:Request){
   const {page}=params.parse({page:form.get("page")});
   const file=form.get("file");
   if(!(file instanceof File)||!file.size||file.size>MAX||!["image/jpeg","image/png","image/webp"].includes(file.type))throw new HttpError(400,"JPEG, PNG or WebP under 3 MB only");
+  await db();
   await mediaDailyQuota(actor.id);
   const extension=file.type==="image/jpeg"?"jpg":file.type==="image/png"?"png":"webp";
   const key="public/cms/"+page+"/"+randomUUID()+"."+extension;
