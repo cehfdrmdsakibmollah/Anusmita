@@ -25,6 +25,17 @@ export function isSafeCmsImage(url:string){
     /^\/public\/cms\/(?:shop|deals|bundles|about|contact|journal|cart|checkout|gift-cards|pre-orders|customer-stories|wishlist|routine-quiz|track-order)\/[0-9a-fA-F-]{36}\.(?:jpg|png|webp)$/.test(u.pathname);
  }catch{return false;}
 }
+export const cmsNativeHeroSchema=z.object({
+ title:z.string().trim().max(130).default(""),
+ subtitle:z.string().trim().max(320).default(""),
+ imageUrl:z.string().trim().max(500).default(""),
+ background:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#fff6f9"),
+ textColor:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#611b37")
+}).strict().superRefine((hero,ctx)=>{
+ if(hero.imageUrl&&!isSafeCmsImage(hero.imageUrl))ctx.addIssue({code:"custom",path:["imageUrl"],message:"Hero image must be an approved media URL"});
+});
+export type CmsNativeHero=z.infer<typeof cmsNativeHeroSchema>;
+export const defaultCmsNativeHero:CmsNativeHero=cmsNativeHeroSchema.parse({});
 export const cmsSlotSchema=z.object({
  id:z.uuid(),placement:z.enum(["before","after"]),
  kind:z.enum(cmsSectionKinds).default("banner"),
@@ -42,6 +53,6 @@ export const cmsSlotSchema=z.object({
  if(!isSafeLink(slot.href))ctx.addIssue({code:"custom",path:["href"],message:"Use an internal /path or #anchor link"});
 });
 export const cmsSlots=z.array(cmsSlotSchema).max(20).refine(items=>new Set(items.map(x=>x.id)).size===items.length,"Duplicate block IDs");
-export const cmsSaveSchema=z.object({page:z.enum(cmsSlotPages),revision:z.number().int().min(0),action:z.enum(["saveDraft","publish"]),slots:cmsSlots}).strict();
+export const cmsSaveSchema=z.object({page:z.enum(cmsSlotPages),revision:z.number().int().min(0),action:z.enum(["saveDraft","publish"]),slots:cmsSlots,nativeHero:cmsNativeHeroSchema.default(defaultCmsNativeHero)}).strict();
 export type CmsSlot=z.infer<typeof cmsSlotSchema>;
 export type CmsSlotPage=typeof cmsSlotPages[number];
