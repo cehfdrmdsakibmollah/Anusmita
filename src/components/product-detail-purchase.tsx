@@ -1,6 +1,5 @@
-import RichProductDescription from "@/components/rich-product-description";
-
 "use client";
+import RichProductDescription from "@/components/rich-product-description";
 import {useEffect,useState} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
