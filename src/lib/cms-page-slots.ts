@@ -1,6 +1,6 @@
 import {z} from "zod";
 import {isSafeImage,isSafeLink} from "@/lib/home-content";
-export const cmsSlotPages=["shop","deals","bundles","about","contact","journal"] as const;
+export const cmsSlotPages=["shop","deals","bundles","about","contact","journal","cart","checkout","gift-cards","pre-orders","customer-stories","wishlist","routine-quiz","track-order"] as const;
 export const cmsSectionKinds=["hero","banner","text","image","callout","split"] as const;
 export const cmsSectionAlignments=["left","center","right"] as const;
 export const cmsSectionImagePositions=["left","right","background"] as const;
