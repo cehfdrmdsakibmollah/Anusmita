@@ -7,6 +7,7 @@ describe("Product photo arrangement",()=>{
   expect(editGallery(images,"two","move-left")).toEqual(["two","one","three"]);
   expect(editGallery(images,"two","move-right")).toEqual(["one","three","two"]);
  });
+ it("preserves gallery photos after promoting an uploaded image to cover",()=>{const uploaded=["original-cover","gallery-1","gallery-2"];expect(editGallery(uploaded,"gallery-2","cover")).toEqual(["gallery-2","original-cover","gallery-1"]);});
  it("does not wrap photos at either edge",()=>{
   expect(editGallery(images,"one","move-left")).toEqual(images);
   expect(editGallery(images,"three","move-right")).toEqual(images);

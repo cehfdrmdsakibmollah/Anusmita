@@ -9,7 +9,7 @@ export const checkoutSchema = z.object({
 }).strict();
 export const productSchema = z.object({
  name:humanText(150),slug:z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),sku:z.string().regex(/^[A-Za-z0-9_-]{3,60}$/),
- brand:z.string().max(100).default(""),category:humanText(60),
+ brand:z.string().max(100).default(""),category:humanText(60),subcategoryId:z.string().regex(/^[a-f0-9]{24}$/i).nullable().default(null),
  origin:z.enum(["Bangladesh","China","Japan","Korea","Other"]).default("Other"),
  description:z.string().max(3000).default(""),size:z.string().max(50).default(""),
  variantLabel:z.string().max(60).default("Standard"),

@@ -1,3 +1,4 @@
+import {validateProductSubcategory} from "@/lib/product-taxonomy-validation";
 
 import mongoose from "mongoose";
 import { authorize,authorizePermission,assertOrigin,apiError,HttpError } from "@/lib/auth";
@@ -15,6 +16,7 @@ export async function POST(request:Request) {
   assertFutureSchedule(data.scheduledPublishAt);
   validateCommercialState(data);
   await db();
+  await validateProductSubcategory(data.category,data.subcategoryId);
   let created:any;const session=await mongoose.startSession();
   try {
    await session.withTransaction(async()=>{
@@ -47,7 +49,7 @@ export async function GET(req:Request) {
   if(status==="archived")filter.archived=true;
   if(status==="all")filter.archived={$ne:true};
   const [products,total,categories]=await Promise.all([
-   Product.find(filter).select("sku name slug brand category origin size color colorHex variantLabel variantGroup ingredients usageInstructions topNotes heartNotes baseNotes pricePaisa costPaisa compareAtPaisa wholesalePaisa featured barcode archived availabilityMode preorderEta discountPercent salesChannels scheduledPublishAt onHand reserved active updatedAt reorderLevel batch expiryAt description imageUrls").sort({updatedAt:-1}).skip((page-1)*pageSize).limit(pageSize).lean<any[]>(),
+   Product.find(filter).select("sku name slug brand category subcategoryId origin size color colorHex variantLabel variantGroup ingredients usageInstructions topNotes heartNotes baseNotes pricePaisa costPaisa compareAtPaisa wholesalePaisa featured barcode archived availabilityMode preorderEta discountPercent salesChannels scheduledPublishAt onHand reserved active updatedAt reorderLevel batch expiryAt description imageUrls").sort({updatedAt:-1}).skip((page-1)*pageSize).limit(pageSize).lean<any[]>(),
    Product.countDocuments(filter),
    Product.distinct("category")
   ]);

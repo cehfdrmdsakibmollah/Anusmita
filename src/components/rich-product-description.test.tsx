@@ -1,9 +1,8 @@
 import {describe,it,expect} from "vitest";
 import {parseProductDescription} from "./rich-product-description";
-describe("product description formatting",()=>{
- it("preserves existing plain text",()=>expect(parseProductDescription("A gentle cream")[0]).toEqual({kind:"paragraph",value:"A gentle cream"}));
- it("recognizes headings, bullets and numbered lists",()=>{
-  expect(parseProductDescription("## Ingredients\n- Glycerin\n1. Apply").map(x=>x.kind)).toEqual(["heading","bullet","number"]);
- });
- it("never constructs executable markup",()=>expect(parseProductDescription("<script>alert(1)</script>")[0].value).toBe("<script>alert(1)</script>"));
+describe("Product description H1/H2/H3 format",()=>{
+ it("keeps legacy description text as paragraphs",()=>expect(parseProductDescription("Normal text")[0]).toMatchObject({kind:"paragraph",value:"Normal text"}));
+ it("keeps heading hierarchy",()=>expect(parseProductDescription("# Hero\n## Details\n### Features").map(x=>x.level)).toEqual([1,2,3]));
+ it("keeps unsafe HTML as text instead of parsing markup",()=>expect(parseProductDescription("<script>alert(1)</script>")[0].value).toBe("<script>alert(1)</script>"));
+ it("parses lists and quote blocks",()=>expect(parseProductDescription("- Bullet\n1. First\n> Important").map(x=>x.kind)).toEqual(["bullet","number","quote"]));
 });
