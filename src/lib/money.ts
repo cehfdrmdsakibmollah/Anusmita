@@ -5,7 +5,7 @@ export function paisa(value: unknown, label = "amount"): number {
 }
 export function taka(value: number) { return new Intl.NumberFormat("en-BD",{style:"currency",currency:"BDT"}).format(value/100); }
 export function cartTotals(lines: {quantity:number;unitPricePaisa:number;lineTotalPaisa?:number}[], shippingPaisa: number) {
- const subtotalPaisa = lines.reduce((sum,l) => sum + l.quantity*l.unitPricePaisa,0);
+ const subtotalPaisa = lines.reduce((sum,l) => sum + (l.lineTotalPaisa??l.quantity*l.unitPricePaisa),0);
  if (!Number.isSafeInteger(subtotalPaisa) || subtotalPaisa<0) throw new Error("Invalid total");
  return {subtotalPaisa,shippingPaisa,totalPaisa:subtotalPaisa+shippingPaisa};
 }
