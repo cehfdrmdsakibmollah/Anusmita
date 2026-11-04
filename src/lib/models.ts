@@ -379,10 +379,11 @@ export const HomePageStyle=mongoose.models.HomePageStyle||mongoose.model("HomePa
 
 /** Isolated editorial page slots; never replaces products, checkout or route logic. */
 const CmsPageSlotSchema=new Schema({
- page:{type:String,required:true,unique:true,enum:["shop","deals","bundles","about","contact","journal"]},
+ page:{type:String,required:true,unique:true,enum:["shop","deals","bundles","about","contact","journal","cart","checkout","gift-cards","pre-orders","customer-stories","wishlist","routine-quiz","track-order"]},
  revision:{type:Number,required:true,default:0,min:0},
  draft:{type:[Schema.Types.Mixed],default:[]},
  published:{type:[Schema.Types.Mixed],default:[]},
+ nativeDraft:{type:Schema.Types.Mixed,default:null},nativePublished:{type:Schema.Types.Mixed,default:null},
  publishedRevision:{type:Number,default:0,min:0},
  lastEditedBy:{type:Schema.Types.ObjectId,ref:"User",default:null},
  publishedAt:{type:Date,default:null}
