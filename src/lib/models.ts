@@ -44,7 +44,7 @@ const OrderLineSchema = new Schema({
  productId:{type:Schema.Types.ObjectId,ref:"Product",required:true},
  sku:{type:String,required:true},name:{type:String,required:true},
  quantity:{type:Number,required:true,min:1},unitPricePaisa:{type:Number,required:true},
- unitCostPaisa:{type:Number,required:true},lineTotalPaisa:{type:Number,required:true}
+ unitCostPaisa:{type:Number,required:true},discountPercent:{type:Number,default:0,min:0,max:50},discountPaisa:{type:Number,default:0,min:0},lineTotalPaisa:{type:Number,required:true}
 },{_id:false});
 const OrderSchema = new Schema({
  orderNumber:{type:String,unique:true,required:true},
