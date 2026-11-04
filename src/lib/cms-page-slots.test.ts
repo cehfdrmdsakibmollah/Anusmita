@@ -25,5 +25,11 @@ describe("Unified CMS Page Slots",()=>{
    expect(cmsSaveSchema.safeParse({action:"publish",page:p,revision:0,slots:[valid]}).success).toBe(true);
   }
  });
+ it("allows isolated uploaded CMS R2 media without allowing arbitrary URLs",()=>{
+  const asset="https://anusmita-media.mdsakibmolla545.workers.dev/public/cms/bundles/550e8400-e29b-41d4-a716-446655440000.webp";
+  expect(cmsSlots.safeParse([{...valid,imageUrl:asset}]).success).toBe(true);
+  expect(cmsSlots.safeParse([{...valid,imageUrl:asset+"?tracker=1"}]).success).toBe(false);
+  expect(cmsSlots.safeParse([{...valid,imageUrl:asset.replace("cms/bundles","products/bundles")}]).success).toBe(false);
+ });
  it("rejects unknown properties",()=>{expect(cmsSlots.safeParse([{...valid,html:"<script />"}]).success).toBe(false);});
 });
