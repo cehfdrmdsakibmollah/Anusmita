@@ -16,6 +16,15 @@ export const cmsStyleSchema=z.object({
 }).strict();
 export type CmsStyle=z.infer<typeof cmsStyleSchema>;
 export const defaultCmsStyle:CmsStyle=cmsStyleSchema.parse({});
+export function isSafeCmsImage(url:string){
+ if(isSafeImage(url))return true;
+ try{
+  const u=new URL(url);
+  return u.protocol==="https:"&&u.hostname==="anusmita-media.mdsakibmolla545.workers.dev"&&
+    !u.username&&!u.password&&!u.search&&!u.hash&&
+    /^\/public\/cms\/(?:shop|deals|bundles|about|contact|journal|cart|checkout|gift-cards|pre-orders|customer-stories|wishlist|routine-quiz|track-order)\/[0-9a-fA-F-]{36}\.(?:jpg|png|webp)$/.test(u.pathname);
+ }catch{return false;}
+}
 export const cmsSlotSchema=z.object({
  id:z.uuid(),placement:z.enum(["before","after"]),
  kind:z.enum(cmsSectionKinds).default("banner"),
@@ -29,7 +38,7 @@ export const cmsSlotSchema=z.object({
  enabled:z.boolean().default(true),
  position:z.number().int().min(0).max(99)
 }).strict().superRefine((slot,ctx)=>{
- if(slot.imageUrl&&!isSafeImage(slot.imageUrl))ctx.addIssue({code:"custom",path:["imageUrl"],message:"Only approved HTTPS Cloudinary, Unsplash or brand assets are allowed"});
+ if(slot.imageUrl&&!isSafeCmsImage(slot.imageUrl))ctx.addIssue({code:"custom",path:["imageUrl"],message:"Only approved HTTPS Cloudinary, Unsplash or brand assets are allowed"});
  if(!isSafeLink(slot.href))ctx.addIssue({code:"custom",path:["href"],message:"Use an internal /path or #anchor link"});
 });
 export const cmsSlots=z.array(cmsSlotSchema).max(20).refine(items=>new Set(items.map(x=>x.id)).size===items.length,"Duplicate block IDs");
