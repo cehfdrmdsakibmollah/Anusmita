@@ -1,0 +1,36 @@
+/* The Custom Pages app is a private admin workspace, not a storefront page. */
+body:has(.anCpWorkspace) .anHeader,body:has(.anCpWorkspace) .anAnnouncement,body:has(.anCpWorkspace) .anFooter,body:has(.anCpWorkspace) .anSkipLink,body:has(.anCpWorkspace) .anHelpLauncher{display:none!important}
+body:has(.anCpWorkspace) {margin:0;background:#fff9fa}
+body:has(.anCpWorkspace) #main-content{max-width:none!important;width:100%!important;margin:0!important;padding:0!important}
+.anCpWorkspace{--cp-wine:#87153f;--cp-soft:#fff2f6;--cp-border:#eac7d4;display:grid;grid-template-columns:208px minmax(0,1fr);width:100%;min-height:100vh;color:#54203a;font-family:Arial,sans-serif;font-size:12px}
+.anCpAdminSidebar{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid #ead1d9;background:linear-gradient(155deg,#fff9fa,#fff0f4);padding:14px 10px 20px;display:flex;flex-direction:column;gap:15px}
+.anCpWordmark{display:block;text-align:center;text-decoration:none;color:#3a1827!important;font:400 27px/1.15 Georgia,serif;letter-spacing:.03em;padding:5px 0 17px;border-bottom:1px solid #e8bbcb}
+.anCpWordmark small{font:700 9px Arial,sans-serif;letter-spacing:.15em;display:block;margin-top:5px;color:#743747}
+.anCpAdminSidebar nav{display:flex;flex-direction:column;gap:4px}
+.anCpAdminSidebar nav h2{font:bold 12px Arial,sans-serif;color:#9a1748;margin:0 0 7px;padding:0 9px}
+.anCpAdminSidebar nav a,.anCpSidebarFoot a{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:7px;color:#53203a!important;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s}
+.anCpAdminSidebar nav a:hover,.anCpSidebarFoot a:hover{background:#f8dfe9}
+.anCpAdminSidebar nav a.active{color:white!important;background:linear-gradient(120deg,#b21f5a,#740a34);box-shadow:0 3px 9px #8a23512a}
+.anCpSidebarFoot{margin-top:auto;padding:12px;border:1px solid #e5c3cf;border-radius:9px;background:#fff8fb;display:flex;flex-direction:column;gap:7px}
+.anCpSidebarFoot strong{color:#8d1d45}.anCpSidebarFoot span{font-size:10px;color:#93697b}.anCpSidebarFoot a{font-size:10px;padding:6px 0}
+.anCpWorkspaceMain{min-width:0;max-width:100%;overflow:clip}
+.anCpGlobalTop{height:43px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 17px;border-bottom:1px solid #efd7df;background:#fffafd}
+.anCpTrail{display:flex;gap:8px;align-items:center;white-space:nowrap;font-size:11px;min-width:0;overflow:hidden;text-overflow:ellipsis}.anCpTrail a{color:#6e1d40;text-decoration:none}.anCpTrail strong{color:#74263e}
+.anCpSearchTop{display:flex;gap:11px;align-items:center;min-width:150px;max-width:480px;flex:1;color:#936a7c;background:#fff8fc;border:1px solid #edd4dd;padding:8px 13px;border-radius:25px}
+.anCpSearchTop span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.anCpSearchTop kbd{border:1px solid #eed7df;border-radius:4px;padding:2px 5px;color:#916479;font-size:10px}
+.anCpAccountTop{display:flex;align-items:center;gap:9px;white-space:nowrap}.anCpAvatar{background:#ce4d7a;color:white;border-radius:100%;height:30px;width:30px;display:grid;place-items:center;font-size:13px;font-weight:700}
+.anCpWorkspaceMain .anPolicyStudio{max-width:none;width:100%;border:0;border-radius:0;min-height:calc(100vh - 43px);padding:14px 16px 30px;background:#fff9fb}
+.anCpWorkspaceMain .anPsHeader{align-items:center}
+.anCpWorkspaceMain .anPsTitle h1{font:700 clamp(23px,2vw,30px) Georgia,serif;margin:3px 0}
+.anCpWorkspaceMain .anPsMetrics{display:none}
+.anCpWorkspaceMain .anPsColumns{grid-template-columns:minmax(215px,24%) minmax(0,1fr) minmax(258px,29%);gap:10px}
+.anCpWorkspaceMain .anPsSidebar,.anCpWorkspaceMain .anPsEditor,.anCpWorkspaceMain .anPsInspector{box-shadow:0 2px 12px #681f4110}
+.anCpWorkspaceMain .anPsEditor{min-height:610px}
+.anCpWorkspaceMain .anPsPages{max-height:585px}
+.anCpWorkspaceMain .anPsEditor .anPsBlockList{max-height:none}
+.anCpWorkspaceMain .anPsPanelTitle h2{font-size:17px}
+.anCpWorkspaceMain .anPsHeaderActions .primary{padding:12px 17px}
+@media(max-width:1330px){.anCpWorkspace{grid-template-columns:184px minmax(0,1fr)}.anCpWorkspaceMain .anPsColumns{grid-template-columns:minmax(195px,27%) minmax(0,1fr)}.anCpWorkspaceMain .anPsInspector{grid-column:1/-1}.anCpSearchTop{max-width:300px}.anCpWorkspaceMain .anPsTitle h1{font-size:25px}}
+@media(max-width:850px){.anCpWorkspace{grid-template-columns:70px minmax(0,1fr)}.anCpWordmark{font-size:12px;letter-spacing:0}.anCpWordmark small,.anCpAdminSidebar nav h2,.anCpAdminSidebar nav a:not(.active),.anCpSidebarFoot{display:none}.anCpAdminSidebar{padding:14px 5px}.anCpAdminSidebar nav a.active{font-size:0;justify-content:center;padding:13px 4px}.anCpGlobalTop{gap:6px}.anCpAccountTop strong,.anCpSearchTop kbd{display:none}}
+@media(max-width:650px){.anCpWorkspace{grid-template-columns:1fr}.anCpAdminSidebar{position:relative;height:auto;max-height:none;overflow:visible;padding:7px 12px}.anCpWordmark{font-size:18px;border:0;padding:4px}.anCpAdminSidebar nav{display:none}.anCpGlobalTop{height:43px}.anCpTrail{max-width:40%}.anCpSearchTop{min-width:0}.anCpWorkspaceMain .anPolicyStudio{padding:10px}.anCpWorkspaceMain .anPsColumns{grid-template-columns:1fr}.anCpWorkspaceMain .anPsInspector{grid-column:auto}.anCpWorkspaceMain .anPsEditor{min-height:350px}}
+@media print{.anCpAdminSidebar,.anCpGlobalTop{display:none}.anCpWorkspace{display:block}}
