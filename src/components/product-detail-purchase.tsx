@@ -1,4 +1,5 @@
 "use client";
+import {priceForQuantity,type QuantityDiscountTier} from "@/lib/quantity-discounts";
 import RichProductDescription from "@/components/rich-product-description";
 import {useEffect,useState} from "react";
 import Link from "next/link";
@@ -8,7 +9,7 @@ import {isPerfumeCategory,perfumeSizeCards,colourChoices,sizeChoices,type Produc
 import {categoryLabels,unitPrice,assistantHref,productEnquiry,type ProductDetails} from "@/lib/product-experience";
 import {emptyShopping,sanitizeShopping,shoppingKey,type ShoppingState} from "@/lib/shopping-storage";
 type Props={
- product:ProductVariant&{name:string;category:string;brand:string;description:string;origin:string;size:string;details?:ProductDetails};
+ product:ProductVariant&{name:string;category:string;brand:string;description:string;origin:string;size:string;quantityDiscounts?:QuantityDiscountTier[];details?:ProductDetails};
  siblings:ProductVariant[];
  canOrder:boolean;
  preview?:boolean;
@@ -24,6 +25,8 @@ export default function ProductDetailPurchase({product,siblings,preview=false}:P
  const perfume=isPerfumeCategory(product.category);
  const choices=perfume?perfumeSizeCards(siblings,product):[];
  const maxQty=20;
+ const activeTiers=preview?[]:(product.quantityDiscounts||[]);
+ const volumePrice=priceForQuantity(product.pricePaisa,qty,activeTiers);
  const stockText=preview?"Design preview":product.available>0?product.available<=3?`Only ${product.available} confirmed in stock`:"In stock":"Availability to be confirmed";
  function readSelection():ShoppingState {
   try{return sanitizeShopping(JSON.parse(localStorage.getItem(shoppingKey)||"null"))}
@@ -75,6 +78,7 @@ export default function ProductDetailPurchase({product,siblings,preview=false}:P
   {preview?<div className="anPdpDemoPrice"><strong>Pricing available soon</strong><span>Demonstration product · no price or discount displayed</span></div>:
    <p className="anPdpPrice">{money(product.pricePaisa)}
     <span className="anPdpPriceCaption">BDT · exact price for selected size</span></p>}
+  {product.size?.trim()&&<p className="anPdpProductSize"><strong>Size / capacity:</strong> <span>{product.size}</span></p>}
   {!preview&&unit&&<p className="pd-unit">{money(unit.paisa)} / {unit.unit}</p>}
   {product.description?<div className="anPdpDescription"><RichProductDescription text={product.description}/></div>:
    <p className="anPdpDescription">Thoughtfully selected for the ANUSMITA collection. Please check the product details and available sizes.</p>}
@@ -95,7 +99,18 @@ export default function ProductDetailPurchase({product,siblings,preview=false}:P
   {product.details?.sizeGuide&&<details className="pd-guide"><summary>Size guide & measurements</summary><p>{product.details.sizeGuide}</p><small>Compare with your measurements; sizing differs by brand.</small></details>}
   {siblings.length>0&&<details className="pd-guide"><summary>Compare published variants</summary><div className="pd-table-wrap"><table><thead><tr><th>Option</th><th>Price</th><th>Available</th></tr></thead><tbody>{[product,...siblings].map(v=><tr key={v.id}><td><Link href={'/products/'+v.slug}>{[v.color,v.size].filter(Boolean).join(' · ')||v.sku}</Link></td><td>{money(v.pricePaisa)}</td><td>{v.available}</td></tr>)}</tbody></table></div></details>}
 
-  <div className="anPdpPurchaseMeta">
+  {!preview&&activeTiers.length>0&&<section className="anPdpVolumeDeals" aria-label="Quantity discounts">
+   <div className="anPdpVolumeHeading"><strong>Buy more, save more</strong><small>Discount applied automatically to eligible quantities</small></div>
+   <div className="anPdpVolumeOptions">{activeTiers.map(tier=>{
+    const calculated=priceForQuantity(product.pricePaisa,tier.minQty,activeTiers);
+    return <button type="button" key={tier.minQty} className={qty>=tier.minQty&&volumePrice.percent===tier.percent?"active":""}
+      onClick={()=>setQty(tier.minQty)} aria-label={`Buy ${tier.minQty} pieces and save ${tier.percent}%`}>
+      <b>{tier.minQty}+ pcs</b><strong>{tier.percent}% OFF</strong><small>{money(calculated.totalPaisa)} for {tier.minQty}</small>
+     </button>;
+   })}</div>
+   <small>Same SKU and size. Quantity-based offer only; delivery calculated separately.</small>
+  </section>}
+    <div className="anPdpPurchaseMeta">
    <div className="anPdpQtyGroup"><label>Quantity</label><div className="anPdpCounter">
     <button type="button" onClick={()=>setQty(q=>Math.max(1,q-1))} disabled={qty<=1||preview} aria-label="Reduce quantity"><Minus size={16}/></button>
     <span aria-live="polite">{qty}</span>
@@ -112,7 +127,7 @@ export default function ProductDetailPurchase({product,siblings,preview=false}:P
   </div>
   {!preview&&<button className="anPdpBuyNow" type="button" onClick={()=>addToCart(true)}>Buy Now · Continue to Checkout <ArrowRight size={17}/></button>}
   {!preview&&<p className="anPdpFeedback" role="status">Catalogue request mode: adding an item does not reserve stock or place an order. <Link href="/cart">Review your bag →</Link></p>}
-  {!preview&&<p className="pd-subtotal">Product subtotal <strong>{money(product.pricePaisa*qty)}</strong><small>Delivery calculated separately.</small></p>}
+  {!preview&&<p className="pd-subtotal">Product subtotal <strong>{money(volumePrice.totalPaisa)}</strong>{volumePrice.savingsPaisa>0&&<span className="anPdpSavedAmount">You save {money(volumePrice.savingsPaisa)} ({volumePrice.percent}% off)</span>}<small>Delivery calculated separately.</small></p>}
   <div className="pd-help"><Link href={help}>Ask ANUSMITA about this product →</Link><a href={enquiry} target="_blank" rel="noopener noreferrer">Enquire on WhatsApp ↗</a></div>
   <details className="pd-guide"><summary>Sending a gift?</summary><label><input type="checkbox" checked={gift} onChange={e=>setGift(e.target.checked)}/> Include a gift request in my WhatsApp enquiry</label>{gift&&<><textarea aria-label="Gift request" placeholder="Gift message or packaging request" value={giftNote} maxLength={250} onChange={e=>setGiftNote(e.target.value)}/><small>Our team will confirm packaging availability and cost. This request is sent only when you send the WhatsApp draft.</small></>}</details>
   <div className="pd-mobile-bar"><div><strong>{product.name}</strong><span>{preview?'Design preview':money(product.pricePaisa)}</span></div>{!preview?<button onClick={()=>addToCart()}>Add to Bag</button>:<Link href={help}>Ask ANUSMITA</Link>}</div>
