@@ -19,7 +19,7 @@ export async function GET(request:Request) {
   if(query) filter.$text={$search:query};
   await db();
   const [products,count]=await Promise.all([
-   Product.find(filter).select("name slug sku brand category origin description imageUrls variantLabel size pricePaisa onHand reserved").sort({createdAt:-1}).skip((page-1)*limit).limit(limit).lean(),
+   Product.find(filter).select("name slug sku brand category origin description imageUrls variantLabel size pricePaisa quantityDiscounts onHand reserved").sort({createdAt:-1}).skip((page-1)*limit).limit(limit).lean(),
    Product.countDocuments(filter)]);
   return Response.json({products:products.map((p:any)=>({...p,_id:String(p._id),available:Math.max(0,p.onHand-p.reserved),onHand:undefined,reserved:undefined})),page,count,pages:Math.ceil(count/limit)},
    {headers:{"Cache-Control":"no-store"}});
