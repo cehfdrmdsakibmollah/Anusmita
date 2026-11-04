@@ -132,7 +132,7 @@ export default function CustomPages(){
     <div className="anPsInsightCard"><h3>Page Insights</h3>
       <div><span>Page status</span><strong>{page? page.archived?"Archived":page.published?"Published":"Draft":"No page selected"}</strong></div>
       <div><span>Content blocks</span><strong>{page?.blocks.length??0}</strong></div>
-      <div><span>Reading time</span><strong>{page?Math.max(1,Math.ceil(page.blocks.map(b=>b.text+" "+(b.answer||"")).join(" ").trim().split(/\\s+/).filter(Boolean).length/200)):0} min</strong></div>
+      <div><span>Reading time</span><strong>{page?Math.max(1,Math.ceil(page.blocks.map(b=>b.text+" "+(b.answer||"")).join(" ").trim().split(/\s+/).filter(Boolean).length/200)):0} min</strong></div>
       <div><span>Saved revision</span><strong>{page?.revision??0}</strong></div>
       <div><span>Unpublished edits</span><strong>{dirty?"Unsaved":page?.hasDraft?"Draft saved":"None"}</strong></div>
      </div>
