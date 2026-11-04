@@ -6,7 +6,7 @@ describe("Unified CMS Page Slots",()=>{
  it("rejects unsafe external media",()=>{expect(cmsSlots.safeParse([{...valid,imageUrl:"https://attacker.invalid/photo.jpg"}]).success).toBe(false);});
  it("rejects javascript links",()=>{expect(cmsSlots.safeParse([{...valid,href:"javascript:alert(1)"}]).success).toBe(false);});
  it("rejects duplicate block IDs",()=>{expect(cmsSlots.safeParse([valid,valid]).success).toBe(false);});
- it("supports draft and explicit publish but only known pages",()=>{expect(cmsSaveSchema.safeParse({action:"publish",page:"deals",revision:0,slots:[valid]}).success).toBe(true);expect(cmsSaveSchema.safeParse({action:"publish",page:"checkout",revision:0,slots:[valid]}).success).toBe(false);});
+ it("supports draft and explicit publish but only known pages",()=>{expect(cmsSaveSchema.safeParse({action:"publish",page:"deals",revision:0,slots:[valid]}).success).toBe(true);expect(cmsSaveSchema.safeParse({action:"publish",page:"unknown-route",revision:0,slots:[valid]}).success).toBe(false);});
  it("supports per-page layout controls with safe style defaults",()=>{
   const result=cmsSlots.safeParse([valid]);
   expect(result.success).toBe(true);
@@ -19,6 +19,11 @@ describe("Unified CMS Page Slots",()=>{
   expect(cmsSlots.safeParse([{...modern,style:{...modern.style,background:"url(javascript:evil)"}}]).success).toBe(false);
   expect(cmsSlots.safeParse([{...modern,style:{...modern.style,padding:100000}}]).success).toBe(false);
   expect(cmsSlots.safeParse([{...modern,style:{...modern.style,customCss:"body{display:none}"}}]).success).toBe(false);
+ });
+ it("allows CMS editorial blocks on other supported routes while preserving native logic",()=>{
+  for(const p of ["shop","deals","bundles","about","contact","journal","cart","checkout","gift-cards","pre-orders","customer-stories","wishlist","routine-quiz","track-order"]){
+   expect(cmsSaveSchema.safeParse({action:"publish",page:p,revision:0,slots:[valid]}).success).toBe(true);
+  }
  });
  it("rejects unknown properties",()=>{expect(cmsSlots.safeParse([{...valid,html:"<script />"}]).success).toBe(false);});
 });
