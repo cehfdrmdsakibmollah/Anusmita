@@ -277,6 +277,9 @@ const ContentPageSchema=new Schema({
  slug:{type:String,required:true,unique:true,lowercase:true,trim:true},
  title:{type:String,required:true,maxlength:100},
  description:{type:String,default:"",maxlength:160},
+ titleBn:{type:String,default:"",maxlength:120},descriptionBn:{type:String,default:"",maxlength:160},
+ seoTitle:{type:String,default:"",maxlength:70},noIndex:{type:Boolean,default:false},
+ archived:{type:Boolean,default:false},publishedAt:{type:Date,default:null},
  blocks:{type:[Schema.Types.Mixed],default:[]},
  published:{type:Boolean,default:false},revision:{type:Number,default:0,min:0},
  updatedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
