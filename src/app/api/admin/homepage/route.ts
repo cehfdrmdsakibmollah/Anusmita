@@ -24,7 +24,7 @@ export async function POST(req:Request){
  try{
   assertOrigin(req);
   const actor=await authorize(["owner","admin"],"settings.edit");
-  if(Number(req.headers.get("content-length")||0)>16000)throw new HttpError(413,"Homepage edit request too large");
+  if(Number(req.headers.get("content-length")||0)>120000)throw new HttpError(413,"Homepage edit request too large");
   const command=cmsOperation.parse(await req.json());
   await db();
   let outcome:any;
@@ -39,9 +39,17 @@ export async function POST(req:Request){
     const existing=await HomePage.findOne({key:"main"}).session(session).lean<any>();
     if(!existing)throw new HttpError(500,"Unable to load homepage");
     if(existing.revision!==command.revision)throw new HttpError(409,"Homepage was changed in another session. Refresh and retry.");
-    const blocks=[...(existing.blocks||[])];
+    let blocks=[...(existing.blocks||[])];
     let sections=[...(existing.sections||[])];
-    if(command.action==="add"){
+    if(command.action==="replace"){
+     const ids=command.blocks.map(x=>x.id);
+     if(new Set(ids).size!==ids.length)throw new HttpError(400,"Duplicate block IDs in page layout");
+     if(!uniqueSections(command.sections))throw new HttpError(400,"Duplicate merchandising section keys");
+     const existingIds=new Map(blocks.map(b=>[b.id,b.kind]));
+     for(const b of command.blocks){if(existingIds.has(b.id)&&existingIds.get(b.id)!==b.kind)throw new HttpError(409,"Changing an existing card type is not permitted");}
+     blocks=command.blocks;
+     sections=command.sections;
+    }else if(command.action==="add"){
      if(blocks.length>=90)throw new HttpError(409,"Homepage card limit reached");
      if(blocks.some(b=>b.id===command.block.id))throw new HttpError(409,"This card already exists");
      blocks.push(command.block);
@@ -75,6 +83,8 @@ export async function POST(req:Request){
     await Audit.create([{actorId:actor.id,action:"homepage."+command.action,
      entity:"HomePage",entityId:"main",details:{
       revision:command.revision+1,
+      before:command.action==="replace"?{blocks:existing.blocks,sections:existing.sections}:undefined,
+      afterCount:command.action==="replace"?{blocks:blocks.length,sections:sections.length}:undefined,
       kind:"block" in command?command.block.kind:"kind" in command?command.kind:null,
       id:"block" in command?command.block.id:"id" in command?command.id:null,
       section:"section" in command?command.section.key:null
