@@ -137,7 +137,7 @@ export default async function ProductPage({params}:Props){
     <ProductImageGallery key={p.slug} urls={p.imageUrls||[]} name={p.name} preview={preview} altTexts={customSeo?.imageAltTexts||[]}/>
     <div className="anPdpRight">
      <ProductDetailPurchase key={p.slug} product={{
-      ...variant(p),name:p.name,category:p.category,brand:p.brand,description:p.description,origin:p.origin,details:Object.fromEntries(["color", "colorHex", "material", "dimensions", "compatibility", "careInstructions", "warranty", "sizeGuide", "skinType", "benefits"].map(key=>[key,p[key as keyof ProductDetails]||""]))
+      ...variant(p),name:p.name,category:p.category,brand:p.brand,description:p.description,origin:p.origin,quantityDiscounts:p.quantityDiscounts||[],details:Object.fromEntries(["color", "colorHex", "material", "dimensions", "compatibility", "careInstructions", "warranty", "sizeGuide", "skinType", "benefits"].map(key=>[key,p[key as keyof ProductDetails]||""]))
      }} siblings={variants} canOrder={canOrder} preview={preview}/>
      <div className="anPdpTrust" aria-label="Shopping information">
       <div><Sparkles size={22}/><span><strong>Curated with care</strong><small>Selected for ANUSMITA</small></span></div>
