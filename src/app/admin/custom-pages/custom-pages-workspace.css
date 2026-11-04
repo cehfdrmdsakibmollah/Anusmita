@@ -34,3 +34,21 @@ body:has(.anCpWorkspace) #main-content{max-width:none!important;width:100%!impor
 @media(max-width:850px){.anCpWorkspace{grid-template-columns:70px minmax(0,1fr)}.anCpWordmark{font-size:12px;letter-spacing:0}.anCpWordmark small,.anCpAdminSidebar nav h2,.anCpAdminSidebar nav a:not(.active),.anCpSidebarFoot{display:none}.anCpAdminSidebar{padding:14px 5px}.anCpAdminSidebar nav a.active{font-size:0;justify-content:center;padding:13px 4px}.anCpGlobalTop{gap:6px}.anCpAccountTop strong,.anCpSearchTop kbd{display:none}}
 @media(max-width:650px){.anCpWorkspace{grid-template-columns:1fr}.anCpAdminSidebar{position:relative;height:auto;max-height:none;overflow:visible;padding:7px 12px}.anCpWordmark{font-size:18px;border:0;padding:4px}.anCpAdminSidebar nav{display:none}.anCpGlobalTop{height:43px}.anCpTrail{max-width:40%}.anCpSearchTop{min-width:0}.anCpWorkspaceMain .anPolicyStudio{padding:10px}.anCpWorkspaceMain .anPsColumns{grid-template-columns:1fr}.anCpWorkspaceMain .anPsInspector{grid-column:auto}.anCpWorkspaceMain .anPsEditor{min-height:350px}}
 @media print{.anCpAdminSidebar,.anCpGlobalTop{display:none}.anCpWorkspace{display:block}}
+
+/* Fourth column follows the supplied 1648px design, with truthful document insights. */
+@media(min-width:1550px){
+ .anCpWorkspaceMain .anPsColumns{grid-template-columns:minmax(215px,22%) minmax(0,1fr) minmax(255px,28%) minmax(155px,14%);gap:9px}
+ .anCpWorkspaceMain .anPsInsights{grid-column:auto}
+ .anCpWorkspaceMain .anPsInspector{grid-column:auto}
+}
+.anCpWorkspaceMain .anPsInsights{min-width:0;display:flex;flex-direction:column;gap:9px}
+.anCpWorkspaceMain .anPsInsightCard{background:#fff;border:1px solid #eac7d4;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:9px}
+.anCpWorkspaceMain .anPsInsightCard h3{margin:0;font:700 14px Georgia,serif;color:#84163f;padding-bottom:7px;border-bottom:1px solid #f0d6df}
+.anCpWorkspaceMain .anPsInsightCard>div{display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:10px;line-height:1.4}
+.anCpWorkspaceMain .anPsInsightCard>div span{color:#916a7c}
+.anCpWorkspaceMain .anPsInsightCard>div strong{color:#841c41;text-align:right}
+.anCpWorkspaceMain .anPsInsightCard button,.anCpWorkspaceMain .anPsInsightCard a{width:100%;display:flex;align-items:center;justify-content:flex-start;gap:8px;background:#fff7fa;border:1px solid #ebccda;border-radius:6px;padding:9px;color:#7a2244;font:600 11px Arial,sans-serif;text-align:left;text-decoration:none;cursor:pointer}
+.anCpWorkspaceMain .anPsInsightCard button:hover,.anCpWorkspaceMain .anPsInsightCard a:hover{background:#f9e4ed}
+.anCpWorkspaceMain .anPsMetricsNote{color:#947188;background:#fff3f7;border:1px dashed #ecd2de;border-radius:8px;padding:11px;font-size:10px;line-height:1.55;margin:0}
+@media(max-width:1549px){.anCpWorkspaceMain .anPsInsights{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.anCpWorkspaceMain .anPsMetricsNote{grid-column:1/-1}}
+@media(max-width:650px){.anCpWorkspaceMain .anPsInsights{grid-template-columns:1fr}.anCpWorkspaceMain .anPsInsights>*{grid-column:auto}}
