@@ -1,5 +1,5 @@
-import type {CmsNativeHero} from "@/lib/cms-page-slots";
 'use client';
+import type {CmsNativeHero} from "@/lib/cms-page-slots";
 import StorefrontHelp from "./storefront-help";
 import {useRef,useState} from 'react';
 import Link from 'next/link';
