@@ -1,3 +1,4 @@
+import {priceForQuantity} from "@/lib/quantity-discounts";
 
 import { createHash } from "node:crypto";
 import mongoose from "mongoose";
@@ -35,7 +36,8 @@ export async function createOrder(input:unknown,idempotencyKey:string) {
    for(const item of data.items){
     const product=await Product.findOneAndUpdate({_id:item.productId,active:true,$expr:{$gte:[{$subtract:["$onHand","$reserved"]},item.quantity]}},{$inc:{reserved:item.quantity}},{new:true,session});
     if(!product) throw new HttpError(409,"Product unavailable or insufficient stock");
-    lines.push({productId:product._id,sku:product.sku,name:product.name,quantity:item.quantity,unitPricePaisa:product.pricePaisa,unitCostPaisa:product.costPaisa,lineTotalPaisa:product.pricePaisa*item.quantity});
+    const volume=priceForQuantity(product.pricePaisa,item.quantity,product.quantityDiscounts||[]);
+    lines.push({productId:product._id,sku:product.sku,name:product.name,quantity:item.quantity,unitPricePaisa:product.pricePaisa,unitCostPaisa:product.costPaisa,lineTotalPaisa:volume.totalPaisa,discountPercent:volume.percent,discountPaisa:volume.savingsPaisa});
    }
    const totals=cartTotals(lines,shippingFor(data.customer.district));
    if(data.depositPaisa>totals.totalPaisa) throw new HttpError(400,"Deposit exceeds order total");
