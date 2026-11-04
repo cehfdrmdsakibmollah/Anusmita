@@ -9,9 +9,17 @@ const routes=[
  {name:"Shop",path:"/shop",editor:"/admin/products/manage",note:"Products, filters, availability and merchandising are managed through Product Management and the Homepage product shelves."},
  {name:"Deals",path:"/deals",editor:"/admin?tab=Homepage%20Studio",note:"Promotional cards and countdowns are controlled through the Homepage CMS. This existing route is not yet a page-builder canvas."},
  {name:"Bundles",path:"/bundles",editor:"/admin/products/manage",note:"Bundles must connect to real inventory and catalog rules; no independent layout publisher is installed yet."},
- {name:"Journal",path:"/journal",editor:"/admin?tab=Accounting%20Journal",note:"Journal storefront and business accounting are distinct. This route has no unified visual content editor yet."},
- {name:"About",path:"/about",editor:"/admin?tab=Custom%20Pages",note:"The existing About page is code-managed. Create a new custom landing page without overwriting it."},
- {name:"Contact",path:"/contact",editor:"/admin?tab=Custom%20Pages",note:"The existing Contact route has forms and policies. Editing custom pages does not change those flows."}
+ {name:"Journal",path:"/journal/design-preview",editor:"/admin?tab=Custom%20Pages",note:"The current Journal storefront is a design preview, not a generic published CMS page. The accounting Journal is a separate financial module."},
+ {name:"About",path:"/about/design-preview",editor:"/admin?tab=Custom%20Pages",note:"The existing About page is code-managed. Create a new custom landing page without overwriting it."},
+ {name:"Contact",path:"/contact/design-preview",editor:"/admin?tab=Custom%20Pages",note:"The existing Contact design preview has separate form flows. Editing custom pages does not change those flows."},
+ {name:"Cart",path:"/cart",editor:"/admin?tab=Orders",note:"Cart logic is application-managed; page-builder replacement could break customer cart state."},
+ {name:"Checkout",path:"/checkout",editor:"/admin?tab=Orders",note:"Checkout has payment and order safety requirements. The storefront is not enabled for arbitrary canvas replacement."},
+ {name:"Gift Cards",path:"/gift-cards",editor:"/admin?tab=Products",note:"Gift card experience is currently its own route and cannot be overwritten by custom page blocks."},
+ {name:"Pre-orders",path:"/pre-orders",editor:"/admin/products/manage",note:"Pre-orders must follow verified product availability and fulfilment rules."},
+ {name:"Customer Stories",path:"/customer-stories",editor:"/admin?tab=Custom%20Pages",note:"The stories route is independently rendered; no authenticated story collection integration is available in this editor."},
+ {name:"Wishlist",path:"/wishlist",editor:"/admin?tab=Products",note:"Wishlist behaviour depends on customer state and is not a generic CMS page."},
+ {name:"Routine Quiz",path:"/routine-quiz",editor:"/admin?tab=Custom%20Pages",note:"The quiz uses interactive logic; page blocks cannot currently replace it safely."},
+ {name:"Track Order",path:"/track-order",editor:"/admin?tab=Orders",note:"Tracking depends on verified order status and courier integrations."}
 ] as const;
 export default function StudioMultiPage({view,onChange}:{view:string;onChange:(value:string)=>void}){
  const [pages,setPages]=useState<Page[]>([]),[page,setPage]=useState<Page|null>(null),[chosen,setChosen]=useState<string>(""),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[loading,setLoading]=useState(false);
