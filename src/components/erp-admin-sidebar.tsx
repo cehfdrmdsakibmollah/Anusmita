@@ -11,7 +11,7 @@ const navigation=[
  ["Suppliers",Building2,"/admin/suppliers","Administration"],
  ["Payments",CreditCard,"/admin/payments","Administration"],
  ["Couriers",Truck,"/admin/couriers","Administration"],
- ["Homepage Studio",PanelsTopLeft,"/admin?tab=Homepage%20Studio","Content & Engagement"],
+ ["Homepage Studio",PanelsTopLeft,"/admin/homepage-studio","Content & Engagement"],
  ["Social Inbox",MessageCircle,"/admin/social-inbox","Content & Engagement"],
  ["Chatbot Responses",MessageCircle,"/admin/chatbot-responses","Content & Engagement"],
  ["Reports",ChartNoAxesColumnIncreasing,"/admin/dashboard","Insights & Operations"],
@@ -24,7 +24,7 @@ const navigation=[
  ["Inventory Health",Activity,"/admin?tab=Inventory%20Health","Enterprise / Admin"],
  ["Header & Footer",LayoutDashboard,"/admin?tab=Header%20%26%20Footer","Enterprise / Admin"]
 ] as const;
-export default function ErpAdminSidebar({active,name="ANUSMITA Owner"}:{active:"Suppliers"|"Payments"|"Couriers"|"Staff Management";name?:string}){
+export default function ErpAdminSidebar({active,name="ANUSMITA Owner"}:{active:"Suppliers"|"Payments"|"Couriers"|"Staff Management"|"Homepage Studio";name?:string}){
  const [open,setOpen]=useState(false);
  return <><button type="button" className="erpMobileNav" onClick={()=>setOpen(true)} aria-label="Open admin navigation"><Menu size={20}/></button>{open&&<button type="button" className="erpBackdrop" onClick={()=>setOpen(false)} aria-label="Close navigation"/>}<aside className={"erpSidebar"+(open?" erpOpen":"")}><Link href="/admin/dashboard" className="erpBrand">ANUSMITA<small>FASHION · JEWELLERY · BEAUTY</small></Link><button type="button" className="erpClose" onClick={()=>setOpen(false)} aria-label="Close navigation"><X size={18}/></button><nav aria-label="Administration">{navigation.map(([label,Icon,url,group],i)=><div key={label}>{(i===0||navigation[i-1][3]!==group)&&<p className="erpGroup">{group}</p>}<Link href={url} onClick={()=>setOpen(false)} aria-current={label===active?"page":undefined} className={label===active?"erpSelected":""}><Icon aria-hidden="true" size={17}/><span>{label}</span></Link></div>)}</nav><Link className="erpOwner" href="/admin?tab=Overview"><span className="erpAvatar">{name.trim().charAt(0)||"A"}</span><span className="erpAccountName">{name}<small>Staff account</small></span><ChevronRight size={18}/></Link></aside></>;
 }
