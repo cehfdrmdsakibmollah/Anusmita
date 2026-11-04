@@ -2,6 +2,8 @@
 import {useEffect,useMemo,useState} from "react";
 import {Plus,Save,ArrowUp,ArrowDown,Trash2,Copy,Eye,ExternalLink,FileText,LayoutGrid,Info,RefreshCw} from "lucide-react";
 import "./studio-multipage.css";
+import CmsPageSlotsEditor from "@/components/cms-page-slots-editor";
+import type {CmsSlotPage} from "@/lib/cms-page-slots";
 type Block={id:string;type:"heading"|"paragraph"|"callout";text:string};
 type Page={slug:string;title:string;description:string;published:boolean;revision:number;blocks:Block[]};
 const blank=():Page=>({slug:"",title:"New Landing Page",description:"",published:false,revision:0,blocks:[{id:crypto.randomUUID(),type:"heading",text:"Welcome to ANUSMITA"}]});
@@ -45,17 +47,18 @@ export default function StudioMultiPage({view,onChange}:{view:string;onChange:(v
       {(["desktop","tablet","mobile"] as const).map(d=><button key={d} type="button" aria-pressed={previewDevice===d} className={previewDevice===d?"smp-selected-device":""} onClick={()=>setPreviewDevice(d)}>{d}</button>)}
       <button onClick={()=>setPreviewKey(k=>k+1)}><RefreshCw size={15}/> Reload</button><a href={activeRoute.path} target="_blank" rel="noreferrer"><ExternalLink size={15}/> Open page</a>
     </div></div>
+    {(["Shop","Deals","Bundles","About","Contact","Journal"].includes(activeRoute.name))&&<CmsPageSlotsEditor page={activeRoute.name.toLowerCase() as CmsSlotPage} onPublished={()=>setPreviewKey(k=>k+1)}/>}
     <div className="smp-native-layout">
       <section className="smp-native-structure"><h3>Page sections</h3><div className="smp-native-list">
         <div><LayoutGrid size={17}/><span>{activeRoute.name} storefront</span><small>Actual running route</small></div>
         <div><FileText size={17}/><span>Data & interactions</span><small>Loaded by native component</small></div>
         <div><Eye size={17}/><span>Responsive preview</span><small>Desktop / tablet / mobile</small></div>
-      </div><p>The frame below shows actual route content. Product prices and stock remain managed by the catalog rather than mock CMS data.</p></section>
+      </div><p>The frame shows the current live route. Published custom CMS slots can be edited above. Product prices and stock are managed by the catalog.</p></section>
       <div className="smp-native-canvas"><div className={"smp-frame-holder "+previewDevice}>
        <iframe key={activeRoute.path+previewKey} src={activeRoute.path} title={activeRoute.name+" storefront preview"} loading="eager" referrerPolicy="same-origin"/>
       </div></div>
       <aside className="smp-native-inspector"><h3>{activeRoute.name} page</h3><label>Live route<input readOnly value={activeRoute.path}/></label>
-       <p>{activeRoute.note}</p><h4>Page management</h4><p>Existing route-specific components and data are rendered in the frame. This is not yet a drag-and-drop editor for those native components.</p>
+       <p>{activeRoute.note}</p><h4>Page management</h4><p>Existing route-specific components and data are rendered in the frame. Edit the added before/after CMS slots above. The original native components remain managed by their existing modules.</p>
        <a href={activeRoute.editor}><ExternalLink size={15}/> Open existing content manager</a>
        <button onClick={create}><Plus size={15}/> New custom landing page</button>
        <p className="smp-native-warning">Shop, checkout, orders, wishlist and interactive flows are intentionally not overwritten. Opening this preview makes no database changes.</p>
