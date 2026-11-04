@@ -3,7 +3,7 @@ import {useCallback,useEffect,useMemo,useRef,useState} from "react";
 import {ArrowDown,ArrowUp,CheckCircle2,ChevronDown,Copy,Download,Eye,EyeOff,GripVertical,Layers,LayoutTemplate,Monitor,Plus,Redo2,RefreshCw,Save,Smartphone,Tablet,Trash2,Undo2,X} from "lucide-react";
 import ErpAdminSidebar from "@/components/erp-admin-sidebar";
 import type {HomeBlock,HomeSection} from "@/lib/home-content";
-import {homeStarterBlocks,homeStarterSections,blockKinds} from "@/lib/home-content";
+import {blockKinds} from "@/lib/home-content";
 type Snapshot={blocks:HomeBlock[];sections:HomeSection[]};
 type Config=Snapshot&{revision:number;saved:boolean};
 type Device="desktop"|"tablet"|"mobile";
@@ -33,7 +33,7 @@ export default function VisualHomepageStudio({adminName}:{adminName:string}){
  function stepForward(){if(!future.length||!draft)return;setDraft(future[0]);setFuture(f=>f.slice(1));setHistory(h=>[...h,clone(draft)].slice(-30))}
  const items=useMemo(()=>draft?sorted(draft.blocks):[],[draft]);
  const active=items.find(x=>x.id===selected);
- const dirty=!!config&&!!draft&&!same(config,draft);
+ const dirty=!!config&&!!draft&&!same({blocks:config.blocks,sections:config.sections},draft);
  function updateBlock(patch:Partial<HomeBlock>){if(!draft||!active)return;change({...draft,blocks:draft.blocks.map(x=>x.id===selected?{...x,...patch}:x)})}
  function newBlock(kind:HomeBlock["kind"]){if(!draft||draft.blocks.length>=90)return;const block:HomeBlock={id:crypto.randomUUID(),kind,title:"New "+names[kind],subtitle:"",label:"",imageUrl:"",href:"/shop",cta:"Explore now",enabled:false,position:draft.blocks.length,startsAt:null,endsAt:null};change({...draft,blocks:[...draft.blocks,block]});setSelected(block.id)}
  function duplicate(){if(!draft||!active||draft.blocks.length>=90)return;const item={...active,id:crypto.randomUUID(),title:active.title+" copy",enabled:false,position:draft.blocks.length};change({...draft,blocks:[...draft.blocks,item]});setSelected(item.id)}
