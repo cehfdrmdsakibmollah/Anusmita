@@ -26,3 +26,36 @@ body:has(.avs-root) .adminWrap>div:last-child{max-width:none!important;margin:0!
 @media(max-width:680px){.avs-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.avs-topline>label{order:3;flex-basis:100%;max-width:none}.avs-heading-actions button{padding:7px}.avs-workspace{grid-template-columns:1fr}.avs-leftpane{min-height:250px;max-height:350px}.avs-centerpane{min-height:530px}.avs-rightpane{grid-column:auto}.avs-canvas-toolbar{flex-wrap:wrap}.avs-device-controls{margin:0}.avs-benefits{flex-wrap:wrap}.avs-category-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.avs-hero .avs-tile-text strong{font-size:22px}.avs-hero .avs-tile-text{padding:15px}.avs-heading-title h1{font-size:19px}}
 
 .avs-page-switch{display:flex;align-items:center;gap:12px;margin-bottom:9px;background:#fff;border:1px solid #eac5d2;border-radius:8px;padding:7px 10px;color:#7b2044;font-size:11px}.avs-page-switch label{display:flex;gap:8px;align-items:center;font-weight:700}.avs-page-switch select{background:#fff7fa;border:1px solid #e8c6d3;padding:6px 10px;color:#73113c;border-radius:5px;font-weight:700;min-width:180px}.avs-page-switch>span{color:#967083}
+
+
+/* Countdown Offer Manager: dedicated CRUD controls for existing CMS promotion blocks. */
+.avs-offer-control{border:1px solid #e9bed0;border-radius:12px;background:linear-gradient(115deg,#fff7fb,#fff0f5);padding:14px 15px;margin:10px 0 14px;box-shadow:0 3px 12px #741c3c10}
+.avs-offer-control-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.avs-offer-control-heading h2{display:flex;align-items:center;gap:8px;color:#7d153c;font:700 18px Georgia,serif;margin:0 0 5px}
+.avs-offer-control-heading p{font-size:11px;color:#805469;margin:0;line-height:1.55}
+.avs-offer-control-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.avs-offer-control-actions button,.avs-offer-card-buttons button{border:1px solid #dcaec0;padding:9px 12px;border-radius:7px;background:white;color:#83163f;font:700 11px Arial,sans-serif;cursor:pointer}
+.avs-offer-control-actions .avs-primary{color:#fff;background:#8e1742;border-color:#8e1742;display:flex;align-items:center;gap:5px}
+.avs-offer-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:9px;margin-top:13px}
+.avs-offer-card{background:#fff;border:1px solid #eac9d8;border-radius:10px;min-width:0;padding:12px;display:flex;flex-direction:column;gap:12px}
+.avs-offer-card-info{display:flex;flex-direction:column;align-items:start;gap:6px;min-width:0}
+.avs-offer-card-info strong{font:700 15px Georgia,serif;color:#601a37;overflow-wrap:anywhere}
+.avs-offer-card-info small{font-size:10px;line-height:1.5;color:#85617a}
+.avs-offer-status{border-radius:30px;font-size:10px;font-weight:700;padding:5px 10px;background:#fff1d5;color:#91631b}
+.avs-offer-status.live{background:#e0f7e6;color:#18753d}
+.avs-offer-status.expired{background:#f2e8e9;color:#88424f}
+.avs-offer-status.draft{background:#fce5ef;color:#9b2853}
+.avs-offer-status.scheduled{background:#eaf0ff;color:#435aa8}
+.avs-offer-card-buttons{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-top:auto}
+.avs-offer-card-buttons .avs-offer-delete{margin-left:auto;border-color:#f0b9c4;color:#af214a;display:grid;place-items:center}
+.avs-offer-empty{color:#876179;font-size:12px;margin:3px 0}
+.avs-countdown-fields{border:1px solid #e8b9cd;background:#fff6fa;border-radius:9px;padding:10px;margin:12px 0;display:flex;flex-direction:column;gap:8px}
+.avs-countdown-fields h4{color:#7f1640;margin:2px 0}
+.avs-countdown-fields label{min-width:0}
+.avs-countdown-preview{overflow:hidden;border:1px dashed #e3abc4;border-radius:8px;padding:10px;background:#fff}
+.avs-countdown-preview>strong{font-size:11px;color:#7d2043}
+.avs-offer-card .anCountdown,.avs-countdown-preview .anCountdown{display:flex;align-items:center;gap:6px;margin-top:5px}
+.avs-offer-card .anCountdown>div,.avs-countdown-preview .anCountdown>div{display:flex;flex-direction:column;align-items:center;gap:3px;border:1px solid #edcbd8;border-radius:5px;padding:5px 7px;background:#fff5fa;min-width:42px}
+.avs-offer-card .anCountdown strong,.avs-countdown-preview .anCountdown strong{font-size:13px;color:#8b1d43}
+.avs-offer-card .anCountdown span,.avs-countdown-preview .anCountdown span{font-size:8px;color:#8a6680}
+@media(max-width:700px){.avs-offer-list{grid-template-columns:1fr}.avs-offer-control{padding:11px}.avs-offer-control-actions{width:100%}.avs-offer-control-actions button{flex:1}}
