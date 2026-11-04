@@ -25,7 +25,7 @@ type DbProduct=ProductDetails&{
  pricePaisa:number;quantityDiscounts?:{minQty:2|3|5;percent:number}[];onHand:number;reserved:number;ingredients:string;usageInstructions:string;
  topNotes:string;heartNotes:string;baseNotes:string
 };
-const projection="name slug sku brand category origin description imageUrls size variantLabel variantGroup pricePaisa onHand reserved ingredients usageInstructions topNotes heartNotes baseNotes color colorHex material dimensions compatibility careInstructions warranty sizeGuide skinType benefits";
+const projection="name slug sku brand category origin description imageUrls size variantLabel variantGroup pricePaisa quantityDiscounts onHand reserved ingredients usageInstructions topNotes heartNotes baseNotes color colorHex material dimensions compatibility careInstructions warranty sizeGuide skinType benefits";
 const previewProduct:DbProduct={
  _id:"preview",name:"Radiance Eau de Parfum",slug:"design-preview",
  sku:"",brand:"ANUSMITA",category:"Perfumes",origin:"Other",description:"A preview of the ANUSMITA product detail experience, inspired by our beauty and fragrance collections. Actual fragrance details will be added when a product is published.",
