@@ -9,6 +9,7 @@ const makeBlock=(type:Type):Block=>({id:crypto.randomUUID(),type,text:type==="he
 const blank=():Page=>({slug:"",title:"",titleBn:"",description:"",descriptionBn:"",seoTitle:"",noIndex:false,archived:false,published:false,revision:0,blocks:[makeBlock("heading"),makeBlock("paragraph")]});
 const types:Type[]=["heading","paragraph","bullet","numbered","faq","callout","quote","divider"];
 const labels:Record<Type,string>={heading:"Heading",paragraph:"Paragraph",bullet:"Bullet List",numbered:"Numbered List",faq:"FAQ / Accordion",callout:"Callout Box",quote:"Quote",divider:"Divider"};
+const payloadFor=(p:Page)=>({slug:p.slug,title:p.title,titleBn:p.titleBn,description:p.description,descriptionBn:p.descriptionBn,seoTitle:p.seoTitle,noIndex:p.noIndex,archived:p.archived,published:p.published,revision:p.revision,blocks:p.blocks.map(b=>({id:b.id,type:b.type,text:b.text,textBn:b.textBn||"",answer:b.answer||"",answerBn:b.answerBn||""}))});
 const autoSlug=(value:string)=>value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,80);
 function describeBlock(b:Block,language:"en"|"bn"){const raw=language==="bn"&&b.textBn?.trim()?b.textBn:b.text;return raw||"Empty block";}
 export default function CustomPages(){
@@ -31,7 +32,7 @@ export default function CustomPages(){
   if(!publish&&page.published&&!window.confirm("Save as draft will unpublish the currently live page. Continue?"))return;
   if(publish&&!window.confirm("Publish /pages/"+page.slug+" to the public storefront?"))return;
   setBusy(true);setNotice("");
-  try{const next={...page,published:publish};const r=await fetch("/api/admin/content-pages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(next)});const d=await r.json();if(!r.ok)throw Error(d.error||"Save failed");const saved={...next,revision:d.revision,publishedAt:publish?new Date().toISOString():null};setPage(saved);setLastSaved(JSON.stringify(saved));setNotice(publish?"Published successfully. Open the live link to review.":"Draft saved to MongoDB.");await load();}
+  try{const next={...page,published:publish};const r=await fetch("/api/admin/content-pages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payloadFor(next))});const d=await r.json();if(!r.ok)throw Error(d.error||"Save failed");const saved={...next,revision:d.revision,publishedAt:publish?new Date().toISOString():null};setPage(saved);setLastSaved(JSON.stringify(saved));setNotice(publish?"Published successfully. Open the live link to review.":"Draft saved to MongoDB.");await load();}
   catch(e){setNotice("Error: "+(e instanceof Error?e.message:String(e)));}
   finally{setBusy(false);}
  }
