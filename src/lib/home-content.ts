@@ -38,7 +38,8 @@ export function isSafeImage(value:string){
   const u=new URL(value);
   return u.protocol==="https:"&&!u.username&&!u.password&&
    (u.hostname==="res.cloudinary.com"&&u.pathname.startsWith("/oseohmxd/image/")||
-    u.hostname==="images.unsplash.com"&&/^\/photo-[a-z0-9-]+$/.test(u.pathname));
+    u.hostname==="images.unsplash.com"&&/^\/photo-[a-z0-9-]+$/.test(u.pathname)||
+    u.hostname==="anusmita-media.mdsakibmolla545.workers.dev"&&/^\/public\/(products|staff-avatars)\/[a-f0-9]{24}\/[a-f0-9-]{36}\.(webp|jpg|png)$/.test(u.pathname));
  }catch{return false;}
 }
 const image=(photo:string,w=1000)=>"https://images.unsplash.com/"+photo+"?auto=format&fit=crop&w="+w+"&q=85";
@@ -79,6 +80,7 @@ export const cmsOperation=z.discriminatedUnion("action",[
  z.object({action:z.literal("edit"),revision:z.number().int().min(0),block:blockSchema}).strict(),
  z.object({action:z.literal("delete"),revision:z.number().int().min(0),id:z.uuid()}).strict(),
  z.object({action:z.literal("section"),revision:z.number().int().min(0),section:sectionSchema}).strict(),
+ z.object({action:z.literal("replace"),revision:z.number().int().min(0),blocks:z.array(blockSchema).max(90),sections:z.array(sectionSchema).max(10)}).strict(),
  z.object({action:z.literal("reorder"),revision:z.number().int().min(0),kind:z.enum(blockKinds),
   ids:z.array(z.uuid()).min(1).max(60)}).strict()
 ]);
