@@ -1,9 +1,10 @@
 
 "use client";
 import {useEffect,useMemo,useState,useRef} from "react";
-import {Home,ShoppingCart,Package,Boxes,Users,Truck,Settings,BookOpen,Image,Layers,LayoutGrid,Monitor,Tablet,Smartphone,Eye,EyeOff,Plus,Trash2,Copy,ArrowUp,ArrowDown,Undo2,RefreshCw,Download,Upload,Search,Save,ExternalLink,ShieldCheck,CheckCircle2,AlertTriangle,Code2,SlidersHorizontal,Clock,FileText,ChevronDown,ChevronRight,Lock,MoreHorizontal,Palette,PanelLeft,PanelRight,Heart,Sparkles,X} from "lucide-react";
+import {Home,ShoppingCart,Package,Boxes,Users,Settings,BookOpen,Image,Layers,LayoutGrid,Monitor,Tablet,Smartphone,Eye,EyeOff,Plus,Trash2,Copy,ArrowUp,ArrowDown,Undo2,Download,Upload,Search,Save,ExternalLink,ShieldCheck,CheckCircle2,AlertTriangle,Code2,SlidersHorizontal,Clock,FileText,ChevronDown,ChevronRight,Palette,PanelLeft,Sparkles,X} from "lucide-react";
 import type {HomeBlock,HomeSection} from "@/lib/home-content";
-import {blockSchema,sectionKeys} from "@/lib/home-content";
+import {blockSchema} from "@/lib/home-content";
+import HomepageManager from "@/components/homepage-manager";
 import "./homepage-studio-v2.css";
 
 type Config={revision:number;blocks:HomeBlock[];sections:HomeSection[];saved:boolean};
@@ -116,7 +117,7 @@ export default function HomepageStudioV2(){
     </section>
    </div>
    <div className="avs-bottom-tools"><strong>✧ Quick Tools:</strong><button onClick={()=>setInspector("style")}><Palette size={15}/> Theme Design</button><button onClick={()=>setInspector("style")}>Global Styles</button><button onClick={()=>setMessage("Custom CSS/JS injection is deliberately disabled until sandbox validation is added.")}><Code2 size={15}/> Custom CSS</button><button onClick={()=>setMessage("A/B testing needs verified traffic allocation and conversion tracking.")}>A/B Test</button><button onClick={()=>setMessage("Heatmaps need privacy-aware analytics integration before activation.")}>Heatmap</button><button onClick={()=>setMessage("Scheduled publishing needs a separate draft version and publish scheduler.")}>Schedule Publish</button><button onClick={exportJson}><Download size={15}/> Asset Backup</button><button onClick={()=>setLegacyOpen(v=>!v)}><PanelLeft size={15}/> {legacyOpen?"Hide":"Open"} Classic CMS</button><span className="avs-saved"><CheckCircle2 size={14}/> Revision {config.revision} saved</span></div>
-   {legacyOpen&&<div className="avs-classic-note"><h3>Classic CMS controls</h3><p>The original product shelf SKU editor, order controls, and legacy tools are still available in the existing backend. This interface does not remove or migrate them.</p><a href="/admin?tab=Categories">Open Categories Manager →</a> · <a href="/admin?tab=Products">Open Products Manager →</a></div>}
+   {legacyOpen&&<div className="avs-classic-note"><h3>Classic CMS controls</h3><p>Manage product shelf SKUs and original homepage cards using the existing editor. This is connected to the same CMS API. Reload the studio after changes to refresh its snapshot.</p><HomepageManager/><p><a href="/admin?tab=Categories">Open Categories Manager →</a> · <a href="/admin?tab=Products">Open Products Manager →</a></p></div>}
   </main>
  </div>;
 }
