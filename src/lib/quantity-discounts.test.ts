@@ -16,6 +16,15 @@ describe("SKU quantity discount price safety",()=>{
   expect(quantityDiscountsSchema.safeParse([{minQty:2,percent:15},{minQty:3,percent:5}]).success).toBe(false);
   expect(quantityDiscountsSchema.safeParse([{minQty:2,percent:5},{minQty:2,percent:10}]).success).toBe(false);
  });
+ it("accepts custom thresholds while retaining server limit of 20 pieces",()=>{
+  const custom=[{minQty:4,percent:7},{minQty:8,percent:12},{minQty:12,percent:15}];
+  expect(quantityDiscountsSchema.safeParse(custom).success).toBe(true);
+  expect(priceForQuantity(10000,6,custom)).toMatchObject({percent:7,totalPaisa:55800});
+  expect(priceForQuantity(10000,10,custom)).toMatchObject({percent:12,totalPaisa:88000});
+  expect(priceForQuantity(10000,20,custom)).toMatchObject({percent:15,totalPaisa:170000});
+  expect(quantityDiscountsSchema.safeParse([{minQty:21,percent:10}]).success).toBe(false);
+  expect(quantityDiscountsSchema.safeParse([{minQty:1,percent:10}]).success).toBe(false);
+ });
  it("keeps legacy products with no offers valid",()=>{
   const basic={name:"Baby Cream",slug:"baby-cream",sku:"BABY-001",category:"Skincare",pricePaisa:220000,costPaisa:150000};
   expect(productSchema.parse(basic).quantityDiscounts).toEqual([]);

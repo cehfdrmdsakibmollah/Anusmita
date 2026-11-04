@@ -1,10 +1,10 @@
 import {z} from "zod";
 /** Explicit SKU-level volume offers; never infer discounts from quantity alone. */
 export const quantityDiscountTierSchema=z.object({
- minQty:z.union([z.literal(2),z.literal(3),z.literal(5)]),
+ minQty:z.number().int().min(2).max(20),
  percent:z.number().int().min(1).max(50)
 }).strict();
-export const quantityDiscountsSchema=z.array(quantityDiscountTierSchema).max(3)
+export const quantityDiscountsSchema=z.array(quantityDiscountTierSchema).max(10)
  .refine(tiers=>new Set(tiers.map(t=>t.minQty)).size===tiers.length,"Duplicate quantity tier")
  .refine(tiers=>tiers.every((tier,i)=>i===0||tier.minQty>tiers[i-1].minQty),"Quantity tiers must be sorted")
  .refine(tiers=>tiers.every((tier,i)=>i===0||tier.percent>=tiers[i-1].percent),"Higher quantities cannot receive a lower discount");

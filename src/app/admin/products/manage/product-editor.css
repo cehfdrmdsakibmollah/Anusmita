@@ -350,3 +350,13 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 .seoDashboard:has(.apReferenceGrid) .apQuantityTierGrid label{font-size:12px;font-weight:700;color:#702044;display:grid;gap:6px;min-width:0}
 .seoDashboard:has(.apReferenceGrid) .apQuantityTierGrid span{font-size:10px;font-weight:400}
 .seoDashboard:has(.apReferenceGrid) .apQuantityTierGrid input{width:100%;min-width:0;padding:8px;background:#fff;border:1px solid #e5bed0;border-radius:6px}
+
+
+.seoDashboard:has(.apReferenceGrid) .apCustomTierList{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.seoDashboard:has(.apReferenceGrid) .apCustomTierRow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:end;gap:7px}
+.seoDashboard:has(.apReferenceGrid) .apCustomTierRow label{font-size:10px;font-weight:700;color:#6d2442;display:grid;gap:5px;min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apCustomTierRow input{width:100%;min-width:0;border:1px solid #e7bacc;padding:8px;border-radius:6px;background:white}
+.seoDashboard:has(.apReferenceGrid) .apCustomTierRow button,.seoDashboard:has(.apReferenceGrid) .apAddCustomTier{border:1px solid #d7a4b8;background:#fff;color:#841942;border-radius:6px;padding:9px 10px;font:700 11px Arial,sans-serif;cursor:pointer}
+.seoDashboard:has(.apReferenceGrid) .apAddCustomTier{width:100%;background:#fff0f6;border-style:dashed;margin:3px 0 10px}
+.seoDashboard:has(.apReferenceGrid) .apAddCustomTier:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:540px){.seoDashboard:has(.apReferenceGrid) .apCustomTierRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apCustomTierRow button{grid-column:1/-1}}
