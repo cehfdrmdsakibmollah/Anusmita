@@ -14,6 +14,9 @@ const cash=(v:number)=>"৳"+new Intl.NumberFormat("en-BD").format(v/100);
 export default function AdminProductWorkspace(){
  const [draft,setDraft]=useState<Draft>(blank),[items,setItems]=useState<Page|null>(null),[query,setQuery]=useState(""),[statusFilter,setStatusFilter]=useState("all"),[page,setPage]=useState(1),[version,setVersion]=useState(0),[selected,setSelected]=useState<Item|null>(null),[feedback,setFeedback]=useState(""),[busy,setBusy]=useState(false),[ready,setReady]=useState(false),[r2Status,setR2Status]=useState("Checking R2 storage…"),[files,setFiles]=useState<File[]>([]),[uploading,setUploading]=useState(false);
  const fileRef=useRef<HTMLInputElement>(null);
+ const [pendingCover,setPendingCover]=useState<number|null>(null);
+ const [pendingPreviews,setPendingPreviews]=useState<string[]>([]);
+ useEffect(()=>{const urls=files.map(f=>URL.createObjectURL(f));setPendingPreviews(urls);return()=>{for(const url of urls)URL.revokeObjectURL(url);};},[files]);
  const initialSelection=useRef(false);
  const [variantByColor,setVariantByColor]=useState(true);
  const [variantBySize,setVariantBySize]=useState(true);
@@ -108,17 +111,67 @@ export default function AdminProductWorkspace(){
  useEffect(()=>{let active=true;fetch("/api/admin/r2",{cache:"no-store"}).then(async r=>{let j=await r.json();if(active){setReady(r.ok&&j.ready);setR2Status(r.ok?"R2 storage connected":j.error||"R2 unavailable");}}).catch(()=>{if(active)setR2Status("R2 connection unavailable")});return()=>{active=false}},[]);
  useEffect(()=>{let active=true;fetch("/api/admin/products?"+new URLSearchParams({q:query,page:String(page),perPage:"10",status:statusFilter}),{cache:"no-store"}).then(async r=>{if(!r.ok)throw Error("Unable to load products");return r.json()}).then(j=>{if(active){setItems(j);setCatalogCategories(j.categories||[])}}).catch(e=>{if(active)setFeedback(e.message)});return()=>{active=false}},[query,page,statusFilter,version]);
  const set=(name:keyof Draft,value:string|boolean|string[])=>setDraft(d=>({...d,[name]:value}));
- function edit(item:Item){const category=categories.find(c=>!c.parentId&&c.name===item.category)||categories.find(c=>c.name===item.category);setCategoryId(category?.parentId||category?.id||item.category);setSubcategoryId(category?.parentId?category.id:"");setSelected(item);setDraft({name:item.name,slug:item.slug,sku:item.sku,brand:item.brand||"",category:item.category,size:item.size||"",color:item.color||"",colorHex:item.colorHex||"",variantGroup:item.variantGroup||"",description:item.description||"",price:(item.pricePaisa/100).toString(),cost:(item.costPaisa/100).toString(),comparePrice:((item.compareAtPaisa||0)/100).toString(),wholesalePrice:((item.wholesalePaisa||0)/100).toString(),barcode:item.barcode||"",featured:!!item.featured,reorderLevel:String(item.reorderLevel??5),stock:String(item.onHand),origin:item.origin||"Other",active:item.active,availabilityMode:item.availabilityMode||"now",preorderEta:item.preorderEta?new Date(item.preorderEta).toISOString().slice(0,16):"",discountPercent:String(item.discountPercent||0),salesChannels:item.salesChannels||["online"],scheduledPublishAt:item.scheduledPublishAt?new Date(item.scheduledPublishAt).toISOString().slice(0,16):""});setFiles([]);setFeedback("");window.scrollTo({top:0,behavior:"smooth"});}
+ function edit(item:Item){const category=categories.find(c=>!c.parentId&&c.name===item.category)||categories.find(c=>c.name===item.category);setCategoryId(category?.parentId||category?.id||item.category);setSubcategoryId(category?.parentId?category.id:"");setSelected(item);setDraft({name:item.name,slug:item.slug,sku:item.sku,brand:item.brand||"",category:item.category,size:item.size||"",color:item.color||"",colorHex:item.colorHex||"",variantGroup:item.variantGroup||"",description:item.description||"",price:(item.pricePaisa/100).toString(),cost:(item.costPaisa/100).toString(),comparePrice:((item.compareAtPaisa||0)/100).toString(),wholesalePrice:((item.wholesalePaisa||0)/100).toString(),barcode:item.barcode||"",featured:!!item.featured,reorderLevel:String(item.reorderLevel??5),stock:String(item.onHand),origin:item.origin||"Other",active:item.active,availabilityMode:item.availabilityMode||"now",preorderEta:item.preorderEta?new Date(item.preorderEta).toISOString().slice(0,16):"",discountPercent:String(item.discountPercent||0),salesChannels:item.salesChannels||["online"],scheduledPublishAt:item.scheduledPublishAt?new Date(item.scheduledPublishAt).toISOString().slice(0,16):""});setFiles([]);setPendingCover(null);setFeedback("");window.scrollTo({top:0,behavior:"smooth"});}
  useEffect(()=>{if(!initialSelection.current&&items?.products?.length){initialSelection.current=true;edit(items.products[0]);}},[items,categories]);
- function reset(){setCategoryId("");setSubcategoryId("");setSelected(null);setDraft(blank);setFiles([]);setFeedback("");if(fileRef.current)fileRef.current.value="";}
- function cloneVariant(){if(!selected)return;const source=selected;setSelected(null);setDraft(d=>({...d,sku:"",slug:"",size:"",color:"",colorHex:"",variantGroup:source.variantGroup||source.slug,stock:"0",active:false}));setFiles([]);setFeedback("New variant draft based on "+source.sku+". Enter a unique SKU and slug, then save. Each variant has its own price, stock and gallery.");window.scrollTo({top:0,behavior:"smooth"});}
- async function uploadGallery(product:Item,batch:File[]){if(!batch.length)return product;let current=product;setUploading(true);
-  try{for(const file of batch){if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>3*1024*1024||file.size<1)throw Error(file.name+": JPEG, PNG or WebP up to 3MB only");if(current.imageUrls.length>=12)throw Error("Maximum 12 images per SKU");
-   const data=new FormData();data.set("productId",current._id);data.set("expectedUpdatedAt",current.updatedAt);data.set("file",file);
-   const r=await fetch("/api/admin/r2",{method:"POST",body:data});const j=await r.json();if(!r.ok)throw Error(j.error||"R2 upload failed");current={...current,imageUrls:j.imageUrls,updatedAt:j.updatedAt};setSelected(current);}
-  return current;
-  }finally{setUploading(false);setFiles([]);if(fileRef.current)fileRef.current.value="";}
+ function reset(){setCategoryId("");setSubcategoryId("");setSelected(null);setDraft(blank);setFiles([]);setPendingCover(null);setFeedback("");if(fileRef.current)fileRef.current.value="";}
+ function cloneVariant(){if(!selected)return;const source=selected;setSelected(null);setDraft(d=>({...d,sku:"",slug:"",size:"",color:"",colorHex:"",variantGroup:source.variantGroup||source.slug,stock:"0",active:false}));setFiles([]);setPendingCover(null);setFeedback("New variant draft based on "+source.sku+". Enter a unique SKU and slug, then save. Each variant has its own price, stock and gallery.");window.scrollTo({top:0,behavior:"smooth"});}
+ async function uploadGallery(product:Item,batch:File[]){
+  if(!batch.length)return product;
+  if(!ready)throw Error(r2Status);
+  let current=product;
+  const originalLength=product.imageUrls.length;
+  let completed=0;
+  setUploading(true);
+  try{
+   if(batch.length+originalLength>12)throw Error("Maximum 12 product images including the cover");
+   for(const file of batch){
+    if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>3*1024*1024||file.size<1)
+     throw Error(file.name+": JPEG, PNG or WebP up to 3MB only");
+    const data=new FormData();
+    data.set("productId",current._id);data.set("expectedUpdatedAt",current.updatedAt);data.set("file",file);
+    const response=await fetch("/api/admin/r2",{method:"POST",body:data});
+    const payload=await response.json();
+    if(!response.ok)throw Error(payload.error||"R2 upload failed");
+    current={...current,imageUrls:payload.imageUrls,updatedAt:payload.updatedAt};
+    setSelected(current);
+    completed++;
+   }
+   // Cover is always imageUrls[0]; all other uploaded images remain in gallery.
+   if(pendingCover!==null){
+    const chosen=current.imageUrls[originalLength+pendingCover];
+    if(chosen&&chosen!==current.imageUrls[0]){
+     const response=await fetch("/api/admin/products/"+current._id+"/images",{
+      method:"PATCH",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({expectedUpdatedAt:current.updatedAt,imageUrl:chosen,action:"cover"})
+     });
+     const payload=await response.json();
+     if(!response.ok)throw Error(payload.error||"Photos uploaded but changing cover failed");
+     current={...current,imageUrls:payload.imageUrls,updatedAt:payload.updatedAt};
+     setSelected(current);
+    }
+   }
+   setFiles([]);setPendingCover(null);
+   if(fileRef.current)fileRef.current.value="";
+   setVersion(v=>v+1);
+   return current;
+  }catch(error){
+   // Keep any not-yet-uploaded files for retry; never delete successfully attached files.
+   if(completed>0){
+    setFiles(batch.slice(completed));
+    setPendingCover(old=>old===null||old<completed?null:old-completed);
+   }
+   throw error;
+  }finally{setUploading(false);}
  }
+ async function uploadSelectedPhotos(){
+  if(!selected||!files.length||uploading||busy)return;
+  setFeedback("");
+  try{
+   const updated=await uploadGallery(selected,files);
+   setFeedback("Uploaded "+updated.imageUrls.length+" total photos. First image is cover; remaining "+Math.max(0,updated.imageUrls.length-1)+" are gallery photos.");
+  }catch(error){setFeedback("Error: "+(error instanceof Error?error.message:String(error)));}
+ }
+
  async function save(e:React.FormEvent){e.preventDefault();if(busy||uploading)return;
   if(files.length&&!ready){setFeedback("Error: "+r2Status+". Images were not uploaded.");return;}
   const cost=Math.round(Number(draft.cost)*100),price=Math.round(Number(draft.price)*100),compareAt=Math.round(Number(draft.comparePrice||"0")*100),wholesale=Math.round(Number(draft.wholesalePrice||"0")*100);
@@ -134,7 +187,7 @@ export default function AdminProductWorkspace(){
    else{const stock=Number(draft.stock);if(!Number.isSafeInteger(stock)||stock<0)throw Error("Opening stock must be a non-negative whole number");const r=await fetch("/api/admin/products",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...payload,onHand:stock,imageUrls:[],variantLabel:draft.size||draft.color||"Standard"})});const j=await r.json();if(!r.ok)throw Error(j.error||"Create failed");const refresh=await fetch("/api/admin/products?q="+encodeURIComponent(payload.sku));const found=await refresh.json();product=found.products.find((p:Item)=>p._id===j.id);if(!product)throw Error("Product created, but reload is needed to attach images");}
    setSelected(product);setVersion(v=>v+1);
    if(files.length){try{product=await uploadGallery(product,files);}catch(err){setFeedback("Product saved. Image upload stopped: "+(err instanceof Error?err.message:"unknown error")+". Previously uploaded images remain linked.");return;}}
-   setFeedback("Saved "+product.sku+" successfully. Gallery: "+product.imageUrls.length+" images. "+(product.active?"Published.":"Draft."));setVersion(v=>v+1);
+   setFeedback("Saved "+product.sku+". Cover: "+(product.imageUrls.length?1:0)+"; gallery: "+Math.max(0,product.imageUrls.length-1)+". "+(product.active?"Published.":"Draft."));setVersion(v=>v+1);
   }catch(err){setFeedback("Error: "+(err instanceof Error?err.message:"Save failed"));}finally{setBusy(false);}
  }
  const field=(name:keyof Draft,label:string,props:React.InputHTMLAttributes<HTMLInputElement>={})=><label className="apField" key={name}><span>{label}</span><input {...props} value={String(draft[name])} onChange={e=>set(name,e.target.value)}/></label>;
