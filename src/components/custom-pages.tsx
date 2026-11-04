@@ -128,6 +128,24 @@ export default function CustomPages(){
      <div className="anPsPublishActions"><button type="button" onClick={()=>void save(false)} disabled={busy}><Save size={15}/> Save as Draft</button><button type="button" className="primary" onClick={()=>void save(true)} disabled={busy||page.archived}><Check size={15}/> Publish / Update</button></div>
      {page.published&&!page.archived&&<a className="anPsLiveLink" href={"/pages/"+page.slug} target="_blank" rel="noreferrer"><Eye size={15}/> View Published Page</a>}</>}
    </aside>
+   <aside className="anPsInsights" aria-label="Page insights and quick actions">
+    <div className="anPsInsightCard"><h3>Page Insights</h3>
+      <div><span>Page status</span><strong>{page? page.archived?"Archived":page.published?"Published":"Draft":"No page selected"}</strong></div>
+      <div><span>Content blocks</span><strong>{page?.blocks.length??0}</strong></div>
+      <div><span>Reading time</span><strong>{page?Math.max(1,Math.ceil(page.blocks.map(b=>b.text+" "+(b.answer||"")).join(" ").trim().split(/\\s+/).filter(Boolean).length/200)):0} min</strong></div>
+      <div><span>Saved revision</span><strong>{page?.revision??0}</strong></div>
+      <div><span>Unpublished edits</span><strong>{dirty?"Unsaved":page?.hasDraft?"Draft saved":"None"}</strong></div>
+     </div>
+     {page&&<div className="anPsInsightCard"><h3>Quick Actions</h3>
+      <button type="button" onClick={copyLink}><Copy size={14}/> Copy Live Link</button>
+      <button type="button" onClick={cloneCurrent}><Copy size={14}/> Clone Page</button>
+      <button type="button" onClick={exportJSON}><FileText size={14}/> Export as JSON</button>
+      <button type="button" onClick={()=>importRef.current?.click()}><FilePlus2 size={14}/> Import JSON</button>
+      <button type="button" onClick={()=>setTab("preview")}><Eye size={14}/> Preview Draft</button>
+      {page.published&&!page.archived&&<a href={"/pages/"+page.slug} target="_blank" rel="noreferrer"><ExternalLink size={14}/> Open Published Page</a>}
+     </div>}
+     <p className="anPsMetricsNote">Insights show real document properties only. Traffic, unique visitors, conversion or heatmaps require verified analytics integration.</p>
+   </aside>
   </div>
   {notice&&<p className="anPsNotice" role="status">{notice}</p>}
  </section>;
