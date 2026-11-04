@@ -1,0 +1,91 @@
+
+body:has(.hvsShell) .anHeader,body:has(.hvsShell) .anFooter,body:has(.hvsShell) .anAnnouncement{display:none!important}
+body:has(.hvsShell){background:#fff8f8}
+.hvsShell{display:grid;grid-template-columns:205px minmax(0,1fr);min-height:100vh;color:#4d1930;font:12px Arial,sans-serif}
+.hvsMain{padding:0 17px 30px;min-width:0;max-width:1900px;width:100%;margin:auto}
+.hvsTop{height:44px;border-bottom:1px solid #efdae0;display:flex;justify-content:space-between;align-items:center;color:#76435c}
+.hvsTop a{color:#971741;text-decoration:none}
+.hvsHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0}
+.hvsHeader h1{margin:3px 0 5px;display:flex;align-items:center;gap:10px;font:34px Georgia,serif;color:#5b1430}
+.hvsHeader p{margin:0;color:#825b68;font-size:12px;line-height:1.5}
+.hvsEyebrow{letter-spacing:2px!important;font-size:10px!important;color:#a75c73!important;font-weight:700}
+.hvsHeaderActions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.hvsShell button{font:inherit;cursor:pointer}
+.hvsShell button:disabled{opacity:.45;cursor:not-allowed}
+.hvsHeaderActions button,.hvsToolbar button,.hvsInspectorActions button,.hvsJson button{background:#fff;border:1px solid #e9c7d2;color:#86133b;border-radius:7px;padding:11px 13px;display:inline-flex;align-items:center;gap:6px}
+.hvsHeaderActions .hvsPrimary{color:white;background:#870d3a;border-color:#870d3a;font-weight:700}
+.hvsMetrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.hvsMetrics>div{min-height:83px;border:1px solid #e9cbd4;background:linear-gradient(#fffdfd,#fff7f8);border-radius:12px;padding:13px;display:grid;grid-template-columns:28px 1fr;column-gap:6px;align-content:center}
+.hvsMetrics svg{grid-row:span 2;width:22px;color:#a41647;align-self:center}
+.hvsMetrics small{font-size:10px;color:#744556}
+.hvsMetrics strong{font:22px Georgia,serif;color:#541a32;margin-top:4px}
+.hvsMetrics>div:last-child strong{font-size:16px}
+.hvsNotice{padding:11px;border-radius:7px;background:#fff0e6;color:#7c2a25}
+.hvsToolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid #eed1d9;background:#fff;border-radius:10px;padding:7px 9px;margin-bottom:10px}
+.hvsToolbar>div{display:flex;align-items:center;gap:5px}
+.hvsToolbar button{padding:9px 10px}
+.hvsToolbar button.active{background:#8e123c;color:#fff;border-color:#8e123c}
+.hvsDivider{height:24px;border-left:1px solid #e5cbd3;margin:0 5px}
+.hvsDraftChip{padding:7px 10px;background:#fcf0f4;color:#961541;border-radius:7px;font-size:10px;font-weight:bold}
+.hvsWorkspace{display:grid;grid-template-columns:minmax(230px,270px) minmax(0,1fr) minmax(250px,300px);gap:10px;align-items:start}
+.hvsPanel,.hvsCanvasArea,.hvsJson{background:#fff;border:1px solid #efd2db;border-radius:11px;min-width:0}
+.hvsPanel{padding:13px;min-height:500px}
+.hvsPanel h2{font:19px Georgia,serif;margin:4px 0 14px;color:#681333}
+.hvsPanel h2 small{display:block;font:10px Arial;color:#977582;margin-top:4px}
+.hvsOutlineList{display:grid;gap:7px;max-height:640px;overflow-y:auto}
+.hvsOutlineRow{display:flex;align-items:center;gap:2px;border:1px solid #ead7dd;border-radius:7px;background:#fffafa}
+.hvsOutlineRow.selected{background:#fcebf1;border-color:#aa2e62;box-shadow:inset 3px 0 #971545}
+.hvsOutlineRow>button{border:0;background:transparent;color:#841c44;padding:7px 4px}
+.hvsOutlineRow>.hvsSelect{display:flex;gap:6px;align-items:center;min-width:0;flex:1;text-align:left}
+.hvsSelect>span:last-child{min-width:0}
+.hvsSelect strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#4a2435}
+.hvsSelect small{display:block;color:#987787;font-size:9px;margin-top:3px}
+.hvsNumber{background:#f5e3e9;border-radius:4px;padding:4px}
+.hvsOutline h3{font:16px Georgia,serif;margin:22px 0 10px}
+.hvsLibrary{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.hvsLibrary button{display:flex;align-items:center;justify-content:center;gap:5px;padding:10px 4px;background:#fff6f8;border:1px solid #f0cfda;border-radius:8px;color:#901742;font-size:10px}
+.hvsHint{color:#9b7583;font-size:10px;line-height:1.6}
+.hvsCanvasArea{padding:11px;background:#f4e9ed}
+.hvsCanvas{width:100%;max-width:100%;min-height:540px;background:white;margin:0 auto;overflow:hidden;box-shadow:0 4px 15px #63273a11;transition:width .2s}
+.hvsCanvas.hvs-tablet{width:min(100%,640px)}.hvsCanvas.hvs-mobile{width:min(100%,375px)}
+.hvsStoreHeader{padding:12px 17px;display:flex;justify-content:space-between;align-items:center;gap:9px;color:#2a2024}
+.hvsStoreHeader>span{font:22px Georgia,serif;text-align:center}
+.hvsStoreHeader small{font:6px Arial;display:block;letter-spacing:1.5px;margin-top:3px}
+.hvsStoreHeader nav{font-size:9px;white-space:nowrap}
+.hvs-mobile .hvsStoreHeader nav{display:none}
+.hvsSelectable{cursor:pointer;position:relative;min-width:0}
+.hvsSelectable.chosen{outline:2px dashed #97144a;outline-offset:-3px;z-index:1}
+.hvsSelectable.chosen:after{content:"Editing block";position:absolute;top:0;left:0;background:#931444;color:white;padding:4px 8px;font-size:10px}
+.hvsCanvasBlock{padding:35px 35px;min-height:200px;background-color:#f8e5ec;background-size:cover;background-position:center;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
+.hvsCanvasBlock>span:first-child{letter-spacing:2px;font-size:10px;color:#a52b59;text-transform:uppercase}
+.hvsCanvasBlock h2{font:clamp(19px,2.5vw,38px) Georgia,serif;margin:11px 0;color:#631932;max-width:450px}
+.hvsCanvasBlock p{color:#795363;line-height:1.5;margin:0 0 13px;max-width:400px}
+.hvsPreviewCta{background:#8c123d;color:#fff;padding:10px 17px;border-radius:6px}
+.hvsCanvas-promotion{min-height:165px}
+.hvsCanvas-editorial{min-height:140px}
+.hvsAnnouncement{background:#f9e4eb;text-align:center;padding:8px;color:#98415e;font-size:10px}
+.hvsCanvasCategoryHeading{display:flex;justify-content:space-between;align-items:center;padding:18px 16px 8px}
+.hvsCanvasCategoryHeading h2{font:22px Georgia,serif;margin:0}
+.hvsCanvasCategoryHeading span{font-size:10px}
+.hvsCanvasCategories{display:flex;gap:10px;padding:10px 15px 22px;overflow-x:auto}
+.hvsCanvasCategories .hvsSelectable{flex:1;min-width:90px}
+.hvsCategory{text-align:center;color:#63243c}.hvsCategory>div{width:74px;height:74px;margin:0 auto 8px;border-radius:50%;background:#f9e9ee;overflow:hidden;display:grid;place-items:center}
+.hvsCategory img{width:100%;height:100%;object-fit:cover}
+.hvsCategory strong,.hvsCategory small{display:block;font-size:10px}.hvsCategory small{font-size:9px;color:#947887;margin-top:4px}
+.hvs-mobile .hvsCanvasCategories .hvsSelectable{min-width:95px}
+.hvs-mobile .hvsCanvasBlock{padding:24px 16px}.hvs-mobile .hvsCanvasBlock h2{font-size:25px}
+.hvsInspectorTabs{display:flex;gap:6px;margin-bottom:18px}
+.hvsInspectorTabs button{flex:1;padding:10px;border:1px solid #eacbd4;border-radius:6px;background:white;color:#82243e}
+.hvsInspectorTabs button.active{background:#8e123c;color:white}
+.hvsInspectorTitle{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:14px}
+.hvsInspectorTitle h2{margin:0}.hvsInspectorTitle span{border-radius:9px;padding:5px 7px;background:#fff0f4;color:#8e1242;font-size:10px}
+.hvsFields{display:grid;gap:12px}.hvsFields label{font-weight:bold;color:#6e2440;font-size:11px}
+.hvsFields input:not([type=checkbox]),.hvsFields textarea{width:100%;margin-top:6px;border-radius:6px;border:1px solid #e8c7d3;padding:10px;color:#54263c;background:white;font:12px Arial;box-sizing:border-box}
+.hvsFields .hvsCheck{display:flex;align-items:center;gap:9px}
+.hvsInspectorActions{display:flex;gap:7px;margin:19px 0;flex-wrap:wrap}.hvsInspectorActions button{font-size:10px;padding:9px}
+.hvsInspectorActions .hvsDanger{color:#b51243}
+.hvsStatus{border:1px solid #f0d5de;border-radius:8px;padding:12px;background:#fff6f8;margin-top:20px}
+.hvsStatus p{color:#826272;line-height:1.6}.hvsStatus a{color:#92123e}
+.hvsJson{padding:22px}.hvsJson textarea{width:100%;min-height:500px;font:12px monospace;background:#27212a;color:#fff;padding:15px}
+@media(max-width:1250px){.hvsWorkspace{grid-template-columns:220px minmax(0,1fr)}.hvsInspector{grid-column:1/-1;min-height:0}.hvsMetrics{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:850px){.hvsShell{grid-template-columns:1fr}.hvsHeader{align-items:flex-start;flex-direction:column}.hvsWorkspace{grid-template-columns:1fr}.hvsPanel{min-height:0}.hvsMetrics{grid-template-columns:repeat(2,1fr)}.hvsMain{padding:0 12px 60px}.hvsHeader h1{font-size:27px}}
