@@ -1,3 +1,4 @@
+import type {CmsNativeHero} from "@/lib/cms-page-slots";
 'use client';
 
 import Link from 'next/link';
@@ -14,7 +15,7 @@ function Art({region, className = '', label}: {region:readonly number[]; classNa
 function Brand({header=false}:{header?:boolean}) {
   return <Link className="dp-brand" href="/" aria-label="ANUSMITA homepage">{header&&<Art region={[94,58,39,40]}/>}<span>ANUSMITA<small>FASHION · JEWELLERY · BEAUTY</small></span></Link>;
 }
-export default function DealsPreview() {
+export default function DealsPreview({hero}:{hero?:CmsNativeHero}) {
   const [category,setCategory] = useState<DealCategory>('All Offers');
   const [sort,setSort] = useState<DealSort>('recommended');
   const [query,setQuery] = useState('');
@@ -56,7 +57,9 @@ export default function DealsPreview() {
       <nav id="deals-navigation" className={menuOpen?'open':''} aria-label="Main navigation">{[['Home','/'],['Shop','/shop'],['Deals','/deals'],['Bundles','/bundles'],['Journal','/journal/design-preview'],['Contact','/contact/design-preview']].map(([label,href])=><Link key={label} href={href} aria-current={label==='Deals'?'page':undefined}>{label}</Link>)}</nav>
       <div className="dp-tools"><button aria-label="Search deals" aria-expanded={searchOpen} aria-controls="deals-search" onClick={()=>setSearchOpen(!searchOpen)}><Search/></button><Link href="/account/design-preview" aria-label="My account"><UserRound/></Link><Link href="/cart/design-preview" aria-label="Shopping bag"><ShoppingBag/></Link></div>
     </header>
-    <section className="dp-hero"><nav aria-label="Breadcrumb"><Link href="/">Home</Link><span>›</span><span>Daily Offers</span></nav><div className="dp-hero-copy"><h1>Little luxuries.<br/><em>Lovely prices.</em></h1><p>Today’s beauty, fashion & lifestyle offers.</p></div><Art region={[480,113,382,215]} className="dp-hero-photo"/></section>
+    <section className="dp-hero" style={hero?.title||hero?.subtitle||hero?.imageUrl?{backgroundColor:hero.background,color:hero.textColor}:undefined}><nav aria-label="Breadcrumb"><Link href="/">Home</Link><span>›</span><span>Daily Offers</span></nav><div className="dp-hero-copy"><h1>{hero?.title||<>{defaultTitle}</>}</h1><p>{hero?.subtitle||"Today’s beauty, fashion & lifestyle offers."}</p></div>{hero?.imageUrl?<img className="dp-cms-hero-image" src={hero.imageUrl} alt="ANUSMITA deals hero"/>:<>
+ <Art region={[480,113,382,215]} className="dp-hero-photo"/>
+ </>}</section>
     <div className="dp-content"><section aria-labelledby="deals-title"><div className="dp-section-heading"><h2 id="deals-title">Today’s Flash Deals</h2><div className="dp-timer-group"><div className="dp-timer" aria-label={`Preview countdown: ${time[0]} hours, ${time[1]} minutes, ${time[2]} seconds`}><span>{expired?'Preview ended':'Offers end in'}</span>{time.map((part,i)=><div key={i}><b>{String(part).padStart(2,'0')}</b><small>{['HOURS','MIN','SEC'][i]}</small></div>)}</div><small className="dp-timer-note">Preview timer · Sample offers</small></div></div>
       <div className="dp-toolbar"><div className="dp-categories" aria-label="Deal categories">{dealCategories.map(c=><button key={c} aria-pressed={category===c} onClick={()=>setCategory(c)}>{c}</button>)}</div><label className="dp-sort"><span className="dp-sr-only">Sort offers</span><select value={sort} onChange={e=>setSort(e.target.value as DealSort)}><option value="recommended">Recommended</option><option value="price-low">Price: Low to High</option><option value="price-high">Price: High to Low</option><option value="discount">Biggest Discount</option></select></label></div>
       <div id="deals-search" hidden={!searchOpen} className="dp-search"><Search/><input ref={searchInput} type="search" aria-label="Search offers" placeholder="Search your favourite offers…" value={query} onChange={e=>setQuery(e.target.value)} maxLength={100}/><button aria-label="Clear and close search" onClick={()=>{setQuery('');setSearchOpen(false);}}><X/></button></div>
