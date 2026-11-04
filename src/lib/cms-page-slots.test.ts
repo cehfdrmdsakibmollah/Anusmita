@@ -31,5 +31,11 @@ describe("Unified CMS Page Slots",()=>{
   expect(cmsSlots.safeParse([{...valid,imageUrl:asset+"?tracker=1"}]).success).toBe(false);
   expect(cmsSlots.safeParse([{...valid,imageUrl:asset.replace("cms/bundles","products/bundles")}]).success).toBe(false);
  });
+ it("supports independently published native hero settings and protects image sources",()=>{
+  const payload={action:"publish",page:"bundles",revision:4,slots:[valid],nativeHero:{title:"New Bundle Collection",subtitle:"Shop real curated sets.",imageUrl:"/brand/hero-reference.webp",background:"#fff4f7",textColor:"#74143e"}};
+  expect(cmsSaveSchema.safeParse(payload).success).toBe(true);
+  expect(cmsSaveSchema.safeParse({...payload,nativeHero:{...payload.nativeHero,imageUrl:"https://untrusted.example/hero.png"}}).success).toBe(false);
+  expect(cmsSaveSchema.safeParse({...payload,nativeHero:{...payload.nativeHero,background:"url(javascript:bad)"}}).success).toBe(false);
+ });
  it("rejects unknown properties",()=>{expect(cmsSlots.safeParse([{...valid,html:"<script />"}]).success).toBe(false);});
 });
