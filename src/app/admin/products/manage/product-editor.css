@@ -325,3 +325,19 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 .seoDashboard:has(.apReferenceGrid) .apUploadTile input{max-width:100%}
 @media(max-width:1120px){.seoDashboard:has(.apReferenceGrid) .apEditorColumns{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 @media(max-width:700px){.seoDashboard:has(.apReferenceGrid) .apEditorColumns{grid-template-columns:minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apToolbarActions .apTopNewProduct{margin-right:0;flex:1 1 100%}}
+
+
+/* Media staging, distinct cover and gallery */
+.seoDashboard:has(.apReferenceGrid) .apHiddenPhotoInput{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;border:0!important;opacity:0;pointer-events:none}
+.seoDashboard:has(.apReferenceGrid) .apPendingPhotos{padding:10px 0;border-bottom:1px solid #ead2d9}
+.seoDashboard:has(.apReferenceGrid) .apPendingPhotos>strong{display:block;font-size:11px;color:#712039;margin:4px 0 10px}
+.seoDashboard:has(.apReferenceGrid) .apPendingPhotoGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
+.seoDashboard:has(.apReferenceGrid) .apPendingPhotoCard{border:1px dashed #d69ab0;border-radius:8px;padding:6px;min-width:0;background:#fff6f9;display:flex;flex-direction:column;gap:5px;align-items:center}
+.seoDashboard:has(.apReferenceGrid) .apPendingPhotoCard img{width:100%;height:88px;object-fit:cover;border-radius:6px}
+.seoDashboard:has(.apReferenceGrid) .apPendingPhotoCard small{font-size:10px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seoDashboard:has(.apReferenceGrid) .apPendingPhotoCard button{font-size:10px;border:1px solid #e0aec2;background:white;color:#81143d;border-radius:6px;padding:6px;width:100%;cursor:pointer}
+.seoDashboard:has(.apReferenceGrid) .apPendingPhotoCard button.selected{background:#84133d;color:white}
+.seoDashboard:has(.apReferenceGrid) .apUploadFooter{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:10px 0;color:#765364;font-size:10px}
+.seoDashboard:has(.apReferenceGrid) .apUploadFooter button{background:#86163e;color:white;border:none;border-radius:7px;padding:10px;font-size:11px;cursor:pointer}
+.seoDashboard:has(.apReferenceGrid) .apUploadFooter button:disabled{opacity:.5;cursor:not-allowed}
+.seoDashboard:has(.apReferenceGrid) .apUploadDrop{padding:10px;min-height:104px}
