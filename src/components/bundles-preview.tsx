@@ -1,5 +1,5 @@
-import type {CmsNativeHero} from "@/lib/cms-page-slots";
 'use client';
+import type {CmsNativeHero} from "@/lib/cms-page-slots";
 import Link from 'next/link';
 import {useEffect,useRef,useState} from 'react';
 import {ArrowDown,ArrowRight,Gift,Heart,Menu,Search,ShoppingBag,Tag,UserRound,X} from 'lucide-react';
