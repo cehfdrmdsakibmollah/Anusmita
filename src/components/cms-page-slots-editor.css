@@ -16,3 +16,14 @@
 .cse-actions button:hover,.cse-row button:hover,.cse-section-head button:hover{background:#f9dce9}
 .cse-root button:focus-visible,.cse-root input:focus-visible,.cse-root textarea:focus-visible,.cse-root select:focus-visible{outline:2px solid #9c2861;outline-offset:2px}
 @media(max-width:690px){.cse-add-control{width:100%}.cse-section-head{flex-wrap:wrap}.cse-preview-card{grid-template-columns:1fr}.cse-preview-card img{max-height:210px}.cse-actions>button{flex:1;justify-content:center}}
+
+
+.cse-native-hero{background:linear-gradient(115deg,#fff5f9,#fffafb);border:1px solid #e7bfd0;border-radius:10px;padding:14px;margin:0 0 12px}
+.cse-native-hero h4{font:700 19px Georgia,serif;color:#731a3b;margin:0}
+.cse-native-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.cse-native-fields label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:700;color:#6d1c3e;min-width:0}
+.cse-native-fields input:not([type=color]),.cse-native-fields textarea{width:100%;border:1px solid #e4bfce;border-radius:6px;background:#fff;padding:9px;color:#4b1830;font:12px Arial,sans-serif;min-width:0}
+.cse-native-fields .cse-media-upload{display:flex;align-items:flex-end}
+.cse-native-fields .cse-media-upload button,.cse-inspector .cse-media-upload button{border:1px solid #b6557b;color:#7d1742;background:#fff3f7;border-radius:6px;padding:9px 11px;font:700 11px Arial,sans-serif;cursor:pointer}
+@media(max-width:1100px){.cse-native-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.cse-native-fields{grid-template-columns:1fr}}
