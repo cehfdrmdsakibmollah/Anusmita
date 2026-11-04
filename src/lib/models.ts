@@ -365,6 +365,17 @@ const HomePageSchema=new Schema({
  lastEditedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
 },opts);
 export const HomePage=mongoose.models.HomePage||mongoose.model("HomePage",HomePageSchema);
+/** Isolated homepage visual settings. Never alters commerce or homepage blocks. */
+const HomePageStyleSchema=new Schema({
+ key:{type:String,required:true,unique:true,default:"main"},
+ revision:{type:Number,required:true,default:0,min:0},
+ primary:{type:String,required:true},accent:{type:String,required:true},
+ background:{type:String,required:true},text:{type:String,required:true},
+ headingFont:{type:String,required:true},radius:{type:Number,required:true},
+ customCss:{type:String,default:""},lastEditedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
+},opts);
+export const HomePageStyle=mongoose.models.HomePageStyle||mongoose.model("HomePageStyle",HomePageStyleSchema);
+
 
 /** Isolated editorial page slots; never replaces products, checkout or route logic. */
 const CmsPageSlotSchema=new Schema({
