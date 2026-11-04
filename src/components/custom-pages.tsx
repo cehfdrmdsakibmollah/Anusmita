@@ -1,6 +1,6 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
-import {Archive,ArrowDown,ArrowUp,BookOpen,Check,ChevronDown,Copy,Eye,FilePlus2,FileText,Globe2,LayoutList,LockKeyhole,Plus,Printer,Save,Search,ShieldCheck,Trash2} from "lucide-react";
+import {useEffect,useMemo,useRef,useState} from "react";
+import {Archive,ArrowDown,ArrowUp,BookOpen,Check,ChevronDown,Copy,Eye,FilePlus2,FileText,Globe2,LayoutList,LockKeyhole,Plus,Printer,Save,Search,ShieldCheck,Trash2,Bold,Italic,Underline,Undo2,Heading1,Heading2,Heading3,List,Quote,ExternalLink,Layers,History} from "lucide-react";
 import "./custom-pages.css";
 type Type="heading"|"paragraph"|"callout"|"bullet"|"numbered"|"faq"|"quote"|"divider";
 type Block={id:string;type:Type;text:string;textBn?:string;answer?:string;answerBn?:string};
@@ -13,6 +13,8 @@ const payloadFor=(p:Page)=>({slug:p.slug,title:p.title,titleBn:p.titleBn,descrip
 const autoSlug=(value:string)=>value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,80);
 function describeBlock(b:Block,language:"en"|"bn"){const raw=language==="bn"&&b.textBn?.trim()?b.textBn:b.text;return raw||"Empty block";}
 export default function CustomPages(){
+ const editorRef=useRef<HTMLTextAreaElement|null>(null);
+ const importRef=useRef<HTMLInputElement|null>(null);
  const [pages,setPages]=useState<Page[]>([]),[page,setPage]=useState<Page|null>(null),[lastSaved,setLastSaved]=useState(""),[search,setSearch]=useState(""),[filter,setFilter]=useState<"all"|"published"|"draft"|"archived">("all");
  const [lang,setLang]=useState<"en"|"bn">("en"),[selected,setSelected]=useState<string|null>(null),[tab,setTab]=useState<"settings"|"seo"|"preview">("settings"),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false),[showAdd,setShowAdd]=useState(false);
  const dirty=!!page&&JSON.stringify(page)!==lastSaved;
@@ -25,6 +27,24 @@ export default function CustomPages(){
  function create(){if(dirty&&!window.confirm("Discard unsaved changes?"))return;const next=blank();setPage(next);setLastSaved(JSON.stringify(next));setSelected(next.blocks[0].id);setTab("settings");setNotice("");}
  function patch(change:Partial<Page>){setPage(p=>p?{...p,...change}:p);}
  function updateBlock(id:string,patch:Partial<Block>){setPage(p=>p?{...p,blocks:p.blocks.map(b=>b.id===id?{...b,...patch}:b)}:p);}
+ function formatSelected(left:string,right=left){
+  const b=page?.blocks.find(x=>x.id===selected);
+  const el=editorRef.current;if(!b||!el)return;
+  const field=lang==="bn"?"textBn":"text";
+  const old=(b[field]||"");
+  const start=el.selectionStart,end=el.selectionEnd;
+  const text=old.slice(start,end)||"text";
+  updateBlock(b.id,{[field]:old.slice(0,start)+left+text+right+old.slice(end)});
+  requestAnimationFrame(()=>{el.focus();el.setSelectionRange(start+left.length,start+left.length+text.length);});
+ }
+ function handleTextShortcut(event:React.KeyboardEvent<HTMLTextAreaElement>,id:string){
+  if(id!==selected)setSelected(id);
+  if(!(event.ctrlKey||event.metaKey)||event.altKey)return;
+  const key=event.key.toLowerCase();
+  if(key==="b"||key==="i"||key==="u"){
+   event.preventDefault();formatSelected(key==="b"?"**":key==="u"?"++":"*",key==="b"?"**":key==="u"?"++":"*");
+  }
+ }
  function move(i:number,dir:number){setPage(p=>{if(!p||i+dir<0||i+dir>=p.blocks.length)return p;const blocks=[...p.blocks];[blocks[i],blocks[i+dir]]=[blocks[i+dir],blocks[i]];return {...p,blocks};});}
  function add(type:Type){if(!page||page.blocks.length>=30)return;const b=makeBlock(type);patch({blocks:[...page.blocks,b]});setSelected(b.id);setShowAdd(false);}
  async function save(publish:boolean){if(!page||busy)return;if(!page.title.trim()||!page.slug.trim()){setNotice("Page title and slug are required.");return;}if(!page.blocks.length){setNotice("Add at least one block.");return;}
@@ -39,11 +59,37 @@ export default function CustomPages(){
  async function archive(){if(!page||busy)return;if(!window.confirm("Archive this page? It will become unavailable to visitors. Existing text remains stored."))return;const next={...page,archived:true,published:false};setBusy(true);try{const r=await fetch("/api/admin/content-pages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...payloadFor(next),mode:"archive"})});const d=await r.json();if(!r.ok)throw Error(d.error||"Archive failed");const updated={...next,revision:d.revision};setPage(updated);setLastSaved(JSON.stringify(updated));setNotice("Page archived, not deleted.");await load();}catch(e){setNotice("Error: "+String(e));}finally{setBusy(false);}}
  function cloneCurrent(){if(!page)return;if(dirty&&!window.confirm("Discard unsaved changes before cloning?"))return;const p={...page,slug:"",title:page.title+" (Copy)",published:false,archived:false,revision:0,hasDraft:false,blocks:page.blocks.map(b=>({...b,id:crypto.randomUUID()}))};setPage(p);setLastSaved(JSON.stringify(p));setNotice("Clone ready. Choose a new unique slug and save as draft.");}
  function exportJSON(){if(!page)return;const json=JSON.stringify({version:1,kind:"anusmita.content-page",page:payloadFor(page)},null,2);const url=URL.createObjectURL(new Blob([json],{type:"application/json"}));const a=document.createElement("a");a.href=url;a.download=(page.slug||"custom-page")+".json";a.click();URL.revokeObjectURL(url);}
+ async function importJSON(file:File){
+  if(file.size>1024*1024){setNotice("JSON file exceeds 1 MB.");return;}
+  try{
+   const json:unknown=JSON.parse(await file.text());
+   if(!json||typeof json!=="object")throw Error("Invalid page export");
+   const wrapper=json as {version?:number;kind?:string;page?:Partial<Page>};
+   if(wrapper.version!==1||wrapper.kind!=="anusmita.content-page"||!wrapper.page)throw Error("Unsupported ANUSMITA export format");
+   const src=wrapper.page;
+   if(!Array.isArray(src.blocks)||src.blocks.length<1||src.blocks.length>30)throw Error("Import requires 1–30 valid blocks");
+   const allowed=new Set<Type>(types);
+   const blocks=src.blocks.map(b=>{
+    if(!b||!allowed.has(b.type)||typeof b.text!=="string"||b.text.length>3000)throw Error("Unsupported content block");
+    return {id:crypto.randomUUID(),type:b.type,text:b.text,textBn:String(b.textBn||"").slice(0,3000),answer:String(b.answer||"").slice(0,3000),answerBn:String(b.answerBn||"").slice(0,3000)};
+   });
+   if(dirty&&!window.confirm("Discard unsaved changes to import a page?"))return;
+   const next={...blank(),title:String(src.title||"Imported page").slice(0,100),titleBn:String(src.titleBn||"").slice(0,120),description:String(src.description||"").slice(0,160),descriptionBn:String(src.descriptionBn||"").slice(0,160),seoTitle:String(src.seoTitle||"").slice(0,70),noIndex:!!src.noIndex,slug:"",blocks};
+   setPage(next);setLastSaved(JSON.stringify(next));setSelected(next.blocks[0]?.id||null);setNotice("Imported as an unpublished draft. Choose a unique slug, then save. Existing pages are untouched.");
+  }catch(e){setNotice("Import rejected: "+(e instanceof Error?e.message:String(e)));}
+ }
  function copyLink(){if(!page)return;void navigator.clipboard.writeText(window.location.origin+"/pages/"+page.slug).then(()=>setNotice("Public URL copied."),()=>setNotice("Copy: "+window.location.origin+"/pages/"+page.slug));}
  const key=lang==="bn"?"textBn":"text";
  return <section className="anPolicyStudio">
   <header className="anPsHeader"><div className="anPsTitle"><span className="anPsBrandIcon"><FileText size={25}/></span><div><div className="anPsBreadcrumb">Admin / Content & Engagement / Custom Pages</div><h1>Custom Pages & Policy Builder <small>PRO</small></h1><p>Create, edit, preview and publish secure content pages without changing existing storefront policies.</p></div></div>
    <div className="anPsHeaderActions"><a href="/" target="_blank" rel="noreferrer"><Eye size={15}/> View Live Site</a><button type="button" className="primary" onClick={create}><Plus size={17}/> New Custom Page</button></div></header>
+  <nav className="anPsMasterRibbon" aria-label="Page builder tools">
+   <button type="button" className="active" onClick={()=>setTab("settings")}><Layers size={15}/> Pages Builder</button>
+   <button type="button" onClick={()=>setTab("seo")}><FileText size={15}/> SEO & OpenGraph</button>
+   <button type="button" onClick={()=>{setShowAdd(true);setTab("settings");}}><LayoutList size={15}/> Blocks Library</button>
+   <button type="button" onClick={()=>setTab("preview")}><Eye size={15}/> Live Draft Preview</button>
+   <a href="/admin?tab=Activity%20Logs"><History size={15}/> Audit Logs</a>
+  </nav>
   <div className="anPsCapabilities"><span><ShieldCheck size={14}/> Text-only secure</span><span><Globe2 size={14}/> Bangla & English</span><span><BookOpen size={14}/> Reading tools</span><span><LockKeyhole size={14}/> Admin protected</span><span><FileText size={14}/> SEO & Publishing</span></div>
   <div className="anPsMetrics"><div><small>Custom Pages</small><strong>{pages.length}</strong></div><div><small>Published</small><strong>{pages.filter(p=>p.published&&!p.archived).length}</strong></div><div><small>Drafts</small><strong>{pages.filter(p=>!p.published&&!p.archived).length}</strong></div><div><small>Archived</small><strong>{pages.filter(p=>p.archived).length}</strong></div></div>
   <div className="anPsColumns">
@@ -53,15 +99,21 @@ export default function CustomPages(){
     <button type="button" className="anPsNewSide" onClick={create}><Plus size={17}/> Create New Page</button>
    </aside>
    {page?<section className="anPsEditor">
-    <div className="anPsEditorTop"><strong>{page.title||"Untitled page"}</strong><span className={page.archived?"archived":page.published?"published":"draft"}>{page.archived?"Archived":page.published?"Published":"Draft"}</span><small>Revision {page.revision}</small></div>
+    <div className="anPsEditorTop"><label className="anPsPagePicker">Edit Page: <select value={page.slug} onChange={e=>{const p=pages.find(v=>v.slug===e.target.value);if(p)choose(p);}}><option value={page.slug}>{page.title||"New page"}</option>{pages.filter(p=>p.slug!==page.slug).map(p=><option key={p.slug} value={p.slug}>{p.title}</option>)}</select></label><span className={page.archived?"archived":page.published?"published":"draft"}>{page.archived?"Archived":page.published?"Published":"Draft"}</span><small>Revision {page.revision}</small></div>
     <div className="anPsLang"><button type="button" className={lang==="en"?"active":""} onClick={()=>setLang("en")}>🇬🇧 English</button><button type="button" className={lang==="bn"?"active":""} onClick={()=>setLang("bn")}>🇧🇩 বাংলা</button><span>Manual bilingual editing · no automatic translation</span></div>
     <div className="anPsFields"><label>Page title {lang==="en"?"(English)":"(Bangla)"}<input required maxLength={lang==="en"?100:120} value={lang==="en"?page.title:page.titleBn} onChange={e=>{if(lang==="bn")patch({titleBn:e.target.value});else patch({title:e.target.value,slug:page.revision===0?autoSlug(e.target.value):page.slug});}}/></label>
      <label>Page URL slug <input value={page.slug} required disabled={page.revision>0} pattern="[a-z0-9]+(-[a-z0-9]+)*" maxLength={80} onChange={e=>patch({slug:e.target.value.toLowerCase()})}/></label></div>
-    <div className="anPsBlockHeader"><div><h2>Content Blocks</h2><small>Reorder and edit safely · {page.blocks.length}/30</small></div><button type="button" onClick={()=>setShowAdd(v=>!v)}><Plus size={15}/> Add Block <ChevronDown size={14}/></button></div>
+    <div className="anPsFormattingToolbar" role="toolbar" aria-label="Selected block text formatting">
+  <button type="button" onClick={()=>formatSelected("**")} title="Bold (Ctrl+B)"><Bold size={16}/></button>
+  <button type="button" onClick={()=>formatSelected("*")} title="Italic (Ctrl+I)"><Italic size={16}/></button>
+  <button type="button" onClick={()=>formatSelected("++")} title="Underline (Ctrl+U)"><Underline size={16}/></button>
+  <span className="anPsToolbarHelp">Select words in a block and use formatting. Ctrl+B / I / U</span>
+ </div>
+ <div className="anPsBlockHeader"><div><h2>Content Blocks</h2><small>Reorder and edit safely · {page.blocks.length}/30</small></div><button type="button" onClick={()=>setShowAdd(v=>!v)}><Plus size={15}/> Add Block <ChevronDown size={14}/></button></div>
     {showAdd&&<div className="anPsAddGrid">{types.map(t=><button key={t} type="button" onClick={()=>add(t)}>{labels[t]}</button>)}</div>}
     <div className="anPsBlockList">{page.blocks.map((b,i)=><div key={b.id} className={"anPsBlock"+(selected===b.id?" selected":"")}><div className="anPsBlockTop"><span>{i+1}. {labels[b.type]}</span><div><button type="button" title="Move up" disabled={i===0} onClick={()=>move(i,-1)}><ArrowUp size={15}/></button><button type="button" title="Move down" disabled={i===page.blocks.length-1} onClick={()=>move(i,1)}><ArrowDown size={15}/></button><button type="button" title="Duplicate" disabled={page.blocks.length>=30} onClick={()=>{const dup={...b,id:crypto.randomUUID()};patch({blocks:[...page.blocks.slice(0,i+1),dup,...page.blocks.slice(i+1)]});setSelected(dup.id);}}><Copy size={15}/></button><button type="button" title="Remove" disabled={page.blocks.length===1} onClick={()=>{patch({blocks:page.blocks.filter(x=>x.id!==b.id)});if(selected===b.id)setSelected(null);}}><Trash2 size={15}/></button></div></div>
       <div className="anPsBlockInner"><label>Block type<select value={b.type} onChange={e=>updateBlock(b.id,{type:e.target.value as Type})}>{types.map(t=><option key={t} value={t}>{labels[t]}</option>)}</select></label>
-       {b.type!=="divider"&&<label>{b.type==="faq"?"Question":b.type==="bullet"||b.type==="numbered"?"One item per line":"Content"} ({lang==="en"?"English":"Bangla"})<textarea rows={b.type==="paragraph"||b.type==="bullet"||b.type==="numbered"?4:2} maxLength={3000} value={b[key]||""} onFocus={()=>setSelected(b.id)} onChange={e=>updateBlock(b.id,{[key]:e.target.value})}/></label>}
+       {b.type!=="divider"&&<label>{b.type==="faq"?"Question":b.type==="bullet"||b.type==="numbered"?"One item per line":"Content"} ({lang==="en"?"English":"Bangla"})<textarea ref={selected===b.id?editorRef:undefined} onKeyDown={e=>handleTextShortcut(e,b.id)} rows={b.type==="paragraph"||b.type==="bullet"||b.type==="numbered"?4:2} maxLength={3000} value={b[key]||""} onFocus={()=>setSelected(b.id)} onChange={e=>updateBlock(b.id,{[key]:e.target.value})}/></label>}
        {b.type==="faq"&&<label>Answer ({lang==="en"?"English":"Bangla"})<textarea rows={3} maxLength={3000} value={(lang==="bn"?b.answerBn:b.answer)||""} onChange={e=>updateBlock(b.id,{[lang==="bn"?"answerBn":"answer"]:e.target.value})}/></label>}
        {b.type==="divider"&&<p className="anPsMuted">A decorative divider will appear between sections.</p>}
       </div></div>)}</div>
@@ -69,12 +121,30 @@ export default function CustomPages(){
     <div className="anPsEditorFoot"><span>{page.blocks.reduce((n,b)=>n+(b.text||"").split(/\s+/).filter(Boolean).length,0)} words · {page.blocks.reduce((n,b)=>n+(b.text||"").length,0)} characters</span><span>{dirty?"Unsaved changes":page.hasDraft?"Draft saved · live unchanged":"All changes saved"}</span></div>
    </section>:<section className="anPsEditor anPsEmptyEditor"><FilePlus2 size={35}/><h2>Choose or create a page</h2><p>Build secure custom pages and publish them under /pages/slug.</p><button onClick={create}>Create New Page</button></section>}
    <aside className="anPsInspector"><div className="anPsTabs"><button type="button" className={tab==="settings"?"active":""} onClick={()=>setTab("settings")}>Page Settings</button><button type="button" className={tab==="seo"?"active":""} onClick={()=>setTab("seo")}>SEO</button><button type="button" className={tab==="preview"?"active":""} onClick={()=>setTab("preview")}>Preview</button></div>
-    {page&&<>{tab==="settings"&&<div className="anPsPanel"><h3>Publishing & Security</h3><p><ShieldCheck size={15}/> Authenticated owner/admin editing</p><label>Status <strong>{page.archived?"Archived":page.published?"Published":"Draft"}</strong></label><label className="anPsCheck"><input type="checkbox" checked={page.noIndex} onChange={e=>patch({noIndex:e.target.checked})}/> Search engines: NoIndex</label><button type="button" onClick={copyLink}><Copy size={14}/> Copy live link</button><button type="button" onClick={cloneCurrent}><Copy size={14}/> Clone page as draft</button><button type="button" onClick={exportJSON}><FileText size={14}/> Export page JSON</button><button type="button" onClick={()=>void archive()} disabled={busy||page.archived}><Archive size={14}/> Archive page safely</button>{page.archived&&<button type="button" onClick={()=>patch({archived:false})}>Restore to draft (save required)</button>}<small>Private pages, IP restrictions, scheduled publishing and legal approval workflows require separate security infrastructure.</small></div>}
+    {page&&<>{tab==="settings"&&<div className="anPsPanel"><h3>Publishing & Security</h3><p><ShieldCheck size={15}/> Authenticated owner/admin editing</p><label>Status <strong>{page.archived?"Archived":page.published?"Published":"Draft"}</strong></label><label className="anPsCheck"><input type="checkbox" checked={page.noIndex} onChange={e=>patch({noIndex:e.target.checked})}/> Search engines: NoIndex</label><button type="button" onClick={copyLink}><Copy size={14}/> Copy live link</button><button type="button" onClick={cloneCurrent}><Copy size={14}/> Clone page as draft</button><button type="button" onClick={exportJSON}><FileText size={14}/> Export page JSON</button><button type="button" onClick={()=>importRef.current?.click()}><FilePlus2 size={14}/> Import JSON as new draft</button><input ref={importRef} type="file" accept=".json,application/json" style={{display:"none"}} onChange={e=>{const file=e.currentTarget.files?.[0];if(file)void importJSON(file);e.currentTarget.value="";}}/><button type="button" onClick={()=>void archive()} disabled={busy||page.archived}><Archive size={14}/> Archive page safely</button>{page.archived&&<button type="button" onClick={()=>patch({archived:false})}>Restore to draft (save required)</button>}<small>Private pages, IP restrictions, scheduled publishing and legal approval workflows require separate security infrastructure.</small></div>}
      {tab==="seo"&&<div className="anPsPanel"><h3>SEO & Social</h3><label>Meta title<input maxLength={70} value={page.seoTitle} onChange={e=>patch({seoTitle:e.target.value})}/></label><label>Meta description ({lang==="en"?"English":"Bangla"})<textarea rows={4} maxLength={160} value={lang==="en"?page.description:page.descriptionBn} onChange={e=>patch(lang==="en"?{description:e.target.value}:{descriptionBn:e.target.value})}/></label><label>Canonical URL<input readOnly value={"/pages/"+page.slug}/></label><label className="anPsCheck"><input type="checkbox" checked={page.noIndex} onChange={e=>patch({noIndex:e.target.checked})}/> NoIndex & NoFollow</label><small>Metadata is generated server-side for published pages. External social image selection requires a verified media asset.</small></div>}
      {tab==="preview"&&<div className="anPsPanel anPsPreview"><h3>Draft content preview</h3><h2>{lang==="bn"&&page.titleBn?page.titleBn:page.title}</h2>{page.blocks.map(b=><div key={b.id}>{b.type==="heading"?<h3>{describeBlock(b,lang)}</h3>:b.type==="divider"?<hr/>:b.type==="faq"?<details><summary>{describeBlock(b,lang)}</summary><p>{lang==="bn"?b.answerBn||b.answer:b.answer}</p></details>:b.type==="bullet"||b.type==="numbered"?<ul>{describeBlock(b,lang).split("\n").map((line,i)=><li key={i}>{line}</li>)}</ul>:<p className={b.type==="callout"?"callout":""}>{describeBlock(b,lang)}</p>}</div>)}</div>}
      <div className="anPsPanel"><h3>Public Page Features</h3><p><Check size={15}/> Bangla / English switch</p><p><Check size={15}/> Automatic table of contents</p><p><Check size={15}/> Font size & dark mode</p><p><Check size={15}/> Print / Save as PDF</p><p><Check size={15}/> Estimated reading time</p></div>
      <div className="anPsPublishActions"><button type="button" onClick={()=>void save(false)} disabled={busy}><Save size={15}/> Save as Draft</button><button type="button" className="primary" onClick={()=>void save(true)} disabled={busy||page.archived}><Check size={15}/> Publish / Update</button></div>
      {page.published&&!page.archived&&<a className="anPsLiveLink" href={"/pages/"+page.slug} target="_blank" rel="noreferrer"><Eye size={15}/> View Published Page</a>}</>}
+   </aside>
+   <aside className="anPsInsights" aria-label="Page insights and quick actions">
+    <div className="anPsInsightCard"><h3>Page Insights</h3>
+      <div><span>Page status</span><strong>{page? page.archived?"Archived":page.published?"Published":"Draft":"No page selected"}</strong></div>
+      <div><span>Content blocks</span><strong>{page?.blocks.length??0}</strong></div>
+      <div><span>Reading time</span><strong>{page?Math.max(1,Math.ceil(page.blocks.map(b=>b.text+" "+(b.answer||"")).join(" ").trim().split(/\s+/).filter(Boolean).length/200)):0} min</strong></div>
+      <div><span>Saved revision</span><strong>{page?.revision??0}</strong></div>
+      <div><span>Unpublished edits</span><strong>{dirty?"Unsaved":page?.hasDraft?"Draft saved":"None"}</strong></div>
+     </div>
+     {page&&<div className="anPsInsightCard"><h3>Quick Actions</h3>
+      <button type="button" onClick={copyLink}><Copy size={14}/> Copy Live Link</button>
+      <button type="button" onClick={cloneCurrent}><Copy size={14}/> Clone Page</button>
+      <button type="button" onClick={exportJSON}><FileText size={14}/> Export as JSON</button>
+      <button type="button" onClick={()=>importRef.current?.click()}><FilePlus2 size={14}/> Import JSON</button>
+      <button type="button" onClick={()=>setTab("preview")}><Eye size={14}/> Preview Draft</button>
+      {page.published&&!page.archived&&<a href={"/pages/"+page.slug} target="_blank" rel="noreferrer"><ExternalLink size={14}/> Open Published Page</a>}
+     </div>}
+     <p className="anPsMetricsNote">Insights show real document properties only. Traffic, unique visitors, conversion or heatmaps require verified analytics integration.</p>
    </aside>
   </div>
   {notice&&<p className="anPsNotice" role="status">{notice}</p>}

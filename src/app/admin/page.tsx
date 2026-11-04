@@ -22,6 +22,7 @@ export default async function AdminPage({searchParams}:{searchParams:Promise<{ta
  if(params.tab==="Customers")redirect("/admin/customers");
  if(params.tab==="Inventory")redirect("/admin/inventory");
  if(params.tab==="Orders")redirect("/admin/orders");
+ if(params.tab==="Custom Pages")redirect("/admin/custom-pages");
  if(params.tab==="Product SEO")redirect("/admin/products/seo");
  if(params.tab==="Products")redirect("/admin/products/manage");
  if(!params.tab){

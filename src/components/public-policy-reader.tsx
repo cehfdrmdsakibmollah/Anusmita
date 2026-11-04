@@ -4,6 +4,12 @@ import {BookOpen,Printer,Sun,Moon,ZoomIn,ZoomOut} from "lucide-react";
 import "./public-policy-reader.css";
 type PolicyBlock={id:string;type:"heading"|"paragraph"|"callout"|"bullet"|"numbered"|"faq"|"quote"|"divider";text:string;textBn?:string;answer?:string;answerBn?:string};
 type Props={title:string;titleBn?:string;description:string;descriptionBn?:string;blocks:PolicyBlock[];updatedAt?:string};
+/** Safely convert a small allowlisted formatting syntax into React nodes.
+ * No HTML parsing, script injection or user CSS execution. */
+function inlineText(value:string){
+ const chunks=value.split(/(\*\*[^*\n]+\*\*|\+\+[^+\n]+\+\+|\*[^*\n]+\*)/g);
+ return chunks.map((v,i)=>v.startsWith("**")&&v.endsWith("**")?<strong key={i}>{v.slice(2,-2)}</strong>:v.startsWith("++")&&v.endsWith("++")?<u key={i}>{v.slice(2,-2)}</u>:v.startsWith("*")&&v.endsWith("*")?<em key={i}>{v.slice(1,-1)}</em>:v);
+}
 export default function PublicPolicyReader({title,titleBn,description,descriptionBn,blocks,updatedAt}:Props){
  const [lang,setLang]=useState<"en"|"bn">("en"),[dark,setDark]=useState(false),[font,setFont]=useState(16);
  const content=(b:PolicyBlock)=>lang==="bn"&&b.textBn?.trim()?b.textBn:b.text;
@@ -30,13 +36,13 @@ export default function PublicPolicyReader({title,titleBn,description,descriptio
    {headings.length>1&&<nav className="anPolicyToc" aria-label="Table of contents"><strong>On this page</strong>{headings.map(({b,i})=><a key={b.id} href={"#policy-section-"+i}>{content(b)}</a>)}</nav>}
    <div className="anPolicyBlocks" lang={lang} dir="auto">{blocks.map((b,i)=>{
     const t=content(b);
-    if(b.type==="heading")return <h2 id={"policy-section-"+i} key={b.id}>{t}</h2>;
+    if(b.type==="heading")return <h2 id={"policy-section-"+i} key={b.id}>{inlineText(t)}</h2>;
     if(b.type==="divider")return <hr key={b.id}/>;
-    if(b.type==="quote")return <blockquote key={b.id}>{t}</blockquote>;
-    if(b.type==="callout")return <aside key={b.id} className="anPolicyCallout">{t}</aside>;
-    if(b.type==="faq")return <details key={b.id} className="anPolicyFaq"><summary>{t}</summary><p>{answer(b)}</p></details>;
-    if(b.type==="bullet"||b.type==="numbered"){const items=t.split("\n").map(v=>v.trim()).filter(Boolean);return b.type==="bullet"?<ul key={b.id}>{items.map((v,k)=><li key={k}>{v}</li>)}</ul>:<ol key={b.id}>{items.map((v,k)=><li key={k}>{v}</li>)}</ol>;}
-    return <p key={b.id}>{t}</p>;
+    if(b.type==="quote")return <blockquote key={b.id}>{inlineText(t)}</blockquote>;
+    if(b.type==="callout")return <aside key={b.id} className="anPolicyCallout">{inlineText(t)}</aside>;
+    if(b.type==="faq")return <details key={b.id} className="anPolicyFaq"><summary>{inlineText(t)}</summary><p>{inlineText(answer(b))}</p></details>;
+    if(b.type==="bullet"||b.type==="numbered"){const items=t.split("\n").map(v=>v.trim()).filter(Boolean);return b.type==="bullet"?<ul key={b.id}>{items.map((v,k)=><li key={k}>{inlineText(v)}</li>)}</ul>:<ol key={b.id}>{items.map((v,k)=><li key={k}>{inlineText(v)}</li>)}</ol>;}
+    return <p key={b.id}>{inlineText(t)}</p>;
    })}</div>
   </div>
  </article>;
