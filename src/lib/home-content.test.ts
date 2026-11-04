@@ -35,6 +35,17 @@ describe("ANUSMITA homepage CMS safety",()=>{
   expect(blockSchema.safeParse({...b,href:"https://phishing.example"}).success).toBe(false);
   expect(blockSchema.safeParse({...b,startsAt:"2026-10-26T08:00:00.000Z",endsAt:"2026-10-25T08:00:00.000Z"}).success).toBe(false);
  });
+ it("validates countdown offer CRUD and public scheduling without changing commerce data",()=>{
+  const offer={...homeStarterBlocks.find(b=>b.kind==="promotion")!,id:"b1505d56-c237-4209-9bd7-2a7e4c7d9968",title:"Eid countdown offer",startsAt:"2026-11-08T12:00:00.000Z",endsAt:"2026-11-10T12:00:00.000Z",enabled:true};
+  expect(blockSchema.safeParse(offer).success).toBe(true);
+  expect(cmsOperation.safeParse({action:"add",revision:3,block:offer}).success).toBe(true);
+  expect(cmsOperation.safeParse({action:"edit",revision:4,block:{...offer,title:"Updated Eid offer"}}).success).toBe(true);
+  expect(cmsOperation.safeParse({action:"delete",revision:5,id:offer.id}).success).toBe(true);
+  expect(publicBlocks([offer],new Date("2026-11-07T10:00:00Z"))).toEqual([]);
+  expect(publicBlocks([offer],new Date("2026-11-09T10:00:00Z"))).toHaveLength(1);
+  expect(publicBlocks([offer],new Date("2026-11-11T10:00:00Z"))).toEqual([]);
+  expect(blockSchema.safeParse({...offer,startsAt:"2026-11-12T12:00:00Z"}).success).toBe(false);
+ });
  it("requires versioned operations and valid data",()=>{
   expect(cmsOperation.safeParse({action:"add",revision:0,block:homeStarterBlocks[0]}).success).toBe(true);
   expect(cmsOperation.safeParse({action:"delete",revision:0,id:homeStarterBlocks[0].id}).success).toBe(true);
