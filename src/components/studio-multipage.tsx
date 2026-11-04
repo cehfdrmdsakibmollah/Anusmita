@@ -47,7 +47,7 @@ export default function StudioMultiPage({view,onChange}:{view:string;onChange:(v
       {(["desktop","tablet","mobile"] as const).map(d=><button key={d} type="button" aria-pressed={previewDevice===d} className={previewDevice===d?"smp-selected-device":""} onClick={()=>setPreviewDevice(d)}>{d}</button>)}
       <button onClick={()=>setPreviewKey(k=>k+1)}><RefreshCw size={15}/> Reload</button><a href={activeRoute.path} target="_blank" rel="noreferrer"><ExternalLink size={15}/> Open page</a>
     </div></div>
-    {(["Shop","Deals","Bundles","About","Contact","Journal","Cart","Checkout","Gift Cards","Pre-orders","Customer Stories","Wishlist","Routine Quiz","Track Order"].includes(activeRoute.name))&&<CmsPageSlotsEditor page={activeRoute.path.replace(/^\\//,"").split("/")[0] as CmsSlotPage} onPublished={()=>setPreviewKey(k=>k+1)}/>}
+    {(["Shop","Deals","Bundles","About","Contact","Journal","Cart","Checkout","Gift Cards","Pre-orders","Customer Stories","Wishlist","Routine Quiz","Track Order"].includes(activeRoute.name))&&<CmsPageSlotsEditor page={activeRoute.path.split("/").filter(Boolean)[0] as CmsSlotPage} onPublished={()=>setPreviewKey(k=>k+1)}/>}
     <div className="smp-native-layout">
       <section className="smp-native-structure"><h3>Page sections</h3><div className="smp-native-list">
         <div><LayoutGrid size={17}/><span>{activeRoute.name} storefront</span><small>Actual running route</small></div>
