@@ -6,8 +6,9 @@ import {db} from "@/lib/db";
 export const runtime="nodejs";
 const MAX=1024*1024;
 function config(){
- const base=process.env.R2_MEDIA_URL,secret=process.env.R2_MEDIA_SECRET;
- if(!base||!secret||secret.length<32)throw new HttpError(503,"Profile media storage unavailable");
+ const base=process.env.R2_MEDIA_URL?.trim()||"https://anusmita-media.mdsakibmolla545.workers.dev/";
+ const secret=process.env.R2_MEDIA_SECRET;
+ if(!secret||secret.length<32)throw new HttpError(503,"Profile media storage unavailable");
  const u=new URL(base);
  if(u.origin!=="https://anusmita-media.mdsakibmolla545.workers.dev"||u.pathname!=="/"||u.search||u.hash)throw new HttpError(503,"Media storage misconfigured");
  return {base:u.origin,headers:{Authorization:"Bearer "+secret}};
