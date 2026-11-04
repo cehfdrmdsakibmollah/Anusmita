@@ -5,6 +5,7 @@ import {Home,ShoppingCart,Package,Boxes,Users,Settings,BookOpen,Image,Layers,Lay
 import type {HomeBlock,HomeSection} from "@/lib/home-content";
 import {blockSchema} from "@/lib/home-content";
 import HomepageManager from "@/components/homepage-manager";
+import HomepageCountdown from "@/components/homepage-countdown";
 import StudioMultiPage from "@/components/studio-multipage";
 import "./homepage-studio-v2.css";
 
@@ -23,6 +24,7 @@ export default function HomepageStudioV2(){
  const [draft,setDraft]=useState<HomeBlock|null>(null),[device,setDevice]=useState<Device>("desktop"),[inspector,setInspector]=useState<Inspector>("content"),[mode,setMode]=useState<SectionMode>("sections");
  const [message,setMessage]=useState(""),[busy,setBusy]=useState(false),[query,setQuery]=useState(""),[showDraft,setShowDraft]=useState(true),[libraryOpen,setLibraryOpen]=useState(true),[legacyOpen,setLegacyOpen]=useState(false),[activePage,setActivePage]=useState("Homepage"),[confirmDelete,setConfirmDelete]=useState(false);
  const [shelfOpen,setShelfOpen]=useState(false);
+ const [offerOpen,setOfferOpen]=useState(true);
  const importRef=useRef<HTMLInputElement|null>(null);
  const [showHelp,setShowHelp]=useState(false);
  async function load(){
@@ -34,6 +36,8 @@ export default function HomepageStudioV2(){
  const blocks=useMemo(()=>{if(!config)return [];return config.blocks.map(b=>draft?.id===b.id?draft:b).concat(draft&&!config.blocks.some(b=>b.id===draft.id)?[draft]:[]).sort((a,b)=>kinds.indexOf(a.kind)-kinds.indexOf(b.kind)||a.position-b.position);},[config,draft]);
  const visible=useMemo(()=>blocks.filter(b=>(showDraft||b.enabled)&&(!query||[b.title,b.kind,b.subtitle].join(" ").toLowerCase().includes(query.toLowerCase()))),[blocks,showDraft,query]);
  const active=selected?blocks.find(b=>b.id===selected)||null:null;
+ const offers=blocks.filter(b=>b.kind==="promotion").sort((a,b)=>a.position-b.position);
+ const offerStatus=(b:HomeBlock)=>{const now=Date.now();if(!b.enabled)return "Draft";if(b.startsAt&&Date.parse(b.startsAt)>now)return "Scheduled";if(b.endsAt&&Date.parse(b.endsAt)<=now)return "Expired";return "Live";};
  const dirty=!!draft&&(JSON.stringify(config?.blocks.find(b=>b.id===draft.id))!==JSON.stringify(draft));
  const selectedKind=active?.kind||"hero";
  function choose(b:HomeBlock){if(dirty&&selected!==b.id&&!window.confirm("Discard unsaved changes to this card?"))return;setSelected(b.id);setDraft({...b});setInspector("content");setConfirmDelete(false);}
@@ -46,7 +50,10 @@ export default function HomepageStudioV2(){
    setConfig(body);setDraft(null);setSelected(null);setMessage("Saved to the live homepage CMS. Refresh the storefront to see published items.");return true;
   }catch(e){setMessage("Error: "+(e instanceof Error?e.message:String(e)));return false;}finally{setBusy(false);}
  }
- async function save(){if(!draft||!config)return;const parsed=blockSchema.safeParse(draft);if(!parsed.success){setMessage("Validation: "+parsed.error.issues.map(i=>i.message).join("; "));return;}
+ async function save(){if(!draft||!config)return;
+  if(draft.kind==="promotion"&&!config.blocks.some(b=>b.id===draft.id)&&!draft.endsAt){setMessage("Validation: countdown offers require a deadline. Choose Offer ends at before saving.");setInspector("content");return;}
+  if(draft.kind==="promotion"&&draft.enabled&&draft.endsAt&&Date.parse(draft.endsAt)<=Date.now()){setMessage("Validation: published countdown end time must be in the future.");setInspector("content");return;}
+  const parsed=blockSchema.safeParse(draft);if(!parsed.success){setMessage("Validation: "+parsed.error.issues.map(i=>i.message).join("; "));return;}
   const existing=config.blocks.some(b=>b.id===draft.id);
   if(draft.enabled&&!window.confirm("This saves a published card to the public storefront immediately. Continue?"))return;
   await operation({action:existing?"edit":"add",block:parsed.data});
@@ -88,6 +95,25 @@ export default function HomepageStudioV2(){
    <div className="avs-stats">
     {[[Home,"Active Page","Homepage"],[Layers,"Sections",String(blocks.length)],[LayoutGrid,"Components",String(config.sections.length)],[AlertTriangle,"Draft Changes",dirty?"1 unsaved":"No unsaved edits"],[CheckCircle2,"Saved Revision",String(config.revision)],[ShieldCheck,"Permissions","Owner / Admin"],[Eye,"Preview","Responsive"],[CheckCircle2,"CMS Status",config.saved?"Connected":"Starter Layout"]].map(([I,label,value],i)=><div className="avs-stat" key={i}><span className="avs-stat-icon">{typeof I!=="string"&&<I size={22}/>}</span><div><small>{label as string}</small><strong>{value as string}</strong></div></div>)}
    </div>
+   <section className="avs-offer-control" aria-label="Homepage countdown offers">
+    <div className="avs-offer-control-heading">
+     <div><h2><Clock size={18}/> Countdown Offer Manager</h2><p>Create, edit, schedule, publish or delete homepage countdown banners. No product prices or inventory are changed.</p></div>
+     <div className="avs-offer-control-actions">
+      <button type="button" onClick={()=>setOfferOpen(v=>!v)} aria-expanded={offerOpen}>{offerOpen?"Hide offers":"Show offers"}</button>
+      <button type="button" className="avs-primary" onClick={()=>{create("promotion");setOfferOpen(true);setInspector("content");}}><Plus size={15}/> Create Countdown Offer</button>
+     </div>
+    </div>
+    {offerOpen&&<div className="avs-offer-list">
+     {offers.length===0&&<p className="avs-offer-empty">No offers have been saved yet. Use Create Countdown Offer to add one.</p>}
+     {offers.map(b=><div className="avs-offer-card" key={b.id}>
+      <div className="avs-offer-card-info"><span className={"avs-offer-status "+offerStatus(b).toLowerCase()}>{offerStatus(b)}</span><strong>{b.title}</strong><small>{b.endsAt?"Deadline: "+new Date(b.endsAt).toLocaleString("en-BD",{timeZone:"Asia/Dhaka"}):"No deadline set (legacy banner)"}</small>
+      {b.enabled&&b.endsAt&&Date.parse(b.endsAt)>Date.now()&&<HomepageCountdown endsAt={b.endsAt}/>}</div>
+      <div className="avs-offer-card-buttons"><button type="button" onClick={()=>{choose(b);setInspector("content");}} aria-label={"Edit "+b.title}>Edit</button>
+      <button type="button" onClick={()=>{choose(b);setInspector("advanced");}} aria-label={"Update publishing "+b.title}>Publish / Schedule</button>
+      <button type="button" className="avs-offer-delete" onClick={()=>{if(dirty&&selected!==b.id&&!window.confirm("Discard unsaved changes before deleting?"))return;if(!window.confirm("Permanently delete countdown offer: "+b.title+"?"))return;void operation({action:"delete",id:b.id});}} aria-label={"Delete "+b.title}><Trash2 size={15}/></button></div>
+     </div>)}
+    </div>}
+   </section>
    <div className="avs-page-switch"><label>Page <select value={activePage} onChange={e=>setActivePage(e.target.value)}><option>Homepage</option><option>Shop</option><option>Deals</option><option>Bundles</option><option>Journal</option><option>About</option><option>Contact</option><option>Cart</option><option>Checkout</option><option>Gift Cards</option><option>Pre-orders</option><option>Customer Stories</option><option>Wishlist</option><option>Routine Quiz</option><option>Track Order</option><option>Custom Page</option></select></label><span>{activePage==="Homepage"?"Homepage visual editor":activePage==="Custom Page"?"Custom landing-page editor":"Existing storefront route · CMS integration pending"}</span></div>
    {message&&<div className={"avs-inline-notice"+(message.startsWith("Error")||message.startsWith("Validation")?" error":"")} role="status">{message}<button type="button" aria-label="Dismiss message" onClick={()=>setMessage("")}><X size={15}/></button></div>}
    {activePage!=="Homepage"?<StudioMultiPage view={activePage} onChange={setActivePage}/>:<><div className="avs-workspace">
@@ -112,7 +138,13 @@ export default function HomepageStudioV2(){
     </section>
     <section className="avs-rightpane"><div className="avs-tabs">{(["content","style","advanced"] as const).map(x=><button key={x} onClick={()=>setInspector(x)} className={inspector===x?"active":""}>{x}</button>)}</div>
      {active&&draft?<div className="avs-inspector"><h3>{labels[selectedKind]} Settings</h3>
-      {inspector==="content"?<><h4>⌄ Content</h4><label>Title<input maxLength={100} value={draft.title} onChange={e=>patch("title",e.target.value)}/></label><label>Subtitle<textarea maxLength={220} rows={3} value={draft.subtitle} onChange={e=>patch("subtitle",e.target.value)}/></label><label>Badge / eyebrow<input maxLength={65} value={draft.label} onChange={e=>patch("label",e.target.value)}/></label><div className="avs-form-two"><label>Primary Button<input maxLength={40} value={draft.cta} onChange={e=>patch("cta",e.target.value)}/></label><label>Destination<input value={draft.href} onChange={e=>patch("href",e.target.value)}/></label></div><h4>Media (Banner Image)</h4>{draft.imageUrl&&<img className="avs-media-thumb" src={draft.imageUrl} alt="Current banner"/>}<label>Approved image URL<input value={draft.imageUrl} onChange={e=>patch("imageUrl",e.target.value)} placeholder="/brand/categories/skincare.webp"/></label><p className="avs-hint">Use approved brand images or supported Cloudinary HTTPS images. Existing R2 upload workflows remain separate.</p></>:inspector==="style"?<><h4>Section appearance</h4><p className="avs-hint">Reference-based burgundy and blush styling is used in this editor. Rich typography, per-block CSS tokens, parallax, and custom animations require a separate validated schema before they can be saved safely.</p><label>Preview mode<select value={device} onChange={e=>setDevice(e.target.value as Device)}><option value="desktop">Desktop</option><option value="tablet">Tablet</option><option value="mobile">Mobile</option></select></label><div className="avs-color-samples"><span/><span/><span/><span/></div></>:<><h4>Publishing controls</h4><label className="avs-check"><input type="checkbox" checked={draft.enabled} onChange={e=>patch("enabled",e.target.checked)}/> Show this block on the public homepage</label><label>Display start<input type="datetime-local" value={localTime(draft.startsAt)} onChange={e=>patch("startsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label><label>Display end<input type="datetime-local" value={localTime(draft.endsAt)} onChange={e=>patch("endsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label><p className="avs-hint">The current API saves to the CMS immediately. Independent publishing approval, rollback and CDN purge are not implemented here.</p></>}
+      {inspector==="content"?<><h4>⌄ Content</h4><label>Title<input maxLength={100} value={draft.title} onChange={e=>patch("title",e.target.value)}/></label><label>Subtitle<textarea maxLength={220} rows={3} value={draft.subtitle} onChange={e=>patch("subtitle",e.target.value)}/></label><label>Badge / eyebrow<input maxLength={65} value={draft.label} onChange={e=>patch("label",e.target.value)}/></label><div className="avs-form-two"><label>Primary Button<input maxLength={40} value={draft.cta} onChange={e=>patch("cta",e.target.value)}/></label><label>Destination<input value={draft.href} onChange={e=>patch("href",e.target.value)}/></label></div>{draft.kind==="promotion"&&<div className="avs-countdown-fields">
+    <h4>Countdown Timer & Offer Schedule</h4>
+    <label>Offer begins at (optional)<input type="datetime-local" value={localTime(draft.startsAt)} onChange={e=>patch("startsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label>
+    <label>Offer ends at (required for new countdown offers)<input type="datetime-local" value={localTime(draft.endsAt)} onChange={e=>patch("endsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label>
+    <p className="avs-hint">Dates use your device's local timezone and are saved in UTC. Once expired, the offer automatically disappears from the public homepage. Change only merchandising copy here; real discounts must be configured separately in Products.</p>
+    {draft.endsAt&&Date.parse(draft.endsAt)>Date.now()&&<div className="avs-countdown-preview"><strong>Live timer preview</strong><HomepageCountdown endsAt={draft.endsAt}/></div>}
+   </div>}<h4>Media (Banner Image)</h4>{draft.imageUrl&&<img className="avs-media-thumb" src={draft.imageUrl} alt="Current banner"/>}<label>Approved image URL<input value={draft.imageUrl} onChange={e=>patch("imageUrl",e.target.value)} placeholder="/brand/categories/skincare.webp"/></label><p className="avs-hint">Use approved brand images or supported Cloudinary HTTPS images. Existing R2 upload workflows remain separate.</p></>:inspector==="style"?<><h4>Section appearance</h4><p className="avs-hint">Reference-based burgundy and blush styling is used in this editor. Rich typography, per-block CSS tokens, parallax, and custom animations require a separate validated schema before they can be saved safely.</p><label>Preview mode<select value={device} onChange={e=>setDevice(e.target.value as Device)}><option value="desktop">Desktop</option><option value="tablet">Tablet</option><option value="mobile">Mobile</option></select></label><div className="avs-color-samples"><span/><span/><span/><span/></div></>:<><h4>Publishing controls</h4><label className="avs-check"><input type="checkbox" checked={draft.enabled} onChange={e=>patch("enabled",e.target.checked)}/> Show this block on the public homepage</label><label>Display start<input type="datetime-local" value={localTime(draft.startsAt)} onChange={e=>patch("startsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label><label>Display end<input type="datetime-local" value={localTime(draft.endsAt)} onChange={e=>patch("endsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label><p className="avs-hint">The current API saves to the CMS immediately. Independent publishing approval, rollback and CDN purge are not implemented here.</p></>}
       <div className="avs-editor-actions"><button onClick={()=>void save()} className="avs-primary" disabled={!dirty||busy}><Save size={14}/> {busy?"Saving…":"Save Changes"}</button><button onClick={duplicate} title="Duplicate as unpublished draft"><Copy size={16}/></button><button onClick={()=>void remove()} title={confirmDelete?"Confirm delete":"Delete"} className={confirmDelete?"avs-danger":""}><Trash2 size={16}/>{confirmDelete?"Confirm":""}</button></div>
       {dirty&&<p className="avs-dirty"><AlertTriangle size={13}/> Unsaved preview changes</p>}
      </div>:<div className="avs-placeholder"><SlidersHorizontal size={27}/><strong>Select a section to edit</strong><p>Click any hero, category card or left-side section to open its settings.</p></div>}
