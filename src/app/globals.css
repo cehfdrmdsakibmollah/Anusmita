@@ -2078,3 +2078,13 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
 .anPdpVolumeOptions button small{font-size:10px;color:#765064}
 .anPdpSavedAmount,.anBulkCartSave{display:block;color:#168044;font-size:11px;font-weight:700;margin-top:6px}
 @media(max-width:460px){.anPdpVolumeOptions{gap:5px}.anPdpVolumeOptions button{padding:10px 6px;min-height:108px}.anPdpVolumeHeading strong{font-size:17px}}
+
+
+.anPdpLightboxViewport{display:flex;align-items:center;justify-content:center;width:min(100%,1100px);height:calc(100vh - 180px);overflow:hidden;touch-action:none;cursor:grab;border-radius:10px}
+.anPdpLightboxViewport:active{cursor:grabbing}
+.anPdpLightboxViewport img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;background:#fffbf9;border-radius:9px;transform-origin:center center;user-select:none;pointer-events:none}
+.anPdpLightboxZoomControls{position:absolute;top:19px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:#ffffffef;border-radius:28px;padding:6px 9px;z-index:2;box-shadow:0 4px 18px #0003}
+.anPdpLightboxZoomControls button{display:grid;place-items:center;width:35px;height:35px;border:1px solid #eac9d5;border-radius:50%;background:#fff;color:#81153c;cursor:pointer}
+.anPdpLightboxZoomControls button:disabled{opacity:.4;cursor:default}
+.anPdpLightboxZoomControls span{font:700 12px Arial,sans-serif;min-width:42px;text-align:center;color:#641932}
+@media(max-width:600px){.anPdpLightbox{padding:56px 10px 65px}.anPdpLightboxViewport{height:calc(100dvh - 150px)}.anPdpLightboxHelp{bottom:13px;font-size:10px;white-space:normal;text-align:center;max-width:240px}.anPdpLightboxZoomControls{top:14px;left:15px;transform:none}.anPdpLightboxClose{right:13px;top:14px}.anPdpLightboxNav{inset:auto 12px 50% 12px}}
