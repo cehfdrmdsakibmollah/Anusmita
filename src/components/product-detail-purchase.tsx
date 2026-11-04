@@ -1,5 +1,5 @@
-
 "use client";
+import RichProductDescription from "@/components/rich-product-description";
 import {useEffect,useState} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
@@ -76,7 +76,7 @@ export default function ProductDetailPurchase({product,siblings,preview=false}:P
    <p className="anPdpPrice">{money(product.pricePaisa)}
     <span className="anPdpPriceCaption">BDT · exact price for selected size</span></p>}
   {!preview&&unit&&<p className="pd-unit">{money(unit.paisa)} / {unit.unit}</p>}
-  {product.description?<p className="anPdpDescription">{product.description}</p>:
+  {product.description?<div className="anPdpDescription"><RichProductDescription text={product.description}/></div>:
    <p className="anPdpDescription">Thoughtfully selected for the ANUSMITA collection. Please check the product details and available sizes.</p>}
   {colours.length>0&&<fieldset className="pd-colours"><legend>Colour / shade: <strong>{product.color}</strong></legend><div>{colours.map(c=><Link key={c.color} href={'/products/'+c.slug} aria-current={c.selected?'page':undefined} className={c.selected?'selected':''}>{/^#[0-9a-f]{6}$/i.test(c.hex)&&<i style={{background:c.hex}}/>}{c.color}</Link>)}</div></fieldset>}
   {perfume?<div className="anPdpVariantArea">

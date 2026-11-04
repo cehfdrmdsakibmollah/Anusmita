@@ -285,3 +285,20 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 .seoDashboard:has(.apReferenceGrid) .apPublishQuick button{border:1px solid #ebc6d1;border-radius:7px;background:#fff7f9;color:#801338;font-size:10px;padding:7px 10px;cursor:pointer;font-weight:700}
 .seoDashboard:has(.apReferenceGrid) .apPublishQuick button.chosen{background:#8d1238;border-color:#8d1238;color:#fff}
 .seoDashboard:has(.apReferenceGrid) .apScheduleField{width:100%}
+
+/* Product editor functional polish */
+.seoDashboard:has(.apReferenceGrid) .apToolbarActions .apTopNewProduct{background:linear-gradient(135deg,#a31b53,#70092d);color:#fff;border:1px solid #750c35;font-weight:800;box-shadow:0 4px 12px #75103c26;order:-1}
+.seoDashboard:has(.apReferenceGrid) .apInlinePhotoManager{margin-top:13px;padding:10px;background:#fff;border:1px solid #eed0dc;border-radius:9px;min-width:0}
+.seoDashboard:has(.apReferenceGrid) .apInlinePhotoManager h3{font:700 14px Georgia,serif;color:#7d143b;margin:0 0 7px}
+.seoDashboard:has(.apReferenceGrid) .apInlinePhotoManager .smallprint{font-size:10px;line-height:1.5;margin-bottom:9px}
+.seoDashboard:has(.apReferenceGrid) .apInlinePhotoManager .mediaEditorGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:9px}
+.seoDashboard:has(.apReferenceGrid) .apInlinePhotoManager .mediaEditorCard{min-width:0;display:flex;flex-direction:column;gap:5px;border:1px solid #ebcad7;border-radius:8px;padding:6px;background:#fff9fb}
+.seoDashboard:has(.apReferenceGrid) .apInlinePhotoManager .mediaEditorCard img{width:100%;height:92px;object-fit:cover;border-radius:6px}
+.seoDashboard:has(.apReferenceGrid) .apInlinePhotoManager .mediaEditorActions{display:flex;flex-wrap:wrap;gap:4px}
+.seoDashboard:has(.apReferenceGrid) .apInlinePhotoManager .mediaEditorActions button{font-size:10px;padding:5px;border:1px solid #e3bacb;border-radius:5px;white-space:normal;background:#fff;color:#87133f;flex-grow:1}
+.seoDashboard:has(.apReferenceGrid) .apInlinePhotoManager .mediaEditorActions button:disabled{opacity:.45}
+.seoDashboard:has(.apReferenceGrid) .apInlinePhotoManager .mediaEditorCard:first-child{border:2px solid #a5265a}
+.seoDashboard:has(.apReferenceGrid) .apDetails .anRichProductEditor textarea{font-size:12px;line-height:1.6;min-height:175px}
+@media(max-width:720px){.seoDashboard:has(.apReferenceGrid) .apToolbarActions .apTopNewProduct{flex:1 0 100%}.seoDashboard:has(.apReferenceGrid) .apInlinePhotoManager .mediaEditorGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.seoDashboard .apTaxFormError{padding:9px 11px;border-radius:6px;background:#fff0f2;color:#a20d36;border:1px solid #edb5c4;font-size:12px;line-height:1.4}
