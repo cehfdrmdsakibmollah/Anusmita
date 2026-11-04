@@ -7,6 +7,8 @@ type Payload={page:CmsSlotPage;revision:number;publishedRevision:number;draft:Cm
 const fresh=(position:number,kind:CmsSlot["kind"]="banner"):CmsSlot=>({id:crypto.randomUUID(),placement:"before",kind,style:{...defaultCmsStyle},title:"New ANUSMITA Collection",subtitle:"Discover what is new and thoughtfully curated.",badge:"ANUSMITA EDIT",imageUrl:"",cta:"Explore Collection",href:"/shop",enabled:true,position});
 export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;onPublished?:()=>void}){
  const jsonInput=useRef<HTMLInputElement|null>(null);
+ const mediaInput=useRef<HTMLInputElement|null>(null);
+ const [mediaBusy,setMediaBusy]=useState(false);
  const [createKind,setCreateKind]=useState<CmsSlot["kind"]>("banner");
  const [inspectorTab,setInspectorTab]=useState<"content"|"design"|"publish">("content");
  const [record,setRecord]=useState<Payload|null>(null),[slots,setSlots]=useState<CmsSlot[]>([]),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[mode,setMode]=useState<"draft"|"published">("draft");
@@ -16,6 +18,20 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
  function exportJson(){
   const blob=new Blob([JSON.stringify({format:"anusmita-cms-slots",version:1,page,slots},null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=page+"-cms-sections.json";a.click();URL.revokeObjectURL(url);
+ }
+ async function uploadImage(file:File){
+  if(!selectedSlot){setNotice("Select a section first.");return;}
+  if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size<=0||file.size>3*1024*1024){setNotice("Choose a JPEG, PNG or WebP image under 3 MB.");return;}
+  const targetId=selectedSlot.id;
+  setMediaBusy(true);setNotice("Uploading CMS image…");
+  try{
+   const form=new FormData();form.set("page",page);form.set("file",file);
+   const r=await fetch("/api/admin/cms-page-slots/media",{method:"POST",body:form});
+   const data=await r.json();if(!r.ok)throw Error(data.error||"Upload failed");
+   setSlots(old=>old.map(x=>x.id===targetId?{...x,imageUrl:data.url}:x));
+   setNotice("Image uploaded to R2 and added to the unsaved section. Save Draft and Publish to make it public.");
+  }catch(e){setNotice("Upload failed: "+(e instanceof Error?e.message:String(e)));}
+  finally{setMediaBusy(false);}
  }
  async function importJson(file:File){
   if(file.size>100000){setNotice("Import rejected: file must be under 100 KB");return;}
@@ -62,7 +78,7 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
     <label>Subtitle<textarea rows={4} maxLength={400} value={selectedSlot.subtitle} onChange={e=>update({subtitle:e.target.value})}/></label>
     <label>Badge<input value={selectedSlot.badge} maxLength={60} onChange={e=>update({badge:e.target.value})}/></label>
     <label>Image URL<input value={selectedSlot.imageUrl} maxLength={500} placeholder="/brand/categories/skincare.webp" onChange={e=>update({imageUrl:e.target.value})}/></label>
-    <p className="cse-muted">Use an existing approved R2/brand media URL. Existing image files remain untouched.</p>
+    <div className="cse-media-upload"><input type="file" hidden ref={mediaInput} accept="image/jpeg,image/png,image/webp" onChange={e=>{const file=e.currentTarget.files?.[0];if(file)void uploadImage(file);e.currentTarget.value="";}}/><button type="button" disabled={mediaBusy} onClick={()=>mediaInput.current?.click()}>{mediaBusy?"Uploading…":"Upload CMS image to R2"}</button></div><p className="cse-muted">JPEG/PNG/WebP, maximum 3 MB. Upload creates a new CMS asset and does not touch product photos. Save Draft and Publish to use it.</p>
     <label>Button label<input value={selectedSlot.cta} maxLength={48} onChange={e=>update({cta:e.target.value})}/></label>
     <label>Button URL<input value={selectedSlot.href} maxLength={250} onChange={e=>update({href:e.target.value})}/></label>
    </>}
