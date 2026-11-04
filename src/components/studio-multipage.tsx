@@ -22,7 +22,7 @@ const routes=[
  {name:"Track Order",path:"/track-order",editor:"/admin?tab=Orders",note:"Tracking depends on verified order status and courier integrations."}
 ] as const;
 export default function StudioMultiPage({view,onChange}:{view:string;onChange:(value:string)=>void}){
- const [pages,setPages]=useState<Page[]>([]),[page,setPage]=useState<Page|null>(null),[chosen,setChosen]=useState<string>(""),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[loading,setLoading]=useState(false);
+ const [previewDevice,setPreviewDevice]=useState<"desktop"|"tablet"|"mobile">("desktop"),[previewKey,setPreviewKey]=useState(0);const [pages,setPages]=useState<Page[]>([]),[page,setPage]=useState<Page|null>(null),[chosen,setChosen]=useState<string>(""),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[loading,setLoading]=useState(false);
  const activeRoute=routes.find(r=>r.name===view);
  async function load(preserve=true){setLoading(true);try{const r=await fetch("/api/admin/content-pages",{cache:"no-store"});const d=await r.json();if(!r.ok)throw Error(d.error||"Unable to load pages");const all=d.pages as Page[];setPages(all||[]);if(preserve&&page?.slug){const updated=all.find(x=>x.slug===page.slug);if(updated)setPage({slug:updated.slug,title:updated.title,description:updated.description||"",published:updated.published,revision:updated.revision,blocks:updated.blocks.map(b=>({id:b.id,type:b.type,text:b.text}))});} }catch(e){setNotice("Error: "+String(e));}finally{setLoading(false);}}
  useEffect(()=>{void load(false);},[]);
@@ -40,7 +40,28 @@ export default function StudioMultiPage({view,onChange}:{view:string;onChange:(v
    <label>Saved custom pages <select value={chosen} onChange={e=>choosePage(e.target.value)}><option value="">Select a custom page…</option>{pages.map(p=><option key={p.slug} value={p.slug}>{p.title} — /pages/{p.slug}</option>)}</select></label>
    <span>{pages.length} custom page(s)</span>
   </div>
-  {activeRoute?<div className="smp-route"><Info size={26}/><h3>{activeRoute.name} — Existing storefront route</h3><p>{activeRoute.note}</p><p>To avoid overwriting product logic or custom forms, editing this native route is not enabled in the Universal CMS yet. It requires explicit page-slot integration in the existing route.</p><div className="smp-actions"><a href={activeRoute.path} target="_blank" rel="noreferrer"><Eye size={15}/> View Current Page</a><a href={activeRoute.editor}><ExternalLink size={15}/> Existing Management Tools</a><button onClick={create}><Plus size={15}/> Create Landing Page</button></div></div>:
+  {activeRoute?<div className="smp-native-workspace">
+    <div className="smp-native-toolbar"><div><strong>{activeRoute.name} — Actual storefront preview</strong><span>Rendering the real route, not placeholder cards</span></div><div className="smp-actions">
+      {(["desktop","tablet","mobile"] as const).map(d=><button key={d} type="button" aria-pressed={previewDevice===d} className={previewDevice===d?"smp-selected-device":""} onClick={()=>setPreviewDevice(d)}>{d}</button>)}
+      <button onClick={()=>setPreviewKey(k=>k+1)}><RefreshCw size={15}/> Reload</button><a href={activeRoute.path} target="_blank" rel="noreferrer"><ExternalLink size={15}/> Open page</a>
+    </div></div>
+    <div className="smp-native-layout">
+      <section className="smp-native-structure"><h3>Page sections</h3><div className="smp-native-list">
+        <div><LayoutGrid size={17}/><span>{activeRoute.name} storefront</span><small>Actual running route</small></div>
+        <div><FileText size={17}/><span>Data & interactions</span><small>Loaded by native component</small></div>
+        <div><Eye size={17}/><span>Responsive preview</span><small>Desktop / tablet / mobile</small></div>
+      </div><p>The frame below shows actual route content. Product prices and stock remain managed by the catalog rather than mock CMS data.</p></section>
+      <div className="smp-native-canvas"><div className={"smp-frame-holder "+previewDevice}>
+       <iframe key={activeRoute.path+previewKey} src={activeRoute.path} title={activeRoute.name+" storefront preview"} loading="eager" referrerPolicy="same-origin"/>
+      </div></div>
+      <aside className="smp-native-inspector"><h3>{activeRoute.name} page</h3><label>Live route<input readOnly value={activeRoute.path}/></label>
+       <p>{activeRoute.note}</p><h4>Page management</h4><p>Existing route-specific components and data are rendered in the frame. This is not yet a drag-and-drop editor for those native components.</p>
+       <a href={activeRoute.editor}><ExternalLink size={15}/> Open existing content manager</a>
+       <button onClick={create}><Plus size={15}/> New custom landing page</button>
+       <p className="smp-native-warning">Shop, checkout, orders, wishlist and interactive flows are intentionally not overwritten. Opening this preview makes no database changes.</p>
+      </aside>
+    </div>
+   </div>:
    view==="Custom Page"?page?<div className="smp-columns">
     <section className="smp-list"><h3>Page Structure <span>{page.blocks.length} blocks</span></h3><div className="smp-items">{page.blocks.map((b,i)=><div className={"smp-item"+(selected===b.id?" active":"")} key={b.id}><button onClick={()=>setSelected(b.id)}><FileText size={14}/><span>{i+1}. {b.type} — {b.text.slice(0,20)}</span></button><button title="Move up" disabled={i===0} onClick={()=>move(i,-1)}><ArrowUp size={14}/></button><button title="Move down" disabled={i===page.blocks.length-1} onClick={()=>move(i,1)}><ArrowDown size={14}/></button></div>)}</div><h4>Block Library</h4><div className="smp-library">{(["heading","paragraph","callout"] as const).map(type=><button key={type} onClick={()=>addBlock(type)}><Plus size={14}/>{type}</button>)}</div></section>
     <section className="smp-preview"><div className="smp-browser"><span>Page Preview (unsaved changes)</span><a target="_blank" rel="noreferrer" href={page.slug?"/pages/"+page.slug:"#"}>Published URL <ExternalLink size={12}/></a></div><article><p className="smp-kicker">ANUSMITA · FASHION · BEAUTY</p><h1>{page.title}</h1>{page.blocks.map(b=><button className={"smp-preview-block"+(selected===b.id?" selected":"")} type="button" onClick={()=>setSelected(b.id)} key={b.id}>{b.type==="heading"?<h2>{b.text}</h2>:b.type==="callout"?<aside>{b.text}</aside>:<p>{b.text}</p>}</button>)}</article></section>
