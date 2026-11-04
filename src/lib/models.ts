@@ -13,7 +13,7 @@ const UserSchema = new Schema({
 const ProductSchema = new Schema({
  name:{type:String,required:true,trim:true},slug:{type:String,required:true,unique:true,lowercase:true,trim:true},
  sku:{type:String,required:true,unique:true,uppercase:true,trim:true}, brand:{type:String,default:""},
- category:{type:String,required:true},origin:{type:String,enum:["Bangladesh","China","Japan","Korea","Other"],default:"Other"},
+ category:{type:String,required:true},subcategoryId:{type:Schema.Types.ObjectId,ref:"CatalogCategory",default:null},origin:{type:String,enum:["Bangladesh","China","Japan","Korea","Other"],default:"Other"},
  description:{type:String,default:""}, imageUrls:{type:[String],default:[]},
  variantLabel:{type:String,default:"Standard"},size:{type:String,default:""},
  variantGroup:{type:String,default:"",trim:true,lowercase:true},
