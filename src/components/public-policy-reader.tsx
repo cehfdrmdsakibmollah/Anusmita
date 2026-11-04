@@ -7,7 +7,7 @@ type Props={title:string;titleBn?:string;description:string;descriptionBn?:strin
 /** Safely convert a small allowlisted formatting syntax into React nodes.
  * No HTML parsing, script injection or user CSS execution. */
 function inlineText(value:string){
- const chunks=value.split(/(\\*\\*[^*\\n]+\\*\\*|\\+\\+[^+\\n]+\\+\\+|\\*[^*\\n]+\\*)/g);
+ const chunks=value.split(/(\*\*[^*\n]+\*\*|\+\+[^+\n]+\+\+|\*[^*\n]+\*)/g);
  return chunks.map((v,i)=>v.startsWith("**")&&v.endsWith("**")?<strong key={i}>{v.slice(2,-2)}</strong>:v.startsWith("++")&&v.endsWith("++")?<u key={i}>{v.slice(2,-2)}</u>:v.startsWith("*")&&v.endsWith("*")?<em key={i}>{v.slice(1,-1)}</em>:v);
 }
 export default function PublicPolicyReader({title,titleBn,description,descriptionBn,blocks,updatedAt}:Props){
