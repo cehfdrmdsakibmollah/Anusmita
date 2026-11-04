@@ -17,8 +17,8 @@ export async function POST(request:Request){
  try{
   assertOrigin(request);
   const actor=await authorize(["owner","admin","sales","finance","inventory","purchasing","support","analyst"]);
-  const length=Number(request.headers.get("content-length"));
-  if(!length||length>MAX+16000)throw new HttpError(413,"Upload an image under 1 MB");
+  const contentLength=request.headers.get("content-length");
+  if(contentLength!==null){const length=Number(contentLength);if(!Number.isFinite(length)||length>MAX+16000)throw new HttpError(413,"Upload an image under 1 MB");}
   const data=await request.formData();
   const file=data.get("file");
   if(!(file instanceof File)||file.size<1||file.size>MAX||!["image/jpeg","image/png","image/webp"].includes(file.type))throw new HttpError(400,"Use JPEG, PNG or WebP under 1 MB");
@@ -32,7 +32,9 @@ export async function POST(request:Request){
   const key="public/staff-avatars/"+actor.id+"/"+randomUUID()+"."+ext;
   const url=c.base+"/"+key;
   const upload=await fetch(url,{method:"PUT",headers:{...c.headers,"Content-Type":file.type,"Content-Length":String(bytes.length)},body:new Uint8Array(bytes),signal:AbortSignal.timeout(20000)});
-  if(!upload.ok)throw new HttpError(502,"Avatar upload failed");
+  if(!upload.ok){console.error("Staff avatar R2 upload rejected",upload.status);throw new HttpError(502,"Cloudflare R2 rejected avatar upload (HTTP "+upload.status+"). Check Worker deployment and upload secret.");}
+  const check=await fetch(url,{method:"HEAD",signal:AbortSignal.timeout(10000)});
+  if(!check.ok)throw new HttpError(502,"Avatar was uploaded but image could not be read from Cloudflare R2");
   uploadedUrl=url;
   await db();
   const session=await mongoose.startSession();
