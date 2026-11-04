@@ -22,10 +22,10 @@ import type {ProductDetails} from "@/lib/product-experience";
 type DbProduct=ProductDetails&{
  _id:any;name:string;slug:string;sku:string;brand:string;category:string;origin:string;
  description:string;imageUrls:string[];size:string;variantLabel:string;variantGroup:string;
- pricePaisa:number;onHand:number;reserved:number;ingredients:string;usageInstructions:string;
+ pricePaisa:number;quantityDiscounts?:{minQty:2|3|5;percent:number}[];onHand:number;reserved:number;ingredients:string;usageInstructions:string;
  topNotes:string;heartNotes:string;baseNotes:string
 };
-const projection="name slug sku brand category origin description imageUrls size variantLabel variantGroup pricePaisa onHand reserved ingredients usageInstructions topNotes heartNotes baseNotes color colorHex material dimensions compatibility careInstructions warranty sizeGuide skinType benefits";
+const projection="name slug sku brand category origin description imageUrls size variantLabel variantGroup pricePaisa quantityDiscounts onHand reserved ingredients usageInstructions topNotes heartNotes baseNotes color colorHex material dimensions compatibility careInstructions warranty sizeGuide skinType benefits";
 const previewProduct:DbProduct={
  _id:"preview",name:"Radiance Eau de Parfum",slug:"design-preview",
  sku:"",brand:"ANUSMITA",category:"Perfumes",origin:"Other",description:"A preview of the ANUSMITA product detail experience, inspired by our beauty and fragrance collections. Actual fragrance details will be added when a product is published.",
@@ -137,7 +137,7 @@ export default async function ProductPage({params}:Props){
     <ProductImageGallery key={p.slug} urls={p.imageUrls||[]} name={p.name} preview={preview} altTexts={customSeo?.imageAltTexts||[]}/>
     <div className="anPdpRight">
      <ProductDetailPurchase key={p.slug} product={{
-      ...variant(p),name:p.name,category:p.category,brand:p.brand,description:p.description,origin:p.origin,details:Object.fromEntries(["color", "colorHex", "material", "dimensions", "compatibility", "careInstructions", "warranty", "sizeGuide", "skinType", "benefits"].map(key=>[key,p[key as keyof ProductDetails]||""]))
+      ...variant(p),name:p.name,category:p.category,brand:p.brand,description:p.description,origin:p.origin,quantityDiscounts:p.quantityDiscounts||[],details:Object.fromEntries(["color", "colorHex", "material", "dimensions", "compatibility", "careInstructions", "warranty", "sizeGuide", "skinType", "benefits"].map(key=>[key,p[key as keyof ProductDetails]||""]))
      }} siblings={variants} canOrder={canOrder} preview={preview}/>
      <div className="anPdpTrust" aria-label="Shopping information">
       <div><Sparkles size={22}/><span><strong>Curated with care</strong><small>Selected for ANUSMITA</small></span></div>

@@ -32,7 +32,7 @@ const ProductSchema = new Schema({
  compareAtPaisa:{type:Number,default:0,min:0},wholesalePaisa:{type:Number,default:0,min:0},featured:{type:Boolean,default:false},barcode:{type:String,default:""},
  pricePaisa:{type:Number,required:true,min:0},costPaisa:{type:Number,required:true,min:0},
  onHand:{type:Number,default:0,min:0},reserved:{type:Number,default:0,min:0},
- reorderLevel:{type:Number,default:5,min:0},scheduledPublishAt:{type:Date,default:null},archived:{type:Boolean,default:false},availabilityMode:{type:String,enum:["now","preorder"],default:"now"},preorderEta:{type:Date,default:null},discountPercent:{type:Number,default:0,min:0,max:100},salesChannels:{type:[String],default:["online"]},warehouseAllocationRevision:{type:Number,default:0},active:{type:Boolean,default:false},
+ reorderLevel:{type:Number,default:5,min:0},scheduledPublishAt:{type:Date,default:null},archived:{type:Boolean,default:false},availabilityMode:{type:String,enum:["now","preorder"],default:"now"},preorderEta:{type:Date,default:null},quantityDiscounts:{type:[new Schema({minQty:{type:Number,enum:[2,3,5],required:true},percent:{type:Number,min:1,max:50,required:true}},{_id:false})],default:[]},discountPercent:{type:Number,default:0,min:0,max:100},salesChannels:{type:[String],default:["online"]},warehouseAllocationRevision:{type:Number,default:0},active:{type:Boolean,default:false},
  expiryAt:{type:Date,default:null},batch:{type:String,default:""},
  supplierId:{type:Schema.Types.ObjectId,ref:"Supplier",default:null}
 },opts);
@@ -44,7 +44,7 @@ const OrderLineSchema = new Schema({
  productId:{type:Schema.Types.ObjectId,ref:"Product",required:true},
  sku:{type:String,required:true},name:{type:String,required:true},
  quantity:{type:Number,required:true,min:1},unitPricePaisa:{type:Number,required:true},
- unitCostPaisa:{type:Number,required:true},lineTotalPaisa:{type:Number,required:true}
+ unitCostPaisa:{type:Number,required:true},discountPercent:{type:Number,default:0,min:0,max:50},discountPaisa:{type:Number,default:0,min:0},lineTotalPaisa:{type:Number,required:true}
 },{_id:false});
 const OrderSchema = new Schema({
  orderNumber:{type:String,unique:true,required:true},

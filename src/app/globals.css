@@ -2062,3 +2062,19 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}b
 @media(max-width:960px){.anPdpUpsellGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:620px){.anPdpUpsellGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.anPdpUpsellCopy{padding:11px;gap:6px}.anPdpUpsellName{font-size:12px}.anPdpUpsellCopy>strong{font-size:15px}.anPdpUpsellButton{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.anPdpUpsellCard,.anPdpUpsellImage img{transition:none}}
+
+
+/* Product size and verified volume savings */
+.anPdpProductSize{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:9px 0 15px;font-size:13px;color:#601835}
+.anPdpProductSize span{border:1px solid #e4c2d0;border-radius:7px;background:#fff5f9;padding:7px 12px;font-weight:700}
+.anPdpVolumeDeals{padding:15px;margin:16px 0;border:1px solid #edc6d5;background:linear-gradient(130deg,#fff7fa,#fff0f5);border-radius:12px;color:#661737}
+.anPdpVolumeHeading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.anPdpVolumeHeading strong{font:700 20px Georgia,serif}
+.anPdpVolumeHeading small,.anPdpVolumeDeals>small{font-size:11px;color:#795c68;line-height:1.5}
+.anPdpVolumeOptions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:10px}
+.anPdpVolumeOptions button{display:flex;flex-direction:column;gap:5px;text-align:left;padding:12px 10px;min-height:95px;background:white;color:#77183f;border:1px solid #e5b9ca;border-radius:9px;cursor:pointer}
+.anPdpVolumeOptions button.active{border:2px solid #941b4c;background:#ffe9f2;box-shadow:0 0 0 2px #b02d6420}
+.anPdpVolumeOptions button strong{font-size:14px}
+.anPdpVolumeOptions button small{font-size:10px;color:#765064}
+.anPdpSavedAmount,.anBulkCartSave{display:block;color:#168044;font-size:11px;font-weight:700;margin-top:6px}
+@media(max-width:460px){.anPdpVolumeOptions{gap:5px}.anPdpVolumeOptions button{padding:10px 6px;min-height:108px}.anPdpVolumeHeading strong{font-size:17px}}

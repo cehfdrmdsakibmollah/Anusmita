@@ -6,6 +6,7 @@ import {Heart,ShoppingBag,Trash2,ArrowRight,Minus,Plus,LockKeyhole,Truck,Chevron
 import CommerceSteps from '@/components/commerce-steps';
 import {districtLocations,areaOptions,locationPairValid} from '@/lib/bd-locations';
 import {sheetCatalogue} from '@/lib/sheet-catalogue';
+import {priceForQuantity,type QuantityDiscountTier} from '@/lib/quantity-discounts';
 import {emptyShopping,sanitizeShopping,shoppingKey,shoppingSubtotal,type ShoppingState} from '@/lib/shopping-storage';
 function read(){try{return sanitizeShopping(JSON.parse(localStorage.getItem(shoppingKey)||'null'))}catch{return emptyShopping}}
 function useShopping(){const [state,setState]=useState<ShoppingState>(emptyShopping);const [ready,setReady]=useState(false);const [error,setError]=useState('');useEffect(()=>{const sync=()=>{setState(read());setReady(true)};sync();window.addEventListener('storage',sync);window.addEventListener('anusmita-shopping',sync);return()=>{window.removeEventListener('storage',sync);window.removeEventListener('anusmita-shopping',sync)}},[]);function update(fn:(s:ShoppingState)=>ShoppingState){try{const next=sanitizeShopping(fn(read()));localStorage.setItem(shoppingKey,JSON.stringify(next));setState(next);window.dispatchEvent(new Event('anusmita-shopping'));setError('');return true}catch{setError('Your browser could not save this selection. Please enable browser storage and try again.');return false}}return{state,ready,error,update}}
@@ -23,7 +24,7 @@ export function ProductCardWishlist({id}:{id:string}){
   <Heart size={19} strokeWidth={1.8} fill={saved?'currentColor':'none'}/>
  </button>;
 }
-type DisplayProduct={id:string;name:string;slug:string;size:string;image:string;pricePaisa:number|null;deliveryIncluded:boolean;category:string};
+type DisplayProduct={id:string;name:string;slug:string;size:string;image:string;pricePaisa:number|null;deliveryIncluded:boolean;category:string;quantityDiscounts?:QuantityDiscountTier[]};
 const staticProducts:DisplayProduct[]=sheetCatalogue.map(p=>({id:p.id,name:p.name,slug:p.slug,size:p.size,image:p.image,pricePaisa:p.pricePaisa,deliveryIncluded:p.deliveryIncluded,category:p.category}));
 export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishlist'|'checkout';codEnabled?:boolean}){
  const {state,ready,error,update}=useShopping();
@@ -46,7 +47,7 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
    const response=await fetch('/api/products?ids='+encodeURIComponent(group.join(','))+'&limit=30',{signal:controller.signal,cache:'no-store'});
    if(!response.ok)throw new Error('Product lookup failed');
    const result=await response.json();
-   return (result.products||[]).map((p:any):DisplayProduct=>({id:String(p._id),name:p.name,slug:p.slug,size:p.size||p.variantLabel||'',image:p.imageUrls?.[0]||'',pricePaisa:p.pricePaisa,deliveryIncluded:false,category:p.category||''}));
+   return (result.products||[]).map((p:any):DisplayProduct=>({id:String(p._id),name:p.name,slug:p.slug,size:p.size||p.variantLabel||'',image:p.imageUrls?.[0]||'',pricePaisa:p.pricePaisa,deliveryIncluded:false,category:p.category||'',quantityDiscounts:p.quantityDiscounts||[]}));
   })).then(batches=>{if(!controller.signal.aborted)setRemote(batches.flat())}).catch(()=>{if(!controller.signal.aborted)setLoadError('Some products could not be loaded. Refresh and try again.')}).finally(()=>{if(!controller.signal.aborted)setLoading(false)});
   return()=>controller.abort();
  },[key]);
@@ -55,7 +56,8 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
  const lines=state.cart.map(line=>({...line,p:productMap.get(line.id)})).filter((line):line is {id:string;quantity:number;p:DisplayProduct}=>Boolean(line.p));
  const wishlist=state.wishlist.map(id=>productMap.get(id)).filter((p):p is DisplayProduct=>Boolean(p));
  const isCheckout=mode==='checkout';
- const total=lines.reduce((sum,l)=>sum+(l.p.pricePaisa||0)*l.quantity,0);
+ const total=lines.reduce((sum,l)=>sum+(l.p.pricePaisa===null?0:priceForQuantity(l.p.pricePaisa,l.quantity,l.p.quantityDiscounts||[]).totalPaisa),0);
+ const totalSavings=lines.reduce((sum,l)=>sum+(l.p.pricePaisa===null?0:priceForQuantity(l.p.pricePaisa,l.quantity,l.p.quantityDiscounts||[]).savingsPaisa),0);
  const unknown=lines.some(l=>l.p.pricePaisa===null);
  const extraDelivery=lines.some(l=>!l.p.deliveryIncluded);
  async function submitCod(event:React.FormEvent<HTMLFormElement>){
@@ -87,7 +89,7 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
     <div><small>{p.category}</small><h2><Link href={'/products/'+p.slug}>{p.name}</Link></h2><p>{p.size}</p><p>{p.pricePaisa===null?'Price to be confirmed':money(p.pricePaisa)} · Availability confirmed before ordering</p>
      <div className="anFlowQty"><button type="button" disabled={quantity<=1} aria-label={"Reduce quantity of "+p.name} onClick={()=>update(x=>({...x,cart:x.cart.map(l=>l.id===id?{...l,quantity:Math.max(1,l.quantity-1)}:l)}))}><Minus size={14}/></button><output>{quantity}</output><button type="button" disabled={quantity>=20} aria-label={"Increase quantity of "+p.name} onClick={()=>update(x=>({...x,cart:x.cart.map(l=>l.id===id?{...l,quantity:Math.min(20,l.quantity+1)}:l)}))}><Plus size={14}/></button></div>
      <button className="shoppingRemove" aria-label={'Remove '+p.name} onClick={()=>update(s=>({...s,cart:s.cart.filter(l=>l.id!==id)}))}><Trash2 size={15}/> Remove</button>
-    </div><strong>{p.pricePaisa===null?'Confirm price':money(p.pricePaisa*quantity)}</strong>
+    </div><strong>{p.pricePaisa===null?'Confirm price':money(priceForQuantity(p.pricePaisa,quantity,p.quantityDiscounts||[]).totalPaisa)}{p.pricePaisa!==null&&priceForQuantity(p.pricePaisa,quantity,p.quantityDiscounts||[]).savingsPaisa>0&&<small className="anBulkCartSave">Saved {money(priceForQuantity(p.pricePaisa,quantity,p.quantityDiscounts||[]).savingsPaisa)}</small>}</strong>
    </article>)}{isCheckout&&<form className="anCodForm anFlowCheckoutForm" onSubmit={submitCod}>
  <h3>Delivery Details</h3>
  <div className="anCheckoutFieldGrid">
@@ -118,6 +120,7 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
  </form>}</section>
    <aside className="shoppingSummary anFlowSummary"><h2>Order Summary</h2><p className="anFlowSummaryCaption">{state.cart.reduce((n,l)=>n+l.quantity,0)} item(s) in your bag</p><div><span>{unknown?'Known-price subtotal':'Product subtotal'}</span><strong>{money(total)}</strong></div>
     {unknown&&<p>Some items need a price confirmation and are not included in the subtotal.</p>}
+    {totalSavings>0&&<div className="anBulkCartSave"><span>Quantity discount saved</span><strong>−{money(totalSavings)}</strong></div>}
     <div><span>Delivery</span><span>{extraDelivery?'To be confirmed':'Included'}</span></div>
     <p className="anFlowNotice">Shipping and availability are confirmed by our team. No payment is collected in catalogue mode.</p>
     {isCheckout?<><p className="anFlowPaymentLabel">Payment method: <strong>Cash on Delivery</strong></p><p>Complete delivery details in the form on this page.</p><Link href="/cart">Back to cart</Link></>:
