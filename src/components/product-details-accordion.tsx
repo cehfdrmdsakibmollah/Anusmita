@@ -1,3 +1,4 @@
+import RichProductDescription from "@/components/rich-product-description";
 
 import {Box,ClipboardList,Droplets,Leaf,PackageCheck} from "lucide-react";
 import {categoryLabels,productFacts,type ProductDetails} from "@/lib/product-experience";
@@ -43,7 +44,7 @@ export default function ProductDetailsAccordion({product,preview=false}:{product
   </article>
   <article className="anPdpInfoPanel anPdpAccordions">
    <h2>Product details</h2>
-   <details open><summary>Description</summary><p>{product.description||"Detailed product information is being prepared."}</p></details>
+   <details open><summary>Description</summary><RichProductDescription text={product.description||"Detailed product information is being prepared."}/></details>
    {productFacts(product).map(f=><details key={f.label}><summary>{f.label}</summary><p style={{whiteSpace:"pre-line"}}>{f.value}</p></details>)}
    {product.ingredients&&<details><summary>Ingredients / materials</summary><p>{product.ingredients}</p></details>}
    {product.usageInstructions&&<details><summary>How to use</summary><p>{product.usageInstructions}</p></details>}
