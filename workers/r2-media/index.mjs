@@ -1,6 +1,6 @@
 // Only storefront image keys are public. Bucket listing and writes require the server secret.
 export const MAX_BYTES = 3 * 1024 * 1024;
-export const KEY = /^public\/products\/[a-f0-9]{24}\/[a-f0-9-]{36}\.(png|jpg|webp)$/;
+export const KEY = /^public\/(?:products|staff-avatars)\/[a-f0-9]{24}\/[a-f0-9-]{36}\.(png|jpg|webp)$/;
 export function imageType(bytes) {
   if(bytes.length<12)return null;
   if(bytes[0]===255&&bytes[1]===216&&bytes[2]===255)return 'image/jpeg';

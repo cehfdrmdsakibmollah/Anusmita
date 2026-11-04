@@ -4,7 +4,7 @@ import mongoose, { Schema } from "mongoose";
 const opts = { timestamps: true, versionKey: false } as const;
 const UserSchema = new Schema({
  email: {type:String,required:true,unique:true,lowercase:true,trim:true},
- name: {type:String,required:true}, passwordHash: {type:String,required:true,select:false},
+ name: {type:String,required:true}, phone:{type:String,default:""}, bio:{type:String,default:""}, avatarUrl:{type:String,default:""}, passwordHash: {type:String,required:true,select:false},
  role:{type:String,enum:["owner","admin","sales","finance","inventory","purchasing","support","analyst"],required:true},
  active:{type:Boolean,default:true}, permissions:{type:Map,of:Boolean,default:{}}, loginFailures:{type:Number,default:0},
  lockedUntil:{type:Date,default:null}
