@@ -383,6 +383,7 @@ const CmsPageSlotSchema=new Schema({
  revision:{type:Number,required:true,default:0,min:0},
  draft:{type:[Schema.Types.Mixed],default:[]},
  published:{type:[Schema.Types.Mixed],default:[]},
+ nativeDraft:{type:Schema.Types.Mixed,default:null},nativePublished:{type:Schema.Types.Mixed,default:null},
  publishedRevision:{type:Number,default:0,min:0},
  lastEditedBy:{type:Schema.Types.ObjectId,ref:"User",default:null},
  publishedAt:{type:Date,default:null}
