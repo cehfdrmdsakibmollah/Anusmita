@@ -7,6 +7,7 @@ export default function AvatarCropper({avatarUrl,name,onSaved}:Props){
  const fileRef=useRef<HTMLInputElement>(null);
  const previewRef=useRef<HTMLCanvasElement>(null);
  const pointerRef=useRef<{id:number;x:number;y:number;pos:{x:number;y:number}}|null>(null);
+ const dimsRef=useRef({width:400,height:400});
  const [source,setSource]=useState<string|null>(null);
  const [zoom,setZoom]=useState(1);
  const [pos,setPos]=useState({x:50,y:50});
@@ -20,6 +21,7 @@ export default function AvatarCropper({avatarUrl,name,onSaved}:Props){
   const img=new Image();
   img.onload=()=>{
    if(cancelled)return;
+   dimsRef.current={width:img.naturalWidth,height:img.naturalHeight};
    const canvas=previewRef.current;
    if(!canvas)return;
    canvas.width=400;canvas.height=400;
@@ -55,11 +57,12 @@ export default function AvatarCropper({avatarUrl,name,onSaved}:Props){
   const start=pointerRef.current;
   if(!start||start.id!==e.pointerId)return;
   const width=e.currentTarget.getBoundingClientRect().width;
-  const range=400*zoom-400;
-  if(range<=0)return;
-  const dx=(e.clientX-start.x)*400/Math.max(1,width);
-  const dy=(e.clientY-start.y)*400/Math.max(1,width);
-  setPos({x:Math.max(0,Math.min(100,start.pos.x-dx/range*100)),y:Math.max(0,Math.min(100,start.pos.y-dy/range*100))});
+  const d=dimsRef.current;
+  const side=Math.min(d.width,d.height)/zoom;
+  const maxX=d.width-side,maxY=d.height-side;
+  const dx=(e.clientX-start.x)/Math.max(1,width)*side;
+  const dy=(e.clientY-start.y)/Math.max(1,width)*side;
+  setPos({x:maxX>0?Math.max(0,Math.min(100,start.pos.x-dx/maxX*100)):50,y:maxY>0?Math.max(0,Math.min(100,start.pos.y-dy/maxY*100)):50});
  }
  function onPointerUp(){pointerRef.current=null}
  async function save(){
