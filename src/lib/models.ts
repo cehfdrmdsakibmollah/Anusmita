@@ -362,6 +362,19 @@ const HomePageSchema=new Schema({
 },opts);
 export const HomePage=mongoose.models.HomePage||mongoose.model("HomePage",HomePageSchema);
 
+/** Isolated editorial page slots; never replaces products, checkout or route logic. */
+const CmsPageSlotSchema=new Schema({
+ page:{type:String,required:true,unique:true,enum:["shop","deals","bundles","about","contact","journal"]},
+ revision:{type:Number,required:true,default:0,min:0},
+ draft:{type:[Schema.Types.Mixed],default:[]},
+ published:{type:[Schema.Types.Mixed],default:[]},
+ publishedRevision:{type:Number,default:0,min:0},
+ lastEditedBy:{type:Schema.Types.ObjectId,ref:"User",default:null},
+ publishedAt:{type:Date,default:null}
+},opts);
+export const CmsPageSlot=mongoose.models.CmsPageSlot||mongoose.model("CmsPageSlot",CmsPageSlotSchema);
+
+
 
 /** Only independently verified customer-submitted reviews may become public.
  * No synthetic ratings, timestamps or authors are generated on a page visit. */

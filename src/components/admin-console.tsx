@@ -11,7 +11,7 @@ import PurchaseManager from "@/components/purchase-manager";
 import CanvaCatalogueReview from "@/components/canva-catalogue-review";
 import HrWholesaleSource from "@/components/hr-wholesale-source";
 import ChatbotManager from "@/components/chatbot-manager";
-import HomepageManager from "@/components/homepage-manager";
+import HomepageStudioV2 from "@/components/homepage-studio-v2";
 import CourierSetup from "@/components/courier-setup";
 import SocialInbox from "@/components/social-inbox";
 import StoreChromeEditor from "@/components/store-chrome-editor";
@@ -97,7 +97,7 @@ export default function AdminConsole({role,initialTab,permissions={}}:{role:stri
  {tab==="SEO Manager"&&(["owner","admin"].includes(role)?<SeoManager/>:<p className="notice">Owner/admin access required.</p>)}
  {tab==="RTO Inspections"&&(["owner","admin","inventory","sales","support"].includes(role)?<ReturnInspections role={role}/>:<p className="notice">Returned order access required.</p>)}
  {tab==="Staff Management"&&(role==="owner"?<StaffManagement/>:<p className="notice">Owner access required.</p>)}
- {tab==="Homepage Studio"&&(["owner","admin"].includes(role)?<HomepageManager/>:<p className="notice">Owner or admin permission required.</p>)}
+ {tab==="Homepage Studio"&&(["owner","admin"].includes(role)?<HomepageStudioV2/>:<p className="notice">Owner or admin permission required.</p>)}
  {tab==="Courier Setup"&&<CourierSetup role={role}/>}
  {tab==="Orders"&&<div className="adminCard"><h2>Order queue</h2><p className="smallprint">Payment status and shipment status are separate. Mark an order shipped only after courier acceptance.</p>
  <table><thead><tr><th>Order</th><th>Customer</th><th>Value</th><th>Order state</th><th>Payment</th><th>Actions</th></tr></thead><tbody>{orders.map(o=><tr key={o._id}><td>{o.orderNumber}<br/><span className="muted">{new Date(o.createdAt).toLocaleDateString("en-BD")}</span></td><td>{o.customer?.name}<br/>{o.customer?.phone}</td><td>{money(o.totalPaisa)}</td><td>{o.orderStatus}</td><td>{o.paymentStatus}<br/><span className="muted">{money(o.collectedPaisa)} collected</span></td><td>{canOrders&&({placed:["confirmed","cancelled"],confirmed:["packed","cancelled"],packed:["shipped","cancelled"],shipped:["delivered"]} as Record<string,string[]>)[o.orderStatus]?.map(s=><button key={s} className="button small light" disabled={pending} style={{margin:"2px"}} onClick={()=>transition(o,s)}>{s}</button>)}<a style={{display:"block",marginTop:6}} href={"/admin/invoices/"+o._id}>Invoice</a></td></tr>)}</tbody></table>
