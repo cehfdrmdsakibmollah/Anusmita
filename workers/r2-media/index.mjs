@@ -29,7 +29,7 @@ export default {
       if(!authorized(request,env))return error(403,'Access denied');
       if(request.method!=='GET')return error(405,'Method not allowed');
       const u=new URL(request.url),prefix=u.searchParams.get('prefix')||'';
-      if(!/^public\\/(?:homepage\\/|cms\\/(?:shop|deals|bundles|about|contact|journal|cart|checkout|gift-cards|pre-orders|customer-stories|wishlist|routine-quiz|track-order)\\/)$/.test(prefix))return error(400,'Invalid media namespace');
+      if(!/^public\/(?:homepage\/|cms\/(?:shop|deals|bundles|about|contact|journal|cart|checkout|gift-cards|pre-orders|customer-stories|wishlist|routine-quiz|track-order)\/)$/.test(prefix))return error(400,'Invalid media namespace');
       const rawLimit=Number(u.searchParams.get('limit')||30);
       if(!Number.isInteger(rawLimit)||rawLimit<1||rawLimit>100)return error(400,'Invalid page size');
       const cursor=u.searchParams.get('cursor')||undefined;
