@@ -56,5 +56,8 @@ export const cmsSlotSchema=z.object({
 });
 export const cmsSlots=z.array(cmsSlotSchema).max(20).refine(items=>new Set(items.map(x=>x.id)).size===items.length,"Duplicate block IDs");
 export const cmsSaveSchema=z.object({page:z.enum(cmsSlotPages),revision:z.number().int().min(0),action:z.enum(["saveDraft","publish"]),slots:cmsSlots,nativeHero:cmsNativeHeroSchema.default(defaultCmsNativeHero)}).strict();
+export const cmsRestoreSchema=z.object({page:z.enum(cmsSlotPages),revision:z.number().int().min(0),action:z.literal("restoreDraft"),restoreRevision:z.number().int().min(1)}).strict();
+export const cmsRevisionSchema=z.object({revision:z.number().int().min(1),action:z.enum(["saveDraft","publish","restoreDraft"]),createdAt:z.coerce.date(),slots:cmsSlots,nativeHero:cmsNativeHeroSchema});
+export type CmsRevision=z.infer<typeof cmsRevisionSchema>;
 export type CmsSlot=z.infer<typeof cmsSlotSchema>;
 export type CmsSlotPage=typeof cmsSlotPages[number];

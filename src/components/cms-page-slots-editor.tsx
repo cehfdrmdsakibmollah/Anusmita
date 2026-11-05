@@ -3,13 +3,14 @@ import {useCallback,useEffect,useRef,useState} from "react";
 import {Plus,Save,Upload,Trash2,ArrowUp,ArrowDown,Eye,EyeOff,RefreshCw} from "lucide-react";
 import {cmsSlotSchema,defaultCmsStyle,cmsSectionKinds,cmsNativeHeroSchema,defaultCmsNativeHero,type CmsNativeHero,type CmsSlot,type CmsSlotPage} from "@/lib/cms-page-slots";
 import "./cms-page-slots-editor.css";
-type Payload={page:CmsSlotPage;revision:number;publishedRevision:number;draft:CmsSlot[];published:CmsSlot[];publishedAt:string|null;nativeDraft:CmsNativeHero;nativePublished:CmsNativeHero};
+type Payload={page:CmsSlotPage;revision:number;publishedRevision:number;draft:CmsSlot[];published:CmsSlot[];publishedAt:string|null;nativeDraft:CmsNativeHero;nativePublished:CmsNativeHero;history:{revision:number;action:"saveDraft"|"publish"|"restoreDraft";createdAt:string;slotCount:number}[]};
 const fresh=(position:number,kind:CmsSlot["kind"]="banner"):CmsSlot=>({id:crypto.randomUUID(),placement:"before",kind,style:{...defaultCmsStyle},title:"New ANUSMITA Collection",subtitle:"Discover what is new and thoughtfully curated.",badge:"ANUSMITA EDIT",imageUrl:"",cta:"Explore Collection",href:"/shop",enabled:true,position});
 export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;onPublished?:()=>void}){
  const jsonInput=useRef<HTMLInputElement|null>(null);
  const mediaInput=useRef<HTMLInputElement|null>(null);
  const nativeMediaInput=useRef<HTMLInputElement|null>(null);
  const [native,setNative]=useState<CmsNativeHero>(defaultCmsNativeHero);
+ const [restoreRevision,setRestoreRevision]=useState("");
  const [mediaBusy,setMediaBusy]=useState(false);
  const [createKind,setCreateKind]=useState<CmsSlot["kind"]>("banner");
  const [canvasView,setCanvasView]=useState<"live"|"blocks">("live");
@@ -17,7 +18,7 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
  const publicPath=["about","contact","journal"].includes(page)?"/"+page+"/design-preview":"/"+page;
  const [inspectorTab,setInspectorTab]=useState<"content"|"design"|"publish">("content");
  const [record,setRecord]=useState<Payload|null>(null),[slots,setSlots]=useState<CmsSlot[]>([]),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[mode,setMode]=useState<"draft"|"published">("draft");
- const load=useCallback(async()=>{const r=await fetch("/api/admin/cms-page-slots?page="+encodeURIComponent(page),{cache:"no-store"});const j=await r.json();if(!r.ok)throw Error(j.error||"Could not fetch CMS slots");const parsed=cmsSlotSchema.array().max(20).parse(j.draft);const nativeParsed=cmsNativeHeroSchema.parse(j.nativeDraft||{});setRecord({...j,draft:parsed,nativeDraft:nativeParsed,nativePublished:cmsNativeHeroSchema.parse(j.nativePublished||{})});setNative(nativeParsed);setSlots(parsed);setSelected(null);setNotice("");},[page]);
+ const load=useCallback(async()=>{const r=await fetch("/api/admin/cms-page-slots?page="+encodeURIComponent(page),{cache:"no-store"});const j=await r.json();if(!r.ok)throw Error(j.error||"Could not fetch CMS slots");const parsed=cmsSlotSchema.array().max(20).parse(j.draft);const nativeParsed=cmsNativeHeroSchema.parse(j.nativeDraft||{});setRecord({...j,history:j.history||[],draft:parsed,nativeDraft:nativeParsed,nativePublished:cmsNativeHeroSchema.parse(j.nativePublished||{})});setRestoreRevision("");setNative(nativeParsed);setSlots(parsed);setSelected(null);setNotice("");},[page]);
  useEffect(()=>{void load().catch(e=>setNotice("Error: "+String(e)));},[load]);
  const selectedSlot=slots.find(s=>s.id===selected);
  function exportJson(){
@@ -56,6 +57,24 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
  function copySlot(id:string){const item=slots.find(x=>x.id===id);if(!item||slots.length>=20)return;const next={...item,id:crypto.randomUUID(),position:slots.length};setSlots(old=>[...old,next]);setSelected(next.id);}
  function updateStyle(changes:Partial<CmsSlot["style"]>){if(!selectedSlot)return;update({style:{...selectedSlot.style,...changes}});}
  function move(id:string,dir:number){const arr=[...slots];const i=arr.findIndex(x=>x.id===id),j=i+dir;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];setSlots(arr.map((s,index)=>({...s,position:index})));}
+ async function restoreDraft(){
+  if(!record||busy||mediaBusy||!restoreRevision)return;
+  const rev=Number(restoreRevision);
+  if(!Number.isInteger(rev)||!record.history.some(h=>h.revision===rev)){setNotice("Select a retained revision.");return;}
+  if(!window.confirm("Restore revision "+rev+" as a NEW DRAFT for "+page+"? Current unsaved edits will be discarded. The live published page will not change."))return;
+  setBusy(true);setNotice("");
+  try{
+   const response=await fetch("/api/admin/cms-page-slots",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page,revision:record.revision,action:"restoreDraft",restoreRevision:rev})});
+   const data=await response.json();
+   if(!response.ok)throw Error(data.error||"Revision restore failed");
+   const parsed=cmsSlotSchema.array().max(20).parse(data.draft);
+   const hero=cmsNativeHeroSchema.parse(data.nativeDraft||{});
+   setRecord({...data,history:data.history||[],draft:parsed,nativeDraft:hero,nativePublished:cmsNativeHeroSchema.parse(data.nativePublished||{})});
+   setSlots(parsed);setNative(hero);setSelected(null);setRestoreRevision("");
+   setNotice("Revision "+rev+" restored as draft r"+data.revision+". The live page is unchanged. Review and Publish Page Slots only when ready.");
+  }catch(e){setNotice("Restore error: "+String(e));}
+  finally{setBusy(false);}
+ }
  async function save(action:"saveDraft"|"publish"){if(!record||busy)return;const valid=cmsSlotSchema.array().max(20).safeParse(slots);const nativeValid=cmsNativeHeroSchema.safeParse(native);if(!nativeValid.success){setNotice("Hero validation: "+nativeValid.error.issues.map(i=>i.message).join("; "));return;}if(!valid.success){setNotice("Validation: "+valid.error.issues.map(i=>i.message).join("; "));return;}
   if(action==="publish"&&!window.confirm("Publish "+slots.length+" editorial block(s) to /"+page+"? Existing native storefront interactions will remain untouched."))return;
   setBusy(true);setNotice("");
@@ -132,7 +151,12 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
    </>}
    </>:<p className="cse-muted">Select a block from the left panel or preview.</p>}
   </section></div>
-  <div className="cse-actions"><button type="button" onClick={exportJson}>Export JSON</button><button type="button" onClick={()=>jsonInput.current?.click()}>Import JSON</button><input ref={jsonInput} type="file" accept="application/json,.json" hidden onChange={e=>{const file=e.currentTarget.files?.[0];if(file)void importJson(file);e.currentTarget.value="";}}/><button type="button" onClick={()=>void save("saveDraft")} disabled={busy}><Save size={16}/> Save Draft</button><button type="button" className="cse-publish" onClick={()=>void save("publish")} disabled={busy}><Upload size={16}/> Publish Page Slots</button><button type="button" onClick={()=>void load()} disabled={busy}><RefreshCw size={15}/> Discard / Reload</button><span>{dirty?"Unsaved editor changes":"Draft saved"} · {record.publishedAt?"Published "+new Date(record.publishedAt).toLocaleString("en-BD"):"Never published"}</span></div>
+  <div className="cse-actions"><button type="button" onClick={exportJson}>Export JSON</button><button type="button" onClick={()=>jsonInput.current?.click()}>Import JSON</button><input ref={jsonInput} type="file" accept="application/json,.json" hidden onChange={e=>{const file=e.currentTarget.files?.[0];if(file)void importJson(file);e.currentTarget.value="";}}/><button type="button" onClick={()=>void save("saveDraft")} disabled={busy||mediaBusy}><Save size={16}/> Save Draft</button><button type="button" className="cse-publish" onClick={()=>void save("publish")} disabled={busy||mediaBusy}><Upload size={16}/> Publish Page Slots</button><button type="button" onClick={()=>void load()} disabled={busy}><RefreshCw size={15}/> Discard / Reload</button><span>{dirty?"Unsaved editor changes":"Draft saved"} · {record.publishedAt?"Published "+new Date(record.publishedAt).toLocaleString("en-BD"):"Never published"}</span></div>
+  <div className="cse-revision-tools"><label>Revision history (latest 20 saved revisions)
+   <select value={restoreRevision} onChange={e=>setRestoreRevision(e.target.value)}><option value="">Select saved revision…</option>{(record.history||[]).map(h=><option key={h.revision} value={h.revision}>r{h.revision} · {h.action} · {new Date(h.createdAt).toLocaleString("en-BD")}</option>)}</select></label>
+   <button type="button" disabled={busy||mediaBusy||!restoreRevision} onClick={()=>void restoreDraft()}>Restore selected as draft</button>
+   <p>Restoring creates a new draft revision. It never immediately replaces published page content or deletes R2 assets. History begins when this feature is deployed; older changes cannot be reconstructed.</p>
+  </div>
   {dirty&&<p className="cse-notice" role="status">Unsaved draft changes are not visible on the live page. Save Draft, then Publish Page Slots to publish text and images.</p>}
   {notice&&<p className="cse-notice" role="status">{notice}</p>}
  </div>;

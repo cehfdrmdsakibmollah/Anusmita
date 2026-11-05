@@ -1,5 +1,5 @@
 import {describe,it,expect} from "vitest";
-import {cmsSaveSchema,cmsSlots} from "./cms-page-slots";
+import {cmsSaveSchema,cmsSlots,cmsRestoreSchema,cmsRevisionSchema} from "./cms-page-slots";
 const valid={id:"550e8400-e29b-41d4-a716-446655440000",placement:"before" as const,title:"Autumn beauty edit",subtitle:"Shop selected items",badge:"NEW",imageUrl:"/brand/categories/skincare.webp",cta:"Shop",href:"/shop",enabled:true,position:0};
 describe("Unified CMS Page Slots",()=>{
  it("accepts approved editorial content",()=>{expect(cmsSlots.safeParse([valid]).success).toBe(true);});
@@ -53,6 +53,19 @@ describe("Unified CMS Page Slots",()=>{
   expect(cmsSaveSchema.safeParse({...sample,nativeHero:{...sample.nativeHero,secondaryTitle:"B".repeat(131)}}).success).toBe(false);
   expect(cmsSaveSchema.safeParse({...sample,nativeHero:{...sample.nativeHero,html:"<script>alert(1)</script>"}}).success).toBe(false);
   expect(cmsSaveSchema.safeParse({action:"saveDraft",page:"deals",revision:0,slots:[],nativeHero:{}}).success).toBe(true);
+ });
+ it("validates restore-as-draft with CAS revision and a retained target",()=>{
+  expect(cmsRestoreSchema.safeParse({action:"restoreDraft",page:"deals",revision:4,restoreRevision:2}).success).toBe(true);
+  expect(cmsRestoreSchema.safeParse({action:"restoreDraft",page:"deals",revision:4,restoreRevision:0}).success).toBe(false);
+  expect(cmsRestoreSchema.safeParse({action:"restoreDraft",page:"checkout",revision:-1,restoreRevision:2}).success).toBe(false);
+  expect(cmsRestoreSchema.safeParse({action:"restoreDraft",page:"bad-route",revision:4,restoreRevision:2}).success).toBe(false);
+  expect(cmsRestoreSchema.safeParse({action:"restoreDraft",page:"deals",revision:4,restoreRevision:2,published:true}).success).toBe(false);
+ });
+ it("validates saved revision snapshots against the same CMS schemas",()=>{
+  const snapshot={revision:2,action:"saveDraft",createdAt:new Date(),slots:[valid],nativeHero:{title:"",subtitle:"",imageUrl:"",background:"#fff6f9",textColor:"#611b37"}};
+  expect(cmsRevisionSchema.safeParse(snapshot).success).toBe(true);
+  expect(cmsRevisionSchema.safeParse({...snapshot,slots:[{...valid,imageUrl:"javascript:alert(1)"}]}).success).toBe(false);
+  expect(cmsRevisionSchema.safeParse({...snapshot,revision:0}).success).toBe(false);
  });
  it("rejects unknown properties",()=>{expect(cmsSlots.safeParse([{...valid,html:"<script />"}]).success).toBe(false);});
 });
