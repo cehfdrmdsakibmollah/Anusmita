@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
+import type {CSSProperties,PointerEvent as ReactPointerEvent,KeyboardEvent as ReactKeyboardEvent} from "react";
 import {ImagePlus,Layers,Tag,Search,Save,ArrowLeft,ArrowRight,Palette,Boxes} from "lucide-react";
 import ProductPhotoManager from "@/components/product-photo-manager";
 import ProductDescriptionEditor from "@/components/product-description-editor";
@@ -15,6 +16,59 @@ export default function AdminProductWorkspace(){
  const [identityAdvice,setIdentityAdvice]=useState<{skuTaken:boolean;slugTaken:boolean;suggestedSku:string|null;suggestedSlug:string|null}|null>(null);
  const [draft,setDraft]=useState<Draft>(blank),[items,setItems]=useState<Page|null>(null),[query,setQuery]=useState(""),[statusFilter,setStatusFilter]=useState("all"),[page,setPage]=useState(1),[version,setVersion]=useState(0),[selected,setSelected]=useState<Item|null>(null),[feedback,setFeedback]=useState(""),[busy,setBusy]=useState(false),[ready,setReady]=useState(false),[r2Status,setR2Status]=useState("Checking R2 storage…"),[files,setFiles]=useState<File[]>([]),[uploading,setUploading]=useState(false);
  const fileRef=useRef<HTMLInputElement>(null);
+ // Product catalog pane only. Do not resize the global admin navigation.
+ const gridRef=useRef<HTMLDivElement>(null);
+ const resizeRef=useRef<{pointerId:number;startX:number;startWidth:number}|null>(null);
+ const catalogWidthRef=useRef<number|null>(null);
+ const [catalogWidth,setCatalogWidth]=useState<number|null>(null);
+ const catalogWidthKey="anusmita.admin.productCatalogWidth.v1";
+ useEffect(()=>{
+  try{
+   const stored=Number(window.localStorage.getItem(catalogWidthKey));
+   if(Number.isFinite(stored)&&stored>=265&&stored<=520){
+    catalogWidthRef.current=stored;setCatalogWidth(stored);
+   }
+  }catch{/* Storage can be disabled; resizing still works in this tab. */}
+ },[]);
+ function resizeLimits(){
+  const gridWidth=gridRef.current?.getBoundingClientRect().width||0;
+  return {min:265,max:Math.max(265,Math.min(520,gridWidth-580))};
+ }
+ function applyCatalogWidth(width:number,persist=false){
+  const {min,max}=resizeLimits();
+  const next=Math.round(Math.max(min,Math.min(max,width)));
+  catalogWidthRef.current=next;setCatalogWidth(next);
+  if(persist)try{window.localStorage.setItem(catalogWidthKey,String(next));}catch{/* Optional persistence. */}
+ }
+ function beginCatalogResize(event:ReactPointerEvent<HTMLButtonElement>){
+  if(event.button!==0||!window.matchMedia("(min-width: 1101px)").matches)return;
+  event.preventDefault();
+  const width=gridRef.current?.querySelector<HTMLElement>(".apReferenceProducts")?.getBoundingClientRect().width||265;
+  resizeRef.current={pointerId:event.pointerId,startX:event.clientX,startWidth:width};
+  event.currentTarget.setPointerCapture(event.pointerId);
+ }
+ function moveCatalogResize(event:ReactPointerEvent<HTMLButtonElement>){
+  const drag=resizeRef.current;
+  if(!drag||drag.pointerId!==event.pointerId)return;
+  applyCatalogWidth(drag.startWidth+event.clientX-drag.startX);
+ }
+ function endCatalogResize(event:ReactPointerEvent<HTMLButtonElement>){
+  if(resizeRef.current?.pointerId!==event.pointerId)return;
+  resizeRef.current=null;
+  if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
+  if(catalogWidthRef.current!==null)applyCatalogWidth(catalogWidthRef.current,true);
+ }
+ function keyboardCatalogResize(event:ReactKeyboardEvent<HTMLButtonElement>){
+  const width=gridRef.current?.querySelector<HTMLElement>(".apReferenceProducts")?.getBoundingClientRect().width||265;
+  const {min,max}=resizeLimits();
+  const next=event.key==="ArrowRight"?width+20:event.key==="ArrowLeft"?width-20:event.key==="Home"?min:event.key==="End"?max:null;
+  if(next===null)return;
+  event.preventDefault();applyCatalogWidth(next,true);
+ }
+ function resetCatalogResize(){
+  resizeRef.current=null;catalogWidthRef.current=null;setCatalogWidth(null);
+  try{window.localStorage.removeItem(catalogWidthKey);}catch{/* Optional persistence. */}
+ }
  const [quantityTiers,setQuantityTiers]=useState<{id:string;minQty:string;percent:string}[]>([]);
  const [pendingCover,setPendingCover]=useState<number|null>(null);
  const [pendingPreviews,setPendingPreviews]=useState<string[]>([]);
@@ -218,7 +272,7 @@ export default function AdminProductWorkspace(){
   {identityAdvice.suggestedSlug&&<button type="button" onClick={()=>{set("slug",identityAdvice.suggestedSlug!);setIdentityAdvice(v=>v?{...v,slugTaken:false,suggestedSlug:null}:null);}}>Use slug: {identityAdvice.suggestedSlug}</button>}
   <small>Suggestions are checked against saved products; the database still confirms uniqueness when saving.</small>
  </div>}
- <div className="apReferenceGrid"><aside className="apReferenceProducts"> <section className="apCard apSearch"><h3><Search size={19}/> Search & edit products</h3><div className="apCardBody"><label className="apField"><span>Search by product name, SKU or brand</span><input value={query} placeholder="Search 121+ real products…" onChange={e=>{setQuery(e.target.value);setPage(1)}}/></label><div className="apCatalogFilters" role="group" aria-label="Filter product publication status">{[["all","All"],["published","Published"],["draft","Draft"],["archived","Archived"]].map(([value,label])=><button type="button" key={value} aria-pressed={statusFilter===value} className={statusFilter===value?"selected":""} onClick={()=>{setStatusFilter(value);setPage(1);}}>{label}</button>)}</div><div className="apTableScroll"><table><thead><tr><th>Product</th><th>SKU</th><th>Price</th><th>Available</th><th>Status</th><th>Action</th></tr></thead><tbody>{items?.products.map(p=><tr key={p._id} role="button" tabIndex={0} aria-label={"Edit "+p.name} onClick={()=>edit(p)} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();edit(p);}}}><td><div className="apProductCell">{p.imageUrls?.[0]?<img src={p.imageUrls[0]} alt=""/>:<span className="apNoImage">No image</span>}<span className="apProductText"><strong>{p.name}</strong><small>SKU: {p.sku}</small><span className="apProductBadges"><em className={p.active?"apPublished":"apDraft"}>{p.archived?"Archived":p.active?"Active":"Draft"}</em><em className={p.onHand-p.reserved<=0?"apDraft":"apPublished"}>Stock: {Math.max(0,p.onHand-p.reserved)}</em></span></span></div></td><td>{p.sku}</td><td>{cash(p.pricePaisa)}</td><td>{p.onHand-p.reserved}</td><td><span className={p.active?"apPublished":"apDraft"}>{p.active?"Published":"Draft"}</span></td><td><button type="button" className="apEdit" onClick={()=>edit(p)}>Edit</button></td></tr>)}</tbody></table></div><div className="apPager"><button type="button" disabled={page<=1} onClick={()=>setPage(v=>v-1)}><ArrowLeft size={16}/> Previous</button><span>Page {page}/{items?.pages||1} · {items?.total||0} SKUs</span><button type="button" disabled={page>=(items?.pages||1)} onClick={()=>setPage(v=>v+1)}>Next <ArrowRight size={16}/></button></div></div></section>
+ <div ref={gridRef} className="apReferenceGrid" style={catalogWidth===null?undefined:{"--ap-product-list-width":catalogWidth+"px"} as CSSProperties}><aside className="apReferenceProducts"><button type="button" className="apCatalogResizeHandle" aria-label="Resize product list sidebar" aria-description="Use left or right arrow keys to resize, Home or End for limits; double-click to reset." aria-valuemin={265} aria-valuemax={resizeLimits().max} aria-valuenow={Math.round(catalogWidth||265)} role="separator" aria-orientation="vertical" tabIndex={0} title="Drag to resize product list · Double-click to reset" onPointerDown={beginCatalogResize} onPointerMove={moveCatalogResize} onPointerUp={endCatalogResize} onPointerCancel={endCatalogResize} onKeyDown={keyboardCatalogResize} onDoubleClick={resetCatalogResize}><span aria-hidden="true"/></button> <section className="apCard apSearch"><h3><Search size={19}/> Search & edit products</h3><div className="apCardBody"><label className="apField"><span>Search by product name, SKU or brand</span><input value={query} placeholder="Search 121+ real products…" onChange={e=>{setQuery(e.target.value);setPage(1)}}/></label><div className="apCatalogFilters" role="group" aria-label="Filter product publication status">{[["all","All"],["published","Published"],["draft","Draft"],["archived","Archived"]].map(([value,label])=><button type="button" key={value} aria-pressed={statusFilter===value} className={statusFilter===value?"selected":""} onClick={()=>{setStatusFilter(value);setPage(1);}}>{label}</button>)}</div><div className="apTableScroll"><table><thead><tr><th>Product</th><th>SKU</th><th>Price</th><th>Available</th><th>Status</th><th>Action</th></tr></thead><tbody>{items?.products.map(p=><tr key={p._id} role="button" tabIndex={0} aria-label={"Edit "+p.name} onClick={()=>edit(p)} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();edit(p);}}}><td><div className="apProductCell">{p.imageUrls?.[0]?<img src={p.imageUrls[0]} alt=""/>:<span className="apNoImage">No image</span>}<span className="apProductText"><strong>{p.name}</strong><small>SKU: {p.sku}</small><span className="apProductBadges"><em className={p.active?"apPublished":"apDraft"}>{p.archived?"Archived":p.active?"Active":"Draft"}</em><em className={p.onHand-p.reserved<=0?"apDraft":"apPublished"}>Stock: {Math.max(0,p.onHand-p.reserved)}</em></span></span></div></td><td>{p.sku}</td><td>{cash(p.pricePaisa)}</td><td>{p.onHand-p.reserved}</td><td><span className={p.active?"apPublished":"apDraft"}>{p.active?"Published":"Draft"}</span></td><td><button type="button" className="apEdit" onClick={()=>edit(p)}>Edit</button></td></tr>)}</tbody></table></div><div className="apPager"><button type="button" disabled={page<=1} onClick={()=>setPage(v=>v-1)}><ArrowLeft size={16}/> Previous</button><span>Page {page}/{items?.pages||1} · {items?.total||0} SKUs</span><button type="button" disabled={page>=(items?.pages||1)} onClick={()=>setPage(v=>v+1)}>Next <ArrowRight size={16}/></button></div></div></section>
 </aside><div className="apReferenceEditor">
  <div className="apReferenceSelected"><div>{selected?.imageUrls[0]?<img src={selected.imageUrls[0]} alt="" width={72} height={75}/>:null}<div><strong>{selected?selected.name:"Add a new product"}</strong><p>{selected?`SKU: ${selected.sku} · ${selected.category} · ${selected.active?"Published":"Draft"}`:"Fill the form below to create a product."}</p></div></div><div className="apSelectedActions">{selected&&<><a href={"/products/"+selected.slug} target="_blank" rel="noopener noreferrer">Preview Product ↗</a><button type="button" onClick={cloneVariant}>Duplicate Variant</button></>}<button type="button" onClick={reset}>+ New Product</button></div></div>
  <nav className="apReferenceTabs" aria-label="Product editor sections"><a href="#ap-basic">Basic Info</a><a href={selected?"/admin/inventory?sku="+encodeURIComponent(selected.sku):"/admin/inventory"}>Inventory ↗</a><a href="#ap-variants">Variants</a><a href="#ap-media">Media</a><a href="#ap-pricing">Pricing</a><a href="#ap-details">Details</a><a href="#ap-publishing">Publishing</a><a href="/admin/products/manage?view=seo">Product SEO ↗</a></nav>
