@@ -14,3 +14,14 @@
 @media(max-width:1180px){.ep-body{grid-template-columns:minmax(0,1fr) 245px}.ep-left{grid-column:1/-1}.ep-check-list{grid-template-columns:repeat(3,minmax(0,1fr))}.ep-left .ep-card{padding:12px}.ep-center{grid-column:1}.ep-right{grid-column:2}.ep-tabs button{flex:none}}
 @media(max-width:820px){.ep-body{grid-template-columns:minmax(0,1fr)}.ep-left,.ep-center,.ep-right{grid-column:1}.ep-right{grid-template-columns:repeat(2,minmax(0,1fr))}.ep-toolbar{align-items:flex-start;flex-direction:column}.ep-product-header{flex-wrap:wrap}.ep-product-links{width:100%}.ep-dual{grid-template-columns:1fr}.ep-catalog form{flex-wrap:wrap}.ep-catalog form select{width:auto}}
 @media(max-width:540px){.ep-check-list{grid-template-columns:1fr 1fr}.ep-right{grid-template-columns:1fr}.ep-toolbar-actions{width:100%}.ep-toolbar-actions button{flex:1}.ep-product-header>img,.ep-no-image{width:74px;height:74px}.ep-product-text h2{font-size:16px}.ep-preview-tools button{padding:7px 6px}.ep-social-card img{width:75px;height:75px}.ep-eyebrow{font-size:19px}.ep-card{padding:10px}}
+
+
+/* Reference page-specific shell: one title bar, no duplicate Product Editor heading. */
+.seoDashboard:has(.ep-workspace){grid-template-columns:208px minmax(0,1fr);background:#fff9fb}
+.seoDashboard:has(.ep-workspace) .seoDashboardSidebar{padding:20px 13px;background:#fff7f9}
+.seoDashboard:has(.ep-workspace) .seoDashboardMain{padding:10px 14px 40px}
+.seoDashboard:has(.ep-workspace) .apModeNavigation,.seoDashboard:has(.ep-workspace)>.seoDashboardMain>.seoBreadcrumb{display:none}
+.seoDashboard:has(.ep-workspace) .seoTopbar{margin-bottom:9px}
+.seoDashboard:has(.ep-workspace) .ep-workspace :is(input,textarea,select){font-family:Arial,Helvetica,sans-serif}
+@media(max-width:950px){.seoDashboard:has(.ep-workspace){grid-template-columns:178px minmax(0,1fr)}}
+@media(max-width:700px){.seoDashboard:has(.ep-workspace){display:block}.seoDashboard:has(.ep-workspace) .seoDashboardSidebar{position:relative;height:auto;max-height:230px;overflow:auto}.seoDashboard:has(.ep-workspace) .seoDashboardMain{padding:10px}}
