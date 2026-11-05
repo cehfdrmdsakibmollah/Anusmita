@@ -69,6 +69,59 @@ export default function AdminProductWorkspace(){
   resizeRef.current=null;catalogWidthRef.current=null;setCatalogWidth(null);
   try{window.localStorage.removeItem(catalogWidthKey);}catch{/* Optional persistence. */}
  }
+ // Resizing the Basic information / Inventory split changes presentation only.
+ const editorColumnsRef=useRef<HTMLDivElement>(null);
+ const basicResizeRef=useRef<{pointerId:number;startX:number;startWidth:number}|null>(null);
+ const basicWidthRef=useRef<number|null>(null);
+ const [basicWidth,setBasicWidth]=useState<number|null>(null);
+ const basicWidthKey="anusmita.admin.productBasicInfoWidth.v1";
+ useEffect(()=>{
+  try{
+   const saved=Number(window.localStorage.getItem(basicWidthKey));
+   if(Number.isFinite(saved)&&saved>=220&&saved<=850){
+    basicWidthRef.current=saved;setBasicWidth(saved);
+   }
+  }catch{/* Local storage is optional. */}
+ },[]);
+ function basicResizeLimits(){
+  const width=editorColumnsRef.current?.getBoundingClientRect().width||0;
+  return {min:220,max:Math.max(220,Math.round(width-230))};
+ }
+ function setBasicPanelWidth(value:number,persist=false){
+  const {min,max}=basicResizeLimits();
+  const next=Math.round(Math.min(max,Math.max(min,value)));
+  basicWidthRef.current=next;setBasicWidth(next);
+  if(persist)try{window.localStorage.setItem(basicWidthKey,String(next));}catch{/* Optional persistence. */}
+ }
+ function startBasicResize(event:ReactPointerEvent<HTMLButtonElement>){
+  if(event.button!==0||!window.matchMedia("(min-width: 1280px)").matches)return;
+  const width=editorColumnsRef.current?.querySelector<HTMLElement>(".apEditorColumn")?.getBoundingClientRect().width||220;
+  event.preventDefault();
+  basicResizeRef.current={pointerId:event.pointerId,startX:event.clientX,startWidth:width};
+  event.currentTarget.setPointerCapture(event.pointerId);
+ }
+ function moveBasicResize(event:ReactPointerEvent<HTMLButtonElement>){
+  const resize=basicResizeRef.current;
+  if(!resize||resize.pointerId!==event.pointerId)return;
+  setBasicPanelWidth(resize.startWidth+event.clientX-resize.startX);
+ }
+ function finishBasicResize(event:ReactPointerEvent<HTMLButtonElement>){
+  if(basicResizeRef.current?.pointerId!==event.pointerId)return;
+  basicResizeRef.current=null;
+  if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
+  if(basicWidthRef.current!==null)setBasicPanelWidth(basicWidthRef.current,true);
+ }
+ function basicResizeKeyboard(event:ReactKeyboardEvent<HTMLButtonElement>){
+  const width=editorColumnsRef.current?.querySelector<HTMLElement>(".apEditorColumn")?.getBoundingClientRect().width||220;
+  const {min,max}=basicResizeLimits();
+  const next=event.key==="ArrowRight"?width+20:event.key==="ArrowLeft"?width-20:event.key==="Home"?min:event.key==="End"?max:null;
+  if(next===null)return;
+  event.preventDefault();setBasicPanelWidth(next,true);
+ }
+ function resetBasicResize(){
+  basicResizeRef.current=null;basicWidthRef.current=null;setBasicWidth(null);
+  try{window.localStorage.removeItem(basicWidthKey);}catch{/* Optional persistence. */}
+ }
  const [quantityTiers,setQuantityTiers]=useState<{id:string;minQty:string;percent:string}[]>([]);
  const [pendingCover,setPendingCover]=useState<number|null>(null);
  const [pendingPreviews,setPendingPreviews]=useState<string[]>([]);
@@ -277,7 +330,7 @@ export default function AdminProductWorkspace(){
  <div className="apReferenceSelected"><div>{selected?.imageUrls[0]?<img src={selected.imageUrls[0]} alt="" width={72} height={75}/>:null}<div><strong>{selected?selected.name:"Add a new product"}</strong><p>{selected?`SKU: ${selected.sku} · ${selected.category} · ${selected.active?"Published":"Draft"}`:"Fill the form below to create a product."}</p></div></div><div className="apSelectedActions">{selected&&<><a href={"/products/"+selected.slug} target="_blank" rel="noopener noreferrer">Preview Product ↗</a><button type="button" onClick={cloneVariant}>Duplicate Variant</button></>}<button type="button" onClick={reset}>+ New Product</button></div></div>
  <nav className="apReferenceTabs" aria-label="Product editor sections"><a href="#ap-basic">Basic Info</a><a href={selected?"/admin/inventory?sku="+encodeURIComponent(selected.sku):"/admin/inventory"}>Inventory ↗</a><a href="#ap-variants">Variants</a><a href="#ap-media">Media</a><a href="#ap-pricing">Pricing</a><a href="#ap-details">Details</a><a href="#ap-publishing">Publishing</a><a href="/admin/products/manage?view=seo">Product SEO ↗</a></nav>
  <form id="apEditorForm" onSubmit={save}>
- <div className="apEditorColumns"><div className="apEditorColumn"><section className="apCard apBasic" id="ap-basic"><h3><Tag size={19}/> Basic information</h3><div className="apCardBody">{field("name","Product name *",{required:true,maxLength:150,placeholder:"e.g. Ivory Jamdani Saree"})}{field("slug","Unique SEO slug *",{required:true,pattern:"[a-z0-9]+(-[a-z0-9]+)*",placeholder:"e.g. ivory-jamdani-saree"})}<div className="apTwo">{field("sku","Unique SKU *",{required:true,disabled:!!selected,placeholder:"ANUS-2026-121"})}{field("brand","Brand",{maxLength:100})}</div><div className="apTaxonomyFields"><label className="apField"><span>Category *</span><select value={categoryId} onChange={e=>{const id=e.target.value;const category=categories.find(c=>c.id===id);setCategoryId(id);setSubcategoryId("");set("category",category?.name||id);}}><option value="">Choose category</option>{parentCategories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}{legacyCategories.map(name=><option key={name} value={name}>{name} (catalog)</option>)}</select></label><div className="apTaxButtons"><button type="button" onClick={()=>openTax(null)}>+ Create</button><button type="button" disabled={!categories.some(c=>c.id===categoryId)} onClick={()=>openTax(null,categories.find(c=>c.id===categoryId))}>Edit</button><button type="button" disabled={!categories.some(c=>c.id===categoryId)} onClick={()=>void changeTax("DELETE",categories.find(c=>c.id===categoryId))}>Delete</button></div><label className="apField"><span>Subcategory</span><select value={subcategoryId} disabled={!categoryId} onChange={e=>setSubcategoryId(e.target.value)}><option value="">No subcategory</option>{subcategories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><div className="apTaxButtons"><button type="button" disabled={!categoryId} onClick={()=>openTax(categoryId)}>+ Create</button><button type="button" disabled={!subcategoryId} onClick={()=>openTax(categoryId,categories.find(c=>c.id===subcategoryId))}>Edit</button><button type="button" disabled={!subcategoryId} onClick={()=>void changeTax("DELETE",categories.find(c=>c.id===subcategoryId))}>Delete</button></div></div><p className="apHint">Legacy products retain their existing category text. Subcategories are managed in the taxonomy registry until storefront mapping is enabled.</p>{field("variantGroup","Variant group key",{placeholder:"e.g. ivory-jamdani"})}<div className="apTwo">{field("color","Colour / shade",{placeholder:"Ivory / Burgundy"})}{field("colorHex","Swatch hex",{placeholder:"#F8F4EB",pattern:"#[0-9a-fA-F]{6}"})}</div>{field("size","Size / capacity",{placeholder:"M, XL, 50ml, 100g…"})}</div></section>
+ <div ref={editorColumnsRef} className="apEditorColumns" style={basicWidth===null?undefined:{"--ap-basic-info-width":basicWidth+"px"} as CSSProperties}><div className="apEditorColumn"><section className="apCard apBasic" id="ap-basic"><button type="button" className="apBasicResizeHandle" role="separator" aria-label="Resize Basic information panel" aria-orientation="vertical" aria-valuemin={220} aria-valuemax={basicResizeLimits().max} aria-valuenow={Math.round(basicWidth||220)} title="Drag to resize Basic information · Double-click to reset" onPointerDown={startBasicResize} onPointerMove={moveBasicResize} onPointerUp={finishBasicResize} onPointerCancel={finishBasicResize} onKeyDown={basicResizeKeyboard} onDoubleClick={resetBasicResize}><span aria-hidden="true"/></button><h3><Tag size={19}/> Basic information</h3><div className="apCardBody">{field("name","Product name *",{required:true,maxLength:150,placeholder:"e.g. Ivory Jamdani Saree"})}{field("slug","Unique SEO slug *",{required:true,pattern:"[a-z0-9]+(-[a-z0-9]+)*",placeholder:"e.g. ivory-jamdani-saree"})}<div className="apTwo">{field("sku","Unique SKU *",{required:true,disabled:!!selected,placeholder:"ANUS-2026-121"})}{field("brand","Brand",{maxLength:100})}</div><div className="apTaxonomyFields"><label className="apField"><span>Category *</span><select value={categoryId} onChange={e=>{const id=e.target.value;const category=categories.find(c=>c.id===id);setCategoryId(id);setSubcategoryId("");set("category",category?.name||id);}}><option value="">Choose category</option>{parentCategories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}{legacyCategories.map(name=><option key={name} value={name}>{name} (catalog)</option>)}</select></label><div className="apTaxButtons"><button type="button" onClick={()=>openTax(null)}>+ Create</button><button type="button" disabled={!categories.some(c=>c.id===categoryId)} onClick={()=>openTax(null,categories.find(c=>c.id===categoryId))}>Edit</button><button type="button" disabled={!categories.some(c=>c.id===categoryId)} onClick={()=>void changeTax("DELETE",categories.find(c=>c.id===categoryId))}>Delete</button></div><label className="apField"><span>Subcategory</span><select value={subcategoryId} disabled={!categoryId} onChange={e=>setSubcategoryId(e.target.value)}><option value="">No subcategory</option>{subcategories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><div className="apTaxButtons"><button type="button" disabled={!categoryId} onClick={()=>openTax(categoryId)}>+ Create</button><button type="button" disabled={!subcategoryId} onClick={()=>openTax(categoryId,categories.find(c=>c.id===subcategoryId))}>Edit</button><button type="button" disabled={!subcategoryId} onClick={()=>void changeTax("DELETE",categories.find(c=>c.id===subcategoryId))}>Delete</button></div></div><p className="apHint">Legacy products retain their existing category text. Subcategories are managed in the taxonomy registry until storefront mapping is enabled.</p>{field("variantGroup","Variant group key",{placeholder:"e.g. ivory-jamdani"})}<div className="apTwo">{field("color","Colour / shade",{placeholder:"Ivory / Burgundy"})}{field("colorHex","Swatch hex",{placeholder:"#F8F4EB",pattern:"#[0-9a-fA-F]{6}"})}</div>{field("size","Size / capacity",{placeholder:"M, XL, 50ml, 100g…"})}</div></section>
 <section className="apCard" id="ap-variants"><h3><Palette size={19}/> Variants / Options</h3><div className="apCardBody"><div className="apVariantToolbar"><span>Variant type: <label><input type="checkbox" checked={variantByColor} onChange={e=>setVariantByColor(e.target.checked)}/> Colour</label> <label><input type="checkbox" checked={variantBySize} onChange={e=>setVariantBySize(e.target.checked)}/> Size</label></span><button type="button" disabled={!selected||(!variantByColor&&!variantBySize)} onClick={()=>{cloneVariant();if(!variantByColor)setDraft(d=>({...d,color:"",colorHex:""}));if(!variantBySize)setDraft(d=>({...d,size:""}));}}>+ Add Variant</button></div><p className="apHint">Use the same variant group for different colours or sizes. Each combination needs a unique SKU and its own photos.</p>{variantError&&<p role="status" className="apHint">{variantError}</p>}{variants.length===0&&<p className="apHint" role="status">No saved variants found for this group. Add a variant to create a separately stocked SKU and gallery.</p>}<div className="apVariantPills">{variants.map(p=><button key={p._id} type="button" className={selected?._id===p._id?"chosen":""} onClick={()=>edit(p)}>{p.color||"Colour default"} · {p.size||"Standard"}</button>)}</div>{variants.length>0&&<div className="apVariantRows"><div className="apVariantRow apVariantHead"><span>Image</span><span>Colour × Size</span><span>SKU</span><span>Stock</span><span>Action</span></div>{variants.map(v=><button className="apVariantRow" type="button" key={v._id} onClick={()=>edit(v)}><span>{v.imageUrls[0]?<img alt="" src={v.imageUrls[0]}/>:<Palette size={18}/>}</span><strong>{v.color||"Default"} × {v.size||"Standard"}</strong><small>{v.sku}</small><small>{Math.max(0,v.onHand-v.reserved)}</small><small>Edit ↗</small></button>)}</div>}</div></section>
 <section className="apCard apPriceDetail" id="ap-pricing"><h3><Tag size={18}/> Pricing</h3><div className="apCardBody"><div className="apTwo">{field("price","Selling price (BDT) *",{required:true,type:"number",min:0.01,step:0.01})}{field("comparePrice","Compare-at price (BDT)",{type:"number",min:0,step:0.01})}{field("cost","Cost price (BDT) *",{required:true,type:"number",min:0,step:0.01})}{field("wholesalePrice","Wholesale reference (BDT)",{type:"number",min:0,step:0.01})}</div>{field("discountPercent","Discount percentage (editorial)",{type:"number",min:0,max:100,step:0.01})}<p className="apHint">Editorial discount and wholesale reference are metadata only. The quantity tiers below are separate real checkout pricing rules.</p>
  <fieldset className="apQuantityTiers"><legend>Buy more · Save more</legend>
