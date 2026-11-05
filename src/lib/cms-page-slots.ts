@@ -28,6 +28,8 @@ export function isSafeCmsImage(url:string){
 export const cmsNativeHeroSchema=z.object({
  title:z.string().trim().max(130).default(""),
  subtitle:z.string().trim().max(320).default(""),
+ sectionTitle:z.string().trim().max(130).default(""),
+ secondaryTitle:z.string().trim().max(130).default(""),
  imageUrl:z.string().trim().max(500).default(""),
  background:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#fff6f9"),
  textColor:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#611b37")

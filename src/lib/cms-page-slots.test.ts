@@ -45,5 +45,14 @@ describe("Unified CMS Page Slots",()=>{
   expect(cmsSaveSchema.safeParse({...payload,nativeHero:{...hero,imageUrl:""}}).success).toBe(true);
   expect(cmsSaveSchema.safeParse({...payload,nativeHero:{...hero,imageUrl:asset.replace("/deals/","/products/")}}).success).toBe(false);
  });
+ it("supports native section heading drafts without altering interactive commerce components",()=>{
+  const sample={action:"publish",page:"bundles",revision:4,slots:[],nativeHero:{title:"",subtitle:"",sectionTitle:"Korean skincare sets",secondaryTitle:"Curated combinations",imageUrl:"",background:"#fff6f9",textColor:"#611b37"}};
+  expect(cmsSaveSchema.safeParse(sample).success).toBe(true);
+  expect(cmsSaveSchema.safeParse({...sample,nativeHero:{...sample.nativeHero,sectionTitle:""}}).success).toBe(true);
+  expect(cmsSaveSchema.safeParse({...sample,nativeHero:{...sample.nativeHero,sectionTitle:"A".repeat(131)}}).success).toBe(false);
+  expect(cmsSaveSchema.safeParse({...sample,nativeHero:{...sample.nativeHero,secondaryTitle:"B".repeat(131)}}).success).toBe(false);
+  expect(cmsSaveSchema.safeParse({...sample,nativeHero:{...sample.nativeHero,html:"<script>alert(1)</script>"}}).success).toBe(false);
+  expect(cmsSaveSchema.safeParse({action:"saveDraft",page:"deals",revision:0,slots:[],nativeHero:{}}).success).toBe(true);
+ });
  it("rejects unknown properties",()=>{expect(cmsSlots.safeParse([{...valid,html:"<script />"}]).success).toBe(false);});
 });
