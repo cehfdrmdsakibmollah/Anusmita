@@ -199,6 +199,9 @@ const StoreChromeSchema=new Schema({
  footerNote:{type:String,default:"",maxlength:240},
  headerOrder:{type:[String],default:["logo","navigation","search","tools"]},
  footerOrder:{type:[String],default:["brand","shop","care"]},
+ navLinks:{type:[Schema.Types.Mixed],default:undefined},
+ footerShopLinks:{type:[Schema.Types.Mixed],default:undefined},
+ footerCareLinks:{type:[Schema.Types.Mixed],default:undefined},
  enabled:{type:Boolean,default:false},
  revision:{type:Number,default:0,min:0},
  lastEditedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
