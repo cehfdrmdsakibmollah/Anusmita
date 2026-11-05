@@ -45,3 +45,14 @@
 .cse-live-frame{width:100%;height:640px;border:1px solid #e7c4d0;border-radius:8px;background:#fff}
 .cse-blocks-canvas[hidden]{display:none}
 .cse-blocks-canvas{display:flex;flex-direction:column;gap:8px}
+
+
+/* Native section heading overrides: additive controls, not a replacement canvas. */
+.cse-native-section-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;padding:12px;border:1px solid #e8c7d4;border-radius:8px;background:#fff}
+.cse-native-section-fields h4,.cse-native-section-fields>p{grid-column:1/-1}
+.cse-native-section-fields h4{font:700 17px Georgia,serif;color:#731a3b}
+.cse-native-section-fields label{display:flex;flex-direction:column;gap:5px;font:700 11px Arial,sans-serif;color:#6d1c3e}
+.cse-native-section-fields label input{width:100%;min-width:0;border:1px solid #e4bfce;border-radius:6px;background:white;padding:9px;color:#4b1830;font:12px Arial,sans-serif}
+.cse-native-section-fields>button{width:max-content;max-width:100%;border:1px solid #c791ac;background:#fff6fa;color:#842047;border-radius:6px;padding:8px 10px;font:700 11px Arial,sans-serif;cursor:pointer}
+.cse-native-section-fields>button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:700px){.cse-native-section-fields{grid-template-columns:1fr}}
