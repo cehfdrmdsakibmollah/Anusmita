@@ -8,6 +8,7 @@ import HomepageManager from "@/components/homepage-manager";
 import HomepageStyleEditor from "@/components/homepage-style-editor";
 import HomepageCountdown from "@/components/homepage-countdown";
 import StudioMultiPage from "@/components/studio-multipage";
+import StoreChromeEditor from "@/components/store-chrome-editor";
 import "./homepage-studio-v2.css";
 
 type Config={revision:number;blocks:HomeBlock[];sections:HomeSection[];saved:boolean};
@@ -26,6 +27,7 @@ export default function HomepageStudioV2(){
  const [message,setMessage]=useState(""),[busy,setBusy]=useState(false),[query,setQuery]=useState(""),[showDraft,setShowDraft]=useState(true),[libraryOpen,setLibraryOpen]=useState(true),[legacyOpen,setLegacyOpen]=useState(false),[activePage,setActivePage]=useState("Homepage"),[confirmDelete,setConfirmDelete]=useState(false);
  const [shelfOpen,setShelfOpen]=useState(false);
  const [offerOpen,setOfferOpen]=useState(true);
+ const [chromeOpen,setChromeOpen]=useState(false);
  const importRef=useRef<HTMLInputElement|null>(null);
  const imageInputRef=useRef<HTMLInputElement|null>(null);
  const [imageUploading,setImageUploading]=useState(false);
@@ -116,6 +118,12 @@ export default function HomepageStudioV2(){
    <div className="avs-stats">
     {[[Home,"Active Page","Homepage"],[Layers,"Sections",String(blocks.length)],[LayoutGrid,"Components",String(config.sections.length)],[AlertTriangle,"Draft Changes",dirty?"1 unsaved":"No unsaved edits"],[CheckCircle2,"Saved Revision",String(config.revision)],[ShieldCheck,"Permissions","Owner / Admin"],[Eye,"Preview","Responsive"],[CheckCircle2,"CMS Status",config.saved?"Connected":"Starter Layout"]].map(([I,label,value],i)=><div className="avs-stat" key={i}><span className="avs-stat-icon">{typeof I!=="string"&&<I size={22}/>}</span><div><small>{label as string}</small><strong>{value as string}</strong></div></div>)}
    </div>
+   <section className="avs-chrome-control" aria-label="Global storefront header and footer controls">
+    <div className="avs-chrome-heading"><div><h2>Global Header & Footer</h2><p>Edit announcement, footer copy and section order using the existing secured StoreChrome manager. All storefront pages share these elements.</p></div>
+     <button type="button" aria-expanded={chromeOpen} onClick={()=>setChromeOpen(v=>!v)}>{chromeOpen?"Hide Header/Footer Editor":"Edit Header & Footer"}</button>
+    </div>
+    {chromeOpen&&<StoreChromeEditor/>}
+   </section>
    <section className="avs-offer-control" aria-label="Homepage countdown offers">
     <div className="avs-offer-control-heading">
      <div><h2><Clock size={18}/> Countdown Offer Manager</h2><p>Create, edit, schedule, publish or delete homepage countdown banners. No product prices or inventory are changed.</p></div>
