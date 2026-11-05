@@ -67,5 +67,19 @@ describe("Unified CMS Page Slots",()=>{
   expect(cmsRevisionSchema.safeParse({...snapshot,slots:[{...valid,imageUrl:"javascript:alert(1)"}]}).success).toBe(false);
   expect(cmsRevisionSchema.safeParse({...snapshot,revision:0}).success).toBe(false);
  });
+ it("validates nested editorial grid card CRUD without unsafe links or images",()=>{
+  const a={id:"11111111-1111-4111-8111-111111111111",title:"New skincare edit",subtitle:"Explore our collection",imageUrl:"/brand/categories/skincare.webp",cta:"Browse",href:"/shop"};
+  const b={...a,id:"22222222-2222-4222-8222-222222222222",title:"Beauty essentials"};
+  const grid={...valid,kind:"grid",children:[a,b]};
+  expect(cmsSlots.safeParse([grid]).success).toBe(true);
+  expect(cmsSaveSchema.safeParse({action:"publish",page:"deals",revision:0,slots:[grid]}).success).toBe(true);
+  expect(cmsSlots.safeParse([{...grid,children:[a,a]}]).success).toBe(false);
+  expect(cmsSlots.safeParse([{...grid,children:Array.from({length:7},(_,i)=>({...a,id:"00000000-0000-4000-8000-"+String(i+1).padStart(12,"0")}))}]).success).toBe(false);
+  expect(cmsSlots.safeParse([{...grid,children:[{...a,href:"javascript:alert(1)"}]}]).success).toBe(false);
+  expect(cmsSlots.safeParse([{...grid,children:[{...a,imageUrl:"https://untrusted.invalid/image.jpg"}]}]).success).toBe(false);
+  expect(cmsSlots.safeParse([{...grid,kind:"banner"}]).success).toBe(false);
+  expect(cmsSlots.safeParse([{...grid,children:[]}]).success).toBe(true);
+  expect(cmsSlots.safeParse([valid]).success).toBe(true);
+ });
  it("rejects unknown properties",()=>{expect(cmsSlots.safeParse([{...valid,html:"<script />"}]).success).toBe(false);});
 });

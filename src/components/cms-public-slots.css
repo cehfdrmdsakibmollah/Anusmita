@@ -22,3 +22,17 @@
 .anCmsPublicSlot .anCmsPublicCopy h2{font-size:clamp(22px,6vw,34px)!important}
 }
 @media(prefers-reduced-motion:reduce){.anCmsPublicSlot *{transition:none!important;animation:none!important}}
+
+
+/* CMS-only nested editorial cards; product and checkout components are unaffected. */
+.anCmsPublicGridSection{border:1px solid #efd0dc;overflow:hidden}
+.anCmsPublicGridSection>h2{font-family:Georgia,serif;line-height:1.12;margin:6px 0 12px}
+.anCmsGridIntro{font:14px/1.6 Arial,sans-serif;margin:0 0 18px}
+.anCmsPublicNestedCards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:16px}
+.anCmsPublicNestedCard{min-width:0;background:#fff;border:1px solid #ecd3dd;border-radius:12px;overflow:hidden;color:#641a36}
+.anCmsPublicNestedCard>img{display:block;width:100%;height:195px;object-fit:cover}
+.anCmsPublicNestedCard>div{padding:18px}
+.anCmsPublicNestedCard h3{font:700 20px Georgia,serif;margin:0 0 8px}
+.anCmsPublicNestedCard p{font:12px/1.55 Arial,sans-serif;color:#725268;margin:0 0 12px}
+.anCmsPublicNestedCard a{display:inline-block;color:white;font:700 11px Arial,sans-serif;padding:9px 12px;border-radius:6px}
+@media(max-width:680px){.anCmsPublicGridSection{padding:16px!important}.anCmsPublicNestedCards{grid-template-columns:1fr}.anCmsPublicNestedCard>img{height:200px}}

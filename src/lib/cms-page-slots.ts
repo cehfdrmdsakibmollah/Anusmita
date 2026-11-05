@@ -1,7 +1,7 @@
 import {z} from "zod";
 import {isSafeImage,isSafeLink} from "@/lib/home-content";
 export const cmsSlotPages=["shop","deals","bundles","about","contact","journal","cart","checkout","gift-cards","pre-orders","customer-stories","wishlist","routine-quiz","track-order"] as const;
-export const cmsSectionKinds=["hero","banner","text","image","callout","split"] as const;
+export const cmsSectionKinds=["hero","banner","text","image","callout","split","grid"] as const;
 export const cmsSectionAlignments=["left","center","right"] as const;
 export const cmsSectionImagePositions=["left","right","background"] as const;
 export const cmsStyleSchema=z.object({
@@ -38,6 +38,18 @@ export const cmsNativeHeroSchema=z.object({
 });
 export type CmsNativeHero=z.infer<typeof cmsNativeHeroSchema>;
 export const defaultCmsNativeHero:CmsNativeHero=cmsNativeHeroSchema.parse({});
+export const cmsNestedCardSchema=z.object({
+ id:z.uuid(),
+ title:z.string().trim().min(2).max(100),
+ subtitle:z.string().trim().max(240).default(""),
+ imageUrl:z.string().trim().max(500).default(""),
+ cta:z.string().trim().max(40).default(""),
+ href:z.string().trim().max(250).default("/shop")
+}).strict().superRefine((card,ctx)=>{
+ if(card.imageUrl&&!isSafeCmsImage(card.imageUrl))ctx.addIssue({code:"custom",path:["imageUrl"],message:"Only approved media assets are supported"});
+ if(!isSafeLink(card.href))ctx.addIssue({code:"custom",path:["href"],message:"Use a safe internal link"});
+});
+export type CmsNestedCard=z.infer<typeof cmsNestedCardSchema>;
 export const cmsSlotSchema=z.object({
  id:z.uuid(),placement:z.enum(["before","after"]),
  kind:z.enum(cmsSectionKinds).default("banner"),
@@ -46,6 +58,7 @@ export const cmsSlotSchema=z.object({
  subtitle:z.string().trim().max(400).default(""),
  badge:z.string().trim().max(60).default(""),
  imageUrl:z.string().trim().max(500).default(""),
+ children:z.array(cmsNestedCardSchema).max(6).refine(items=>new Set(items.map(x=>x.id)).size===items.length,"Duplicate nested card IDs").default([]),
  cta:z.string().trim().max(48).default(""),
  href:z.string().trim().max(250).default("/shop"),
  enabled:z.boolean().default(true),
@@ -53,6 +66,7 @@ export const cmsSlotSchema=z.object({
 }).strict().superRefine((slot,ctx)=>{
  if(slot.imageUrl&&!isSafeCmsImage(slot.imageUrl))ctx.addIssue({code:"custom",path:["imageUrl"],message:"Only approved HTTPS Cloudinary, Unsplash or brand assets are allowed"});
  if(!isSafeLink(slot.href))ctx.addIssue({code:"custom",path:["href"],message:"Use an internal /path or #anchor link"});
+ if(slot.kind!=="grid"&&slot.children.length)ctx.addIssue({code:"custom",path:["children"],message:"Nested cards are supported on grid sections only"});
 });
 export const cmsSlots=z.array(cmsSlotSchema).max(20).refine(items=>new Set(items.map(x=>x.id)).size===items.length,"Duplicate block IDs");
 export const cmsSaveSchema=z.object({page:z.enum(cmsSlotPages),revision:z.number().int().min(0),action:z.enum(["saveDraft","publish"]),slots:cmsSlots,nativeHero:cmsNativeHeroSchema.default(defaultCmsNativeHero)}).strict();
