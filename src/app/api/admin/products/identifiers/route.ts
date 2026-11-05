@@ -20,14 +20,14 @@ export async function GET(req:Request){
    const candidates=Array.from({length:99},(_,i)=>prefix+"-"+(i+2));
    const existing=await Product.find({sku:{$in:candidates}}).select("sku -_id").lean<{sku:string}[]>();
    const taken=new Set(existing.map(p=>p.sku));
-   suggestedSku=nextProductIdentity(input.sku,candidate=>taken.has(candidate),60);
+   suggestedSku=nextProductIdentity(prefix,candidate=>taken.has(candidate),60);
   }
   if(conflictingSlug){
    const prefix=input.slug.slice(0,140);
    const candidates=Array.from({length:99},(_,i)=>prefix+"-"+(i+2));
    const existing=await Product.find({slug:{$in:candidates}}).select("slug -_id").lean<{slug:string}[]>();
    const taken=new Set(existing.map(p=>p.slug));
-   suggestedSlug=nextProductIdentity(input.slug,candidate=>taken.has(candidate),200);
+   suggestedSlug=nextProductIdentity(prefix,candidate=>taken.has(candidate),200);
   }
   return Response.json({available:!conflictingSku&&!conflictingSlug,skuTaken:conflictingSku,slugTaken:conflictingSlug,suggestedSku,suggestedSlug},{headers:{"Cache-Control":"private, no-store"}});
  }catch(e){return apiError(e);}
