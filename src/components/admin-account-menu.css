@@ -31,3 +31,11 @@
 .anAccountError{margin:5px 0;padding:8px;border-radius:6px;background:#fff0f0;color:#a11c2b;font-size:11px}
 @keyframes anAccountSpin{to{transform:rotate(360deg)}}
 @media(max-width:650px){.anAccountTriggerCopy strong{max-width:88px}.anAccountMenu-sidebar .anAccountPopover{left:0;right:auto;max-width:calc(100vw - 30px)}}
+
+
+/* Override legacy Product Editor header span rules only inside the account menu. */
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount .anAccountMenu span{height:auto;width:auto;display:initial;place-items:initial;border-radius:initial;background:transparent;color:inherit}
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount .anAccountMenu .anAccountAvatar{display:grid;place-items:center;flex:none;height:30px;width:30px;border-radius:50%;background:linear-gradient(140deg,#b93467,#7b0b35);color:#fff}
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount .anAccountMenu .anAccountAvatarLarge{height:42px;width:42px}
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount .anAccountMenu .anAccountTriggerCopy,.seoDashboard:has(.apReferenceGrid) .apTopbarAccount .anAccountMenu .anAccountRole{display:flex}
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount .anAccountMenu .anAccountRole{display:inline-flex;border-radius:20px;background:#fff1f6;color:#87133f}
