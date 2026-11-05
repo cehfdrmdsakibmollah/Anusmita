@@ -71,7 +71,12 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
     <label>Hero background<div className="cse-color-control"><input type="color" value={native.background} onChange={e=>setNative(n=>({...n,background:e.target.value}))}/><input maxLength={7} value={native.background} onChange={e=>setNative(n=>({...n,background:e.target.value}))}/></div></label>
     <label>Hero text color<div className="cse-color-control"><input type="color" value={native.textColor} onChange={e=>setNative(n=>({...n,textColor:e.target.value}))}/><input maxLength={7} value={native.textColor} onChange={e=>setNative(n=>({...n,textColor:e.target.value}))}/></div></label>
    </div>
-   <p className="cse-muted">Native hero changes go live only when you click Publish Page Slots. Save Draft preserves the current public hero.</p>
+   <div className="cse-native-image-preview" aria-live="polite">
+    <strong>{native.imageUrl?"Unsaved hero image preview":"Current native image preserved"}</strong>
+    {native.imageUrl?<img src={native.imageUrl} alt="Draft hero image preview" onError={()=>setNotice("Image preview failed. Verify the approved URL before publishing.")}/>:<p className="cse-muted">No CMS image override. This page retains its original hero artwork.</p>}
+    <div className="cse-media-upload"><button type="button" disabled={mediaBusy||!native.imageUrl} onClick={()=>setNative(n=>({...n,imageUrl:""}))}>Restore original hero image</button><button type="button" disabled={mediaBusy} onClick={()=>nativeMediaInput.current?.click()}>Replace image</button></div>
+   </div>
+   <p className="cse-muted">Image upload adds a new R2 asset to the draft; it does not publish automatically. Click Save Draft then Publish Page Slots to update the public hero.</p>
   </div>}
   <div className="cse-workspace"><section className="cse-list"><div className="cse-section-head"><strong>Page sections ({slots.length})</strong><div className="cse-add-control"><select aria-label="Section type to add" value={createKind} onChange={e=>setCreateKind(e.target.value as CmsSlot["kind"])}>{cmsSectionKinds.map(t=><option key={t} value={t}>{t[0].toUpperCase()+t.slice(1)}</option>)}</select><button onClick={add} disabled={slots.length>=20}><Plus size={14}/> Add</button></div></div>
    {slots.length===0&&<p className="cse-muted">No custom sections yet. The original page remains visible.</p>}
@@ -114,6 +119,7 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
    </>:<p className="cse-muted">Select a block from the left panel or preview.</p>}
   </section></div>
   <div className="cse-actions"><button type="button" onClick={exportJson}>Export JSON</button><button type="button" onClick={()=>jsonInput.current?.click()}>Import JSON</button><input ref={jsonInput} type="file" accept="application/json,.json" hidden onChange={e=>{const file=e.currentTarget.files?.[0];if(file)void importJson(file);e.currentTarget.value="";}}/><button type="button" onClick={()=>void save("saveDraft")} disabled={busy}><Save size={16}/> Save Draft</button><button type="button" className="cse-publish" onClick={()=>void save("publish")} disabled={busy}><Upload size={16}/> Publish Page Slots</button><button type="button" onClick={()=>void load()} disabled={busy}><RefreshCw size={15}/> Discard / Reload</button><span>{dirty?"Unsaved editor changes":"Draft saved"} · {record.publishedAt?"Published "+new Date(record.publishedAt).toLocaleString("en-BD"):"Never published"}</span></div>
+  {dirty&&<p className="cse-notice" role="status">Unsaved draft changes are not visible on the live page. Save Draft, then Publish Page Slots to publish text and images.</p>}
   {notice&&<p className="cse-notice" role="status">{notice}</p>}
  </div>;
 }
