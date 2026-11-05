@@ -2,6 +2,7 @@
 import {useCallback,useEffect,useRef,useState} from "react";
 import {Plus,Save,Upload,Trash2,ArrowUp,ArrowDown,Eye,EyeOff,RefreshCw} from "lucide-react";
 import {cmsSlotSchema,defaultCmsStyle,cmsSectionKinds,cmsNativeHeroSchema,defaultCmsNativeHero,type CmsNativeHero,type CmsSlot,type CmsSlotPage} from "@/lib/cms-page-slots";
+import CmsMediaLibrary from "@/components/cms-media-library";
 import "./cms-page-slots-editor.css";
 type Payload={page:CmsSlotPage;revision:number;publishedRevision:number;draft:CmsSlot[];published:CmsSlot[];publishedAt:string|null;nativeDraft:CmsNativeHero;nativePublished:CmsNativeHero;history:{revision:number;action:"saveDraft"|"publish"|"restoreDraft";createdAt:string;slotCount:number}[]};
 const fresh=(position:number,kind:CmsSlot["kind"]="banner"):CmsSlot=>({id:crypto.randomUUID(),placement:"before",kind,style:{...defaultCmsStyle},title:"New ANUSMITA Collection",subtitle:"Discover what is new and thoughtfully curated.",badge:"ANUSMITA EDIT",imageUrl:"",children:[],cta:"Explore Collection",href:"/shop",enabled:true,position});
@@ -111,7 +112,8 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
     <label>Hero background<div className="cse-color-control"><input type="color" value={native.background} onChange={e=>setNative(n=>({...n,background:e.target.value}))}/><input maxLength={7} value={native.background} onChange={e=>setNative(n=>({...n,background:e.target.value}))}/></div></label>
     <label>Hero text color<div className="cse-color-control"><input type="color" value={native.textColor} onChange={e=>setNative(n=>({...n,textColor:e.target.value}))}/><input maxLength={7} value={native.textColor} onChange={e=>setNative(n=>({...n,textColor:e.target.value}))}/></div></label>
    </div>
-   <div className="cse-native-image-preview" aria-live="polite">
+   <CmsMediaLibrary scope={page} onChoose={url=>setNative(hero=>({...hero,imageUrl:url}))}/>
+    <div className="cse-native-image-preview" aria-live="polite">
     <strong>{native.imageUrl?"Unsaved hero image preview":"Current native image preserved"}</strong>
     {native.imageUrl?<img src={native.imageUrl} alt="Draft hero image preview" onError={()=>setNotice("Image preview failed. Verify the approved URL before publishing.")}/>:<p className="cse-muted">No CMS image override. This page retains its original hero artwork.</p>}
     <div className="cse-media-upload"><button type="button" disabled={mediaBusy||!native.imageUrl} onClick={()=>setNative(n=>({...n,imageUrl:""}))}>Restore original hero image</button><button type="button" disabled={mediaBusy} onClick={()=>nativeMediaInput.current?.click()}>Replace image</button></div>
@@ -152,7 +154,8 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
     <label>Title<input value={selectedSlot.title} maxLength={110} onChange={e=>update({title:e.target.value})}/></label>
     <label>Subtitle<textarea rows={4} maxLength={400} value={selectedSlot.subtitle} onChange={e=>update({subtitle:e.target.value})}/></label>
     <label>Badge<input value={selectedSlot.badge} maxLength={60} onChange={e=>update({badge:e.target.value})}/></label>
-    <label>Image URL<input value={selectedSlot.imageUrl} maxLength={500} placeholder="/brand/categories/skincare.webp" onChange={e=>update({imageUrl:e.target.value})}/></label>
+    <CmsMediaLibrary scope={page} onChoose={url=>update({imageUrl:url})}/>
+     <label>Image URL<input value={selectedSlot.imageUrl} maxLength={500} placeholder="/brand/categories/skincare.webp" onChange={e=>update({imageUrl:e.target.value})}/></label>
     <div className="cse-media-upload"><input type="file" hidden ref={mediaInput} accept="image/jpeg,image/png,image/webp" onChange={e=>{const file=e.currentTarget.files?.[0];if(file)void uploadImage(file);e.currentTarget.value="";}}/><button type="button" disabled={mediaBusy} onClick={()=>mediaInput.current?.click()}>{mediaBusy?"Uploading…":"Upload CMS image to R2"}</button></div><p className="cse-muted">JPEG/PNG/WebP, maximum 3 MB. Upload creates a new CMS asset and does not touch product photos. Save Draft and Publish to use it.</p>
     {selectedSlot.kind==="grid"&&<div className="cse-nested-editor">
      <div className="cse-nested-heading"><strong>Nested editorial cards ({selectedSlot.children.length}/6)</strong><button type="button" disabled={selectedSlot.children.length>=6||busy||mediaBusy} onClick={addNested}><Plus size={13}/> Add card</button></div>
@@ -163,6 +166,7 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
       <label>Card description<textarea rows={2} value={card.subtitle} maxLength={240} onChange={e=>modifyNested(card.id,{subtitle:e.target.value})}/></label>
       <label>Card image URL<input value={card.imageUrl} maxLength={500} onChange={e=>modifyNested(card.id,{imageUrl:e.target.value})}/></label>
       {card.imageUrl&&<img src={card.imageUrl} className="cse-nested-thumb" alt={"Draft card "+(index+1)+" media"}/>}
+      <CmsMediaLibrary scope={page} onChoose={url=>modifyNested(card.id,{imageUrl:url})}/>
       <div className="cse-nested-media"><label>Upload image<input type="file" accept="image/jpeg,image/png,image/webp" disabled={mediaBusy} onChange={e=>{const file=e.currentTarget.files?.[0];if(file)void uploadImage(file,"nested",card.id);e.currentTarget.value="";}}/></label><button type="button" disabled={mediaBusy||!card.imageUrl} onClick={()=>modifyNested(card.id,{imageUrl:""})}>Clear image</button></div>
       <label>Button label<input value={card.cta} maxLength={40} onChange={e=>modifyNested(card.id,{cta:e.target.value})}/></label>
       <label>Button destination<input value={card.href} maxLength={250} onChange={e=>modifyNested(card.id,{href:e.target.value})}/></label>

@@ -9,6 +9,7 @@ import HomepageStyleEditor from "@/components/homepage-style-editor";
 import HomepageCountdown from "@/components/homepage-countdown";
 import StudioMultiPage from "@/components/studio-multipage";
 import StoreChromeEditor from "@/components/store-chrome-editor";
+import CmsMediaLibrary from "@/components/cms-media-library";
 import "./homepage-studio-v2.css";
 
 type Config={revision:number;blocks:HomeBlock[];sections:HomeSection[];saved:boolean};
@@ -173,7 +174,7 @@ export default function HomepageStudioV2(){
     <label>Offer ends at (required for new countdown offers)<input type="datetime-local" value={localTime(draft.endsAt)} onChange={e=>patch("endsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label>
     <p className="avs-hint">Dates use your device's local timezone and are saved in UTC. Once expired, the offer automatically disappears from the public homepage. Change only merchandising copy here; real discounts must be configured separately in Products.</p>
     {draft.endsAt&&Date.parse(draft.endsAt)>Date.now()&&<div className="avs-countdown-preview"><strong>Live timer preview</strong><HomepageCountdown endsAt={draft.endsAt}/></div>}
-   </div>}<h4>Media (Banner Image)</h4>{draft.imageUrl&&<img className="avs-media-thumb" src={draft.imageUrl} alt="Draft banner image preview"/>}
+   </div>}<h4>Media (Banner Image)</h4><CmsMediaLibrary scope="homepage" onChoose={url=>patch("imageUrl",url)}/>{draft.imageUrl&&<img className="avs-media-thumb" src={draft.imageUrl} alt="Draft banner image preview"/>}
    <input ref={imageInputRef} type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={e=>{const file=e.currentTarget.files?.[0];if(file)void uploadHomepageImage(file);e.currentTarget.value="";}}/>
    <div className="avs-image-actions"><button type="button" disabled={imageUploading} onClick={()=>imageInputRef.current?.click()}><Upload size={14}/>{imageUploading?"Uploading…":draft.imageUrl?"Replace / Upload Image":"Upload Image"}</button><button type="button" disabled={imageUploading||!draft.imageUrl} onClick={()=>patch("imageUrl","")}><Trash2 size={14}/> Remove Image</button></div>
    <label>Approved image URL<input value={draft.imageUrl} disabled={imageUploading} onChange={e=>patch("imageUrl",e.target.value)} placeholder="/brand/categories/skincare.webp"/></label>
