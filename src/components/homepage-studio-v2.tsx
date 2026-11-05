@@ -31,6 +31,7 @@ export default function HomepageStudioV2(){
  const [chromeOpen,setChromeOpen]=useState(false);
  const importRef=useRef<HTMLInputElement|null>(null);
  const imageInputRef=useRef<HTMLInputElement|null>(null);
+ const inspectorRef=useRef<HTMLElement|null>(null);
  const [imageUploading,setImageUploading]=useState(false);
  async function uploadHomepageImage(file:File){
   const targetId=draft?.id;
@@ -57,6 +58,11 @@ export default function HomepageStudioV2(){
   setConfig(data);setDraft(null);setSelected(null);setMessage("");
  }
  useEffect(()=>{void load().catch(e=>setMessage(String(e)));},[]);
+ const [focusOfferEditor,setFocusOfferEditor]=useState(false);
+ useEffect(()=>{if(focusOfferEditor&&activePage==="Homepage"&&draft?.kind==="promotion"){
+  inspectorRef.current?.scrollIntoView({behavior:"smooth",block:"start"});
+  setFocusOfferEditor(false);
+ }},[focusOfferEditor,activePage,draft]);
  const blocks=useMemo(()=>{if(!config)return [];return config.blocks.map(b=>draft?.id===b.id?draft:b).concat(draft&&!config.blocks.some(b=>b.id===draft.id)?[draft]:[]).sort((a,b)=>kinds.indexOf(a.kind)-kinds.indexOf(b.kind)||a.position-b.position);},[config,draft]);
  const visible=useMemo(()=>blocks.filter(b=>(showDraft||b.enabled)&&(!query||[b.title,b.kind,b.subtitle].join(" ").toLowerCase().includes(query.toLowerCase()))),[blocks,showDraft,query]);
  const active=selected?blocks.find(b=>b.id===selected)||null:null;
@@ -64,8 +70,30 @@ export default function HomepageStudioV2(){
  const offerStatus=(b:HomeBlock)=>{const now=Date.now();if(!b.enabled)return "Draft";if(b.startsAt&&Date.parse(b.startsAt)>now)return "Scheduled";if(b.endsAt&&Date.parse(b.endsAt)<=now)return "Expired";return "Live";};
  const dirty=!!draft&&(JSON.stringify(config?.blocks.find(b=>b.id===draft.id))!==JSON.stringify(draft));
  const selectedKind=active?.kind||"hero";
- function choose(b:HomeBlock){if(imageUploading)return;if(dirty&&selected!==b.id&&!window.confirm("Discard unsaved changes to this card?"))return;setSelected(b.id);setDraft({...b});setInspector("content");setConfirmDelete(false);}
+ function choose(b:HomeBlock){if(imageUploading)return false;if(dirty&&selected!==b.id&&!window.confirm("Discard unsaved changes to this card?"))return false;setSelected(b.id);setDraft({...b});setInspector("content");setConfirmDelete(false);return true;}
  function create(kind:HomeBlock["kind"]){if(imageUploading)return;if(dirty&&!window.confirm("Discard unsaved changes?"))return;const card=initial(kind,blocks.filter(b=>b.kind===kind).length);setSelected(card.id);setDraft(card);setInspector("content");setMode("sections");}
+ function openOfferEditor(offer:HomeBlock,tab:Inspector){
+  if(!choose(offer))return;
+  setActivePage("Homepage");setMode("sections");setInspector(tab);setFocusOfferEditor(true);
+ }
+ function createOffer(){
+  if(imageUploading||busy)return;
+  if(dirty&&!window.confirm("Discard unsaved changes before creating a new offer?"))return;
+  const card=initial("promotion",config?.blocks.filter(b=>b.kind==="promotion").length||0);
+  setActivePage("Homepage");setOfferOpen(true);setMode("sections");setSelected(card.id);setDraft(card);setInspector("content");setConfirmDelete(false);setFocusOfferEditor(true);
+ }
+ async function deleteOffer(offer:HomeBlock){
+  if(busy||imageUploading||!config)return;
+  const stored=config.blocks.some(item=>item.id===offer.id);
+  if(dirty&&selected!==offer.id&&!window.confirm("Discard unsaved card changes before deleting this offer?"))return;
+  if(!window.confirm((stored?"Permanently delete saved countdown offer: ":"Discard unsaved countdown offer: ")+offer.title+"?"))return;
+  if(!stored){
+   if(selected===offer.id){setDraft(null);setSelected(null);}
+   setMessage("Unsaved countdown draft discarded. No database record was deleted.");
+   return;
+  }
+  await operation({action:"delete",id:offer.id});
+ }
  function patch<K extends keyof HomeBlock>(key:K,value:HomeBlock[K]){if(!draft)return;setDraft({...draft,[key]:value});}
  async function operation(data:Record<string,unknown>){
   if(!config||busy)return false;setBusy(true);setMessage("");
@@ -130,17 +158,17 @@ export default function HomepageStudioV2(){
      <div><h2><Clock size={18}/> Countdown Offer Manager</h2><p>Create, edit, schedule, publish or delete homepage countdown banners. No product prices or inventory are changed.</p></div>
      <div className="avs-offer-control-actions">
       <button type="button" onClick={()=>setOfferOpen(v=>!v)} aria-expanded={offerOpen}>{offerOpen?"Hide offers":"Show offers"}</button>
-      <button type="button" className="avs-primary" onClick={()=>{create("promotion");setOfferOpen(true);setInspector("content");}}><Plus size={15}/> Create Countdown Offer</button>
+      <button type="button" className="avs-primary" onClick={createOffer}><Plus size={15}/> Create Countdown Offer</button>
      </div>
     </div>
     {offerOpen&&<div className="avs-offer-list">
      {offers.length===0&&<p className="avs-offer-empty">No offers have been saved yet. Use Create Countdown Offer to add one.</p>}
      {offers.map(b=><div className="avs-offer-card" key={b.id}>
-      <div className="avs-offer-card-info"><span className={"avs-offer-status "+offerStatus(b).toLowerCase()}>{offerStatus(b)}</span><strong>{b.title}</strong><small>{b.endsAt?"Deadline: "+new Date(b.endsAt).toLocaleString("en-BD",{timeZone:"Asia/Dhaka"}):"No deadline set (legacy banner)"}</small>
+      <div className="avs-offer-card-info">{!config.blocks.some(item=>item.id===b.id)&&<span className="avs-offer-status draft">Unsaved · not in database</span>}<span className={"avs-offer-status "+offerStatus(b).toLowerCase()}>{offerStatus(b)}</span><strong>{b.title}</strong><small>{b.endsAt?"Deadline: "+new Date(b.endsAt).toLocaleString("en-BD",{timeZone:"Asia/Dhaka"}):"No deadline set (legacy banner)"}</small>
       {b.enabled&&b.endsAt&&Date.parse(b.endsAt)>Date.now()&&<HomepageCountdown endsAt={b.endsAt}/>}</div>
-      <div className="avs-offer-card-buttons"><button type="button" onClick={()=>{choose(b);setInspector("content");}} aria-label={"Edit "+b.title}>Edit</button>
-      <button type="button" onClick={()=>{choose(b);setInspector("advanced");}} aria-label={"Update publishing "+b.title}>Publish / Schedule</button>
-      <button type="button" className="avs-offer-delete" onClick={()=>{if(dirty&&selected!==b.id&&!window.confirm("Discard unsaved changes before deleting?"))return;if(!window.confirm("Permanently delete countdown offer: "+b.title+"?"))return;void operation({action:"delete",id:b.id});}} aria-label={"Delete "+b.title}><Trash2 size={15}/></button></div>
+      <div className="avs-offer-card-buttons"><button type="button" onClick={()=>openOfferEditor(b,"content")} aria-label={"Edit "+b.title}>Edit</button>
+      <button type="button" onClick={()=>openOfferEditor(b,"advanced")} aria-label={"Update publishing "+b.title}>Publish / Schedule</button>
+      <button type="button" className="avs-offer-delete" onClick={()=>void deleteOffer(b)} aria-label={"Delete "+b.title}><Trash2 size={15}/></button></div>
      </div>)}
     </div>}
    </section>
@@ -166,8 +194,8 @@ export default function HomepageStudioV2(){
       <div className="avs-site-footer">ANUSMITA <small>Curated for you</small></div>
      </div></div>
     </section>
-    <section className="avs-rightpane"><div className="avs-tabs">{(["content","style","advanced"] as const).map(x=><button key={x} onClick={()=>setInspector(x)} className={inspector===x?"active":""}>{x}</button>)}</div>
-     {active&&draft?<div className="avs-inspector"><h3>{labels[selectedKind]} Settings</h3>
+    <section className="avs-rightpane" ref={inspectorRef} id="avs-countdown-editor"><div className="avs-tabs">{(["content","style","advanced"] as const).map(x=><button key={x} onClick={()=>setInspector(x)} className={inspector===x?"active":""}>{x}</button>)}</div>
+     {active&&draft?<div className="avs-inspector"><h3>{labels[selectedKind]} Settings</h3>{draft.kind==="promotion"&&<p className="avs-hint" role="status">Editing countdown offer: {draft.title}. Update fields, then use Save Changes below. {!config.blocks.some(item=>item.id===draft.id)?"This is an unsaved new offer.":"This offer is stored in the homepage CMS."}</p>}
       {inspector==="content"?<><h4>⌄ Content</h4><label>Title<input maxLength={100} value={draft.title} onChange={e=>patch("title",e.target.value)}/></label><label>Subtitle<textarea maxLength={220} rows={3} value={draft.subtitle} onChange={e=>patch("subtitle",e.target.value)}/></label><label>Badge / eyebrow<input maxLength={65} value={draft.label} onChange={e=>patch("label",e.target.value)}/></label><div className="avs-form-two"><label>Primary Button<input maxLength={40} value={draft.cta} onChange={e=>patch("cta",e.target.value)}/></label><label>Destination<input value={draft.href} onChange={e=>patch("href",e.target.value)}/></label></div>{draft.kind==="promotion"&&<div className="avs-countdown-fields">
     <h4>Countdown Timer & Offer Schedule</h4>
     <label>Offer begins at (optional)<input type="datetime-local" value={localTime(draft.startsAt)} onChange={e=>patch("startsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label>
