@@ -4,6 +4,7 @@ import {useEffect,useMemo,useState,useRef} from "react";
 import {Home,ShoppingCart,Package,Boxes,Users,Settings,BookOpen,Image,Layers,LayoutGrid,Monitor,Tablet,Smartphone,Eye,EyeOff,Plus,Trash2,Copy,ArrowUp,ArrowDown,Undo2,Download,Upload,Search,Save,ExternalLink,ShieldCheck,CheckCircle2,AlertTriangle,Code2,SlidersHorizontal,Clock,FileText,ChevronDown,ChevronRight,Palette,PanelLeft,Sparkles,X} from "lucide-react";
 import type {HomeBlock,HomeSection} from "@/lib/home-content";
 import {blockSchema} from "@/lib/home-content";
+import {offerIsStored,offerDeletePlan,offerEditorPage} from "@/lib/countdown-offer-actions";
 import HomepageManager from "@/components/homepage-manager";
 import HomepageStyleEditor from "@/components/homepage-style-editor";
 import HomepageCountdown from "@/components/homepage-countdown";
@@ -74,17 +75,17 @@ export default function HomepageStudioV2(){
  function create(kind:HomeBlock["kind"]){if(imageUploading)return;if(dirty&&!window.confirm("Discard unsaved changes?"))return;const card=initial(kind,blocks.filter(b=>b.kind===kind).length);setSelected(card.id);setDraft(card);setInspector("content");setMode("sections");}
  function openOfferEditor(offer:HomeBlock,tab:Inspector){
   if(!choose(offer))return;
-  setActivePage("Homepage");setMode("sections");setInspector(tab);setFocusOfferEditor(true);
+  setActivePage(offerEditorPage());setMode("sections");setInspector(tab);setFocusOfferEditor(true);
  }
  function createOffer(){
   if(imageUploading||busy)return;
   if(dirty&&!window.confirm("Discard unsaved changes before creating a new offer?"))return;
   const card=initial("promotion",config?.blocks.filter(b=>b.kind==="promotion").length||0);
-  setActivePage("Homepage");setOfferOpen(true);setMode("sections");setSelected(card.id);setDraft(card);setInspector("content");setConfirmDelete(false);setFocusOfferEditor(true);
+  setActivePage(offerEditorPage());setOfferOpen(true);setMode("sections");setSelected(card.id);setDraft(card);setInspector("content");setConfirmDelete(false);setFocusOfferEditor(true);
  }
  async function deleteOffer(offer:HomeBlock){
   if(busy||imageUploading||!config)return;
-  const stored=config.blocks.some(item=>item.id===offer.id);
+  const stored=offerDeletePlan(config.blocks,offer.id)==="delete-persisted";
   if(dirty&&selected!==offer.id&&!window.confirm("Discard unsaved card changes before deleting this offer?"))return;
   if(!window.confirm((stored?"Permanently delete saved countdown offer: ":"Discard unsaved countdown offer: ")+offer.title+"?"))return;
   if(!stored){
@@ -164,7 +165,7 @@ export default function HomepageStudioV2(){
     {offerOpen&&<div className="avs-offer-list">
      {offers.length===0&&<p className="avs-offer-empty">No offers have been saved yet. Use Create Countdown Offer to add one.</p>}
      {offers.map(b=><div className="avs-offer-card" key={b.id}>
-      <div className="avs-offer-card-info">{!config.blocks.some(item=>item.id===b.id)&&<span className="avs-offer-status draft">Unsaved · not in database</span>}<span className={"avs-offer-status "+offerStatus(b).toLowerCase()}>{offerStatus(b)}</span><strong>{b.title}</strong><small>{b.endsAt?"Deadline: "+new Date(b.endsAt).toLocaleString("en-BD",{timeZone:"Asia/Dhaka"}):"No deadline set (legacy banner)"}</small>
+      <div className="avs-offer-card-info">{!offerIsStored(config.blocks,b.id)&&<span className="avs-offer-status draft">Unsaved · not in database</span>}<span className={"avs-offer-status "+offerStatus(b).toLowerCase()}>{offerStatus(b)}</span><strong>{b.title}</strong><small>{b.endsAt?"Deadline: "+new Date(b.endsAt).toLocaleString("en-BD",{timeZone:"Asia/Dhaka"}):"No deadline set (legacy banner)"}</small>
       {b.enabled&&b.endsAt&&Date.parse(b.endsAt)>Date.now()&&<HomepageCountdown endsAt={b.endsAt}/>}</div>
       <div className="avs-offer-card-buttons"><button type="button" onClick={()=>openOfferEditor(b,"content")} aria-label={"Edit "+b.title}>Edit</button>
       <button type="button" onClick={()=>openOfferEditor(b,"advanced")} aria-label={"Update publishing "+b.title}>Publish / Schedule</button>
@@ -195,7 +196,7 @@ export default function HomepageStudioV2(){
      </div></div>
     </section>
     <section className="avs-rightpane" ref={inspectorRef} id="avs-countdown-editor"><div className="avs-tabs">{(["content","style","advanced"] as const).map(x=><button key={x} onClick={()=>setInspector(x)} className={inspector===x?"active":""}>{x}</button>)}</div>
-     {active&&draft?<div className="avs-inspector"><h3>{labels[selectedKind]} Settings</h3>{draft.kind==="promotion"&&<p className="avs-hint" role="status">Editing countdown offer: {draft.title}. Update fields, then use Save Changes below. {!config.blocks.some(item=>item.id===draft.id)?"This is an unsaved new offer.":"This offer is stored in the homepage CMS."}</p>}
+     {active&&draft?<div className="avs-inspector"><h3>{labels[selectedKind]} Settings</h3>{draft.kind==="promotion"&&<p className="avs-hint" role="status">Editing countdown offer: {draft.title}. Update fields, then use Save Changes below. {!offerIsStored(config.blocks,draft.id)?"This is an unsaved new offer.":"This offer is stored in the homepage CMS."}</p>}
       {inspector==="content"?<><h4>⌄ Content</h4><label>Title<input maxLength={100} value={draft.title} onChange={e=>patch("title",e.target.value)}/></label><label>Subtitle<textarea maxLength={220} rows={3} value={draft.subtitle} onChange={e=>patch("subtitle",e.target.value)}/></label><label>Badge / eyebrow<input maxLength={65} value={draft.label} onChange={e=>patch("label",e.target.value)}/></label><div className="avs-form-two"><label>Primary Button<input maxLength={40} value={draft.cta} onChange={e=>patch("cta",e.target.value)}/></label><label>Destination<input value={draft.href} onChange={e=>patch("href",e.target.value)}/></label></div>{draft.kind==="promotion"&&<div className="avs-countdown-fields">
     <h4>Countdown Timer & Offer Schedule</h4>
     <label>Offer begins at (optional)<input type="datetime-local" value={localTime(draft.startsAt)} onChange={e=>patch("startsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label>
