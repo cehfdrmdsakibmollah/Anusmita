@@ -27,3 +27,12 @@
 .cse-native-fields .cse-media-upload button,.cse-inspector .cse-media-upload button{border:1px solid #b6557b;color:#7d1742;background:#fff3f7;border-radius:6px;padding:9px 11px;font:700 11px Arial,sans-serif;cursor:pointer}
 @media(max-width:1100px){.cse-native-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.cse-native-fields{grid-template-columns:1fr}}
+
+
+/* Native hero media feedback; contained within the existing page-slots editor. */
+.cse-native-image-preview{margin-top:12px;padding:10px;border:1px dashed #d9a4b6;background:#fff;border-radius:8px;display:grid;gap:8px}
+.cse-native-image-preview>strong{font:700 12px Georgia,serif;color:#751d40}
+.cse-native-image-preview>img{display:block;max-width:min(100%,460px);max-height:220px;object-fit:contain;border:1px solid #ead1da;border-radius:6px;background:#fff7fa}
+.cse-native-image-preview .cse-media-upload{display:flex;gap:7px;flex-wrap:wrap}
+.cse-native-image-preview .cse-media-upload button{border:1px solid #d3a3b5;border-radius:6px;padding:8px 11px;background:white;color:#842047;font:700 11px Arial,sans-serif;cursor:pointer}
+.cse-native-image-preview .cse-media-upload button:disabled{opacity:.45;cursor:not-allowed}
