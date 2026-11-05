@@ -360,3 +360,28 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
 .seoDashboard:has(.apReferenceGrid) .apAddCustomTier{width:100%;background:#fff0f6;border-style:dashed;margin:3px 0 10px}
 .seoDashboard:has(.apReferenceGrid) .apAddCustomTier:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:540px){.seoDashboard:has(.apReferenceGrid) .apCustomTierRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.seoDashboard:has(.apReferenceGrid) .apCustomTierRow button{grid-column:1/-1}}
+
+
+/* Product catalog splitter: scoped to the marked inner sidebar only. */
+.seoDashboard:has(.apReferenceGrid) .apCatalogResizeHandle{display:none}
+@media(min-width:1101px){
+ .seoDashboard:has(.apReferenceGrid) .apReferenceGrid{
+  grid-template-columns:clamp(265px,var(--ap-product-list-width,22%),min(520px,calc(100% - 580px))) minmax(0,1fr) minmax(222px,19%);
+ }
+ .seoDashboard:has(.apReferenceGrid) .apReferenceProducts{position:sticky}
+ .seoDashboard:has(.apReferenceGrid) .apCatalogResizeHandle{
+  display:flex;position:absolute;top:0;bottom:0;right:-8px;width:15px;height:100%;
+  align-items:center;justify-content:center;z-index:5;padding:0;border:0;
+  border-radius:7px;background:transparent;cursor:col-resize;touch-action:none;
+ }
+ .seoDashboard:has(.apReferenceGrid) .apCatalogResizeHandle span{
+  display:block;width:4px;height:48px;border-radius:4px;background:#d7a1b3;
+  box-shadow:0 0 0 1px #fff8fa;
+ }
+ .seoDashboard:has(.apReferenceGrid) .apCatalogResizeHandle:is(:hover,:focus-visible) span{
+  background:#8d1238;width:5px;
+ }
+ .seoDashboard:has(.apReferenceGrid) .apCatalogResizeHandle:focus-visible{
+  outline:2px solid #8d1238;outline-offset:2px;
+ }
+}
