@@ -2,7 +2,7 @@ import "./product-seo-page.css";
 import Link from "next/link";
 import {redirect} from "next/navigation";
 import {currentUser} from "@/lib/auth";
-import ProductSeoManager from "@/components/product-seo-manager";
+import ProductSeoWorkspace from "@/components/product-seo-workspace";
 export const dynamic="force-dynamic";
 export const metadata={title:"Product SEO Manager | ANUSMITA",robots:{index:false,follow:false}};
 const menu=[["Overview","/admin/dashboard"],["Orders","/admin?tab=Orders"],["Products","/admin?tab=Products"],["Inventory","/admin?tab=Inventory"],["Customers","/admin?tab=Customers"],["Suppliers","/admin?tab=Suppliers"],["Payments","/admin?tab=Payments"],["Couriers","/admin?tab=Courier%20Setup"],["Homepage Studio","/admin?tab=Homepage%20Studio"],["Social Inbox","/admin?tab=Social%20Inbox"],["Staff Management","/admin?tab=Staff%20Management"],["Finance Audit","/admin?tab=Finance%20Audit"],["Activity Logs","/admin?tab=Activity%20Logs"],["Header & Footer","/admin?tab=Header%20%26%20Footer"]] as const;
@@ -16,6 +16,6 @@ export default async function ProductSeoPage(){
    <p className="seoMenuLabel">Enterprise / Admin</p>{menu.slice(10).map(([label,href])=><Link key={label} href={href}>{label}</Link>)}
    <p className="seoSidebarIdentity">{user.name} · {user.role}</p>
   </aside>
-  <main className="seoDashboardMain"><nav className="seoBreadcrumb" aria-label="Breadcrumb"><Link href="/admin/dashboard">Admin</Link><span>/</span><Link href="/admin?tab=Products">Products</Link><span>/</span><strong>Product SEO Manager</strong></nav><ProductSeoManager/></main>
+  <main className="seoDashboardMain"><nav className="seoBreadcrumb" aria-label="Breadcrumb"><Link href="/admin/dashboard">Admin</Link><span>/</span><Link href="/admin?tab=Products">Products</Link><span>/</span><strong>Product SEO Manager</strong></nav><ProductSeoWorkspace canEdit={["owner","admin","inventory"].includes(user.role)&&user.permissions?.["products.edit"]!==false}/></main>
  </div>;
 }
