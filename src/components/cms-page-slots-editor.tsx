@@ -79,6 +79,13 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
     {native.imageUrl?<img src={native.imageUrl} alt="Draft hero image preview" onError={()=>setNotice("Image preview failed. Verify the approved URL before publishing.")}/>:<p className="cse-muted">No CMS image override. This page retains its original hero artwork.</p>}
     <div className="cse-media-upload"><button type="button" disabled={mediaBusy||!native.imageUrl} onClick={()=>setNative(n=>({...n,imageUrl:""}))}>Restore original hero image</button><button type="button" disabled={mediaBusy} onClick={()=>nativeMediaInput.current?.click()}>Replace image</button></div>
    </div>
+   <div className="cse-native-section-fields">
+    <h4>Native page section headings</h4>
+    <p className="cse-muted">Edit the real storefront headings, not just banners placed above/below the page. Blank values preserve the original design text. Prices, product data, forms and interactive behavior are unchanged.</p>
+    <label>{page==="deals"?"Flash Deals heading":page==="bundles"?"Routine section heading":page==="about"?"Story section heading":page==="contact"?"Contact form heading":"Featured guide heading"}<input maxLength={130} value={native.sectionTitle} placeholder="Keep existing native heading" onChange={e=>setNative(n=>({...n,sectionTitle:e.target.value}))}/></label>
+    {page!=="deals"&&page!=="contact"&&<label>{page==="bundles"?"Bundle collection heading":page==="about"?"Care section heading":"Skin type section heading"}<input maxLength={130} value={native.secondaryTitle} placeholder="Keep existing native heading" onChange={e=>setNative(n=>({...n,secondaryTitle:e.target.value}))}/></label>}
+    <button type="button" onClick={()=>setNative(n=>({...n,sectionTitle:"",secondaryTitle:""}))} disabled={!native.sectionTitle&&!native.secondaryTitle}>Restore original section headings</button>
+   </div>
    <p className="cse-muted">Image upload adds a new R2 asset to the draft; it does not publish automatically. Click Save Draft then Publish Page Slots to update the public hero.</p>
   </div>}
   <div className="cse-workspace"><section className="cse-list"><div className="cse-section-head"><strong>Page sections ({slots.length})</strong><div className="cse-add-control"><select aria-label="Section type to add" value={createKind} onChange={e=>setCreateKind(e.target.value as CmsSlot["kind"])}>{cmsSectionKinds.map(t=><option key={t} value={t}>{t[0].toUpperCase()+t.slice(1)}</option>)}</select><button onClick={add} disabled={slots.length>=20}><Plus size={14}/> Add</button></div></div>
