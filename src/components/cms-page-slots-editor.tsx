@@ -19,6 +19,7 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
  const canvasWidth=canvasDevice==="desktop"?1280:canvasDevice==="tablet"?768:390;
  const [previewKey,setPreviewKey]=useState(0);
  const [draggingId,setDraggingId]=useState<string|null>(null);
+ const touchDrag=useRef<{pointerId:number;sourceId:string}|null>(null);
  const publicPath=["about","contact","journal"].includes(page)?"/"+page+"/design-preview":"/"+page;
  const [inspectorTab,setInspectorTab]=useState<"content"|"design"|"publish">("content");
  const [record,setRecord]=useState<Payload|null>(null),[slots,setSlots]=useState<CmsSlot[]>([]),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[mode,setMode]=useState<"draft"|"published">("draft");
@@ -66,8 +67,7 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
  function copySlot(id:string){const item=slots.find(x=>x.id===id);if(!item||slots.length>=20)return;const next={...item,id:crypto.randomUUID(),position:slots.length};setSlots(old=>[...old,next]);setSelected(next.id);}
  function updateStyle(changes:Partial<CmsSlot["style"]>){if(!selectedSlot)return;update({style:{...selectedSlot.style,...changes}});}
  function move(id:string,dir:number){const arr=[...slots];const i=arr.findIndex(x=>x.id===id),j=i+dir;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];setSlots(arr.map((s,index)=>({...s,position:index})));}
- function dropSection(targetId:string){
-  const sourceId=draggingId;
+ function dropSection(targetId:string,sourceId:string|null=draggingId){
   setDraggingId(null);
   if(!sourceId||sourceId===targetId||busy||mediaBusy)return;
   const sourceIndex=slots.findIndex(s=>s.id===sourceId),targetIndex=slots.findIndex(s=>s.id===targetId);
@@ -75,6 +75,26 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
   const reordered=[...slots];const [moved]=reordered.splice(sourceIndex,1);reordered.splice(targetIndex,0,moved);
   setSlots(reordered.map((s,index)=>({...s,position:index})));
   setNotice("Section order updated in your unsaved draft. Save Draft, then Publish to update the public page.");
+ }
+ function startTouchSection(event:React.PointerEvent<HTMLButtonElement>,id:string){
+  if(event.pointerType==="mouse"||busy||mediaBusy)return;
+  event.preventDefault();
+  touchDrag.current={pointerId:event.pointerId,sourceId:id};
+  setDraggingId(id);
+  event.currentTarget.setPointerCapture(event.pointerId);
+ }
+ function endTouchSection(event:React.PointerEvent<HTMLButtonElement>){
+  const state=touchDrag.current;
+  if(!state||state.pointerId!==event.pointerId)return;
+  touchDrag.current=null;
+  const found=document.elementFromPoint(event.clientX,event.clientY)?.closest("[data-cms-section-id]");
+  const targetId=found?.getAttribute("data-cms-section-id")||null;
+  if(targetId)dropSection(targetId,state.sourceId);
+  else setDraggingId(null);
+  if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
+ }
+ function cancelTouchSection(){
+  touchDrag.current=null;setDraggingId(null);
  }
  async function restoreDraft(){
   if(!record||busy||mediaBusy||!restoreRevision)return;
@@ -129,7 +149,7 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
   </div>}
   <div className="cse-workspace"><section className="cse-list"><div className="cse-section-head"><strong>Page sections ({slots.length})</strong><div className="cse-add-control"><select aria-label="Section type to add" value={createKind} onChange={e=>setCreateKind(e.target.value as CmsSlot["kind"])}>{cmsSectionKinds.map(t=><option key={t} value={t}>{t[0].toUpperCase()+t.slice(1)}</option>)}</select><button onClick={add} disabled={slots.length>=20}><Plus size={14}/> Add</button></div></div>
    {slots.length===0&&<p className="cse-muted">No custom sections yet. The original page remains visible.</p>}
-   {slots.map((s,i)=><div key={s.id} className={"cse-row"+(selected===s.id?" active":"")+(draggingId===s.id?" cse-row-dragging":"")} draggable={!busy&&!mediaBusy} onDragStart={e=>{if(busy||mediaBusy){e.preventDefault();return;}setDraggingId(s.id);e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",s.id);}} onDragOver={e=>{if(draggingId){e.preventDefault();e.dataTransfer.dropEffect="move";}}} onDrop={e=>{e.preventDefault();dropSection(s.id);}} onDragEnd={()=>setDraggingId(null)}><button onClick={()=>setSelected(s.id)}><span>{i+1}.</span><span>{s.title}</span></button><small>{s.kind}</small><button title="Duplicate section" disabled={slots.length>=20} onClick={()=>copySlot(s.id)}>⧉</button><button title="Move up" disabled={i===0} onClick={()=>move(s.id,-1)}><ArrowUp size={13}/></button><button title="Move down" disabled={i===slots.length-1} onClick={()=>move(s.id,1)}><ArrowDown size={13}/></button></div>)}
+   {slots.map((s,i)=><div key={s.id} className={"cse-row"+(selected===s.id?" active":"")+(draggingId===s.id?" cse-row-dragging":"")} data-cms-section-id={s.id} draggable={!busy&&!mediaBusy} onDragStart={e=>{if(busy||mediaBusy){e.preventDefault();return;}setDraggingId(s.id);e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",s.id);}} onDragOver={e=>{if(draggingId){e.preventDefault();e.dataTransfer.dropEffect="move";}}} onDrop={e=>{e.preventDefault();dropSection(s.id);}} onDragEnd={()=>setDraggingId(null)}><button type="button" className="cse-touch-handle" title="Touch and drag to reorder" aria-label={"Touch and drag section "+(i+1)} onPointerDown={e=>startTouchSection(e,s.id)} onPointerUp={endTouchSection} onPointerCancel={cancelTouchSection}>⠿</button><button onClick={()=>setSelected(s.id)}><span>{i+1}.</span><span>{s.title}</span></button><small>{s.kind}</small><button title="Duplicate section" disabled={slots.length>=20} onClick={()=>copySlot(s.id)}>⧉</button><button title="Move up" disabled={i===0} onClick={()=>move(s.id,-1)}><ArrowUp size={13}/></button><button title="Move down" disabled={i===slots.length-1} onClick={()=>move(s.id,1)}><ArrowDown size={13}/></button></div>)}
    <p className="cse-muted">Drag a section row to reorder (desktop), or use the Up/Down buttons. Save Draft and Publish to apply. Before/After placement still preserves native page elements.</p>
   </section>
   <section className="cse-canvas">

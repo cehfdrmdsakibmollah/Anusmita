@@ -102,3 +102,8 @@
 .cse-nested-preview img{width:100%;height:85px;object-fit:cover}
 .cse-nested-preview strong{font-size:11px}
 .cse-nested-preview small{font-size:9px}
+
+
+/* Touch/pen drag is restricted to the grip; scroll elsewhere remains normal. */
+.cse-row .cse-touch-handle{flex:0 0 28px;width:28px;min-width:28px;justify-content:center;touch-action:none;user-select:none;cursor:grab;background:#fff0f5;border:1px dashed #dba6bc}
+.cse-row.cse-row-dragging .cse-touch-handle{cursor:grabbing;background:#8d1644;color:#fff}
