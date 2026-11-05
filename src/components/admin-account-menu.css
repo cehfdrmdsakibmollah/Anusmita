@@ -1,0 +1,41 @@
+/* Only Product/SEO admin account controls; no storefront or editor layout overrides. */
+.anAccountMenu{position:relative;min-width:0;z-index:40;font-family:Arial,sans-serif}
+.anAccountTrigger{display:flex;gap:9px;align-items:center;border:1px solid transparent;border-radius:10px;padding:5px 7px;background:transparent;color:#54172c;cursor:pointer;max-width:100%;text-align:left}
+.anAccountTrigger:hover,.anAccountTrigger[aria-expanded=true]{background:#fce8ee;border-color:#e9c6d4}
+.anAccountTrigger:focus-visible,.anAccountPopover a:focus-visible,.anAccountPopover button:focus-visible{outline:2px solid #991541;outline-offset:2px}
+.anAccountAvatar{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;background:linear-gradient(140deg,#b93467,#7b0b35);color:white;font-weight:700;font-size:13px}
+.anAccountTriggerCopy{display:flex;min-width:0;flex-direction:column;gap:2px}
+.anAccountTriggerCopy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;max-width:125px}
+.anAccountTriggerCopy small{font-size:10px;color:#805467}
+.anAccountRotated{transform:rotate(180deg)}
+.anAccountMenu-sidebar{margin-top:12px;border-top:1px solid #eccbd5;padding-top:12px}
+.anAccountMenu-sidebar .anAccountTrigger{width:100%}
+.anAccountMenu-sidebar .anAccountTriggerCopy{flex:1}
+.anAccountPopover{position:absolute;top:calc(100% + 7px);right:0;width:min(305px,calc(100vw - 26px));padding:8px;border-radius:13px;border:1px solid #e3becc;background:#fffbfc;box-shadow:0 15px 38px #4b14302f;z-index:200;color:#481729}
+.anAccountMenu-sidebar .anAccountPopover{left:0;right:auto;top:auto;bottom:calc(100% + 8px)}
+.anAccountIdentity{display:flex;align-items:start;gap:11px;padding:12px 10px 14px;border-bottom:1px solid #f0dae2}
+.anAccountAvatarLarge{width:42px;height:42px;font-size:17px}
+.anAccountIdentity>div{min-width:0;display:flex;flex-direction:column;gap:5px}
+.anAccountIdentity strong{font-size:14px;overflow-wrap:anywhere}
+.anAccountIdentity small{font-size:11px;color:#896376;overflow-wrap:anywhere}
+.anAccountRole{display:inline-flex;gap:5px;align-items:center;align-self:start;border:1px solid #edc5d4;background:#fff1f6;padding:4px 8px;border-radius:20px;color:#87133f;font-size:10px;font-weight:700}
+.anAccountMenuItems{padding:6px 0}
+.anAccountMenuItems a{color:#521d34;display:flex;gap:10px;align-items:center;border-radius:8px;text-decoration:none;padding:11px;font-size:12px}
+.anAccountMenuItems a:hover{background:#fbe8ef}
+.anAccountMenuItems a>span{margin-left:auto;color:#9e6e80}
+.anAccountPermission{padding:10px 11px;display:flex;gap:8px;align-items:center;border-top:1px solid #f1e0e6;color:#795665;font-size:11px}
+.anAccountLogout{display:flex;align-items:center;gap:10px;width:100%;padding:11px;border-radius:8px;border:1px solid #efc4d4;background:#fff2f6;color:#a20c41;font-weight:700;font-size:12px;cursor:pointer}
+.anAccountLogout:hover{background:#fce1e9}
+.anAccountLogout:disabled{opacity:.65;cursor:wait}
+.anAccountSpinner{animation:anAccountSpin 1s linear infinite}
+.anAccountError{margin:5px 0;padding:8px;border-radius:6px;background:#fff0f0;color:#a11c2b;font-size:11px}
+@keyframes anAccountSpin{to{transform:rotate(360deg)}}
+@media(max-width:650px){.anAccountTriggerCopy strong{max-width:88px}.anAccountMenu-sidebar .anAccountPopover{left:0;right:auto;max-width:calc(100vw - 30px)}}
+
+
+/* Override legacy Product Editor header span rules only inside the account menu. */
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount .anAccountMenu span{height:auto;width:auto;display:initial;place-items:initial;border-radius:initial;background:transparent;color:inherit}
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount .anAccountMenu .anAccountAvatar{display:grid;place-items:center;flex:none;height:30px;width:30px;border-radius:50%;background:linear-gradient(140deg,#b93467,#7b0b35);color:#fff}
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount .anAccountMenu .anAccountAvatarLarge{height:42px;width:42px}
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount .anAccountMenu .anAccountTriggerCopy,.seoDashboard:has(.apReferenceGrid) .apTopbarAccount .anAccountMenu .anAccountRole{display:flex}
+.seoDashboard:has(.apReferenceGrid) .apTopbarAccount .anAccountMenu .anAccountRole{display:inline-flex;border-radius:20px;background:#fff1f6;color:#87133f}

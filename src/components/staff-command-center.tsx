@@ -11,6 +11,7 @@ const initials=(name:string)=>name.trim().split(/\s+/).slice(0,2).map(x=>x[0]?.t
 export default function StaffCommandCenter({adminName,isOwner}:{adminName:string;isOwner:boolean}){
  const [insights,setInsights]=useState<{roleCounts:{role:string;count:number}[];activity:{date:string;count:number}[];topActors:{name:string;actions:number}[]}|null>(null);
  const [users,setUsers]=useState<Staff[]>([]),[profile,setProfile]=useState<Profile|null>(null),[tab,setTab]=useState<"directory"|"roles"|"profile">("directory");
+ useEffect(()=>{if(new URLSearchParams(window.location.search).get("section")==="profile")setTab("profile");},[]);
  const [selectedStaff,setSelectedStaff]=useState<string>("");
  const [query,setQuery]=useState(""),[role,setRole]=useState("all"),[state,setState]=useState("all"),[page,setPage]=useState(1),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  
