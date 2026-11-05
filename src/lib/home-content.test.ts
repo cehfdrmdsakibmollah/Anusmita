@@ -27,6 +27,11 @@ describe("ANUSMITA homepage CMS safety",()=>{
   const b=homeStarterBlocks[0];
   expect(isSafeImage("javascript:alert(1)")).toBe(false);
   expect(isSafeImage("https://res.cloudinary.com.attacker.com/oseohmxd/image/upload/f.png")).toBe(false);
+  const uploaded="https://anusmita-media.mdsakibmolla545.workers.dev/public/homepage/550e8400-e29b-41d4-a716-446655440000.webp";
+  expect(isSafeImage(uploaded)).toBe(true);
+  expect(blockSchema.safeParse({...b,imageUrl:uploaded}).success).toBe(true);
+  expect(isSafeImage(uploaded+"?token=leak")).toBe(false);
+  expect(isSafeImage(uploaded.replace("/homepage/","/products/"))).toBe(false);
   expect(isSafeImage("https://images.unsplash.com/photo-test")).toBe(true);
   expect(isSafeImage("/brand/hero-reference.webp")).toBe(true);
   expect(isSafeImage("/brand/../private.webp")).toBe(false);
