@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState} from "react";
+import "./cms-media-library.css";
 import type {CmsSlotPage} from "@/lib/cms-page-slots";
 type Media={key:string;url:string;size:number;uploaded:string|null};
 export default function CmsMediaLibrary({scope,onChoose}:{scope:"homepage"|CmsSlotPage;onChoose:(url:string)=>void}){
