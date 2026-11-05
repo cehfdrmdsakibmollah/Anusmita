@@ -385,3 +385,23 @@ body:has(.apReferenceGrid) :is(.anHeader,.anFooter,.anAnnouncement){display:none
   outline:2px solid #8d1238;outline-offset:2px;
  }
 }
+
+
+/* Basic information split-pane only; retain all existing card and mobile layouts. */
+.seoDashboard:has(.apReferenceGrid) .apBasicResizeHandle{display:none}
+@media(min-width:1280px){
+ .seoDashboard:has(.apReferenceGrid) .apEditorColumns{
+  grid-template-columns:clamp(220px,var(--ap-basic-info-width,50%),calc(100% - 230px)) minmax(0,1fr);
+ }
+ .seoDashboard:has(.apReferenceGrid) .apEditorColumn>.apBasic{position:relative!important}
+ .seoDashboard:has(.apReferenceGrid) .apBasicResizeHandle{
+  position:absolute;display:flex;right:-8px;top:0;bottom:0;width:15px;height:100%;
+  align-items:center;justify-content:center;z-index:4;padding:0;border:0;border-radius:6px;
+  background:transparent;cursor:col-resize;touch-action:none;
+ }
+ .seoDashboard:has(.apReferenceGrid) .apBasicResizeHandle span{
+  width:4px;height:48px;border-radius:4px;background:#d7a1b3;box-shadow:0 0 0 1px #fff8fa;
+ }
+ .seoDashboard:has(.apReferenceGrid) .apBasicResizeHandle:is(:hover,:focus-visible) span{width:5px;background:#8d1238}
+ .seoDashboard:has(.apReferenceGrid) .apBasicResizeHandle:focus-visible{outline:2px solid #8d1238;outline-offset:2px}
+}
