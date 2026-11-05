@@ -5,26 +5,31 @@ const headerLabels:Record<string,string>={logo:"Brand logo",navigation:"Main nav
 const footerLabels:Record<string,string>={brand:"Brand introduction",shop:"Shop links",care:"Customer care links"};
 export default function StoreChromeEditor(){
  const [drag,setDrag]=useState<{part:"headerOrder"|"footerOrder";id:string}|null>(null);
- const [config,setConfig]=useState<Config|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[notice,setNotice]=useState("");
+ const [config,setConfig]=useState<Config|null>(null),[saved,setSaved]=useState<Config|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[notice,setNotice]=useState("");
+ const dirty=!!config&&!!saved&&JSON.stringify(config)!==JSON.stringify(saved);
  async function load(){
   setLoading(true);setNotice("");
   try{
    const res=await fetch("/api/admin/store-chrome",{cache:"no-store"}),body=await res.json();
    if(!res.ok)throw new Error(body.error||"Unable to load settings");
-   setConfig(body);
+   const parsed:Config={announcement:String(body.announcement||""),footerNote:String(body.footerNote||""),enabled:!!body.enabled,revision:Number(body.revision||0),headerOrder:body.headerOrder,footerOrder:body.footerOrder};
+   setConfig(parsed);setSaved({...parsed,headerOrder:[...parsed.headerOrder],footerOrder:[...parsed.footerOrder]});
   }catch(e){setNotice("Error: "+(e instanceof Error?e.message:"Load failed"));}
   finally{setLoading(false);}
  }
  useEffect(()=>{void load();},[]);
+ useEffect(()=>{if(!dirty)return;const guard=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue="";};window.addEventListener("beforeunload",guard);return()=>window.removeEventListener("beforeunload",guard);},[dirty]);
  function move(part:"headerOrder"|"footerOrder",from:string,to:string){if(!config||from===to)return;const order=[...config[part]],source=order.indexOf(from),destination=order.indexOf(to);if(source<0||destination<0)return;order.splice(source,1);order.splice(destination,0,from);setConfig({...config,[part]:order});}
  function upDown(part:"headerOrder"|"footerOrder",id:string,delta:number){if(!config)return;const order=config[part],index=order.indexOf(id),target=order[index+delta];if(target)move(part,id,target);}
  function sectionList(part:"headerOrder"|"footerOrder",labels:Record<string,string>){if(!config)return null;return <div className="adminCard"><h3>{part==="headerOrder"?"Header sections":"Footer sections"}</h3><p className="smallprint">Drag a section over another section to reorder it, or use the accessible arrow buttons. Essential navigation and legal links cannot be deleted.</p><div style={{display:"grid",gap:8}}>{config[part].map((id,i)=><div key={id} draggable onDragStart={()=>setDrag({part,id})} onDragEnd={()=>setDrag(null)} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(drag?.part===part)move(part,drag.id,id);setDrag(null);}} style={{display:"flex",gap:8,alignItems:"center",padding:12,border:"1px solid #d6c4c4",borderRadius:10,cursor:"grab"}}><span aria-hidden="true">☰</span><strong style={{flex:1}}>{labels[id]||id}</strong><button type="button" aria-label={"Move "+labels[id]+" earlier"} disabled={i===0} className="button small light" onClick={()=>upDown(part,id,-1)}>↑</button><button type="button" aria-label={"Move "+labels[id]+" later"} disabled={i===config[part].length-1} className="button small light" onClick={()=>upDown(part,id,1)}>↓</button></div>)}</div></div>;}
  async function save(e:React.FormEvent<HTMLFormElement>){
-  e.preventDefault();if(!config)return;setBusy(true);setNotice("");
+  e.preventDefault();if(!config||busy||!dirty)return;
+  if(!window.confirm("Publish header/footer changes to all storefront pages? Existing navigation and commerce logic will be preserved."))return;
+  setBusy(true);setNotice("");
   try{
    const res=await fetch("/api/admin/store-chrome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(config)});
    const body=await res.json();if(!res.ok)throw new Error(body.error||"Unable to save");
-   setConfig({...config,revision:body.revision});setNotice("Saved successfully. Refresh the storefront to verify content.");
+   const next={...config,revision:Number(body.revision)};setConfig(next);setSaved({...next,headerOrder:[...next.headerOrder],footerOrder:[...next.footerOrder]});setNotice("Published revision "+body.revision+". Refresh the public storefront to verify content.");
   }catch(e){setNotice("Error: "+(e instanceof Error?e.message:"Save failed"));}
   finally{setBusy(false);}
  }
@@ -43,8 +48,10 @@ export default function StoreChromeEditor(){
    <div className="adminCard"><h3>Live draft preview</h3><p className="smallprint">Header arrangement</p><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{config.headerOrder.map(x=><span key={x} style={{padding:8,border:"1px solid #caa",borderRadius:6}}>{headerLabels[x]}</span>)}</div><p className="smallprint">Footer arrangement</p><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{config.footerOrder.map(x=><span key={x} style={{padding:8,border:"1px solid #caa",borderRadius:6}}>{footerLabels[x]}</span>)}</div></div>
    <label><input type="checkbox" checked={config.enabled} onChange={e=>setConfig({...config,enabled:e.target.checked})}/> Enable custom text</label>
    <p className="smallprint">Preview: {config.enabled?(config.announcement||"Default announcement"):"Default ANUSMITA announcement"}</p>
-   <button className="button" type="submit" disabled={busy}>Save content</button>
-   <button className="button small light" type="button" disabled={busy} onClick={()=>void load()}>Reload</button>
+   <button className="button" type="submit" disabled={busy||!dirty}>{busy?"Saving…":"Publish Header/Footer"}</button>
+   <button className="button small light" type="button" disabled={busy||!dirty} onClick={()=>{if(!window.confirm("Discard unsaved header/footer edits?"))return;if(saved)setConfig({...saved,headerOrder:[...saved.headerOrder],footerOrder:[...saved.footerOrder]});}}>Discard changes</button>
+   <button className="button small light" type="button" disabled={busy} onClick={()=>{if(dirty&&!window.confirm("Reload saved header/footer settings and discard unsaved edits?"))return;void load();}}>Reload</button>
+   <p className="smallprint" role="status">{dirty?"Unsaved header/footer edits.":config.enabled?"Custom header/footer configuration enabled.":"Using default storefront header/footer."} · Revision {config.revision}</p>
   </form>}
  </section>;
 }

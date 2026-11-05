@@ -65,3 +65,19 @@ body:has(.avs-root) .adminWrap>div:last-child{max-width:none!important;margin:0!
 .avs-image-actions{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0}
 .avs-image-actions button{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 10px;border:1px solid #d5a6b9;border-radius:7px;background:#fff6fa;color:#842047;font-size:11px;font-weight:700;cursor:pointer}
 .avs-image-actions button:disabled{opacity:.48;cursor:not-allowed}
+
+
+/* Existing StoreChrome manager within Homepage Studio; does not affect its other panels. */
+.avs-chrome-control{border:1px solid #e6b9c9;background:#fff8fb;border-radius:12px;padding:14px;margin:12px 0}
+.avs-chrome-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.avs-chrome-heading h2{font:700 20px Georgia,serif;color:#79163b;margin:0 0 4px}
+.avs-chrome-heading p{font-size:12px;color:#87526a;margin:0;max-width:700px}
+.avs-chrome-heading>button{border:1px solid #a34163;border-radius:7px;background:#8a103a;color:white;padding:9px 12px;font:700 11px Arial,sans-serif;cursor:pointer}
+.avs-chrome-control>.adminCard{margin-top:12px;background:white;border:1px solid #ebc9d6;border-radius:10px;padding:14px}
+.avs-chrome-control .adminForm{display:grid;gap:12px}
+.avs-chrome-control .adminForm .field{display:grid;gap:6px}
+.avs-chrome-control .adminForm input:not([type=checkbox]){border:1px solid #ddb2c2;border-radius:6px;padding:9px;width:100%;min-width:0}
+.avs-chrome-control .adminForm .adminCard{border:1px solid #eed2dd;border-radius:9px;padding:12px;background:#fffafc}
+.avs-chrome-control .adminForm button{border:1px solid #b97795;border-radius:6px;padding:7px 11px;cursor:pointer;background:#fff;color:#772041}
+.avs-chrome-control .adminForm button[type=submit]{background:#8a103a;color:white}
+.avs-chrome-control .adminForm button:disabled{opacity:.45;cursor:not-allowed}
