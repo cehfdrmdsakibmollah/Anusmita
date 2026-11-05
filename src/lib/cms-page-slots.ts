@@ -29,12 +29,14 @@ export const cmsNativeHeroSchema=z.object({
  title:z.string().trim().max(130).default(""),
  subtitle:z.string().trim().max(320).default(""),
  sectionTitle:z.string().trim().max(130).default(""),
+ sectionImageUrl:z.string().trim().max(500).default(""),
  secondaryTitle:z.string().trim().max(130).default(""),
  imageUrl:z.string().trim().max(500).default(""),
  background:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#fff6f9"),
  textColor:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#611b37")
 }).strict().superRefine((hero,ctx)=>{
  if(hero.imageUrl&&!isSafeCmsImage(hero.imageUrl))ctx.addIssue({code:"custom",path:["imageUrl"],message:"Hero image must be an approved media URL"});
+ if(hero.sectionImageUrl&&!isSafeCmsImage(hero.sectionImageUrl))ctx.addIssue({code:"custom",path:["sectionImageUrl"],message:"Native section image must be approved"});
 });
 export type CmsNativeHero=z.infer<typeof cmsNativeHeroSchema>;
 export const defaultCmsNativeHero:CmsNativeHero=cmsNativeHeroSchema.parse({});
