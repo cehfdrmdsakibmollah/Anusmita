@@ -4,7 +4,7 @@ import {Plus,Save,Upload,Trash2,ArrowUp,ArrowDown,Eye,EyeOff,RefreshCw} from "lu
 import {cmsSlotSchema,defaultCmsStyle,cmsSectionKinds,cmsNativeHeroSchema,defaultCmsNativeHero,type CmsNativeHero,type CmsSlot,type CmsSlotPage} from "@/lib/cms-page-slots";
 import "./cms-page-slots-editor.css";
 type Payload={page:CmsSlotPage;revision:number;publishedRevision:number;draft:CmsSlot[];published:CmsSlot[];publishedAt:string|null;nativeDraft:CmsNativeHero;nativePublished:CmsNativeHero;history:{revision:number;action:"saveDraft"|"publish"|"restoreDraft";createdAt:string;slotCount:number}[]};
-const fresh=(position:number,kind:CmsSlot["kind"]="banner"):CmsSlot=>({id:crypto.randomUUID(),placement:"before",kind,style:{...defaultCmsStyle},title:"New ANUSMITA Collection",subtitle:"Discover what is new and thoughtfully curated.",badge:"ANUSMITA EDIT",imageUrl:"",cta:"Explore Collection",href:"/shop",enabled:true,position});
+const fresh=(position:number,kind:CmsSlot["kind"]="banner"):CmsSlot=>({id:crypto.randomUUID(),placement:"before",kind,style:{...defaultCmsStyle},title:"New ANUSMITA Collection",subtitle:"Discover what is new and thoughtfully curated.",badge:"ANUSMITA EDIT",imageUrl:"",children:[],cta:"Explore Collection",href:"/shop",enabled:true,position});
 export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;onPublished?:()=>void}){
  const jsonInput=useRef<HTMLInputElement|null>(null);
  const mediaInput=useRef<HTMLInputElement|null>(null);
@@ -28,8 +28,8 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
   const blob=new Blob([JSON.stringify({format:"anusmita-cms-slots",version:1,page,slots},null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=page+"-cms-sections.json";a.click();URL.revokeObjectURL(url);
  }
- async function uploadImage(file:File,target:"block"|"native"="block"){
-  if(target==="block"&&!selectedSlot){setNotice("Select a section first.");return;}
+ async function uploadImage(file:File,target:"block"|"native"|"nested"="block",nestedId?:string){
+  if(target!=="native"&&!selectedSlot){setNotice("Select a section first.");return;}
   if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size<=0||file.size>3*1024*1024){setNotice("Choose a JPEG, PNG or WebP image under 3 MB.");return;}
   const targetId=selectedSlot?.id;
   setMediaBusy(true);setNotice("Uploading CMS image…");
@@ -37,7 +37,9 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
    const form=new FormData();form.set("page",page);form.set("file",file);
    const r=await fetch("/api/admin/cms-page-slots/media",{method:"POST",body:form});
    const data=await r.json();if(!r.ok)throw Error(data.error||"Upload failed");
-   if(target==="native")setNative(v=>({...v,imageUrl:data.url}));else setSlots(old=>old.map(x=>x.id===targetId?{...x,imageUrl:data.url}:x));
+   if(target==="native")setNative(v=>({...v,imageUrl:data.url}));
+   else if(target==="nested")setSlots(old=>old.map(x=>x.id===targetId?{...x,children:x.children.map(card=>card.id===nestedId?{...card,imageUrl:data.url}:card)}:x));
+   else setSlots(old=>old.map(x=>x.id===targetId?{...x,imageUrl:data.url}:x));
    setNotice("Image uploaded to R2 and added to the unsaved section. Save Draft and Publish to make it public.");
   }catch(e){setNotice("Upload failed: "+(e instanceof Error?e.message:String(e)));}
   finally{setMediaBusy(false);}
@@ -54,6 +56,9 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
  }
 
  function update(changes:Partial<CmsSlot>){if(!selectedSlot)return;setSlots(old=>old.map(s=>s.id===selected?{...s,...changes}:s));}
+ function modifyNested(id:string,changes:Partial<CmsSlot["children"][number]>){if(!selectedSlot)return;update({children:selectedSlot.children.map(card=>card.id===id?{...card,...changes}:card)});}
+ function addNested(){if(!selectedSlot||selectedSlot.children.length>=6)return;update({children:[...selectedSlot.children,{id:crypto.randomUUID(),title:"New editorial card",subtitle:"",imageUrl:"",cta:"Explore",href:"/shop"}]});}
+ function moveNested(id:string,direction:number){if(!selectedSlot)return;const items=[...selectedSlot.children],index=items.findIndex(card=>card.id===id),next=index+direction;if(index<0||next<0||next>=items.length)return;[items[index],items[next]]=[items[next],items[index]];update({children:items});}
  const dirty=!!record&&(JSON.stringify(slots)!==JSON.stringify(record.draft)||JSON.stringify(native)!==JSON.stringify(record.nativeDraft));
  useEffect(()=>{if(!dirty)return;const guard=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue="";};window.addEventListener("beforeunload",guard);return()=>window.removeEventListener("beforeunload",guard);},[dirty]);
  function add(){const item=fresh(slots.length,createKind);setSlots(prev=>[...prev,item]);setSelected(item.id);setMode("draft");}
@@ -135,6 +140,7 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
    <div className="cse-preview-viewport" role="region" aria-label={canvasDevice+" draft block preview"} tabIndex={0} hidden={canvasView!=="blocks"}><div className="cse-blocks-canvas" style={{width:canvasWidth}}>
    {slots.map(s=><button key={s.id} className={"cse-preview-card cse-preview-"+s.kind+(selected===s.id?" active":"")} style={{background:s.style.background,color:s.style.textColor,borderRadius:s.style.radius}} onClick={()=>setSelected(s.id)}>
     <div style={{padding:s.style.padding,textAlign:s.style.alignment}}><small>{s.badge||"ANUSMITA"}</small><h3 style={{fontSize:s.style.fontSize,color:s.style.textColor}}>{s.title}</h3><p>{s.subtitle}</p>{s.cta&&<em style={{background:s.style.accentColor,borderRadius:Math.min(s.style.radius,24)}}>{s.cta} →</em>}</div>{s.imageUrl&&<img src={s.imageUrl} alt=""/>}
+    {s.kind==="grid"&&<div className="cse-nested-preview">{s.children.map(card=><span key={card.id}>{card.imageUrl&&<img src={card.imageUrl} alt=""/>}<strong>{card.title}</strong><small>{card.subtitle}</small></span>)}</div>}
     <span className="cse-flag">{s.enabled?"Visible":"Hidden"} · {s.placement}</span></button>)}
    {!slots.length&&<p className="cse-empty-preview">Use Add to start editing this page.</p>}
    </div></div>
@@ -142,12 +148,26 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
   <section className="cse-inspector"><h3>Section Settings</h3>
    <div className="cse-inspector-tabs" role="group" aria-label="Inspector panels">{(["content","design","publish"] as const).map(t=><button type="button" key={t} className={inspectorTab===t?"active":""} onClick={()=>setInspectorTab(t)}>{t}</button>)}</div>
    {selectedSlot?<>{inspectorTab==="content"&&<>
-    <label>Block type<select value={selectedSlot.kind} onChange={e=>update({kind:e.target.value as CmsSlot["kind"]})}>{cmsSectionKinds.map(t=><option key={t} value={t}>{t}</option>)}</select></label>
+    <label>Block type<select value={selectedSlot.kind} onChange={e=>update({kind:e.target.value as CmsSlot["kind"],children:e.target.value==="grid"?selectedSlot.children:[]})}>{cmsSectionKinds.map(t=><option key={t} value={t}>{t}</option>)}</select></label>
     <label>Title<input value={selectedSlot.title} maxLength={110} onChange={e=>update({title:e.target.value})}/></label>
     <label>Subtitle<textarea rows={4} maxLength={400} value={selectedSlot.subtitle} onChange={e=>update({subtitle:e.target.value})}/></label>
     <label>Badge<input value={selectedSlot.badge} maxLength={60} onChange={e=>update({badge:e.target.value})}/></label>
     <label>Image URL<input value={selectedSlot.imageUrl} maxLength={500} placeholder="/brand/categories/skincare.webp" onChange={e=>update({imageUrl:e.target.value})}/></label>
     <div className="cse-media-upload"><input type="file" hidden ref={mediaInput} accept="image/jpeg,image/png,image/webp" onChange={e=>{const file=e.currentTarget.files?.[0];if(file)void uploadImage(file);e.currentTarget.value="";}}/><button type="button" disabled={mediaBusy} onClick={()=>mediaInput.current?.click()}>{mediaBusy?"Uploading…":"Upload CMS image to R2"}</button></div><p className="cse-muted">JPEG/PNG/WebP, maximum 3 MB. Upload creates a new CMS asset and does not touch product photos. Save Draft and Publish to use it.</p>
+    {selectedSlot.kind==="grid"&&<div className="cse-nested-editor">
+     <div className="cse-nested-heading"><strong>Nested editorial cards ({selectedSlot.children.length}/6)</strong><button type="button" disabled={selectedSlot.children.length>=6||busy||mediaBusy} onClick={addNested}><Plus size={13}/> Add card</button></div>
+     <p className="cse-muted">Create nested image/text/CTA cards inside this editorial grid. These are CMS-only content; no product pricing, cart or inventory is altered.</p>
+     {selectedSlot.children.map((card,index)=><div className="cse-nested-item" key={card.id}>
+      <div className="cse-nested-actions"><b>Card {index+1}</b><button type="button" aria-label={"Move nested card "+(index+1)+" up"} disabled={index===0} onClick={()=>moveNested(card.id,-1)}><ArrowUp size={13}/></button><button type="button" aria-label={"Move nested card "+(index+1)+" down"} disabled={index===selectedSlot.children.length-1} onClick={()=>moveNested(card.id,1)}><ArrowDown size={13}/></button><button type="button" aria-label={"Remove nested card "+(index+1)} onClick={()=>{if(window.confirm("Remove this nested editorial card from the draft?"))update({children:selectedSlot.children.filter(c=>c.id!==card.id)});}}><Trash2 size={13}/></button></div>
+      <label>Card heading<input value={card.title} maxLength={100} onChange={e=>modifyNested(card.id,{title:e.target.value})}/></label>
+      <label>Card description<textarea rows={2} value={card.subtitle} maxLength={240} onChange={e=>modifyNested(card.id,{subtitle:e.target.value})}/></label>
+      <label>Card image URL<input value={card.imageUrl} maxLength={500} onChange={e=>modifyNested(card.id,{imageUrl:e.target.value})}/></label>
+      {card.imageUrl&&<img src={card.imageUrl} className="cse-nested-thumb" alt={"Draft card "+(index+1)+" media"}/>}
+      <div className="cse-nested-media"><label>Upload image<input type="file" accept="image/jpeg,image/png,image/webp" disabled={mediaBusy} onChange={e=>{const file=e.currentTarget.files?.[0];if(file)void uploadImage(file,"nested",card.id);e.currentTarget.value="";}}/></label><button type="button" disabled={mediaBusy||!card.imageUrl} onClick={()=>modifyNested(card.id,{imageUrl:""})}>Clear image</button></div>
+      <label>Button label<input value={card.cta} maxLength={40} onChange={e=>modifyNested(card.id,{cta:e.target.value})}/></label>
+      <label>Button destination<input value={card.href} maxLength={250} onChange={e=>modifyNested(card.id,{href:e.target.value})}/></label>
+     </div>)}
+    </div>}
     <label>Button label<input value={selectedSlot.cta} maxLength={48} onChange={e=>update({cta:e.target.value})}/></label>
     <label>Button URL<input value={selectedSlot.href} maxLength={250} onChange={e=>update({href:e.target.value})}/></label>
    </>}
