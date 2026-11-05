@@ -23,7 +23,7 @@ export default function ProductSeoWorkspace({canEdit=true}:{canEdit?:boolean}){
  const grade=localScore(checks),done=checks.filter(c=>c.ok).length;
  const dirty=!!seo&&!!saved&&JSON.stringify(seo)!==JSON.stringify(saved);
  const fallback=product?autoSeo(product):null;
- const title=seo?.metaTitle.trim()||fallback?.title||"",desc=seo?.metaDescription.trim()||fallback?.description||"";
+ const title=seo?.metaTitle.trim()||product?.name||"",desc=seo?.metaDescription.trim()||product?.description?.slice(0,160)||"";
  const url=product?canonical(product.slug):"";
  const words=product?cleanText(product.description).split(/\s+/).filter(Boolean):[];
  const focus=seo?.focusKeyword.trim().toLowerCase()||"";
