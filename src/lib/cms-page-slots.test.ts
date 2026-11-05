@@ -37,5 +37,13 @@ describe("Unified CMS Page Slots",()=>{
   expect(cmsSaveSchema.safeParse({...payload,nativeHero:{...payload.nativeHero,imageUrl:"https://untrusted.example/hero.png"}}).success).toBe(false);
   expect(cmsSaveSchema.safeParse({...payload,nativeHero:{...payload.nativeHero,background:"url(javascript:bad)"}}).success).toBe(false);
  });
+ it("accepts page-scoped R2 hero replacement and resetting to original without affecting native features",()=>{
+  const asset="https://anusmita-media.mdsakibmolla545.workers.dev/public/cms/deals/550e8400-e29b-41d4-a716-446655440000.webp";
+  const hero={title:"New deals",subtitle:"Current collection",imageUrl:asset,background:"#fff6f9",textColor:"#611b37"};
+  const payload={action:"publish",page:"deals",revision:1,slots:[],nativeHero:hero};
+  expect(cmsSaveSchema.safeParse(payload).success).toBe(true);
+  expect(cmsSaveSchema.safeParse({...payload,nativeHero:{...hero,imageUrl:""}}).success).toBe(true);
+  expect(cmsSaveSchema.safeParse({...payload,nativeHero:{...hero,imageUrl:asset.replace("/deals/","/products/")}}).success).toBe(false);
+ });
  it("rejects unknown properties",()=>{expect(cmsSlots.safeParse([{...valid,html:"<script />"}]).success).toBe(false);});
 });
