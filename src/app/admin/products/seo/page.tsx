@@ -16,6 +16,6 @@ export default async function ProductSeoPage(){
    <p className="seoMenuLabel">Enterprise / Admin</p>{menu.slice(10).map(([label,href])=><Link key={label} href={href}>{label}</Link>)}
    <p className="seoSidebarIdentity">{user.name} · {user.role}</p>
   </aside>
-  <main className="seoDashboardMain"><nav className="seoBreadcrumb" aria-label="Breadcrumb"><Link href="/admin/dashboard">Admin</Link><span>/</span><Link href="/admin?tab=Products">Products</Link><span>/</span><strong>Product SEO Manager</strong></nav><ProductSeoWorkspace/></main>
+  <main className="seoDashboardMain"><nav className="seoBreadcrumb" aria-label="Breadcrumb"><Link href="/admin/dashboard">Admin</Link><span>/</span><Link href="/admin?tab=Products">Products</Link><span>/</span><strong>Product SEO Manager</strong></nav><ProductSeoWorkspace canEdit={["owner","admin","inventory"].includes(user.role)&&user.permissions?.["products.edit"]!==false}/></main>
  </div>;
 }
