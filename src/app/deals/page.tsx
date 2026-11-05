@@ -3,5 +3,6 @@ import CmsPublicSlots from "@/components/cms-public-slots";
 import type {Metadata} from 'next';
 import DealsPreview from '@/components/deals-preview';
 import '@/components/deals-preview.css';
+export const dynamic="force-dynamic";
 export const metadata:Metadata={title:'Flash Deals & Daily Offers',description:'Explore the ANUSMITA daily offers design — beauty, fashion and lifestyle.',robots:{index:false,follow:false},alternates:{canonical:'/deals'}};
 export default async function Page(){const hero=await publishedCmsNativeHero("deals");return <><CmsPublicSlots page="deals" placement="before"/><DealsPreview hero={hero}/><CmsPublicSlots page="deals" placement="after"/></>;}
