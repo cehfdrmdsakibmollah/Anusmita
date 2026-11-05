@@ -53,7 +53,7 @@ export default function StudioMultiPage({view,onChange}:{view:string;onChange:(v
         <div><LayoutGrid size={17}/><span>{activeRoute.name} storefront</span><small>Actual running route</small></div>
         <div><FileText size={17}/><span>Data & interactions</span><small>Loaded by native component</small></div>
         <div><Eye size={17}/><span>Responsive preview</span><small>Desktop / tablet / mobile</small></div>
-      </div><p>The frame shows the current live route. Published custom CMS slots can be edited above. Product prices and stock are managed by the catalog.</p></section>
+      </div><p>The frame shows the current live route. Edit, add, reorder and publish CMS sections above. Product prices, stock and interactive native components remain managed by their existing modules.</p></section>
       <div className="smp-native-canvas"><div className={"smp-frame-holder "+previewDevice}>
        <iframe key={activeRoute.path+previewKey} src={activeRoute.path} title={activeRoute.name+" storefront preview"} loading="eager" referrerPolicy="same-origin"/>
       </div></div>
