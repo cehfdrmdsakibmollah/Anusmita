@@ -59,3 +59,9 @@ body:has(.avs-root) .adminWrap>div:last-child{max-width:none!important;margin:0!
 .avs-offer-card .anCountdown strong,.avs-countdown-preview .anCountdown strong{font-size:13px;color:#8b1d43}
 .avs-offer-card .anCountdown span,.avs-countdown-preview .anCountdown span{font-size:8px;color:#8a6680}
 @media(max-width:700px){.avs-offer-list{grid-template-columns:1fr}.avs-offer-control{padding:11px}.avs-offer-control-actions{width:100%}.avs-offer-control-actions button{flex:1}}
+
+
+/* Homepage image actions: preserve the existing right inspector layout. */
+.avs-image-actions{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0}
+.avs-image-actions button{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 10px;border:1px solid #d5a6b9;border-radius:7px;background:#fff6fa;color:#842047;font-size:11px;font-weight:700;cursor:pointer}
+.avs-image-actions button:disabled{opacity:.48;cursor:not-allowed}

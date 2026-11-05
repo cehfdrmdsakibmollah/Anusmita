@@ -12,6 +12,9 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
  const [native,setNative]=useState<CmsNativeHero>(defaultCmsNativeHero);
  const [mediaBusy,setMediaBusy]=useState(false);
  const [createKind,setCreateKind]=useState<CmsSlot["kind"]>("banner");
+ const [canvasView,setCanvasView]=useState<"live"|"blocks">("live");
+ const [previewKey,setPreviewKey]=useState(0);
+ const publicPath=["about","contact","journal"].includes(page)?"/"+page+"/design-preview":"/"+page;
  const [inspectorTab,setInspectorTab]=useState<"content"|"design"|"publish">("content");
  const [record,setRecord]=useState<Payload|null>(null),[slots,setSlots]=useState<CmsSlot[]>([]),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[mode,setMode]=useState<"draft"|"published">("draft");
  const load=useCallback(async()=>{const r=await fetch("/api/admin/cms-page-slots?page="+encodeURIComponent(page),{cache:"no-store"});const j=await r.json();if(!r.ok)throw Error(j.error||"Could not fetch CMS slots");const parsed=cmsSlotSchema.array().max(20).parse(j.draft);const nativeParsed=cmsNativeHeroSchema.parse(j.nativeDraft||{});setRecord({...j,draft:parsed,nativeDraft:nativeParsed,nativePublished:cmsNativeHeroSchema.parse(j.nativePublished||{})});setNative(nativeParsed);setSlots(parsed);setSelected(null);setNotice("");},[page]);
@@ -56,7 +59,7 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
  async function save(action:"saveDraft"|"publish"){if(!record||busy)return;const valid=cmsSlotSchema.array().max(20).safeParse(slots);const nativeValid=cmsNativeHeroSchema.safeParse(native);if(!nativeValid.success){setNotice("Hero validation: "+nativeValid.error.issues.map(i=>i.message).join("; "));return;}if(!valid.success){setNotice("Validation: "+valid.error.issues.map(i=>i.message).join("; "));return;}
   if(action==="publish"&&!window.confirm("Publish "+slots.length+" editorial block(s) to /"+page+"? Existing native storefront interactions will remain untouched."))return;
   setBusy(true);setNotice("");
-  try{const r=await fetch("/api/admin/cms-page-slots",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page,revision:record.revision,action,slots:valid.data,nativeHero:nativeValid.data})});const j=await r.json();if(!r.ok)throw Error(j.error||"Save failed");const nextNative=cmsNativeHeroSchema.parse(j.nativeDraft||{});setRecord({...j,nativeDraft:nextNative,nativePublished:cmsNativeHeroSchema.parse(j.nativePublished||{})});setNative(nextNative);setSlots(cmsSlotSchema.array().max(20).parse(j.draft));setNotice(action==="publish"?"Published revision "+j.publishedRevision+". Reload page preview to view your changes.":"Draft revision "+j.revision+" saved. Public page unchanged.");if(action==="publish")onPublished?.();
+  try{const r=await fetch("/api/admin/cms-page-slots",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page,revision:record.revision,action,slots:valid.data,nativeHero:nativeValid.data})});const j=await r.json();if(!r.ok)throw Error(j.error||"Save failed");const nextNative=cmsNativeHeroSchema.parse(j.nativeDraft||{});setRecord({...j,nativeDraft:nextNative,nativePublished:cmsNativeHeroSchema.parse(j.nativePublished||{})});setNative(nextNative);setSlots(cmsSlotSchema.array().max(20).parse(j.draft));setNotice(action==="publish"?"Published revision "+j.publishedRevision+". Reload page preview to view your changes.":"Draft revision "+j.revision+" saved. Public page unchanged.");if(action==="publish"){setPreviewKey(v=>v+1);onPublished?.();}
   }catch(e){setNotice("Error: "+String(e));}finally{setBusy(false);}
  }
  if(!record)return <div className="cse-empty" role="status">{notice||"Loading "+page+" CMS slots…"}</div>;
@@ -83,11 +86,15 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
    {slots.map((s,i)=><div key={s.id} className={"cse-row"+(selected===s.id?" active":"")}><button onClick={()=>setSelected(s.id)}><span>{i+1}.</span><span>{s.title}</span></button><small>{s.kind}</small><button title="Duplicate section" disabled={slots.length>=20} onClick={()=>copySlot(s.id)}>⧉</button><button title="Move up" disabled={i===0} onClick={()=>move(s.id,-1)}><ArrowUp size={13}/></button><button title="Move down" disabled={i===slots.length-1} onClick={()=>move(s.id,1)}><ArrowDown size={13}/></button></div>)}
    <p className="cse-muted">Before and After indicate placement around the original page. Existing native page elements are protected.</p>
   </section>
-  <section className="cse-canvas"><div className="cse-preview-head"><strong>CMS block preview</strong><span>Unsaved draft</span></div>
+  <section className="cse-canvas">
+   <div className="cse-preview-head"><strong>{canvasView==="live"?"Actual storefront preview":"CMS block draft preview"}</strong><div className="cse-canvas-controls"><button type="button" aria-pressed={canvasView==="live"} onClick={()=>setCanvasView("live")}>Live page</button><button type="button" aria-pressed={canvasView==="blocks"} onClick={()=>setCanvasView("blocks")}>Draft blocks</button><button type="button" onClick={()=>setPreviewKey(v=>v+1)}>Reload</button></div></div>
+   {canvasView==="live"&&<><p className="cse-muted">Published storefront route. To change the native hero, edit its fields above; draft CMS blocks are shown under Draft blocks. Saving a draft alone does not change the public page.</p><iframe key={publicPath+previewKey} className="cse-live-frame" title={page+" published storefront"} src={publicPath} loading="lazy"/></>}
+   <div hidden={canvasView!=="blocks"} className="cse-blocks-canvas">
    {slots.map(s=><button key={s.id} className={"cse-preview-card cse-preview-"+s.kind+(selected===s.id?" active":"")} style={{background:s.style.background,color:s.style.textColor,borderRadius:s.style.radius}} onClick={()=>setSelected(s.id)}>
     <div style={{padding:s.style.padding,textAlign:s.style.alignment}}><small>{s.badge||"ANUSMITA"}</small><h3 style={{fontSize:s.style.fontSize,color:s.style.textColor}}>{s.title}</h3><p>{s.subtitle}</p>{s.cta&&<em style={{background:s.style.accentColor,borderRadius:Math.min(s.style.radius,24)}}>{s.cta} →</em>}</div>{s.imageUrl&&<img src={s.imageUrl} alt=""/>}
     <span className="cse-flag">{s.enabled?"Visible":"Hidden"} · {s.placement}</span></button>)}
    {!slots.length&&<p className="cse-empty-preview">Use Add to start editing this page.</p>}
+   </div>
   </section>
   <section className="cse-inspector"><h3>Section Settings</h3>
    <div className="cse-inspector-tabs" role="group" aria-label="Inspector panels">{(["content","design","publish"] as const).map(t=><button type="button" key={t} className={inspectorTab===t?"active":""} onClick={()=>setInspectorTab(t)}>{t}</button>)}</div>

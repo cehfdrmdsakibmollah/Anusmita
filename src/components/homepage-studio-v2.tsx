@@ -27,6 +27,25 @@ export default function HomepageStudioV2(){
  const [shelfOpen,setShelfOpen]=useState(false);
  const [offerOpen,setOfferOpen]=useState(true);
  const importRef=useRef<HTMLInputElement|null>(null);
+ const imageInputRef=useRef<HTMLInputElement|null>(null);
+ const [imageUploading,setImageUploading]=useState(false);
+ async function uploadHomepageImage(file:File){
+  const targetId=draft?.id;
+  if(!targetId)return;
+  if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size<=0||file.size>3*1024*1024){
+   setMessage("Choose a JPEG, PNG or WebP image under 3 MB.");return;
+  }
+  setImageUploading(true);setMessage("Uploading image to Cloudflare R2…");
+  try{
+   const form=new FormData();form.set("file",file);
+   const response=await fetch("/api/admin/homepage/media",{method:"POST",body:form});
+   const result=await response.json();
+   if(!response.ok)throw Error(result.error||"Homepage image upload failed");
+   setDraft(current=>current?.id===targetId?{...current,imageUrl:result.url}:current);
+   setMessage("Image uploaded to R2 and selected in your unsaved card. Click Save Changes to publish the image.");
+  }catch(error){setMessage("Error: "+(error instanceof Error?error.message:String(error)));}
+  finally{setImageUploading(false);}
+ }
  const [showHelp,setShowHelp]=useState(false);
  const [stylePanel,setStylePanel]=useState<"global"|"css"|null>(null);
  async function load(){
@@ -42,8 +61,8 @@ export default function HomepageStudioV2(){
  const offerStatus=(b:HomeBlock)=>{const now=Date.now();if(!b.enabled)return "Draft";if(b.startsAt&&Date.parse(b.startsAt)>now)return "Scheduled";if(b.endsAt&&Date.parse(b.endsAt)<=now)return "Expired";return "Live";};
  const dirty=!!draft&&(JSON.stringify(config?.blocks.find(b=>b.id===draft.id))!==JSON.stringify(draft));
  const selectedKind=active?.kind||"hero";
- function choose(b:HomeBlock){if(dirty&&selected!==b.id&&!window.confirm("Discard unsaved changes to this card?"))return;setSelected(b.id);setDraft({...b});setInspector("content");setConfirmDelete(false);}
- function create(kind:HomeBlock["kind"]){if(dirty&&!window.confirm("Discard unsaved changes?"))return;const card=initial(kind,blocks.filter(b=>b.kind===kind).length);setSelected(card.id);setDraft(card);setInspector("content");setMode("sections");}
+ function choose(b:HomeBlock){if(imageUploading)return;if(dirty&&selected!==b.id&&!window.confirm("Discard unsaved changes to this card?"))return;setSelected(b.id);setDraft({...b});setInspector("content");setConfirmDelete(false);}
+ function create(kind:HomeBlock["kind"]){if(imageUploading)return;if(dirty&&!window.confirm("Discard unsaved changes?"))return;const card=initial(kind,blocks.filter(b=>b.kind===kind).length);setSelected(card.id);setDraft(card);setInspector("content");setMode("sections");}
  function patch<K extends keyof HomeBlock>(key:K,value:HomeBlock[K]){if(!draft)return;setDraft({...draft,[key]:value});}
  async function operation(data:Record<string,unknown>){
   if(!config||busy)return false;setBusy(true);setMessage("");
@@ -52,7 +71,7 @@ export default function HomepageStudioV2(){
    setConfig(body);setDraft(null);setSelected(null);setMessage("Saved to the live homepage CMS. Refresh the storefront to see published items.");return true;
   }catch(e){setMessage("Error: "+(e instanceof Error?e.message:String(e)));return false;}finally{setBusy(false);}
  }
- async function save(){if(!draft||!config)return;
+ async function save(){if(!draft||!config||imageUploading)return;
   if(draft.kind==="promotion"&&!config.blocks.some(b=>b.id===draft.id)&&!draft.endsAt){setMessage("Validation: countdown offers require a deadline. Choose Offer ends at before saving.");setInspector("content");return;}
   if(draft.kind==="promotion"&&draft.enabled&&draft.endsAt&&Date.parse(draft.endsAt)<=Date.now()){setMessage("Validation: published countdown end time must be in the future.");setInspector("content");return;}
   const parsed=blockSchema.safeParse(draft);if(!parsed.success){setMessage("Validation: "+parsed.error.issues.map(i=>i.message).join("; "));return;}
@@ -146,8 +165,12 @@ export default function HomepageStudioV2(){
     <label>Offer ends at (required for new countdown offers)<input type="datetime-local" value={localTime(draft.endsAt)} onChange={e=>patch("endsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label>
     <p className="avs-hint">Dates use your device's local timezone and are saved in UTC. Once expired, the offer automatically disappears from the public homepage. Change only merchandising copy here; real discounts must be configured separately in Products.</p>
     {draft.endsAt&&Date.parse(draft.endsAt)>Date.now()&&<div className="avs-countdown-preview"><strong>Live timer preview</strong><HomepageCountdown endsAt={draft.endsAt}/></div>}
-   </div>}<h4>Media (Banner Image)</h4>{draft.imageUrl&&<img className="avs-media-thumb" src={draft.imageUrl} alt="Current banner"/>}<label>Approved image URL<input value={draft.imageUrl} onChange={e=>patch("imageUrl",e.target.value)} placeholder="/brand/categories/skincare.webp"/></label><p className="avs-hint">Use approved brand images or supported Cloudinary HTTPS images. Existing R2 upload workflows remain separate.</p></>:inspector==="style"?<><h4>Section appearance</h4><p className="avs-hint">Reference-based burgundy and blush styling is used in this editor. Rich typography, per-block CSS tokens, parallax, and custom animations require a separate validated schema before they can be saved safely.</p><label>Preview mode<select value={device} onChange={e=>setDevice(e.target.value as Device)}><option value="desktop">Desktop</option><option value="tablet">Tablet</option><option value="mobile">Mobile</option></select></label><div className="avs-color-samples"><span/><span/><span/><span/></div></>:<><h4>Publishing controls</h4><label className="avs-check"><input type="checkbox" checked={draft.enabled} onChange={e=>patch("enabled",e.target.checked)}/> Show this block on the public homepage</label><label>Display start<input type="datetime-local" value={localTime(draft.startsAt)} onChange={e=>patch("startsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label><label>Display end<input type="datetime-local" value={localTime(draft.endsAt)} onChange={e=>patch("endsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label><p className="avs-hint">The current API saves to the CMS immediately. Independent publishing approval, rollback and CDN purge are not implemented here.</p></>}
-      <div className="avs-editor-actions"><button onClick={()=>void save()} className="avs-primary" disabled={!dirty||busy}><Save size={14}/> {busy?"Saving…":"Save Changes"}</button><button onClick={duplicate} title="Duplicate as unpublished draft"><Copy size={16}/></button><button onClick={()=>void remove()} title={confirmDelete?"Confirm delete":"Delete"} className={confirmDelete?"avs-danger":""}><Trash2 size={16}/>{confirmDelete?"Confirm":""}</button></div>
+   </div>}<h4>Media (Banner Image)</h4>{draft.imageUrl&&<img className="avs-media-thumb" src={draft.imageUrl} alt="Draft banner image preview"/>}
+   <input ref={imageInputRef} type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={e=>{const file=e.currentTarget.files?.[0];if(file)void uploadHomepageImage(file);e.currentTarget.value="";}}/>
+   <div className="avs-image-actions"><button type="button" disabled={imageUploading} onClick={()=>imageInputRef.current?.click()}><Upload size={14}/>{imageUploading?"Uploading…":draft.imageUrl?"Replace / Upload Image":"Upload Image"}</button><button type="button" disabled={imageUploading||!draft.imageUrl} onClick={()=>patch("imageUrl","")}><Trash2 size={14}/> Remove Image</button></div>
+   <label>Approved image URL<input value={draft.imageUrl} disabled={imageUploading} onChange={e=>patch("imageUrl",e.target.value)} placeholder="/brand/categories/skincare.webp"/></label>
+   <p className="avs-hint">JPEG, PNG or WebP · max 3 MB. Uploaded images go to Cloudflare R2. Removing an image clears this card's reference only; existing R2 files and product photos stay untouched. Click Save Changes to publish.</p></>:inspector==="style"?<><h4>Section appearance</h4><p className="avs-hint">Reference-based burgundy and blush styling is used in this editor. Rich typography, per-block CSS tokens, parallax, and custom animations require a separate validated schema before they can be saved safely.</p><label>Preview mode<select value={device} onChange={e=>setDevice(e.target.value as Device)}><option value="desktop">Desktop</option><option value="tablet">Tablet</option><option value="mobile">Mobile</option></select></label><div className="avs-color-samples"><span/><span/><span/><span/></div></>:<><h4>Publishing controls</h4><label className="avs-check"><input type="checkbox" checked={draft.enabled} onChange={e=>patch("enabled",e.target.checked)}/> Show this block on the public homepage</label><label>Display start<input type="datetime-local" value={localTime(draft.startsAt)} onChange={e=>patch("startsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label><label>Display end<input type="datetime-local" value={localTime(draft.endsAt)} onChange={e=>patch("endsAt",e.target.value?new Date(e.target.value).toISOString():null)}/></label><p className="avs-hint">The current API saves to the CMS immediately. Independent publishing approval, rollback and CDN purge are not implemented here.</p></>}
+      <div className="avs-editor-actions"><button onClick={()=>void save()} className="avs-primary" disabled={!dirty||busy||imageUploading}><Save size={14}/> {busy?"Saving…":"Save Changes"}</button><button onClick={duplicate} title="Duplicate as unpublished draft"><Copy size={16}/></button><button onClick={()=>void remove()} title={confirmDelete?"Confirm delete":"Delete"} className={confirmDelete?"avs-danger":""}><Trash2 size={16}/>{confirmDelete?"Confirm":""}</button></div>
       {dirty&&<p className="avs-dirty"><AlertTriangle size={13}/> Unsaved preview changes</p>}
      </div>:<div className="avs-placeholder"><SlidersHorizontal size={27}/><strong>Select a section to edit</strong><p>Click any hero, category card or left-side section to open its settings.</p></div>}
     </section>

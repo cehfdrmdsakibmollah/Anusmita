@@ -34,6 +34,7 @@ export function isSafeLink(value:string){
 }
 export function isSafeImage(value:string){
  if(/^\/brand\/(?:categories\/)?[a-z0-9-]+\.webp$/.test(value))return true;
+ try{const u=new URL(value);if(u.protocol==="https:"&&u.hostname==="anusmita-media.mdsakibmolla545.workers.dev"&&!u.username&&!u.password&&!u.search&&!u.hash&&/^\/public\/homepage\/[0-9a-fA-F-]{36}\.(?:jpg|png|webp)$/.test(u.pathname))return true;}catch{/* Not an HTTPS URL. */}
  try{
   const u=new URL(value);
   return u.protocol==="https:"&&!u.username&&!u.password&&
