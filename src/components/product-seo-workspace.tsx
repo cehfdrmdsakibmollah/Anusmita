@@ -113,3 +113,4 @@ export default function ProductSeoWorkspace({canEdit=true}:{canEdit?:boolean}){
    <section className="ep-card ep-health"><h3>SEO Health Checks</h3>{checks.slice(0,8).map(check=><p key={check.id}><span className={check.ok?"good":"todo"}>{check.ok?<CheckCircle2 size={15}/>:<XCircle size={15}/>}</span>{check.label}</p>)}</section>
   </aside></div></>:<div className="ep-empty">{loading?<><Loader2 size={22}/> Loading SEO data…</>:<>Select a saved catalog product to begin. <button className="ep-outline" onClick={()=>setCatalogOpen(true)}>Choose product</button></>}</div>}
  </section>;
+}
