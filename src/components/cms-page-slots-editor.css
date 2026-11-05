@@ -71,3 +71,15 @@
 .cse-row[draggable=true]:active{cursor:grabbing}
 .cse-row.cse-row-dragging{opacity:.48;border-style:dashed;border-color:#8c1645}
 .cse-row:focus-within{outline-offset:2px}
+
+
+/* Real iframe viewport widths; horizontal scrolling is confined to the CMS canvas. */
+.cse-device-controls{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin:0 0 8px}
+.cse-device-controls button{padding:5px 8px;border:1px solid #e2bad0;border-radius:6px;background:#fff;color:#842047;font-size:10px;cursor:pointer}
+.cse-device-controls button[aria-pressed=true]{background:#8d1238;color:#fff}
+.cse-device-controls span{font-size:10px;color:#886477}
+.cse-preview-viewport{max-width:100%;overflow-x:auto;overflow-y:hidden;border:1px solid #eed1dc;border-radius:7px;background:#fff}
+.cse-preview-viewport[hidden]{display:none}
+.cse-preview-viewport .cse-live-frame{max-width:none;display:block;min-height:640px}
+.cse-preview-viewport>.cse-blocks-canvas{max-width:none;min-height:180px;padding:8px}
+.cse-preview-viewport>.cse-blocks-canvas .cse-preview-card{width:100%}
