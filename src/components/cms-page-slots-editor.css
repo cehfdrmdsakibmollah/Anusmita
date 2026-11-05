@@ -64,3 +64,10 @@
 .cse-revision-tools button{padding:10px;border:1px solid #a84e75;border-radius:6px;background:#8c1640;color:white;font:700 11px Arial,sans-serif;cursor:pointer}
 .cse-revision-tools button:disabled{opacity:.5;cursor:not-allowed}
 .cse-revision-tools p{flex-basis:100%;margin:0;color:#835b6e;font-size:11px}
+
+
+/* Editorial CMS drag-sort: Up/Down buttons remain available to keyboard/touch users. */
+.cse-row[draggable=true]{cursor:grab}
+.cse-row[draggable=true]:active{cursor:grabbing}
+.cse-row.cse-row-dragging{opacity:.48;border-style:dashed;border-color:#8c1645}
+.cse-row:focus-within{outline-offset:2px}
