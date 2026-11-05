@@ -1,3 +1,4 @@
+import {duplicateProductIdentityField} from "@/lib/product-identity";
 import {validateProductSubcategory} from "@/lib/product-taxonomy-validation";
 
 import mongoose from "mongoose";
@@ -17,6 +18,13 @@ export async function POST(request:Request) {
   validateCommercialState(data);
   await db();
   await validateProductSubcategory(data.category,data.subcategoryId);
+  const [duplicateSku,duplicateSlug]=await Promise.all([
+   Product.exists({sku:data.sku}),Product.exists({slug:data.slug})
+  ]);
+  if(duplicateSku||duplicateSlug)return Response.json({
+   error:duplicateSku&&duplicateSlug?"SKU and SEO slug already exist":duplicateSku?"SKU already exists":"SEO slug already exists",
+   code:"PRODUCT_IDENTIFIER_CONFLICT",skuTaken:Boolean(duplicateSku),slugTaken:Boolean(duplicateSlug)
+  },{status:409});
   let created:any;const session=await mongoose.startSession();
   try {
    await session.withTransaction(async()=>{
@@ -27,7 +35,13 @@ export async function POST(request:Request) {
    });
   }finally{await session.endSession();}
   return Response.json({id:String(created._id),sku:created.sku},{status:201});
- }catch(e:any){if(e?.code===11000)return Response.json({error:"SKU or slug already exists"},{status:409});return apiError(e);}
+ }catch(e:any){
+  if(e?.code===11000){
+   const field=duplicateProductIdentityField(e);
+   return Response.json({error:field==="sku"?"SKU already exists":field==="slug"?"SEO slug already exists":"Product identifier already exists",code:"PRODUCT_IDENTIFIER_CONFLICT",field},{status:409});
+  }
+  return apiError(e);
+ }
 }
 
 export async function GET(req:Request) {
