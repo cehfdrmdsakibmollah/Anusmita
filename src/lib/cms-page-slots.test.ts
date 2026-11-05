@@ -81,5 +81,12 @@ describe("Unified CMS Page Slots",()=>{
   expect(cmsSlots.safeParse([{...grid,children:[]}]).success).toBe(true);
   expect(cmsSlots.safeParse([valid]).success).toBe(true);
  });
+ it("validates optional native section image overrides",()=>{
+  const base={action:"publish",page:"about",revision:1,slots:[],nativeHero:{title:"",subtitle:"",sectionImageUrl:"/brand/categories/skincare.webp"}};
+  expect(cmsSaveSchema.safeParse(base).success).toBe(true);
+  expect(cmsSaveSchema.safeParse({...base,nativeHero:{...base.nativeHero,sectionImageUrl:""}}).success).toBe(true);
+  expect(cmsSaveSchema.safeParse({...base,nativeHero:{...base.nativeHero,sectionImageUrl:"https://untrusted.invalid/foo.png"}}).success).toBe(false);
+  expect(cmsSaveSchema.safeParse({action:"saveDraft",page:"journal",revision:1,slots:[],nativeHero:{}}).success).toBe(true);
+ });
  it("rejects unknown properties",()=>{expect(cmsSlots.safeParse([{...valid,html:"<script />"}]).success).toBe(false);});
 });
