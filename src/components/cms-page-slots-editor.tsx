@@ -14,6 +14,8 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
  const [mediaBusy,setMediaBusy]=useState(false);
  const [createKind,setCreateKind]=useState<CmsSlot["kind"]>("banner");
  const [canvasView,setCanvasView]=useState<"live"|"blocks">("live");
+ const [canvasDevice,setCanvasDevice]=useState<"desktop"|"tablet"|"mobile">("desktop");
+ const canvasWidth=canvasDevice==="desktop"?1280:canvasDevice==="tablet"?768:390;
  const [previewKey,setPreviewKey]=useState(0);
  const [draggingId,setDraggingId]=useState<string|null>(null);
  const publicPath=["about","contact","journal"].includes(page)?"/"+page+"/design-preview":"/"+page;
@@ -125,13 +127,17 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
   </section>
   <section className="cse-canvas">
    <div className="cse-preview-head"><strong>{canvasView==="live"?"Actual storefront preview":"CMS block draft preview"}</strong><div className="cse-canvas-controls"><button type="button" aria-pressed={canvasView==="live"} onClick={()=>setCanvasView("live")}>Live page</button><button type="button" aria-pressed={canvasView==="blocks"} onClick={()=>setCanvasView("blocks")}>Draft blocks</button><button type="button" onClick={()=>setPreviewKey(v=>v+1)}>Reload</button></div></div>
-   {canvasView==="live"&&<><p className="cse-muted">Published storefront route. To change the native hero, edit its fields above; draft CMS blocks are shown under Draft blocks. Saving a draft alone does not change the public page.</p><iframe key={publicPath+previewKey} className="cse-live-frame" title={page+" published storefront"} src={publicPath} loading="lazy"/></>}
-   <div hidden={canvasView!=="blocks"} className="cse-blocks-canvas">
+   <div className="cse-device-controls" role="group" aria-label="Storefront preview viewport">
+    {(["desktop","tablet","mobile"] as const).map(device=><button key={device} type="button" aria-pressed={canvasDevice===device} onClick={()=>setCanvasDevice(device)}>{device[0].toUpperCase()+device.slice(1)}</button>)}
+    <span>{canvasWidth}px viewport · scroll inside canvas to inspect wider pages</span>
+   </div>
+   {canvasView==="live"&&<><p className="cse-muted">Published storefront route. To change the native hero, edit its fields above; draft CMS blocks are shown under Draft blocks. Saving a draft alone does not change the public page.</p><div className="cse-preview-viewport" role="region" aria-label={canvasDevice+" page preview"} tabIndex={0}><iframe key={publicPath+previewKey} className="cse-live-frame" style={{width:canvasWidth}} title={page+" published storefront"} src={publicPath} loading="lazy"/></div></>}
+   <div className="cse-preview-viewport" role="region" aria-label={canvasDevice+" draft block preview"} tabIndex={0} hidden={canvasView!=="blocks"}><div className="cse-blocks-canvas" style={{width:canvasWidth}}>
    {slots.map(s=><button key={s.id} className={"cse-preview-card cse-preview-"+s.kind+(selected===s.id?" active":"")} style={{background:s.style.background,color:s.style.textColor,borderRadius:s.style.radius}} onClick={()=>setSelected(s.id)}>
     <div style={{padding:s.style.padding,textAlign:s.style.alignment}}><small>{s.badge||"ANUSMITA"}</small><h3 style={{fontSize:s.style.fontSize,color:s.style.textColor}}>{s.title}</h3><p>{s.subtitle}</p>{s.cta&&<em style={{background:s.style.accentColor,borderRadius:Math.min(s.style.radius,24)}}>{s.cta} →</em>}</div>{s.imageUrl&&<img src={s.imageUrl} alt=""/>}
     <span className="cse-flag">{s.enabled?"Visible":"Hidden"} · {s.placement}</span></button>)}
    {!slots.length&&<p className="cse-empty-preview">Use Add to start editing this page.</p>}
-   </div>
+   </div></div>
   </section>
   <section className="cse-inspector"><h3>Section Settings</h3>
    <div className="cse-inspector-tabs" role="group" aria-label="Inspector panels">{(["content","design","publish"] as const).map(t=><button type="button" key={t} className={inspectorTab===t?"active":""} onClick={()=>setInspectorTab(t)}>{t}</button>)}</div>
