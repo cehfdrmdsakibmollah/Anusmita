@@ -133,7 +133,7 @@ export default function AdminProductWorkspace(){
     data.set("productId",current._id);data.set("expectedUpdatedAt",current.updatedAt);data.set("file",file);
     const response=await fetch("/api/admin/r2",{method:"POST",body:data});
     const payload=await response.json();
-    if(!response.ok)throw Error(payload.error||"R2 upload failed");
+    if(!response.ok)throw Error(response.status===403?"Product photo upload denied. Ask the Owner to enable Products: edit for your staff account.":payload.error||"R2 upload failed");
     current={...current,imageUrls:payload.imageUrls,updatedAt:payload.updatedAt};
     setSelected(current);
     completed++;
