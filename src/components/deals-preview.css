@@ -6,3 +6,5 @@ body:has(.dealsPreview)>.anAnnouncement,body:has(.dealsPreview)>.anHeader,body:h
 @media(max-width:760px){.dp-help{display:grid;grid-template-columns:44px 1fr;column-gap:16px;row-gap:14px}.dp-help>svg{grid-column:1;grid-row:1;align-self:start}.dp-help>div{grid-column:2}.dp-help .dp-primary{grid-column:2;margin-left:0;justify-self:start}.dp-help h3{line-height:1.2}.dp-help p{margin-top:5px}}@media(max-width:450px){.dp-help{grid-template-columns:35px 1fr;column-gap:12px}.dp-help .dp-primary{margin-left:0}}
 
 .dp-hero>.dp-cms-hero-image{position:absolute;right:0;top:0;width:49%;height:100%;object-fit:cover;mask-image:linear-gradient(90deg,transparent,#000 15%);z-index:0}@media(max-width:680px){.dp-hero>.dp-cms-hero-image{width:68%;height:210px;top:auto;bottom:0;right:0}}
+.dp-editorial .dp-native-section-image{display:block;width:min(35%,320px);height:140px;object-fit:cover;border-radius:8px}
+@media(max-width:680px){.dp-editorial .dp-native-section-image{width:100%;height:160px}}

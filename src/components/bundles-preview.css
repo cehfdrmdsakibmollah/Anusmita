@@ -7,3 +7,4 @@
 .bp-feature-grid>.bp-feature-mobile{display:none}@media(max-width:760px){.bp-feature-grid>.bp-feature-photo{display:none}.bp-feature-grid>.bp-feature-mobile{display:block;aspect-ratio:220/146;height:auto;border-radius:7px}}
 
 .bp-hero>.bp-cms-hero-image{position:absolute;right:0;top:0;width:48%;height:100%;object-fit:cover;mask-image:linear-gradient(90deg,transparent,#000 20%);z-index:0}@media(max-width:680px){.bp-hero>.bp-cms-hero-image{position:relative;display:block;width:110%;height:210px;right:auto;top:auto;margin:14px -5% 0;mask-image:none}}
+.bp-feature-grid .bp-native-section-image{display:block;width:100%;height:100%;object-fit:cover;border-radius:9px}

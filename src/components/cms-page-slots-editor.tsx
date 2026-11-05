@@ -10,6 +10,7 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
  const jsonInput=useRef<HTMLInputElement|null>(null);
  const mediaInput=useRef<HTMLInputElement|null>(null);
  const nativeMediaInput=useRef<HTMLInputElement|null>(null);
+ const sectionMediaInput=useRef<HTMLInputElement|null>(null);
  const [native,setNative]=useState<CmsNativeHero>(defaultCmsNativeHero);
  const [restoreRevision,setRestoreRevision]=useState("");
  const [mediaBusy,setMediaBusy]=useState(false);
@@ -30,8 +31,8 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
   const blob=new Blob([JSON.stringify({format:"anusmita-cms-slots",version:1,page,slots},null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=page+"-cms-sections.json";a.click();URL.revokeObjectURL(url);
  }
- async function uploadImage(file:File,target:"block"|"native"|"nested"="block",nestedId?:string){
-  if(target!=="native"&&!selectedSlot){setNotice("Select a section first.");return;}
+ async function uploadImage(file:File,target:"block"|"native"|"nativeSection"|"nested"="block",nestedId?:string){
+  if(target!=="native"&&target!=="nativeSection"&&!selectedSlot){setNotice("Select a section first.");return;}
   if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size<=0||file.size>3*1024*1024){setNotice("Choose a JPEG, PNG or WebP image under 3 MB.");return;}
   const targetId=selectedSlot?.id;
   setMediaBusy(true);setNotice("Uploading CMS image…");
@@ -40,6 +41,7 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
    const r=await fetch("/api/admin/cms-page-slots/media",{method:"POST",body:form});
    const data=await r.json();if(!r.ok)throw Error(data.error||"Upload failed");
    if(target==="native")setNative(v=>({...v,imageUrl:data.url}));
+   else if(target==="nativeSection")setNative(v=>({...v,sectionImageUrl:data.url}));
    else if(target==="nested")setSlots(old=>old.map(x=>x.id===targetId?{...x,children:x.children.map(card=>card.id===nestedId?{...card,imageUrl:data.url}:card)}:x));
    else setSlots(old=>old.map(x=>x.id===targetId?{...x,imageUrl:data.url}:x));
    setNotice("Image uploaded to R2 and added to the unsaved section. Save Draft and Publish to make it public.");
@@ -145,6 +147,15 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
     {page!=="deals"&&page!=="contact"&&<label>{page==="bundles"?"Bundle collection heading":page==="about"?"Care section heading":"Skin type section heading"}<input maxLength={130} value={native.secondaryTitle} placeholder="Keep existing native heading" onChange={e=>setNative(n=>({...n,secondaryTitle:e.target.value}))}/></label>}
     <button type="button" onClick={()=>setNative(n=>({...n,sectionTitle:"",secondaryTitle:""}))} disabled={!native.sectionTitle&&!native.secondaryTitle}>Restore original section headings</button>
    </div>
+   {page!=="contact"&&<div className="cse-native-section-media">
+    <h4>Native section image — {page}</h4>
+    <p className="cse-muted">Replace decorative editorial artwork without modifying prices, filters, cards or forms.</p>
+    <label>Approved image URL<input maxLength={500} value={native.sectionImageUrl} onChange={e=>setNative(n=>({...n,sectionImageUrl:e.target.value}))} placeholder="Keep original image"/></label>
+    <CmsMediaLibrary scope={page} onChoose={url=>setNative(n=>({...n,sectionImageUrl:url}))}/>
+    <input type="file" hidden ref={sectionMediaInput} accept="image/jpeg,image/png,image/webp" onChange={e=>{const file=e.currentTarget.files?.[0];if(file)void uploadImage(file,"nativeSection");e.currentTarget.value="";}}/>
+    <div className="cse-media-upload"><button type="button" disabled={mediaBusy} onClick={()=>sectionMediaInput.current?.click()}>Upload replacement to R2</button><button type="button" disabled={!native.sectionImageUrl||mediaBusy} onClick={()=>setNative(n=>({...n,sectionImageUrl:""}))}>Restore original image</button></div>
+    {native.sectionImageUrl&&<img src={native.sectionImageUrl} className="cse-native-section-thumbnail" alt="Draft replacement artwork"/>}
+   </div>}
    <p className="cse-muted">Image upload adds a new R2 asset to the draft; it does not publish automatically. Click Save Draft then Publish Page Slots to update the public hero.</p>
   </div>}
   <div className="cse-workspace"><section className="cse-list"><div className="cse-section-head"><strong>Page sections ({slots.length})</strong><div className="cse-add-control"><select aria-label="Section type to add" value={createKind} onChange={e=>setCreateKind(e.target.value as CmsSlot["kind"])}>{cmsSectionKinds.map(t=><option key={t} value={t}>{t[0].toUpperCase()+t.slice(1)}</option>)}</select><button onClick={add} disabled={slots.length>=20}><Plus size={14}/> Add</button></div></div>

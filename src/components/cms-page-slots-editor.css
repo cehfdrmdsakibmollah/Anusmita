@@ -107,3 +107,10 @@
 /* Touch/pen drag is restricted to the grip; scroll elsewhere remains normal. */
 .cse-row .cse-touch-handle{flex:0 0 28px;width:28px;min-width:28px;justify-content:center;touch-action:none;user-select:none;cursor:grab;background:#fff0f5;border:1px dashed #dba6bc}
 .cse-row.cse-row-dragging .cse-touch-handle{cursor:grabbing;background:#8d1644;color:#fff}
+
+
+.cse-native-section-media{display:grid;gap:8px;background:#fff;border:1px solid #e3bfce;border-radius:8px;padding:12px;margin:12px 0}
+.cse-native-section-media h4{font:700 16px Georgia,serif;color:#761e40;margin:0}
+.cse-native-section-media label{display:grid;gap:5px;font-size:11px;color:#6b2340}
+.cse-native-section-media label input{min-width:0;width:100%;border:1px solid #dbb1c4;border-radius:5px;padding:8px}
+.cse-native-section-thumbnail{width:min(100%,460px);height:180px;object-fit:contain;border:1px solid #edd1df;border-radius:6px}
