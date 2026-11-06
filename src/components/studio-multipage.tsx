@@ -4,6 +4,7 @@ import {Plus,Save,ArrowUp,ArrowDown,Trash2,Copy,Eye,ExternalLink,FileText,Layout
 import "./studio-multipage.css";
 import CmsPageSlotsEditor from "@/components/cms-page-slots-editor";
 import type {CmsSlotPage} from "@/lib/cms-page-slots";
+import {shouldConfirmCustomDraftReplacement} from "@/lib/cms-navigation-guard";
 type Block={id:string;type:"heading"|"paragraph"|"callout";text:string};
 type Page={slug:string;title:string;description:string;published:boolean;revision:number;blocks:Block[]};
 const blank=():Page=>({slug:"",title:"New Landing Page",description:"",published:false,revision:0,blocks:[{id:crypto.randomUUID(),type:"heading",text:"Welcome to ANUSMITA"}]});
@@ -36,7 +37,7 @@ export default function StudioMultiPage({view,onChange,onDirtyChange}:{view:stri
  const hasPendingEdits=view==="Custom Page"?customDirty:cmsDirty;
  useEffect(()=>{onDirtyChange?.(hasPendingEdits);return()=>onDirtyChange?.(false);},[hasPendingEdits,onDirtyChange]);
  function confirmReplacement(){
-  return !customDirty||window.confirm("Discard unsaved custom-page changes? They have not been saved or published.");
+  return !shouldConfirmCustomDraftReplacement(view==="Custom Page",customDirty)||window.confirm("Discard unsaved custom-page changes? They have not been saved or published.");
  }
  async function load(preserve=true){setLoading(true);try{const r=await fetch("/api/admin/content-pages",{cache:"no-store"});const d=await r.json();if(!r.ok)throw Error(d.error||"Unable to load pages");const all=d.pages as Page[];setPages(all||[]);if(preserve&&page?.slug){const updated=all.find(x=>x.slug===page.slug);if(updated)setPage({slug:updated.slug,title:updated.title,description:updated.description||"",published:updated.published,revision:updated.revision,blocks:updated.blocks.map(b=>({id:b.id,type:b.type,text:b.text}))});} }catch(e){setNotice("Error: "+String(e));}finally{setLoading(false);}}
  useEffect(()=>{void load(false);},[]);
