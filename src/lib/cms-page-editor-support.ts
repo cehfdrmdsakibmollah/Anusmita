@@ -1,7 +1,7 @@
 import {cmsNativeHeroSchema,type CmsNativeHero,type CmsSlotPage} from "./cms-page-slots";
 
-export const nativeHeroPageNames=["shop","deals","bundles","about","contact","journal"] as const;
-export const additionalIntroPageNames=["cart","checkout","gift-cards","pre-orders","customer-stories","wishlist","routine-quiz","track-order"] as const;
+export const nativeHeroPageNames=["shop","deals","bundles","about","contact","journal","cart","checkout","gift-cards","pre-orders","customer-stories","wishlist","routine-quiz","track-order"] as const;
+export const additionalIntroPageNames=[] as const;
 export function hasNativePageHero(page:CmsSlotPage):boolean{
  return nativeHeroPageNames.some(name=>name===page);
 }

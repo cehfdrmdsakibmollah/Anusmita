@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
+import type {CmsNativeHero} from '@/lib/cms-page-slots';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {Heart,ShoppingBag,Trash2,ArrowRight,Minus,Plus,LockKeyhole,Truck,ChevronRight,MapPin,Check,Wallet,CreditCard,ShieldCheck} from 'lucide-react';
@@ -26,7 +27,7 @@ export function ProductCardWishlist({id}:{id:string}){
 }
 type DisplayProduct={id:string;name:string;slug:string;size:string;image:string;pricePaisa:number|null;deliveryIncluded:boolean;category:string;quantityDiscounts?:QuantityDiscountTier[]};
 const staticProducts:DisplayProduct[]=sheetCatalogue.map(p=>({id:p.id,name:p.name,slug:p.slug,size:p.size,image:p.image,pricePaisa:p.pricePaisa,deliveryIncluded:p.deliveryIncluded,category:p.category}));
-export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishlist'|'checkout';codEnabled?:boolean}){
+export default function ShoppingPage({mode,codEnabled=false,nativeHero}:{mode:'cart'|'wishlist'|'checkout';codEnabled?:boolean;nativeHero?:CmsNativeHero}){
  const {state,ready,error,update}=useShopping();
  const [consent,setConsent]=useState(false);
  const [codCustomer,setCodCustomer]=useState({name:'',phone:'',district:'',area:'',address:'',notes:''});
@@ -73,7 +74,8 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
  }
 
  return <div className={"anWide shoppingPage anFlowPage"+(isCheckout?" anFlowCheckoutReference":"")}>{isCheckout&&<nav className="anCheckoutBreadcrumb" aria-label="Breadcrumb"><Link href="/">Home</Link><ChevronRight size={13}/><Link href="/cart">Shopping Bag</Link><ChevronRight size={13}/><span>Checkout</span></nav>}{mode!=="wishlist"&&<CommerceSteps step={isCheckout?2:1}/>}<p className="anOverline">ANUSMITA · THOUGHTFULLY CURATED</p>
-  <h1>{mode==='wishlist'?'Your saved favourites.':isCheckout?'Checkout':'Your Shopping Bag'}</h1>
+  <h1 style={nativeHero?.textColor&&nativeHero.textColor!=="#611b37"?{color:nativeHero.textColor}:undefined}>{nativeHero?.title||(mode==='wishlist'?'Your saved favourites.':isCheckout?'Checkout':'Your Shopping Bag')}</h1>
+  {(nativeHero?.subtitle||nativeHero?.imageUrl)&&<div className="anFlowCmsEditable" style={nativeHero.background!=="#fff6f9"?{backgroundColor:nativeHero.background}:undefined}>{nativeHero.subtitle&&<p>{nativeHero.subtitle}</p>}{nativeHero.imageUrl&&<img src={nativeHero.imageUrl} alt="ANUSMITA curated collection" loading="lazy" style={{maxWidth:"100%",maxHeight:240,objectFit:"contain",borderRadius:8}}/>}</div>}
   {mode!=="wishlist"&&<p className="anFlowSubtitle">{isCheckout?"Almost there! Tell us where to deliver your favourites.":"A little more beautiful, one favourite at a time."}</p>}
   <nav className="shoppingNav"><Link href="/shop">Continue shopping</Link><Link href="/cart">Cart ({state.cart.reduce((n,l)=>n+l.quantity,0)})</Link><Link href="/wishlist">Wishlist ({state.wishlist.length})</Link></nav>
   {!ready||loading?<p role="status">Loading your selection…</p>:<>
@@ -82,9 +84,9 @@ export default function ShoppingPage({mode,codEnabled=false}:{mode:'cart'|'wishl
    {mode==='wishlist'?(wishlist.length?<div className="sheetGrid">{wishlist.map(p=><article className="sheetCard" key={p.id}>
     <Link href={'/products/'+p.slug}><div className="sheetPhoto">{p.image?<img src={p.image} alt={p.name} loading="lazy"/>:<span>ANUSMITA</span>}</div><div className="sheetCardCopy"><h3>{p.name}</h3><strong>{p.pricePaisa===null?'Confirm price':money(p.pricePaisa)}</strong></div></Link>
     <ShoppingActions id={p.id}/>
-   </article>)}</div>:<div className="sheetEmpty"><h2>Your wishlist is waiting.</h2><p>Tap the heart on a product to save it here.</p><Link href="/shop">Explore products →</Link></div>):
+   </article>)}</div>:<div className="sheetEmpty"><h2>{nativeHero?.sectionTitle||"Your wishlist is waiting."}</h2><p>Tap the heart on a product to save it here.</p><Link href="/shop">Explore products →</Link></div>):
    (!lines.length?<div className="sheetEmpty"><h2>Your bag is empty.</h2><Link href="/shop">Find something lovely →</Link></div>:
-   <div className="shoppingLayout anFlowLayout"><section className="anFlowItems">{!isCheckout&&<div className="anFlowHero"><div><small>YOUR CURATED EDIT</small><h2>Your Shopping Bag</h2><p>Selected with care. Made for your moments.</p></div><img src="/brand/promo-reference.webp" alt="" loading="lazy"/></div>}{isCheckout&&<div className="anFlowCheckoutIntro"><div><h2>Checkout</h2><p>Almost there! Tell us where to deliver your favourites.</p></div><span className="anCheckoutFloral" aria-hidden="true">✿ ❀ ✿</span></div>}{lines.map(({id,quantity,p})=><article className="shoppingLine anFlowItem" key={id}>
+   <div className="shoppingLayout anFlowLayout"><section className="anFlowItems">{!isCheckout&&<div className="anFlowHero"><div><small>YOUR CURATED EDIT</small><h2>{nativeHero?.sectionTitle||"Your Shopping Bag"}</h2><p>Selected with care. Made for your moments.</p></div><img src="/brand/promo-reference.webp" alt="" loading="lazy"/></div>}{isCheckout&&<div className="anFlowCheckoutIntro"><div><h2>{nativeHero?.sectionTitle||"Checkout"}</h2><p>Almost there! Tell us where to deliver your favourites.</p></div><span className="anCheckoutFloral" aria-hidden="true">✿ ❀ ✿</span></div>}{lines.map(({id,quantity,p})=><article className="shoppingLine anFlowItem" key={id}>
     <Link href={'/products/'+p.slug}>{p.image?<img src={p.image} alt={p.name}/>:<span className="shoppingImageFallback">A.</span>}</Link>
     <div><small>{p.category}</small><h2><Link href={'/products/'+p.slug}>{p.name}</Link></h2><p>{p.size}</p><p>{p.pricePaisa===null?'Price to be confirmed':money(p.pricePaisa)} · Availability confirmed before ordering</p>
      <div className="anFlowQty"><button type="button" disabled={quantity<=1} aria-label={"Reduce quantity of "+p.name} onClick={()=>update(x=>({...x,cart:x.cart.map(l=>l.id===id?{...l,quantity:Math.max(1,l.quantity-1)}:l)}))}><Minus size={14}/></button><output>{quantity}</output><button type="button" disabled={quantity>=20} aria-label={"Increase quantity of "+p.name} onClick={()=>update(x=>({...x,cart:x.cart.map(l=>l.id===id?{...l,quantity:Math.min(20,l.quantity+1)}:l)}))}><Plus size={14}/></button></div>
