@@ -47,18 +47,18 @@ export default function StudioMultiPage({view,onChange}:{view:string;onChange:(v
       {(["desktop","tablet","mobile"] as const).map(d=><button key={d} type="button" aria-pressed={previewDevice===d} className={previewDevice===d?"smp-selected-device":""} onClick={()=>setPreviewDevice(d)}>{d}</button>)}
       <button onClick={()=>setPreviewKey(k=>k+1)}><RefreshCw size={15}/> Reload</button><a href={activeRoute.path} target="_blank" rel="noreferrer"><ExternalLink size={15}/> Open page</a>
     </div></div>
-    {(["Shop","Deals","Bundles","About","Contact","Journal","Cart","Checkout","Gift Cards","Pre-orders","Customer Stories","Wishlist","Routine Quiz","Track Order"].includes(activeRoute.name))&&<CmsPageSlotsEditor page={activeRoute.path.split("/").filter(Boolean)[0] as CmsSlotPage} onPublished={()=>setPreviewKey(k=>k+1)}/>}
+    {(["Shop","Deals","Bundles","About","Contact","Journal","Cart","Checkout","Gift Cards","Pre-orders","Customer Stories","Wishlist","Routine Quiz","Track Order"].includes(activeRoute.name))&&<CmsPageSlotsEditor key={activeRoute.name} page={activeRoute.path.split("/").filter(Boolean)[0] as CmsSlotPage} onPublished={()=>setPreviewKey(k=>k+1)}/>}
     <div className="smp-native-layout">
       <section className="smp-native-structure"><h3>Page sections</h3><div className="smp-native-list">
         <div><LayoutGrid size={17}/><span>{activeRoute.name} storefront</span><small>Actual running route</small></div>
         <div><FileText size={17}/><span>Data & interactions</span><small>Loaded by native component</small></div>
         <div><Eye size={17}/><span>Responsive preview</span><small>Desktop / tablet / mobile</small></div>
-      </div><p>The frame shows the current live route. Edit, add, reorder and publish CMS sections above. Product prices, stock and interactive native components remain managed by their existing modules.</p></section>
+      </div><p>The frame shows the current live route. Use the editor above to create, edit, reorder, delete and publish page sections and optional page intros. The preview below shows the published site. Product prices, stock and interactive native components remain managed by their existing modules.</p></section>
       <div className="smp-native-canvas"><div className={"smp-frame-holder "+previewDevice}>
        <iframe key={activeRoute.path+previewKey} src={activeRoute.path} title={activeRoute.name+" storefront preview"} loading="eager" referrerPolicy="same-origin"/>
       </div></div>
       <aside className="smp-native-inspector"><h3>{activeRoute.name} page</h3><label>Live route<input readOnly value={activeRoute.path}/></label>
-       <p>{activeRoute.note}</p><h4>Page management</h4><p>Existing route-specific components and data are rendered in the frame. Edit the added before/after CMS slots above. The original native components remain managed by their existing modules.</p>
+       <p>{activeRoute.note}</p><h4>Page management</h4><p>Edit the page-intro heading, text, image and editorial sections in the CMS editor above. Existing route-specific components stay intact; their operational data and actions remain controlled by their specialized modules.</p>
        <a href={activeRoute.editor}><ExternalLink size={15}/> Open existing content manager</a>
        <button onClick={create}><Plus size={15}/> New custom landing page</button>
        <p className="smp-native-warning">Shop, checkout, orders, wishlist and interactive flows are intentionally not overwritten. Opening this preview makes no database changes.</p>

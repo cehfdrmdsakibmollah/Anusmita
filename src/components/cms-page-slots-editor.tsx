@@ -3,6 +3,7 @@ import {useCallback,useEffect,useRef,useState} from "react";
 import {Plus,Save,Upload,Trash2,ArrowUp,ArrowDown,Eye,EyeOff,RefreshCw} from "lucide-react";
 import {cmsSlotSchema,defaultCmsStyle,cmsSectionKinds,cmsNativeHeroSchema,defaultCmsNativeHero,type CmsNativeHero,type CmsSlot,type CmsSlotPage} from "@/lib/cms-page-slots";
 import CmsMediaLibrary from "@/components/cms-media-library";
+import {hasNativePageHero,hasCmsPageIntro,sameCmsPageDraft} from "@/lib/cms-page-editor-support";
 import "./cms-page-slots-editor.css";
 type Payload={page:CmsSlotPage;revision:number;publishedRevision:number;draft:CmsSlot[];published:CmsSlot[];publishedAt:string|null;nativeDraft:CmsNativeHero;nativePublished:CmsNativeHero;history:{revision:number;action:"saveDraft"|"publish"|"restoreDraft";createdAt:string;slotCount:number}[]};
 const fresh=(position:number,kind:CmsSlot["kind"]="banner"):CmsSlot=>({id:crypto.randomUUID(),placement:"before",kind,style:{...defaultCmsStyle},title:"New ANUSMITA Collection",subtitle:"Discover what is new and thoughtfully curated.",badge:"ANUSMITA EDIT",imageUrl:"",children:[],cta:"Explore Collection",href:"/shop",enabled:true,position});
@@ -119,13 +120,26 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
  async function save(action:"saveDraft"|"publish"){if(!record||busy)return;const valid=cmsSlotSchema.array().max(20).safeParse(slots);const nativeValid=cmsNativeHeroSchema.safeParse(native);if(!nativeValid.success){setNotice("Hero validation: "+nativeValid.error.issues.map(i=>i.message).join("; "));return;}if(!valid.success){setNotice("Validation: "+valid.error.issues.map(i=>i.message).join("; "));return;}
   if(action==="publish"&&!window.confirm("Publish "+slots.length+" editorial block(s) to /"+page+"? Existing native storefront interactions will remain untouched."))return;
   setBusy(true);setNotice("");
-  try{const r=await fetch("/api/admin/cms-page-slots",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page,revision:record.revision,action,slots:valid.data,nativeHero:nativeValid.data})});const j=await r.json();if(!r.ok)throw Error(j.error||"Save failed");const nextNative=cmsNativeHeroSchema.parse(j.nativeDraft||{});setRecord({...j,nativeDraft:nextNative,nativePublished:cmsNativeHeroSchema.parse(j.nativePublished||{})});setNative(nextNative);setSlots(cmsSlotSchema.array().max(20).parse(j.draft));setNotice(action==="publish"?"Published revision "+j.publishedRevision+". Reload page preview to view your changes.":"Draft revision "+j.revision+" saved. Public page unchanged.");if(action==="publish"){setPreviewKey(v=>v+1);onPublished?.();}
+  try{
+   const response=await fetch("/api/admin/cms-page-slots",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page,revision:record.revision,action,slots:valid.data,nativeHero:nativeValid.data})});
+   const data=await response.json();if(!response.ok)throw Error(data.error||"Save failed");
+   const savedRevision=Number(data.revision);
+   const verification=await fetch("/api/admin/cms-page-slots?page="+encodeURIComponent(page),{cache:"no-store"});
+   const persisted=await verification.json();if(!verification.ok)throw Error(persisted.error||"Could not verify saved CMS data");
+   const savedSlots=cmsSlotSchema.array().max(20).parse(persisted.draft);
+   const savedHero=cmsNativeHeroSchema.parse(persisted.nativeDraft||{});
+   if(!sameCmsPageDraft({draft:valid.data,nativeDraft:nativeValid.data,revision:savedRevision},{draft:savedSlots,nativeDraft:savedHero,revision:Number(persisted.revision)}))throw Error("Saved page revision/content differs; reload before editing.");
+   if(action==="publish"&&Number(persisted.publishedRevision)!==savedRevision)throw Error("Published revision did not persist; reload before editing.");
+   setRecord({...persisted,draft:savedSlots,nativeDraft:savedHero,nativePublished:cmsNativeHeroSchema.parse(persisted.nativePublished||{}),history:persisted.history||[]});
+   setNative(savedHero);setSlots(savedSlots);
+   setNotice(action==="publish"?"Published and database-verified revision "+savedRevision+". Refresh the public preview to inspect changes.":"Draft saved and database-verified revision "+savedRevision+". Public page unchanged.");
+   if(action==="publish"){setPreviewKey(v=>v+1);onPublished?.();}
   }catch(e){setNotice("Error: "+String(e));}finally{setBusy(false);}
  }
  if(!record)return <div className="cse-empty" role="status">{notice||"Loading "+page+" CMS slots…"}</div>;
  return <div className="cse-root"><div className="cse-heading"><div><h3>Editable {page} page slots</h3><p>Add banners, text and curated CTA sections without altering the existing storefront logic.</p></div><span>Draft r{record.revision} · Live r{record.publishedRevision}</span></div>
-  {(["bundles","deals","about","contact","journal"] as string[]).includes(page)&&<div className="cse-native-hero">
-   <div><h4>Native Page Hero — {page}</h4><p className="cse-muted">Override the existing hero title, subtitle, photo and colors. Leave fields blank to keep the original. Existing forms, product information and interactive sections stay unchanged.</p></div>
+  {(hasNativePageHero(page)||hasCmsPageIntro(page))&&<div className="cse-native-hero">
+   <div><h4>{hasNativePageHero(page)?"Native Page Hero":"Page Intro Builder"} — {page}</h4><p className="cse-muted">{hasNativePageHero(page)?"Override existing hero title, subtitle, image and colors.":"Add an optional editable title, subtitle and image above existing native content. Blank fields remove the intro."} Cart, product, checkout and order logic remain unchanged.</p></div>
    <div className="cse-native-fields">
     <label>Hero title<input value={native.title} maxLength={130} placeholder="Keep original title" onChange={e=>setNative(n=>({...n,title:e.target.value}))}/></label>
     <label>Hero subtitle<textarea value={native.subtitle} rows={2} maxLength={320} placeholder="Keep original subtitle" onChange={e=>setNative(n=>({...n,subtitle:e.target.value}))}/></label>
@@ -136,18 +150,18 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
    </div>
    <CmsMediaLibrary scope={page} onChoose={url=>setNative(hero=>({...hero,imageUrl:url}))}/>
     <div className="cse-native-image-preview" aria-live="polite">
-    <strong>{native.imageUrl?"Unsaved hero image preview":"Current native image preserved"}</strong>
-    {native.imageUrl?<img src={native.imageUrl} alt="Draft hero image preview" onError={()=>setNotice("Image preview failed. Verify the approved URL before publishing.")}/>:<p className="cse-muted">No CMS image override. This page retains its original hero artwork.</p>}
+    <strong>{native.imageUrl?"Draft page image preview":hasNativePageHero(page)?"Current native image preserved":"No intro image selected"}</strong>
+    {native.imageUrl?<img src={native.imageUrl} alt="Draft page image preview" onError={()=>setNotice("Image preview failed. Verify the approved URL before publishing.")}/>:<p className="cse-muted">No CMS image override. Existing page content remains unchanged.</p>}
     <div className="cse-media-upload"><button type="button" disabled={mediaBusy||!native.imageUrl} onClick={()=>setNative(n=>({...n,imageUrl:""}))}>Restore original hero image</button><button type="button" disabled={mediaBusy} onClick={()=>nativeMediaInput.current?.click()}>Replace image</button></div>
    </div>
-   <div className="cse-native-section-fields">
+   {hasNativePageHero(page)&&<div className="cse-native-section-fields">
     <h4>Native page section headings</h4>
     <p className="cse-muted">Edit the real storefront headings, not just banners placed above/below the page. Blank values preserve the original design text. Prices, product data, forms and interactive behavior are unchanged.</p>
     <label>{page==="deals"?"Flash Deals heading":page==="bundles"?"Routine section heading":page==="about"?"Story section heading":page==="contact"?"Contact form heading":"Featured guide heading"}<input maxLength={130} value={native.sectionTitle} placeholder="Keep existing native heading" onChange={e=>setNative(n=>({...n,sectionTitle:e.target.value}))}/></label>
     {page!=="deals"&&page!=="contact"&&<label>{page==="bundles"?"Bundle collection heading":page==="about"?"Care section heading":"Skin type section heading"}<input maxLength={130} value={native.secondaryTitle} placeholder="Keep existing native heading" onChange={e=>setNative(n=>({...n,secondaryTitle:e.target.value}))}/></label>}
     <button type="button" onClick={()=>setNative(n=>({...n,sectionTitle:"",secondaryTitle:""}))} disabled={!native.sectionTitle&&!native.secondaryTitle}>Restore original section headings</button>
-   </div>
-   {page!=="contact"&&<div className="cse-native-section-media">
+   </div>}
+   {hasNativePageHero(page)&&page!=="contact"&&<div className="cse-native-section-media">
     <h4>Native section image — {page}</h4>
     <p className="cse-muted">Replace decorative editorial artwork without modifying prices, filters, cards or forms.</p>
     <label>Approved image URL<input maxLength={500} value={native.sectionImageUrl} onChange={e=>setNative(n=>({...n,sectionImageUrl:e.target.value}))} placeholder="Keep original image"/></label>

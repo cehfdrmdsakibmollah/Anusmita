@@ -1,17 +1,24 @@
 import {db} from "@/lib/db";
 import {CmsPageSlot} from "@/lib/models";
-import {cmsSlots,type CmsSlotPage,type CmsSlot} from "@/lib/cms-page-slots";
+import {cmsSlots,cmsNativeHeroSchema,type CmsSlotPage,type CmsSlot} from "@/lib/cms-page-slots";
+import {shouldRenderCmsIntro} from "@/lib/cms-page-editor-support";
 import "./cms-public-slots.css";
 export default async function CmsPublicSlots({page,placement}:{page:CmsSlotPage;placement:"before"|"after"}){
  let slots:CmsSlot[]=[];
+ let intro:ReturnType<typeof cmsNativeHeroSchema.parse>|null=null;
  if(process.env.MONGODB_URI)try{
   await db();
-  const data=await CmsPageSlot.findOne({page}).select("published").lean<any>();
+  const data=await CmsPageSlot.findOne({page}).select("published nativePublished").lean<any>();
   const parsed=cmsSlots.safeParse(data?.published||[]);
   if(parsed.success)slots=parsed.data.filter(x=>x.enabled&&x.placement===placement).sort((a,b)=>a.position-b.position);
+  if(placement==="before"&&shouldRenderCmsIntro(page,data?.nativePublished))intro=cmsNativeHeroSchema.parse(data.nativePublished);
  }catch{/* Preserve normal storefront availability even if merchandising database fails. */}
- if(!slots.length)return null;
+ if(!slots.length&&!intro)return null;
  return <div className="anCmsPublicSlots" data-cms-page={page} data-placement={placement}>
+  {intro&&<section className="anCmsPageIntro" aria-label={intro.title||page+" introduction"} style={{background:intro.background,color:intro.textColor}}>
+    <div className="anCmsPageIntroCopy">{intro.title&&<h1>{intro.title}</h1>}{intro.subtitle&&<p>{intro.subtitle}</p>}</div>
+    {intro.imageUrl&&<img src={intro.imageUrl} alt="" loading="lazy"/>}
+  </section>}
   {slots.map(slot=>slot.kind==="grid"?<section key={slot.id} className="anCmsPublicGridSection" aria-label={slot.title} style={{background:slot.style.background,color:slot.style.textColor,borderRadius:slot.style.radius,padding:slot.style.padding}}>
    {slot.badge&&<p className="anCmsPublicEyebrow">{slot.badge}</p>}
    <h2 style={{fontSize:slot.style.fontSize,color:slot.style.textColor,textAlign:slot.style.alignment}}>{slot.title}</h2>

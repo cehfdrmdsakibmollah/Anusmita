@@ -36,3 +36,12 @@
 .anCmsPublicNestedCard p{font:12px/1.55 Arial,sans-serif;color:#725268;margin:0 0 12px}
 .anCmsPublicNestedCard a{display:inline-block;color:white;font:700 11px Arial,sans-serif;padding:9px 12px;border-radius:6px}
 @media(max-width:680px){.anCmsPublicGridSection{padding:16px!important}.anCmsPublicNestedCards{grid-template-columns:1fr}.anCmsPublicNestedCard>img{height:200px}}
+
+
+/* Optional published editorial intro. Does not replace any native route or action. */
+.anCmsPageIntro{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:clamp(22px,4vw,62px);min-width:0;border:1px solid #edd2dc}
+.anCmsPageIntroCopy{min-width:0;max-width:720px;flex:1}
+.anCmsPageIntro h1{font:700 clamp(28px,4vw,54px)/1.13 Georgia,serif;margin:0 0 12px;color:inherit}
+.anCmsPageIntro p{font:15px/1.7 Arial,sans-serif;margin:0;color:inherit}
+.anCmsPageIntro img{display:block;flex:0 1 38%;width:min(38%,450px);max-height:330px;object-fit:contain;border-radius:10px}
+@media(max-width:700px){.anCmsPageIntro{display:block;padding:22px 16px}.anCmsPageIntro img{width:100%;max-width:100%;max-height:240px;margin-top:20px}}
