@@ -10,7 +10,7 @@ type Page={slug:string;title:string;description:string;published:boolean;revisio
 const blank=():Page=>({slug:"",title:"New Landing Page",description:"",published:false,revision:0,blocks:[{id:crypto.randomUUID(),type:"heading",text:"Welcome to ANUSMITA"}]});
 const routes=[
  {name:"Shop",path:"/shop",editor:"/admin/products/manage",note:"Products, filters, availability and merchandising are managed through Product Management and the Homepage product shelves."},
- {name:"Deals",path:"/deals",editor:"/admin?tab=Homepage%20Studio",note:"Promotional cards and countdowns are controlled through the Homepage CMS. This existing route is not yet a page-builder canvas."},
+ {name:"Deals",path:"/deals",editor:"/admin?tab=Homepage%20Studio",note:"Native promotions remain data-backed; editable editorial slots and hero are in this page canvas."},
  {name:"Bundles",path:"/bundles",editor:"/admin/products/manage",note:"Bundles must connect to real inventory and catalog rules; no independent layout publisher is installed yet."},
  {name:"Journal",path:"/journal/design-preview",editor:"/admin?tab=Custom%20Pages",note:"The current Journal storefront is a design preview, not a generic published CMS page. The accounting Journal is a separate financial module."},
  {name:"About",path:"/about/design-preview",editor:"/admin?tab=Custom%20Pages",note:"The existing About page is code-managed. Create a new custom landing page without overwriting it."},
@@ -61,22 +61,7 @@ export default function StudioMultiPage({view,onChange,onDirtyChange}:{view:stri
       <button onClick={()=>setPreviewKey(k=>k+1)}><RefreshCw size={15}/> Reload</button><a href={activeRoute.path} target="_blank" rel="noreferrer"><ExternalLink size={15}/> Open page</a>
     </div></div>
     {(["Shop","Deals","Bundles","About","Contact","Journal","Cart","Checkout","Gift Cards","Pre-orders","Customer Stories","Wishlist","Routine Quiz","Track Order"].includes(activeRoute.name))&&<CmsPageSlotsEditor key={activeRoute.name} page={activeRoute.path.split("/").filter(Boolean)[0] as CmsSlotPage} onPublished={()=>setPreviewKey(k=>k+1)} onDirtyChange={setCmsDirty}/>}
-    <div className="smp-native-layout">
-      <section className="smp-native-structure"><h3>Page sections</h3><div className="smp-native-list">
-        <div><LayoutGrid size={17}/><span>{activeRoute.name} storefront</span><small>Actual running route</small></div>
-        <div><FileText size={17}/><span>Data & interactions</span><small>Loaded by native component</small></div>
-        <div><Eye size={17}/><span>Responsive preview</span><small>Desktop / tablet / mobile</small></div>
-      </div><p>The frame shows the current live route. Use the editor above to create, edit, reorder, delete and publish page sections and optional page intros. The preview below shows the published site. Product prices, stock and interactive native components remain managed by their existing modules.</p></section>
-      <div className="smp-native-canvas"><div className={"smp-frame-holder "+previewDevice}>
-       <iframe key={activeRoute.path+previewKey} src={activeRoute.path} title={activeRoute.name+" storefront preview"} loading="eager" referrerPolicy="same-origin"/>
-      </div></div>
-      <aside className="smp-native-inspector"><h3>{activeRoute.name} page</h3><label>Live route<input readOnly value={activeRoute.path}/></label>
-       <p>{activeRoute.note}</p><h4>Page management</h4><p>Edit the page-intro heading, text, image and editorial sections in the CMS editor above. Existing route-specific components stay intact; their operational data and actions remain controlled by their specialized modules.</p>
-       <a href={activeRoute.editor}><ExternalLink size={15}/> Open existing content manager</a>
-       <button onClick={create}><Plus size={15}/> New custom landing page</button>
-       <p className="smp-native-warning">Shop, checkout, orders, wishlist and interactive flows are intentionally not overwritten. Opening this preview makes no database changes.</p>
-      </aside>
-    </div>
+    <div className="smp-integrated-preview-note"><strong>One editor for this page</strong><span>Use the three-panel Visual editor above for CMS title, images, sections, cards and styles. Select <b>Live storefront</b> in its canvas to see real catalog/forms and published content.</span><a href={activeRoute.path} target="_blank" rel="noreferrer"><ExternalLink size={14}/> Open live route</a></div>
    </div>:
    view==="Custom Page"?page?<div className="smp-columns">
     <section className="smp-list"><h3>Page Structure <span>{page.blocks.length} blocks</span></h3><div className="smp-items">{page.blocks.map((b,i)=><div className={"smp-item"+(selected===b.id?" active":"")} key={b.id}><button onClick={()=>setSelected(b.id)}><FileText size={14}/><span>{i+1}. {b.type} — {b.text.slice(0,20)}</span></button><button title="Move up" disabled={i===0} onClick={()=>move(i,-1)}><ArrowUp size={14}/></button><button title="Move down" disabled={i===page.blocks.length-1} onClick={()=>move(i,1)}><ArrowDown size={14}/></button></div>)}</div><h4>Block Library</h4><div className="smp-library">{(["heading","paragraph","callout"] as const).map(type=><button key={type} onClick={()=>addBlock(type)}><Plus size={14}/>{type}</button>)}</div></section>
