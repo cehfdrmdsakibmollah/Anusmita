@@ -1,4 +1,5 @@
 'use client';
+import type {CmsNativeHero} from '@/lib/cms-page-slots';
 import Link from 'next/link';
 import {useRef,useState,type FormEvent} from 'react';
 import {ArrowRight,Gift,Menu,Pencil,Search,Send,ShoppingBag,UserRound,X} from 'lucide-react';
@@ -6,7 +7,7 @@ import {dhakaDate,giftAmounts,giftMoney,giftStyles,validateGift,type GiftDraft} 
 function Brand(){return <Link href="/" className="rq-brand" aria-label="ANUSMITA homepage"><span>ANUSMITA<small>FASHION · JEWELLERY · BEAUTY</small></span></Link>;}
 function Art({region,className='',label}:{region:number[];className?:string;label?:string}){return <svg className={`gc-art ${className}`} viewBox={region.join(' ')} preserveAspectRatio="xMidYMid slice" role={label?'img':undefined} aria-label={label} aria-hidden={label?undefined:true}><image href="/brand/reference/gift-cards-approved.png" width="1024" height="1536"/></svg>;}
 const thumbnails=[[43,686,105,84],[168,686,99,81],[286,687,104,80]];
-export default function GiftCards(){
+export default function GiftCards({nativeHero}:{nativeHero?:CmsNativeHero}={}){
  const [menu,setMenu]=useState(false),[style,setStyle]=useState<typeof giftStyles[number]>('Blush');
  const [draft,setDraft]=useState<GiftDraft>({amount:2000,recipient:'',email:'',sender:'',message:'',delivery:'now',date:''});
  const [errors,setErrors]=useState<ReturnType<typeof validateGift>>({});
@@ -15,9 +16,9 @@ export default function GiftCards(){
  function submit(e:FormEvent){e.preventDefault();const next=validateGift(draft);setErrors(next);if(Object.keys(next).length){requestAnimationFrame(()=>form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());return;}dialog.current?.showModal();}
  return <div className="routineQuiz giftCards">
  <header className="rq-header"><Brand/><nav id="gc-navigation" className={menu?'open':''} aria-label="Main navigation">{[['Home','/'],['Shop','/shop'],['Bundles','/bundles'],['Deals','/deals'],['Journal','/journal/design-preview'],['Contact','/contact/design-preview']].map(([label,href])=><Link key={label} href={href}>{label}</Link>)}</nav><div className="rq-tools"><Link href="/shop" aria-label="Search products"><Search/></Link><Link href="/account/design-preview" aria-label="My account"><UserRound/></Link><Link href="/cart/design-preview" aria-label="Shopping bag"><ShoppingBag/></Link><button className="rq-menu" aria-label="Toggle navigation" aria-expanded={menu} aria-controls="gc-navigation" onClick={()=>setMenu(!menu)}><Menu/></button></div></header>
- <section className="gc-hero"><Art region={[343,93,409,252]} className="gc-hero-art" label="ANUSMITA gift card with pink satin ribbon and envelope"/><nav aria-label="Breadcrumb"><Link href="/">Home</Link><span>/</span><span>Gift Cards</span></nav><div className="gc-hero-copy"><span className="gc-eyebrow">GIFT SOMETHING LOVELY</span><h1>A little gift.<br/>Endless possibilities.</h1><p>Let them choose their ANUSMITA favourites.</p></div></section>
+ <section className="gc-hero" style={nativeHero?.background&&nativeHero.background!=="#fff6f9"?{backgroundColor:nativeHero.background}:undefined}>{nativeHero?.imageUrl?<img src={nativeHero.imageUrl} className="gc-hero-art" alt="ANUSMITA gift cards" style={{objectFit:"cover"}}/>:<Art region={[343,93,409,252]} className="gc-hero-art" label="ANUSMITA gift card with pink satin ribbon and envelope"/>}<nav aria-label="Breadcrumb"><Link href="/">Home</Link><span>/</span><span>Gift Cards</span></nav><div className="gc-hero-copy"><span className="gc-eyebrow">GIFT SOMETHING LOVELY</span><h1 style={nativeHero?.textColor&&nativeHero.textColor!=="#611b37"?{color:nativeHero.textColor}:undefined}>{nativeHero?.title||<>A little gift.<br/>Endless possibilities.</>}</h1><p>{nativeHero?.subtitle||"Let them choose their ANUSMITA favourites."}</p></div></section>
  <p className="gc-preview-note"><span>DESIGN PREVIEW</span> · Sample gift card values</p>
- <main className="gc-config"><section className="gc-design" aria-labelledby="gc-title"><h2 id="gc-title">Make it personal.</h2><div className={`gc-card gc-card-${style.toLowerCase()}`} aria-label={`${style} gift card preview, ${giftMoney(draft.amount)}`}>
+ <main className="gc-config"><section className="gc-design" aria-labelledby="gc-title"><h2 id="gc-title">{nativeHero?.sectionTitle||"Make it personal."}</h2><div className={`gc-card gc-card-${style.toLowerCase()}`} aria-label={`${style} gift card preview, ${giftMoney(draft.amount)}`}>
  {style==='Blush'?<><Art region={[40,431,355,234]}/><span className="gc-live-amount">{giftMoney(draft.amount)}</span></>:<><Art region={thumbnails[style==='Classic'?0:2]}/><div className="gc-card-lettering"><span>ANUSMITA</span><i>A gift, just for you.</i><strong>{giftMoney(draft.amount)}</strong></div></>}
  </div><div className="gc-styles" role="group" aria-label="Gift card style">{giftStyles.map((s,i)=><button key={s} aria-pressed={style===s} onClick={()=>setStyle(s)}><span><Art region={thumbnails[i]}/></span>{s}</button>)}</div></section>
  <form ref={form} className="gc-form" onSubmit={submit} noValidate>
