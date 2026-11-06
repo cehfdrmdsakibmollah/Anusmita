@@ -2,15 +2,17 @@ import {describe,it,expect} from "vitest";
 import {cmsNativeHeroSchema,defaultCmsNativeHero,cmsSlotPages} from "./cms-page-slots";
 import {hasNativePageHero,hasCmsPageIntro,shouldRenderCmsIntro,sameCmsPageDraft,additionalIntroPageNames} from "./cms-page-editor-support";
 describe("Universal CMS page editing and publishing safety",()=>{
- it("offers a visual intro editor for all nine previously unsupported routes",()=>{
+ it("offers a visual intro editor for eight remaining intro-only routes",()=>{
   for(const page of additionalIntroPageNames){
    expect(hasCmsPageIntro(page)).toBe(true);
    expect(hasNativePageHero(page)).toBe(false);
   }
   expect(cmsSlotPages.length).toBe(14);
+  expect(hasNativePageHero("shop")).toBe(true);
+  expect(hasCmsPageIntro("shop")).toBe(false);
  });
  it("never overlays existing independently configured native page heroes",()=>{
-  for(const name of ["deals","bundles","about","contact","journal"] as const){
+  for(const name of ["shop","deals","bundles","about","contact","journal"] as const){
    expect(hasNativePageHero(name)).toBe(true);
    expect(hasCmsPageIntro(name)).toBe(false);
    expect(shouldRenderCmsIntro(name,{title:"Sample"})).toBe(false);
