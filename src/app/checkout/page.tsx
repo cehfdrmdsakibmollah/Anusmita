@@ -1,6 +1,7 @@
 import CmsPublicSlots from "@/components/cms-public-slots";
+import {publishedCmsNativeHero} from "@/lib/cms-native-hero";
 import ShoppingPage from '@/components/catalogue-shopping';
 import {checkoutEnabled} from '@/lib/launch-config';
 export const dynamic='force-dynamic';
 export const metadata={title:'Secure checkout | ANUSMITA',robots:{index:false,follow:false}};
-export default function Page(){return <><CmsPublicSlots page="checkout" placement="before"/><ShoppingPage mode="checkout" codEnabled={checkoutEnabled(process.env)}/><CmsPublicSlots page="checkout" placement="after"/></>;}
+export default async function Page(){const nativeHero=await publishedCmsNativeHero("checkout");return <><CmsPublicSlots page="checkout" placement="before"/><ShoppingPage mode="checkout" codEnabled={checkoutEnabled(process.env)}/><CmsPublicSlots page="checkout" placement="after"/></>;}
