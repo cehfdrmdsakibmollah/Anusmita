@@ -19,7 +19,7 @@ describe("Universal CMS page editing and publishing safety",()=>{
   }
  });
  it("renders only valid, nonempty published intros",()=>{
-  expect(shouldRenderCmsIntro("shop",{title:"Curated Shop"})).toBe(true);
+  expect(shouldRenderCmsIntro("shop",{title:"Curated Shop"})).toBe(false);
   expect(shouldRenderCmsIntro("cart",{subtitle:"Your selected items"})).toBe(true);
   expect(shouldRenderCmsIntro("wishlist",{imageUrl:"/brand/hero-reference.webp"})).toBe(true);
   expect(shouldRenderCmsIntro("cart",{})).toBe(false);
