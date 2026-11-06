@@ -7,7 +7,7 @@ import {hasNativePageHero,hasCmsPageIntro,sameCmsPageDraft} from "@/lib/cms-page
 import "./cms-page-slots-editor.css";
 type Payload={page:CmsSlotPage;revision:number;publishedRevision:number;draft:CmsSlot[];published:CmsSlot[];publishedAt:string|null;nativeDraft:CmsNativeHero;nativePublished:CmsNativeHero;history:{revision:number;action:"saveDraft"|"publish"|"restoreDraft";createdAt:string;slotCount:number}[]};
 const fresh=(position:number,kind:CmsSlot["kind"]="banner"):CmsSlot=>({id:crypto.randomUUID(),placement:"before",kind,style:{...defaultCmsStyle},title:"New ANUSMITA Collection",subtitle:"Discover what is new and thoughtfully curated.",badge:"ANUSMITA EDIT",imageUrl:"",children:[],cta:"Explore Collection",href:"/shop",enabled:true,position});
-export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;onPublished?:()=>void}){
+export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{page:CmsSlotPage;onPublished?:()=>void;onDirtyChange?:(dirty:boolean)=>void}){
  const jsonInput=useRef<HTMLInputElement|null>(null);
  const mediaInput=useRef<HTMLInputElement|null>(null);
  const nativeMediaInput=useRef<HTMLInputElement|null>(null);
@@ -65,6 +65,7 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
  function addNested(){if(!selectedSlot||selectedSlot.children.length>=6)return;update({children:[...selectedSlot.children,{id:crypto.randomUUID(),title:"New editorial card",subtitle:"",imageUrl:"",cta:"Explore",href:"/shop"}]});}
  function moveNested(id:string,direction:number){if(!selectedSlot)return;const items=[...selectedSlot.children],index=items.findIndex(card=>card.id===id),next=index+direction;if(index<0||next<0||next>=items.length)return;[items[index],items[next]]=[items[next],items[index]];update({children:items});}
  const dirty=!!record&&(JSON.stringify(slots)!==JSON.stringify(record.draft)||JSON.stringify(native)!==JSON.stringify(record.nativeDraft));
+ useEffect(()=>{onDirtyChange?.(dirty);return()=>onDirtyChange?.(false);},[dirty,onDirtyChange]);
  useEffect(()=>{if(!dirty)return;const guard=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue="";};window.addEventListener("beforeunload",guard);return()=>window.removeEventListener("beforeunload",guard);},[dirty]);
  function add(){const item=fresh(slots.length,createKind);setSlots(prev=>[...prev,item]);setSelected(item.id);setMode("draft");}
  function copySlot(id:string){const item=slots.find(x=>x.id===id);if(!item||slots.length>=20)return;const next={...item,id:crypto.randomUUID(),position:slots.length};setSlots(old=>[...old,next]);setSelected(next.id);}
