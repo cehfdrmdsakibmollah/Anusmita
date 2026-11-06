@@ -9,6 +9,7 @@ import HomepageManager from "@/components/homepage-manager";
 import HomepageStyleEditor from "@/components/homepage-style-editor";
 import HomepageCountdown from "@/components/homepage-countdown";
 import StudioMultiPage from "@/components/studio-multipage";
+import {shouldConfirmCmsPageSwitch} from "@/lib/cms-navigation-guard";
 import StoreChromeEditor from "@/components/store-chrome-editor";
 import CmsMediaLibrary from "@/components/cms-media-library";
 import "./homepage-studio-v2.css";
@@ -74,8 +75,7 @@ export default function HomepageStudioV2(){
  function requestPageChange(next:string):boolean{
   if(next===activePage)return true;
   if(busy||imageUploading){setMessage("Complete the current save or upload before switching pages.");return false;}
-  const hasUnsaved=activePage==="Homepage"?dirty:secondaryDirty;
-  if(hasUnsaved&&!window.confirm("Unsaved edits on "+activePage+" will be lost if you switch pages. Continue without saving?"))return false;
+  if(shouldConfirmCmsPageSwitch(activePage,next,dirty,secondaryDirty)&&!window.confirm("Unsaved edits on "+activePage+" will be lost if you switch pages. Continue without saving?"))return false;
   setSecondaryDirty(false);setActivePage(next);return true;
  }
  const selectedKind=active?.kind||"hero";
