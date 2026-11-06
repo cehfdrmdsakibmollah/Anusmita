@@ -1,4 +1,5 @@
 import CmsPublicSlots from "@/components/cms-public-slots";
+import {publishedCmsNativeHero} from "@/lib/cms-native-hero";
 import type {Metadata} from "next";
 import Link from "next/link";
 import ShopReference from "@/components/shop-reference";
@@ -13,6 +14,7 @@ function selectedArray(v:string|string[]|undefined){return (Array.isArray(v)?v:v
 type Query={page?:string;category?:string;q?:string;sort?:string;origin?:string|string[];concern?:string|string[];min?:string;max?:string};
 export default async function Shop({searchParams}:{searchParams:Promise<Query>}){
  const query=await searchParams;
+ const nativeHero=await publishedCmsNativeHero("shop");
  if(!process.env.MONGODB_URI)return <><CmsPublicSlots page="shop" placement="before"/><SheetCatalogue query={query}/><CmsPublicSlots page="shop" placement="after"/></>;
  const origins=selectedArray(query.origin).filter(x=>options.includes(x));
  const selectedConcerns=selectedArray(query.concern).filter(x=>concerns.includes(x));
@@ -38,5 +40,5 @@ export default async function Shop({searchParams}:{searchParams:Promise<Query>})
   const rows=await Product.find(filter).select("name slug brand category origin imageUrls size variantLabel pricePaisa onHand reserved").sort(sortMap[sort]).skip((page-1)*9).limit(9).maxTimeMS(10000).lean<any[]>();
   products=rows.map(p=>({id:String(p._id),name:p.name,slug:p.slug,brand:p.brand||"",category:p.category,origin:p.origin||"",image:p.imageUrls?.[0]||"",size:p.size||p.variantLabel||"",pricePaisa:p.pricePaisa,available:Math.max(0,(p.onHand||0)-(p.reserved||0))}));
  }catch{failed=true}
- return <><CmsPublicSlots page="shop" placement="before"/><div className="anWide catalogPage anShopPageScope">{failed?<p className="catalogState" role="status">The catalogue is temporarily unavailable. Please try again or <Link href="/contact/design-preview">contact ANUSMITA</Link>.</p>:<ShopReference products={products} page={page} pages={pages} count={count} filters={{category,origins,concerns:selectedConcerns,minPrice:minPrice===null?"":String(minPrice),maxPrice:maxPrice===null?"":String(maxPrice),sort,q:search}}/>}</div><CmsPublicSlots page="shop" placement="after"/></>;
+ return <><CmsPublicSlots page="shop" placement="before"/><div className="anWide catalogPage anShopPageScope">{failed?<p className="catalogState" role="status">The catalogue is temporarily unavailable. Please try again or <Link href="/contact/design-preview">contact ANUSMITA</Link>.</p>:<ShopReference nativeHero={nativeHero} products={products} page={page} pages={pages} count={count} filters={{category,origins,concerns:selectedConcerns,minPrice:minPrice===null?"":String(minPrice),maxPrice:maxPrice===null?"":String(maxPrice),sort,q:search}}/>}</div><CmsPublicSlots page="shop" placement="after"/></>;
 }
