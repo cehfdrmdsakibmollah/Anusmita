@@ -52,7 +52,7 @@ export default function StudioMultiPage({view,onChange,onDirtyChange}:{view:stri
   <div className="smp-bar"><label>Active page <select value={view==="Custom Page"?"custom":view} onChange={e=>{const v=e.target.value;if(onChange(v==="custom"?"Custom Page":v))setSelected(null);}}>
    <option value="Homepage">Homepage</option>{routes.map(r=><option key={r.name} value={r.name}>{r.name} ({r.path})</option>)}<option value="custom">Custom Page / Landing Page</option></select></label>
    <label>Saved custom pages <select value={chosen} onChange={e=>choosePage(e.target.value)}><option value="">Select a custom page…</option>{pages.map(p=><option key={p.slug} value={p.slug}>{p.title} — /pages/{p.slug}</option>)}</select></label>
-   <span>{pages.length} custom page(s)</span>
+   <span>{pages.length} custom page(s) · {hasPendingEdits?"Unsaved changes — save before switching":"No pending edits"}</span>
   </div>
   {activeRoute?<div className="smp-native-workspace">
     <div className="smp-native-toolbar"><div><strong>{activeRoute.name} — Actual storefront preview</strong><span>Rendering the real route, not placeholder cards</span></div><div className="smp-actions">
