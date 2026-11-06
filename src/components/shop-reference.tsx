@@ -3,6 +3,7 @@ import {useState} from "react";
 import Link from "next/link";
 import {ArrowRight,ChevronLeft,ChevronRight,Grid2X2,List,SlidersHorizontal} from "lucide-react";
 import {ProductCardWishlist} from "@/components/catalogue-shopping";
+import type {CmsNativeHero} from "@/lib/cms-page-slots";
 
 type Item={id:string;name:string;slug:string;brand:string;category:string;origin:string;image:string;size:string;pricePaisa:number;available:number};
 type Filters={category:string;origins:string[];concerns:string[];minPrice:string;maxPrice:string;sort:string;q:string};
@@ -10,7 +11,7 @@ const originOptions=["Japan","Korea","China"];
 const categories=["Skincare","Makeup","Perfume","Fashion","Bedsheets","Watches","Bags","Jewellery","Accessories"];
 const concerns=["Acne","Brightening","Sensitive","Dry Skin","Oily Skin"];
 const money=(p:number)=>"৳"+(p/100).toLocaleString("en-BD",{maximumFractionDigits:2});
-export default function ShopReference({products,filters,page,pages,count}:{products:Item[];filters:Filters;page:number;pages:number;count:number}){
+export default function ShopReference({products,filters,page,pages,count,nativeHero}:{products:Item[];filters:Filters;page:number;pages:number;count:number;nativeHero?:CmsNativeHero}){
  const [draft,setDraft]=useState(filters);
  const [view,setView]=useState<"grid"|"list">("grid");
  const toggle=(key:"origins"|"concerns",value:string)=>setDraft(old=>({...old,[key]:old[key].includes(value)?old[key].filter(v=>v!==value):[...old[key],value]}));
@@ -18,8 +19,11 @@ export default function ShopReference({products,filters,page,pages,count}:{produ
  const totalStart=count?(page-1)*9+1:0,totalEnd=Math.min(count,page*9);
  return <div className="anShopFull">
   <nav className="anShopCrumbs" aria-label="Breadcrumb"><Link href="/">Home</Link><ChevronRight size={13}/><Link href="/shop">Shop</Link><ChevronRight size={13}/><span>All Products</span></nav>
-  <section className="anShopHero"><div><span>THE ANUSMITA COLLECTION</span><h1>Discover Your<br/>Next <em>Favourite</em></h1><p>Beauty, fragrance & lifestyle, thoughtfully curated for you.</p></div></section>
-  <div className="anShopHeading"><h2>Shop All Products</h2><div className="anShopToolbar"><button className={view==="grid"?"active":""} type="button" onClick={()=>setView("grid")} aria-label="Grid view" aria-pressed={view==="grid"}><Grid2X2 size={19}/></button><button className={view==="list"?"active":""} type="button" onClick={()=>setView("list")} aria-label="List view" aria-pressed={view==="list"}><List size={19}/></button><label>Sort by: <select value={draft.sort} onChange={e=>{const v=e.target.value;setDraft(x=>({...x,sort:v}));window.location.assign(link({...draft,sort:v}));}} aria-label="Sort products"><option value="newest">Newest</option><option value="price-low">Price: Low to High</option><option value="price-high">Price: High to Low</option><option value="name">Name: A to Z</option></select></label></div></div>
+  <section className="anShopHero" style={{
+   ...(nativeHero?.background&&nativeHero.background!=="#fff6f9"?{backgroundColor:nativeHero.background}:{}),
+   ...(nativeHero?.imageUrl?{backgroundImage:`linear-gradient(90deg,rgba(255,246,249,.90),rgba(255,246,249,.24)),url("${nativeHero.imageUrl}")`,backgroundSize:"cover",backgroundPosition:"center"}:{})
+  }}><div style={nativeHero?.textColor&&nativeHero.textColor!=="#611b37"?{color:nativeHero.textColor}:undefined}><span>THE ANUSMITA COLLECTION</span><h1>{nativeHero?.title||<>Discover Your<br/>Next <em>Favourite</em></>}</h1><p>{nativeHero?.subtitle||"Beauty, fragrance & lifestyle, thoughtfully curated for you."}</p></div></section>
+  <div className="anShopHeading"><h2>{nativeHero?.sectionTitle||"Shop All Products"}</h2><div className="anShopToolbar"><button className={view==="grid"?"active":""} type="button" onClick={()=>setView("grid")} aria-label="Grid view" aria-pressed={view==="grid"}><Grid2X2 size={19}/></button><button className={view==="list"?"active":""} type="button" onClick={()=>setView("list")} aria-label="List view" aria-pressed={view==="list"}><List size={19}/></button><label>Sort by: <select value={draft.sort} onChange={e=>{const v=e.target.value;setDraft(x=>({...x,sort:v}));window.location.assign(link({...draft,sort:v}));}} aria-label="Sort products"><option value="newest">Newest</option><option value="price-low">Price: Low to High</option><option value="price-high">Price: High to Low</option><option value="name">Name: A to Z</option></select></label></div></div>
   <div className="anShopBody">
    <aside className="anShopSidebar" aria-label="Product filters">
     <form action="/shop" method="get"><div className="anShopFiltersTitle"><h3>Filters</h3><Link href="/shop">Clear all</Link></div>
