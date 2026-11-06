@@ -27,6 +27,7 @@ export default function HomepageStudioV2(){
  const [config,setConfig]=useState<Config|null>(null),[selected,setSelected]=useState<string|null>(null);
  const [draft,setDraft]=useState<HomeBlock|null>(null),[device,setDevice]=useState<Device>("desktop"),[inspector,setInspector]=useState<Inspector>("content"),[mode,setMode]=useState<SectionMode>("sections");
  const [message,setMessage]=useState(""),[busy,setBusy]=useState(false),[query,setQuery]=useState(""),[showDraft,setShowDraft]=useState(true),[libraryOpen,setLibraryOpen]=useState(true),[legacyOpen,setLegacyOpen]=useState(false),[activePage,setActivePage]=useState("Homepage"),[confirmDelete,setConfirmDelete]=useState(false);
+ const [secondaryDirty,setSecondaryDirty]=useState(false);
  const [shelfOpen,setShelfOpen]=useState(false);
  const [offerOpen,setOfferOpen]=useState(true);
  const [chromeOpen,setChromeOpen]=useState(false);
@@ -70,18 +71,27 @@ export default function HomepageStudioV2(){
  const offers=blocks.filter(b=>b.kind==="promotion").sort((a,b)=>a.position-b.position);
  const offerStatus=(b:HomeBlock)=>{const now=Date.now();if(!b.enabled)return "Draft";if(b.startsAt&&Date.parse(b.startsAt)>now)return "Scheduled";if(b.endsAt&&Date.parse(b.endsAt)<=now)return "Expired";return "Live";};
  const dirty=!!draft&&(JSON.stringify(config?.blocks.find(b=>b.id===draft.id))!==JSON.stringify(draft));
+ function requestPageChange(next:string):boolean{
+  if(next===activePage)return true;
+  if(busy||imageUploading){setMessage("Complete the current save or upload before switching pages.");return false;}
+  const hasUnsaved=activePage==="Homepage"?dirty:secondaryDirty;
+  if(hasUnsaved&&!window.confirm("Unsaved edits on "+activePage+" will be lost if you switch pages. Continue without saving?"))return false;
+  setSecondaryDirty(false);setActivePage(next);return true;
+ }
  const selectedKind=active?.kind||"hero";
  function choose(b:HomeBlock){if(imageUploading)return false;if(dirty&&selected!==b.id&&!window.confirm("Discard unsaved changes to this card?"))return false;setSelected(b.id);setDraft({...b});setInspector("content");setConfirmDelete(false);return true;}
  function create(kind:HomeBlock["kind"]){if(imageUploading)return;if(dirty&&!window.confirm("Discard unsaved changes?"))return;const card=initial(kind,blocks.filter(b=>b.kind===kind).length);setSelected(card.id);setDraft(card);setInspector("content");setMode("sections");}
  function openOfferEditor(offer:HomeBlock,tab:Inspector){
   if(!choose(offer))return;
-  setActivePage(offerEditorPage());setMode("sections");setInspector(tab);setFocusOfferEditor(true);
+  if(!requestPageChange(offerEditorPage()))return;
+  setMode("sections");setInspector(tab);setFocusOfferEditor(true);
  }
  function createOffer(){
   if(imageUploading||busy)return;
   if(dirty&&!window.confirm("Discard unsaved changes before creating a new offer?"))return;
   const card=initial("promotion",config?.blocks.filter(b=>b.kind==="promotion").length||0);
-  setActivePage(offerEditorPage());setOfferOpen(true);setMode("sections");setSelected(card.id);setDraft(card);setInspector("content");setConfirmDelete(false);setFocusOfferEditor(true);
+  if(!requestPageChange(offerEditorPage()))return;
+  setOfferOpen(true);setMode("sections");setSelected(card.id);setDraft(card);setInspector("content");setConfirmDelete(false);setFocusOfferEditor(true);
  }
  async function deleteOffer(offer:HomeBlock){
   if(busy||imageUploading||!config)return;
@@ -173,9 +183,9 @@ export default function HomepageStudioV2(){
      </div>)}
     </div>}
    </section>
-   <div className="avs-page-switch"><label>Page <select value={activePage} onChange={e=>setActivePage(e.target.value)}><option>Homepage</option><option>Shop</option><option>Deals</option><option>Bundles</option><option>Journal</option><option>About</option><option>Contact</option><option>Cart</option><option>Checkout</option><option>Gift Cards</option><option>Pre-orders</option><option>Customer Stories</option><option>Wishlist</option><option>Routine Quiz</option><option>Track Order</option><option>Custom Page</option></select></label><span>{activePage==="Homepage"?"Homepage visual editor":activePage==="Custom Page"?"Custom landing-page editor":"CMS sections editable · native components preserved"}</span></div>
+   <div className="avs-page-switch"><label>Page <select value={activePage} onChange={e=>requestPageChange(e.target.value)}><option>Homepage</option><option>Shop</option><option>Deals</option><option>Bundles</option><option>Journal</option><option>About</option><option>Contact</option><option>Cart</option><option>Checkout</option><option>Gift Cards</option><option>Pre-orders</option><option>Customer Stories</option><option>Wishlist</option><option>Routine Quiz</option><option>Track Order</option><option>Custom Page</option></select></label><span>{activePage==="Homepage"?"Homepage visual editor":activePage==="Custom Page"?"Custom landing-page editor":"CMS sections editable · native components preserved"}</span></div>
    {message&&<div className={"avs-inline-notice"+(message.startsWith("Error")||message.startsWith("Validation")?" error":"")} role="status">{message}<button type="button" aria-label="Dismiss message" onClick={()=>setMessage("")}><X size={15}/></button></div>}
-   {activePage!=="Homepage"?<StudioMultiPage view={activePage} onChange={setActivePage}/>:<><div className="avs-workspace">
+   {activePage!=="Homepage"?<StudioMultiPage view={activePage} onChange={requestPageChange} onDirtyChange={setSecondaryDirty}/>:<><div className="avs-workspace">
     <section className="avs-leftpane"><div className="avs-tabs">{(["sections","blocks","layouts"] as const).map(x=><button key={x} className={mode===x?"active":""} onClick={()=>setMode(x)}>{x}</button>)}</div>
      {mode==="sections"?<><h3>Page Sections <small>(select to edit)</small></h3><div className="avs-section-list">
       {visible.map((b,i)=><div className={"avs-section-row"+(selected===b.id?" selected":"")} key={b.id}><button className="avs-row-main" onClick={()=>choose(b)}><span className="avs-handle">⠿</span><span>{i+1}</span><ListIcon kind={b.kind}/><span>{b.title}</span></button><button title="Toggle visibility in navigator" onClick={()=>setShowDraft(v=>!v)}>{b.enabled?<Eye size={15}/>:<EyeOff size={15}/>}</button><button title="Move section up" disabled={busy} onClick={()=>void move(b,-1)}><ArrowUp size={14}/></button><button title="Move section down" disabled={busy} onClick={()=>void move(b,1)}><ArrowDown size={14}/></button></div>)}
