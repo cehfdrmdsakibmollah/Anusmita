@@ -160,7 +160,7 @@ export default function CmsPageSlotsEditor({page,onPublished}:{page:CmsSlotPage;
     <label>{page==="deals"?"Flash Deals heading":page==="bundles"?"Routine section heading":page==="about"?"Story section heading":page==="contact"?"Contact form heading":"Featured guide heading"}<input maxLength={130} value={native.sectionTitle} placeholder="Keep existing native heading" onChange={e=>setNative(n=>({...n,sectionTitle:e.target.value}))}/></label>
     {page!=="deals"&&page!=="contact"&&<label>{page==="bundles"?"Bundle collection heading":page==="about"?"Care section heading":"Skin type section heading"}<input maxLength={130} value={native.secondaryTitle} placeholder="Keep existing native heading" onChange={e=>setNative(n=>({...n,secondaryTitle:e.target.value}))}/></label>}
     <button type="button" onClick={()=>setNative(n=>({...n,sectionTitle:"",secondaryTitle:""}))} disabled={!native.sectionTitle&&!native.secondaryTitle}>Restore original section headings</button>
-   </div>
+   </div>}
    {hasNativePageHero(page)&&page!=="contact"&&<div className="cse-native-section-media">
     <h4>Native section image — {page}</h4>
     <p className="cse-muted">Replace decorative editorial artwork without modifying prices, filters, cards or forms.</p>
