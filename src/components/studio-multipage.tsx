@@ -23,13 +23,25 @@ const routes=[
  {name:"Routine Quiz",path:"/routine-quiz",editor:"/admin?tab=Custom%20Pages",note:"The quiz uses interactive logic; page blocks cannot currently replace it safely."},
  {name:"Track Order",path:"/track-order",editor:"/admin?tab=Orders",note:"Tracking depends on verified order status and courier integrations."}
 ] as const;
-export default function StudioMultiPage({view,onChange}:{view:string;onChange:(value:string)=>void}){
+export default function StudioMultiPage({view,onChange,onDirtyChange}:{view:string;onChange:(value:string)=>boolean;onDirtyChange?:(dirty:boolean)=>void}){
+ const [cmsDirty,setCmsDirty]=useState(false);
  const [previewDevice,setPreviewDevice]=useState<"desktop"|"tablet"|"mobile">("desktop"),[previewKey,setPreviewKey]=useState(0);const [pages,setPages]=useState<Page[]>([]),[page,setPage]=useState<Page|null>(null),[chosen,setChosen]=useState<string>(""),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[loading,setLoading]=useState(false);
  const activeRoute=routes.find(r=>r.name===view);
+ const savedCustom=pages.find(p=>p.slug===page?.slug);
+ const customDirty=!!page&&(page.revision===0||!!savedCustom&&JSON.stringify({
+  slug:page.slug,title:page.title,description:page.description,published:page.published,blocks:page.blocks
+ })!==JSON.stringify({
+  slug:savedCustom.slug,title:savedCustom.title,description:savedCustom.description||"",published:savedCustom.published,blocks:savedCustom.blocks
+ }));
+ const hasPendingEdits=view==="Custom Page"?customDirty:cmsDirty;
+ useEffect(()=>{onDirtyChange?.(hasPendingEdits);return()=>onDirtyChange?.(false);},[hasPendingEdits,onDirtyChange]);
+ function confirmReplacement(){
+  return !customDirty||window.confirm("Discard unsaved custom-page changes? They have not been saved or published.");
+ }
  async function load(preserve=true){setLoading(true);try{const r=await fetch("/api/admin/content-pages",{cache:"no-store"});const d=await r.json();if(!r.ok)throw Error(d.error||"Unable to load pages");const all=d.pages as Page[];setPages(all||[]);if(preserve&&page?.slug){const updated=all.find(x=>x.slug===page.slug);if(updated)setPage({slug:updated.slug,title:updated.title,description:updated.description||"",published:updated.published,revision:updated.revision,blocks:updated.blocks.map(b=>({id:b.id,type:b.type,text:b.text}))});} }catch(e){setNotice("Error: "+String(e));}finally{setLoading(false);}}
  useEffect(()=>{void load(false);},[]);
- function choosePage(slug:string){const match=pages.find(p=>p.slug===slug);if(match){setPage({slug:match.slug,title:match.title,description:match.description||"",published:match.published,revision:match.revision,blocks:match.blocks.map(b=>({id:b.id,type:b.type,text:b.text}))});setSelected(null);setChosen(slug);setNotice("");onChange("Custom Page");}}
- function create(){setPage(blank());setSelected(null);setChosen("");setNotice("");onChange("Custom Page");}
+ function choosePage(slug:string){const match=pages.find(p=>p.slug===slug);if(match){if(view==="Custom Page"&&!confirmReplacement())return;if(view!=="Custom Page"&&!onChange("Custom Page"))return;setPage({slug:match.slug,title:match.title,description:match.description||"",published:match.published,revision:match.revision,blocks:match.blocks.map(b=>({id:b.id,type:b.type,text:b.text}))});setSelected(null);setChosen(slug);setNotice("");}}
+ function create(){if(view==="Custom Page"&&!confirmReplacement())return;if(view!=="Custom Page"&&!onChange("Custom Page"))return;setPage(blank());setSelected(null);setChosen("");setNotice("");}
  function patchBlock(id:string,props:Partial<Block>){if(!page)return;setPage({...page,blocks:page.blocks.map(b=>b.id===id?{...b,...props}:b)});}
  function move(index:number,d:number){if(!page||index+d<0||index+d>=page.blocks.length)return;const a=[...page.blocks];[a[index],a[index+d]]=[a[index+d],a[index]];setPage({...page,blocks:a});}
  function addBlock(type:Block["type"]){if(!page||page.blocks.length>=30)return;const block:Block={id:crypto.randomUUID(),type,text:type==="heading"?"New heading":type==="callout"?"New callout":"New paragraph"};setPage({...page,blocks:[...page.blocks,block]});setSelected(block.id);}
@@ -37,7 +49,7 @@ export default function StudioMultiPage({view,onChange}:{view:string;onChange:(v
  const selectedBlock=useMemo(()=>page?.blocks.find(b=>b.id===selected)||null,[page,selected]);
  return <div className="smp-root">
   <div className="smp-top"><div><h2>Universal Page Workspace</h2><p>Choose an existing storefront route or create and edit a custom landing page.</p></div><div className="smp-actions"><button type="button" onClick={()=>void load(false)} disabled={loading}><RefreshCw size={15}/> Refresh</button><button type="button" onClick={create}><Plus size={15}/> New Custom Page</button></div></div>
-  <div className="smp-bar"><label>Active page <select value={view==="Custom Page"?"custom":view} onChange={e=>{const v=e.target.value;onChange(v==="custom"?"Custom Page":v);setSelected(null);}}>
+  <div className="smp-bar"><label>Active page <select value={view==="Custom Page"?"custom":view} onChange={e=>{const v=e.target.value;if(onChange(v==="custom"?"Custom Page":v))setSelected(null);}}>
    <option value="Homepage">Homepage</option>{routes.map(r=><option key={r.name} value={r.name}>{r.name} ({r.path})</option>)}<option value="custom">Custom Page / Landing Page</option></select></label>
    <label>Saved custom pages <select value={chosen} onChange={e=>choosePage(e.target.value)}><option value="">Select a custom page…</option>{pages.map(p=><option key={p.slug} value={p.slug}>{p.title} — /pages/{p.slug}</option>)}</select></label>
    <span>{pages.length} custom page(s)</span>
@@ -47,7 +59,7 @@ export default function StudioMultiPage({view,onChange}:{view:string;onChange:(v
       {(["desktop","tablet","mobile"] as const).map(d=><button key={d} type="button" aria-pressed={previewDevice===d} className={previewDevice===d?"smp-selected-device":""} onClick={()=>setPreviewDevice(d)}>{d}</button>)}
       <button onClick={()=>setPreviewKey(k=>k+1)}><RefreshCw size={15}/> Reload</button><a href={activeRoute.path} target="_blank" rel="noreferrer"><ExternalLink size={15}/> Open page</a>
     </div></div>
-    {(["Shop","Deals","Bundles","About","Contact","Journal","Cart","Checkout","Gift Cards","Pre-orders","Customer Stories","Wishlist","Routine Quiz","Track Order"].includes(activeRoute.name))&&<CmsPageSlotsEditor key={activeRoute.name} page={activeRoute.path.split("/").filter(Boolean)[0] as CmsSlotPage} onPublished={()=>setPreviewKey(k=>k+1)}/>}
+    {(["Shop","Deals","Bundles","About","Contact","Journal","Cart","Checkout","Gift Cards","Pre-orders","Customer Stories","Wishlist","Routine Quiz","Track Order"].includes(activeRoute.name))&&<CmsPageSlotsEditor key={activeRoute.name} page={activeRoute.path.split("/").filter(Boolean)[0] as CmsSlotPage} onPublished={()=>setPreviewKey(k=>k+1)} onDirtyChange={setCmsDirty}/>}
     <div className="smp-native-layout">
       <section className="smp-native-structure"><h3>Page sections</h3><div className="smp-native-list">
         <div><LayoutGrid size={17}/><span>{activeRoute.name} storefront</span><small>Actual running route</small></div>
