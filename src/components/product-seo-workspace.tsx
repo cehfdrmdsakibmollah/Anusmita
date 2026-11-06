@@ -80,7 +80,8 @@ export default function ProductSeoWorkspace({canEdit=true}:{canEdit?:boolean}){
   }catch(error){
    if(acceptedRevision!==null){
     setNotice("Save accepted at revision "+acceptedRevision+", but persistence verification failed: "+String(error)+". Reload saved SEO before continuing.");
-    setSeo(previous=>previous?{...previous,revision:acceptedRevision}:previous);
+    const persistedRevision=acceptedRevision;
+    setSeo(previous=>previous?{...previous,revision:persistedRevision}:previous);
    }else setNotice("Save error: "+String(error));
   }finally{setBusy(false);}
  }
