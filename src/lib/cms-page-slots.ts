@@ -91,6 +91,7 @@ export const cmsSlotSchema=z.object({
  enabled:z.boolean().default(true),
  position:z.number().int().min(0).max(99)
 }).strict().superRefine((slot,ctx)=>{
+ if(slot.cssRules.some(rule=>rule.elementId))ctx.addIssue({code:"custom",path:["cssRules"],message:"Element-specific CSS scopes belong to native page controls only"});
  if(slot.imageUrl&&!isSafeCmsImage(slot.imageUrl))ctx.addIssue({code:"custom",path:["imageUrl"],message:"Only approved HTTPS Cloudinary, Unsplash or brand assets are allowed"});
  if(!isSafeLink(slot.href))ctx.addIssue({code:"custom",path:["href"],message:"Use an internal /path or #anchor link"});
  if(slot.kind!=="grid"&&slot.children.length)ctx.addIssue({code:"custom",path:["children"],message:"Nested cards are supported on grid sections only"});
