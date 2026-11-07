@@ -10,7 +10,7 @@ export const cmsCssProperties=[
 ] as const;
 export const cmsCssRuleSchema=z.object({
  target:z.enum(cmsCssTargets),
- elementId:z.string().regex(/^[a-z][a-z0-9-]{0,39}$/).optional(),
+ elementId:z.string().regex(/^[a-z][A-Za-z0-9-]{0,39}$/).optional(),
  state:z.enum(cmsCssStates).default("normal"),
  property:z.enum(cmsCssProperties),
  value:z.string().trim().min(1).max(95)
