@@ -1,5 +1,5 @@
 import {describe,it,expect} from "vitest";
-import {cmsCssRuleSchema,cmsCssRulesSchema,safeCmsCssValue,renderCmsCssRules} from "./cms-css-rules";
+import {cmsCssRuleSchema,cmsCssRulesSchema,safeCmsCssValue,renderCmsCssRules,renderNativeCmsCssRules,validateNativeCmsCssScopes} from "./cms-css-rules";
 import {cmsNativeHeroSchema,cmsSlotSchema,defaultCmsStyle} from "./cms-page-slots";
 const rule={target:"card" as const,state:"hover" as const,property:"box-shadow" as const,value:"0 8px 24px #e8c8d5"};
 describe("strict visual CSS editor",()=>{
@@ -26,5 +26,34 @@ describe("strict visual CSS editor",()=>{
   const block=cmsSlotSchema.parse({id:"81d346fb-42ad-4e93-811b-98d2d3304b30",placement:"before",kind:"banner",style:defaultCmsStyle,title:"Safe title",position:0});
   expect(block.cssRules).toEqual([]);
   expect(cmsSlotSchema.safeParse({...block,cssRules:[{...rule,value:"url(x)"}]}).success).toBe(false);
+ });
+});
+
+describe("native selected promotional card styling",()=>{
+ it("only accepts server-defined card identifiers for the selected page",()=>{
+  const scoped={...rule,elementId:"serum"};
+  expect(cmsCssRuleSchema.safeParse(scoped).success).toBe(true);
+  expect(validateNativeCmsCssScopes("deals",[scoped])).toBe(true);
+  expect(validateNativeCmsCssScopes("bundles",[scoped])).toBe(false);
+  expect(validateNativeCmsCssScopes("shop",[scoped])).toBe(false);
+  expect(validateNativeCmsCssScopes("deals",[{...scoped,elementId:"unknown"}])).toBe(false);
+  expect(cmsCssRuleSchema.safeParse({...scoped,elementId:'serum"] body'}).success).toBe(false);
+ });
+ it("styles only a specific real card and its image; generic rules remain unchanged",()=>{
+  const css=renderNativeCmsCssRules("deals",[
+   {...rule,elementId:"serum"},
+   {target:"image",elementId:"serum",state:"normal",property:"object-fit",value:"contain"},
+   {target:"heading",state:"normal",property:"font-size",value:"28px"}
+  ]);
+  expect(css).toContain('body .dp-card[data-cms-promo-id="serum"]:hover{box-shadow:0 8px 24px #e8c8d5 !important}');
+  expect(css).toContain('body .dp-card[data-cms-promo-id="serum"] .dp-product-photo img{object-fit:contain !important}');
+  expect(css).toContain('body .dp-hero h1{font-size:28px !important}');
+  expect(css).not.toContain('body .dp-card:hover');
+  expect(renderNativeCmsCssRules("deals",[{...rule,elementId:"bad"}])).toBe("");
+ });
+ it("rejects per-native-element scopes on independent CMS section blocks",()=>{
+  const slot={id:"550e8400-e29b-41d4-a716-446655440000",placement:"before",title:"Safe card",position:0};
+  expect(cmsSlotSchema.safeParse({...slot,cssRules:[{...rule,elementId:"serum"}]}).success).toBe(false);
+  expect(cmsNativeHeroSchema.safeParse({cssRules:[{...rule,elementId:"serum"}]}).success).toBe(true);
  });
 });
