@@ -1,3 +1,4 @@
+import {nativePromoIds} from "@/lib/cms-promo-bindings";
 import {z} from "zod";
 /** Validated per-component CSS declarations. Arbitrary CSS selectors, URLs, imports, and scripts are not accepted. */
 export const cmsCssTargets=["hero","heading","card","button","image"] as const;
@@ -9,6 +10,7 @@ export const cmsCssProperties=[
 ] as const;
 export const cmsCssRuleSchema=z.object({
  target:z.enum(cmsCssTargets),
+ elementId:z.string().regex(/^[a-z][a-z0-9-]{0,39}$/).optional(),
  state:z.enum(cmsCssStates).default("normal"),
  property:z.enum(cmsCssProperties),
  value:z.string().trim().min(1).max(95)
@@ -65,3 +67,31 @@ export function renderCmsCssRules(rules:readonly CmsCssRule[],scope:string,targe
  return result.join("\n");
 }
 export const slotCssSelectors={hero:":scope",heading:"h2",card:".anCmsPublicNestedCard",button:"a",image:"img"};
+
+/** Native per-card scopes are server-defined IDs, never user-supplied CSS selectors. */
+export function validateNativeCmsCssScopes(page:string,rules:readonly CmsCssRule[]):boolean{
+ const ids=page==="deals"||page==="bundles"?new Set<string>(nativePromoIds[page]):new Set<string>();
+ return rules.every(rule=>!rule.elementId||ids.has(rule.elementId));
+}
+
+/** Shared by public pages and preview to avoid editor/public selector drift. */
+export function renderNativeCmsCssRules(page:string,rules:readonly CmsCssRule[],scope="body"):string{
+ const hero=nativeCmsSelectors[page];
+ if(!hero)return "";
+ const card=nativeCmsCardSelectors[page]||".anCmsPublicNestedCard";
+ const defaults={hero,heading:hero+" h1",card,button:hero+" a, "+hero+" button",image:hero+" img, "+hero+" svg"};
+ const output:string[]=[];
+ for(const rule of rules){
+  if(!safeCmsCssValue(rule.property,rule.value))continue;
+  if(!rule.elementId){output.push(renderCmsCssRules([rule],scope,defaults));continue;}
+  if(!validateNativeCmsCssScopes(page,[rule]))continue;
+  const base=card+'[data-cms-promo-id="'+rule.elementId+'"]';
+  const scoped=rule.target==="card"?base:
+   rule.target==="heading"?base+" h3":
+   rule.target==="button"?base+" button, "+base+" a":
+   rule.target==="image"?base+" .dp-product-photo img, "+base+" .dp-product-photo svg, "+base+" .bp-card-photo img, "+base+" .bp-card-photo svg":
+   "";
+  if(scoped)output.push(renderCmsCssRules([{...rule,elementId:undefined}],scope,{...defaults,[rule.target]:scoped}));
+ }
+ return output.filter(Boolean).join("\n");
+}
