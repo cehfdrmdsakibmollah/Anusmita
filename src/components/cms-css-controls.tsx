@@ -8,10 +8,10 @@ const defaults:Record<string,string>={
  padding:"20px",margin:"0px",opacity:"1",transform:"scale(1)",
  transition:"all 200ms ease",gap:"12px","object-fit":"cover"
 };
-export default function CmsCssControls({rules,onChange,disabled=false,preferredTarget="hero"}:{rules:CmsCssRule[];onChange:(rules:CmsCssRule[])=>void;disabled?:boolean;preferredTarget?:CmsCssRule["target"]}){
+export default function CmsCssControls({rules,onChange,disabled=false,preferredTarget="hero",preferredElementId,scopeOptions=[]}:{rules:CmsCssRule[];onChange:(rules:CmsCssRule[])=>void;disabled?:boolean;preferredTarget?:CmsCssRule["target"];preferredElementId?:string|null;scopeOptions?:{id:string;label:string}[]}){
  function add(){
   if(disabled||rules.length>=32)return;
-  onChange([...rules,{target:preferredTarget,state:"normal",property:"border-radius",value:"12px"}]);
+  onChange([...rules,{target:preferredElementId&&preferredTarget==="hero"?"card":preferredTarget,...(preferredElementId?{elementId:preferredElementId}:{}),state:"normal",property:"border-radius",value:"12px"}]);
  }
  function patch(index:number,changes:Partial<CmsCssRule>){
   if(disabled)return;
@@ -21,15 +21,16 @@ export default function CmsCssControls({rules,onChange,disabled=false,preferredT
   <h4>Scoped Custom CSS · Visual Controls</h4>
   <p className="cse-muted">Select exactly what to style. Rules apply to this page/section only, including hover effects. Unsafe values and external CSS are blocked.</p>
   {rules.map((rule,index)=><div className="cse-rule-row" key={index}>
+   {scopeOptions.length>0&&<label>Apply to<select disabled={disabled} value={rule.elementId||""} onChange={e=>{const elementId=e.target.value||undefined;patch(index,{elementId,target:elementId&&rule.target==="hero"?"card":rule.target});}}><option value="">All matching page elements</option>{scopeOptions.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select></label>}
    <div className="cse-rule-pair">
-    <label>Element<select disabled={disabled} value={rule.target} onChange={e=>patch(index,{target:e.target.value as CmsCssRule["target"]})}>{cmsCssTargets.map(v=><option key={v} value={v}>{v}</option>)}</select></label>
+    <label>Element<select disabled={disabled} value={rule.target} onChange={e=>patch(index,{target:e.target.value as CmsCssRule["target"]})}>{cmsCssTargets.filter(v=>!rule.elementId||v!=="hero").map(v=><option key={v} value={v}>{v}</option>)}</select></label>
     <label>State<select disabled={disabled} value={rule.state} onChange={e=>patch(index,{state:e.target.value as CmsCssRule["state"]})}>{cmsCssStates.map(v=><option key={v} value={v}>{v}</option>)}</select></label>
    </div>
    <div className="cse-rule-pair">
     <label>CSS property<select disabled={disabled} value={rule.property} onChange={e=>{const property=e.target.value as CmsCssRule["property"];patch(index,{property,value:defaults[property]});}}>{cmsCssProperties.map(v=><option key={v} value={v}>{v}</option>)}</select></label>
     <label>Value<input disabled={disabled} aria-invalid={!safeCmsCssValue(rule.property,rule.value)} value={rule.value} maxLength={95} spellCheck={false} placeholder={defaults[rule.property]} onChange={e=>patch(index,{value:e.target.value})}/></label>
    </div>
-   <div className="cse-rule-actions"><code>{rule.target}{rule.state==="hover"?":hover":""} {"{"}{rule.property}: {rule.value}{"}"}</code><button type="button" disabled={disabled} onClick={()=>onChange(rules.filter((_,i)=>i!==index))}>Remove</button></div>
+   <div className="cse-rule-actions"><code>{rule.elementId?rule.elementId+" · ":""}{rule.target}{rule.state==="hover"?":hover":""} {"{"}{rule.property}: {rule.value}{"}"}</code><button type="button" disabled={disabled} onClick={()=>onChange(rules.filter((_,i)=>i!==index))}>Remove</button></div>
    {!safeCmsCssValue(rule.property,rule.value)&&<small role="alert">Enter a safe CSS value before saving.</small>}
   </div>)}
   <button type="button" onClick={add} disabled={disabled||rules.length>=32}>+ Add CSS property ({rules.length}/32)</button>
