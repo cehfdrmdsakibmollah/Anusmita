@@ -246,6 +246,36 @@ export const WarehouseBalance=mongoose.models.WarehouseBalance||mongoose.model("
 export const WarehouseEvent=mongoose.models.WarehouseEvent||mongoose.model("WarehouseEvent",WarehouseEventSchema);
 export const WarehouseLocation=mongoose.models.WarehouseLocation||mongoose.model("WarehouseLocation",WarehouseLocationSchema);
 
+/** Cashier POS transactions are immutable. Their idempotency key blocks double-charging retries. */
+const OfflineSaleSchema=new Schema({
+ operationKey:{type:String,required:true,unique:true},
+ invoiceNumber:{type:String,required:true,unique:true},
+ branchId:{type:Schema.Types.ObjectId,ref:"WarehouseLocation",required:true,index:true},
+ branchName:{type:String,required:true},
+ cashierId:{type:Schema.Types.ObjectId,ref:"User",required:true,index:true},
+ cashierName:{type:String,required:true},
+ customerName:{type:String,default:""},customerPhone:{type:String,default:""},
+ paymentMethod:{type:String,enum:["cash"],required:true,default:"cash"},
+ lines:{type:[new Schema({
+  productId:{type:Schema.Types.ObjectId,ref:"Product",required:true},
+  sku:{type:String,required:true},name:{type:String,required:true},
+  quantity:{type:Number,required:true,min:1},unitPricePaisa:{type:Number,required:true,min:0},
+  lineTotalPaisa:{type:Number,required:true,min:0}
+ },{_id:false})],required:true},
+ subtotalPaisa:{type:Number,required:true,min:1},
+ discountPaisa:{type:Number,default:0,min:0},
+ totalPaisa:{type:Number,required:true,min:1},
+ tenderedPaisa:{type:Number,required:true,min:0},
+ changePaisa:{type:Number,required:true,min:0},
+ businessDate:{type:String,required:true},
+ status:{type:String,enum:["completed"],default:"completed"}
+},opts);
+OfflineSaleSchema.index({branchId:1,createdAt:-1});
+OfflineSaleSchema.index({cashierId:1,businessDate:1});
+OfflineSaleSchema.index({businessDate:1,createdAt:-1});
+export const OfflineSale=mongoose.models.OfflineSale||mongoose.model("OfflineSale",OfflineSaleSchema);
+
+
 const CatalogCategorySchema=new Schema({
  name:{type:String,required:true,trim:true,maxlength:90},
  slug:{type:String,required:true,unique:true,lowercase:true,trim:true},
