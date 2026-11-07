@@ -42,7 +42,7 @@ export function safeCmsCssValue(property:string,value:string):boolean{
  }
 }
 export const nativeCmsSelectors:Record<string,string>={
- shop:".anShopHero",deals:".dp-hero",bundles:".bp-hero",about:".aboutHero",contact:".contactHero",journal:".journalHero",
+ shop:".anShopHero",deals:".dp-hero",bundles:".bp-hero",about:".ip-about-hero",contact:".ip-contact-hero",journal:".ip-journal-hero",
  cart:".shoppingPage",checkout:".shoppingPage",wishlist:".shoppingPage",
  "gift-cards":".gc-hero","pre-orders":".po-hero","customer-stories":".cs-hero","routine-quiz":".rq-hero","track-order":".to-hero"
 };
