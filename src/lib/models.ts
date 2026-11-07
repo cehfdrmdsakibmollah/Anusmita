@@ -39,6 +39,15 @@ const ProductSchema = new Schema({
 ProductSchema.index({active:1,category:1,createdAt:-1});
 ProductSchema.index({variantGroup:1,active:1});
 ProductSchema.index({name:"text",brand:"text",category:"text"});
+/** Old published product slugs remain reserved; resolution follows productId directly. */
+const ProductSlugRedirectSchema=new Schema({
+ sourceSlug:{type:String,required:true,unique:true,lowercase:true,trim:true,match:/^[a-z0-9]+(?:-[a-z0-9]+)*$/},
+ productId:{type:Schema.Types.ObjectId,ref:"Product",required:true,index:true},
+ changedBy:{type:Schema.Types.ObjectId,ref:"User",required:true}
+},opts);
+ProductSlugRedirectSchema.index({productId:1,createdAt:-1});
+export const ProductSlugRedirect=mongoose.models.ProductSlugRedirect||mongoose.model("ProductSlugRedirect",ProductSlugRedirectSchema);
+
 
 const OrderLineSchema = new Schema({
  productId:{type:Schema.Types.ObjectId,ref:"Product",required:true},
