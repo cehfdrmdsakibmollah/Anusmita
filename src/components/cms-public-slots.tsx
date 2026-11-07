@@ -38,6 +38,7 @@ export default async function CmsPublicSlots({page,placement}:{page:CmsSlotPage;
    <div className="anCmsPublicNestedCards">{slot.children.map(card=><article className="anCmsPublicNestedCard" key={card.id}>
     {card.imageUrl&&<img src={card.imageUrl} alt="" loading="lazy"/>}
     <div><h3>{card.title}</h3>{card.subtitle&&<p>{card.subtitle}</p>}{card.cta&&<a href={card.href} style={{backgroundColor:slot.style.accentColor}}>{card.cta} <span aria-hidden="true">→</span></a>}</div>
+    {card.subcards.length>0&&<div className="anCmsPublicSubcards">{card.subcards.map(leaf=><div className="anCmsPublicSubcard" key={leaf.id}>{leaf.imageUrl&&<img src={leaf.imageUrl} alt="" loading="lazy"/>}<div><h4>{leaf.title}</h4>{leaf.subtitle&&<p>{leaf.subtitle}</p>}{leaf.cta&&<a href={leaf.href}>{leaf.cta}</a>}</div></div>)}</div>}
    </article>)}</div>
   </section>:<section key={slot.id} className={"anCmsPublicSlot anCmsKind-"+slot.kind+" anCmsImage-"+slot.style.imagePosition+" anCmsAlign-"+slot.style.alignment} aria-label={slot.title} style={{background:slot.style.background,color:slot.style.textColor,borderRadius:slot.style.radius,minHeight:slot.kind==="hero"?300:slot.kind==="text"?120:210}}> 
    <div className="anCmsPublicCopy" style={{padding:slot.style.padding,textAlign:slot.style.alignment}}>
