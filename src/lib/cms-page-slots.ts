@@ -2,6 +2,7 @@ import {z} from "zod";
 import {isSafeImage,isSafeLink} from "@/lib/home-content";
 import {cmsCssRulesSchema} from "@/lib/cms-css-rules";
 import {cmsNativeTextSchema} from "@/lib/cms-native-bindings";
+import {validateNativePromoIds} from "@/lib/cms-promo-bindings";
 export const cmsSlotPages=["shop","deals","bundles","about","contact","journal","cart","checkout","gift-cards","pre-orders","customer-stories","wishlist","routine-quiz","track-order"] as const;
 export const cmsSectionKinds=["hero","banner","text","image","callout","split","grid"] as const;
 export const cmsSectionAlignments=["left","center","right"] as const;
@@ -27,6 +28,12 @@ export function isSafeCmsImage(url:string){
     /^\/public\/cms\/(?:shop|deals|bundles|about|contact|journal|cart|checkout|gift-cards|pre-orders|customer-stories|wishlist|routine-quiz|track-order)\/[0-9a-fA-F-]{36}\.(?:jpg|png|webp)$/.test(u.pathname);
  }catch{return false;}
 }
+export const cmsPromoCardSchema=z.object({
+ id:z.string().trim().min(2).max(40),
+ title:z.string().trim().min(1).max(100).default(""),
+ imageUrl:z.string().trim().max(500).default(""),
+ enabled:z.boolean().default(true)
+}).strict();
 export const cmsNativeHeroSchema=z.object({
  title:z.string().trim().max(130).default(""),
  subtitle:z.string().trim().max(320).default(""),
@@ -37,8 +44,10 @@ export const cmsNativeHeroSchema=z.object({
  background:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#fff6f9"),
  textColor:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#611b37"),
  cssRules:cmsCssRulesSchema.default([]),
- textBindings:cmsNativeTextSchema.default([])
+ textBindings:cmsNativeTextSchema.default([]),
+ promoCards:z.array(cmsPromoCardSchema).max(12).default([])
 }).strict().superRefine((hero,ctx)=>{
+ for(const [i,card] of hero.promoCards.entries())if(card.imageUrl&&!isSafeCmsImage(card.imageUrl))ctx.addIssue({code:"custom",path:["promoCards",i,"imageUrl"],message:"Only approved media assets"});
  if(hero.imageUrl&&!isSafeCmsImage(hero.imageUrl))ctx.addIssue({code:"custom",path:["imageUrl"],message:"Hero image must be an approved media URL"});
  if(hero.sectionImageUrl&&!isSafeCmsImage(hero.sectionImageUrl))ctx.addIssue({code:"custom",path:["sectionImageUrl"],message:"Native section image must be approved"});
 });
