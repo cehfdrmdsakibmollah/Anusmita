@@ -2,7 +2,7 @@
 export type ProductSeoSource={
  name:string;slug:string;sku?:string;brand?:string;category?:string;description?:string;
  imageUrls?:string[];pricePaisa?:number;onHand?:number;reserved?:number;
- availabilityMode?:string;barcode?:string;active?:boolean;
+ availabilityMode?:string;barcode?:string;active?:boolean;categoryPath?:string;
  verifiedReviewCount?:number;verifiedRatingValue?:number
 };
 export type ProductSeoOverrides={metaDescription?:string;schemaEnabled?:boolean};
@@ -38,7 +38,7 @@ export function buildProductSeoGraph(p:ProductSeoSource,seo:ProductSeoOverrides=
  const crumbs=[
   {"@type":"ListItem",position:1,name:"Home",item:origin+"/"},
   {"@type":"ListItem",position:2,name:"Shop",item:origin+"/shop"},
-  ...(p.category?[{"@type":"ListItem",position:3,name:p.category,item:origin+"/shop?category="+encodeURIComponent(p.category)}]:[]),
+  ...(p.category?[{"@type":"ListItem",position:3,name:p.category,item:origin+(p.categoryPath&&/^\/collections\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(p.categoryPath)?p.categoryPath:"/shop?category="+encodeURIComponent(p.category))}]:[]),
   {"@type":"ListItem",position:p.category?4:3,name:p.name,item:url}
  ];
  return {product,breadcrumb:{"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:crumbs}};
