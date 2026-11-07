@@ -1,5 +1,5 @@
 import {describe,it,expect} from "vitest";
-import {cmsCssRuleSchema,cmsCssRulesSchema,safeCmsCssValue,renderCmsCssRules,renderNativeCmsCssRules,validateNativeCmsCssScopes} from "./cms-css-rules";
+import {cmsCssRuleSchema,cmsCssRulesSchema,safeCmsCssValue,renderCmsCssRules,renderNativeCmsCssRules,validateNativeCmsCssScopes,nativeCmsFieldScope} from "./cms-css-rules";
 import {cmsNativeHeroSchema,cmsSlotSchema,defaultCmsStyle} from "./cms-page-slots";
 const rule={target:"card" as const,state:"hover" as const,property:"box-shadow" as const,value:"0 8px 24px #e8c8d5"};
 describe("strict visual CSS editor",()=>{
@@ -55,5 +55,30 @@ describe("native selected promotional card styling",()=>{
   const slot={id:"550e8400-e29b-41d4-a716-446655440000",placement:"before",title:"Safe card",position:0};
   expect(cmsSlotSchema.safeParse({...slot,cssRules:[{...rule,elementId:"serum"}]}).success).toBe(false);
   expect(cmsNativeHeroSchema.safeParse({cssRules:[{...rule,elementId:"serum"}]}).success).toBe(true);
+ });
+});
+
+describe("real selected native field style persistence",()=>{
+ it("maps picked Deals heading and hero media to the same published selectors",()=>{
+  expect(nativeCmsFieldScope("deals","sectionTitle","heading")).toBe("#deals-title");
+  expect(nativeCmsFieldScope("deals","imageUrl","image")).toContain(".dp-cms-hero-image");
+  expect(nativeCmsFieldScope("deals","sectionImageUrl","image")).toContain(".dp-native-section-image");
+  expect(nativeCmsFieldScope("deals","sectionTitle","image")).toBe(null);
+  expect(nativeCmsFieldScope("checkout","sectionImageUrl","image")).toBe(null);
+ });
+ it("accepts approved field CSS but rejects invalid target or injection",()=>{
+  const valid={target:"heading" as const,state:"normal" as const,elementId:"sectionTitle",property:"color" as const,value:"#a12345"};
+  expect(cmsNativeHeroSchema.safeParse({cssRules:[valid]}).success).toBe(true);
+  expect(validateNativeCmsCssScopes("deals",[valid])).toBe(true);
+  expect(validateNativeCmsCssScopes("deals",[{...valid,target:"image"}])).toBe(false);
+  expect(validateNativeCmsCssScopes("deals",[{...valid,elementId:"arbitrary-selector"}])).toBe(false);
+  const css=renderNativeCmsCssRules("deals",[valid,{...valid,elementId:"imageUrl",target:"image",property:"object-fit",value:"contain"}]);
+  expect(css).toContain("body #deals-title{color:#a12345 !important}");
+  expect(css).toContain("body .dp-hero>.dp-cms-hero-image{object-fit:contain !important}");
+  expect(css).not.toContain("body .dp-hero h1{color:#a12345");
+ });
+ it("preserves unscoped page-level rules",()=>{
+  const rule={target:"hero" as const,state:"normal" as const,property:"background-color" as const,value:"#fff4f7"};
+  expect(renderNativeCmsCssRules("deals",[rule])).toContain("body .dp-hero{background-color:#fff4f7 !important}");
  });
 });
