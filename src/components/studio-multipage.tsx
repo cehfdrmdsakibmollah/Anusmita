@@ -26,7 +26,7 @@ const routes=[
 ] as const;
 export default function StudioMultiPage({view,onChange,onDirtyChange}:{view:string;onChange:(value:string)=>boolean;onDirtyChange?:(dirty:boolean)=>void}){
  const [cmsDirty,setCmsDirty]=useState(false);
- const [previewDevice,setPreviewDevice]=useState<"desktop"|"tablet"|"mobile">("desktop"),[previewKey,setPreviewKey]=useState(0);const [pages,setPages]=useState<Page[]>([]),[page,setPage]=useState<Page|null>(null),[chosen,setChosen]=useState<string>(""),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[loading,setLoading]=useState(false);
+const [pages,setPages]=useState<Page[]>([]),[page,setPage]=useState<Page|null>(null),[chosen,setChosen]=useState<string>(""),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[loading,setLoading]=useState(false);
  const activeRoute=routes.find(r=>r.name===view);
  const savedCustom=pages.find(p=>p.slug===page?.slug);
  const customDirty=!!page&&(page.revision===0||!!savedCustom&&JSON.stringify({
@@ -56,12 +56,8 @@ export default function StudioMultiPage({view,onChange,onDirtyChange}:{view:stri
    <span>{pages.length} custom page(s) · {hasPendingEdits?"Unsaved changes — save before switching":"No pending edits"}</span>
   </div>
   {activeRoute?<div className="smp-native-workspace">
-    <div className="smp-native-toolbar"><div><strong>{activeRoute.name} — Actual storefront preview</strong><span>Rendering the real route, not placeholder cards</span></div><div className="smp-actions">
-      {(["desktop","tablet","mobile"] as const).map(d=><button key={d} type="button" aria-pressed={previewDevice===d} className={previewDevice===d?"smp-selected-device":""} onClick={()=>setPreviewDevice(d)}>{d}</button>)}
-      <button onClick={()=>setPreviewKey(k=>k+1)}><RefreshCw size={15}/> Reload</button><a href={activeRoute.path} target="_blank" rel="noreferrer"><ExternalLink size={15}/> Open page</a>
-    </div></div>
-    {(["Shop","Deals","Bundles","About","Contact","Journal","Cart","Checkout","Gift Cards","Pre-orders","Customer Stories","Wishlist","Routine Quiz","Track Order"].includes(activeRoute.name))&&<CmsPageSlotsEditor key={activeRoute.name} page={activeRoute.path.split("/").filter(Boolean)[0] as CmsSlotPage} onPublished={()=>setPreviewKey(k=>k+1)} onDirtyChange={setCmsDirty}/>}
-    <div className="smp-integrated-preview-note"><strong>One editor for this page</strong><span>Use the three-panel Visual editor above for CMS title, images, sections, cards and styles. Select <b>Live storefront</b> in its canvas to see real catalog/forms and published content.</span><a href={activeRoute.path} target="_blank" rel="noreferrer"><ExternalLink size={14}/> Open live route</a></div>
+    {(["Shop","Deals","Bundles","About","Contact","Journal","Cart","Checkout","Gift Cards","Pre-orders","Customer Stories","Wishlist","Routine Quiz","Track Order"].includes(activeRoute.name))&&<CmsPageSlotsEditor key={activeRoute.name} page={activeRoute.path.split("/").filter(Boolean)[0] as CmsSlotPage} onDirtyChange={setCmsDirty}/>}
+    
    </div>:
    view==="Custom Page"?page?<div className="smp-columns">
     <section className="smp-list"><h3>Page Structure <span>{page.blocks.length} blocks</span></h3><div className="smp-items">{page.blocks.map((b,i)=><div className={"smp-item"+(selected===b.id?" active":"")} key={b.id}><button onClick={()=>setSelected(b.id)}><FileText size={14}/><span>{i+1}. {b.type} — {b.text.slice(0,20)}</span></button><button title="Move up" disabled={i===0} onClick={()=>move(i,-1)}><ArrowUp size={14}/></button><button title="Move down" disabled={i===page.blocks.length-1} onClick={()=>move(i,1)}><ArrowDown size={14}/></button></div>)}</div><h4>Block Library</h4><div className="smp-library">{(["heading","paragraph","callout"] as const).map(type=><button key={type} onClick={()=>addBlock(type)}><Plus size={14}/>{type}</button>)}</div></section>
