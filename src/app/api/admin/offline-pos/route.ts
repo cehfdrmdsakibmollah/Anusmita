@@ -47,6 +47,7 @@ export async function POST(request:Request){
   assertOrigin(request);
   const actor=await authorize([...roles],"orders.edit");
   const data=posSaleInput.parse(await request.json());
+  if(data.discountPaisa>0&&actor.role==="sales")throw new HttpError(403,"Cashier discounts require manager authorization");
   try{assertUniquePosLines(data.lines);}catch(e){throw new HttpError(400,String(e));}
   await db();
   const session=await mongoose.startSession();
@@ -75,6 +76,7 @@ export async function POST(request:Request){
     let financials;
     try{financials=calculatePosCash(lines,data.discountPaisa,data.tenderedPaisa);}
     catch(e){throw new HttpError(400,e instanceof Error?e.message:"Invalid cash tender");}
+    if(data.discountPaisa>Math.floor(financials.subtotalPaisa*0.2))throw new HttpError(403,"Discounts above 20% require a separate approval workflow");
     // Both the location quantity and global available stock must cover the sale.
     for(const line of lines){
      const location=await WarehouseBalance.findOneAndUpdate({locationId:data.branchId,productId:line.productId,quantity:{$gte:line.quantity}},{$inc:{quantity:-line.quantity}},{new:true,session});
