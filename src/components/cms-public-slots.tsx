@@ -2,7 +2,7 @@ import {db} from "@/lib/db";
 import {CmsPageSlot} from "@/lib/models";
 import {cmsSlots,cmsNativeHeroSchema,type CmsSlotPage,type CmsSlot} from "@/lib/cms-page-slots";
 import {shouldRenderCmsIntro} from "@/lib/cms-page-editor-support";
-import {nativeCmsSelectors,renderCmsCssRules} from "@/lib/cms-css-rules";
+import {nativeCmsSelectors,nativeCmsCardSelectors,renderCmsCssRules} from "@/lib/cms-css-rules";
 import "./cms-public-slots.css";
 export default async function CmsPublicSlots({page,placement}:{page:CmsSlotPage;placement:"before"|"after"}){
  let slots:CmsSlot[]=[];
@@ -14,7 +14,7 @@ export default async function CmsPublicSlots({page,placement}:{page:CmsSlotPage;
   const parsed=cmsSlots.safeParse(data?.published||[]);
   if(parsed.success)slots=parsed.data.filter(x=>x.enabled&&x.placement===placement).sort((a,b)=>a.position-b.position);
   if(placement==="before"&&shouldRenderCmsIntro(page,data?.nativePublished))intro=cmsNativeHeroSchema.parse(data.nativePublished);
-  if(placement==="before"&&data?.nativePublished){const checked=cmsNativeHeroSchema.safeParse(data.nativePublished);if(checked.success){const hero=nativeCmsSelectors[page];if(hero)nativeRules=renderCmsCssRules(checked.data.cssRules,`body`,{hero,heading:hero+" h1",card:".anCmsPublicNestedCard",button:hero+" a",image:hero+" img"});}}
+  if(placement==="before"&&data?.nativePublished){const checked=cmsNativeHeroSchema.safeParse(data.nativePublished);if(checked.success){const hero=nativeCmsSelectors[page];if(hero)nativeRules=renderCmsCssRules(checked.data.cssRules,`body`,{hero,heading:hero+" h1",card:nativeCmsCardSelectors[page]||".anCmsPublicNestedCard",button:hero+" a",image:hero+" img"});}}
  }catch{/* Preserve normal storefront availability even if merchandising database fails. */}
  if(!slots.length&&!intro&&!nativeRules)return null;
  return <div className="anCmsPublicSlots" data-cms-page={page} data-placement={placement}>
