@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState} from "react";
 import {nativeCmsSelectors,nativeCmsCardSelectors,renderCmsCssRules,type CmsCssRule} from "@/lib/cms-css-rules";
 import type {CmsNativeHero,CmsSlotPage} from "@/lib/cms-page-slots";
+import {nativeTextTargets} from "@/lib/cms-native-bindings";
 type Target=CmsCssRule["target"];
 type Props={page:CmsSlotPage;src:string;width:number;revision:number;draft:CmsNativeHero;onPick:(target:Target,slotId?:string)=>void};
 /** Same-origin visual inspection of the ACTUAL storefront. Preview mutations are never persisted. */
@@ -30,6 +31,24 @@ export default function CmsLiveVisualCanvas({page,src,width,revision,draft,onPic
   write(p,draft.subtitle);
   const sectionSelectors:Record<string,string>={shop:".anShopHeading h2",deals:"#deals-title",bundles:"#routine-title","gift-cards":"#gc-title","pre-orders":"#po-journey-title","customer-stories":"#cs-gallery-title","routine-quiz":".rq-help h2","track-order":"#to-form-title",cart:".anFlowHero h2",checkout:".anFlowCheckoutIntro h2",wishlist:".sheetEmpty h2"};
   write(doc.querySelector(sectionSelectors[page]||"___cms_no_match"),draft.sectionTitle);
+  for(const promo of draft.promoCards){
+   const card=doc.querySelector('[data-cms-promo-id="'+promo.id+'"]') as HTMLElement|null;
+   if(!card)continue;
+   card.style.display=promo.enabled?"":"none";
+   const label=card.querySelector("h3");write(label,promo.title);
+   const media=card.querySelector(".dp-product-photo, .bp-card-photo") as HTMLElement|null;
+   if(media){
+    let image=media.querySelector('img[data-cse-promo-image]') as HTMLImageElement|null;
+    if(promo.imageUrl){
+     if(!image){image=doc.createElement("img");image.dataset.csePromoImage="";image.style.cssText="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:1";media.appendChild(image);}
+     image.src=promo.imageUrl;
+    }else image?.remove();
+   }
+  }
+  for(const [key,selector] of Object.entries(nativeTextTargets[page])){
+   const entry=draft.textBindings.find(x=>x.key===key&&x.enabled);
+   write(doc.querySelector(selector),entry?.text||"");
+  }
   if(root){
    if(draft.background!=="#fff6f9")root.style.setProperty("background-color",draft.background,"important");
    else root.style.removeProperty("background-color");
@@ -61,6 +80,7 @@ export default function CmsLiveVisualCanvas({page,src,width,revision,draft,onPic
    if(slot){slot.setAttribute("data-cse-picked","");onPick("hero",slot.getAttribute("data-cms-slot")||undefined);return;}
    const cardSel=nativeCmsCardSelectors[page];
    const card=cardSel?element.closest(cardSel):null;
+   const promoId=card?.getAttribute("data-cms-promo-id");
    let target:Target="hero",chosen:Element|null=root;
    if(card){target="card";chosen=card;}
    else if(element.closest("button,a")){target="button";chosen=element.closest("button,a");}
@@ -68,7 +88,7 @@ export default function CmsLiveVisualCanvas({page,src,width,revision,draft,onPic
    else if(element.closest("img,svg")){target="image";chosen=element.closest("img,svg");}
    else if(root&&root.contains(element)){chosen=root;target="hero";}
    chosen?.setAttribute("data-cse-picked","");
-   onPick(target);
+   onPick(target,promoId?"promo:"+promoId:undefined);
   };
   doc.addEventListener("click",choose,true);
   doc.addEventListener("submit",prevent,true);

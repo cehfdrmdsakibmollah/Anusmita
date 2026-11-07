@@ -5,6 +5,8 @@ import {cmsSlotSchema,defaultCmsStyle,cmsSectionKinds,cmsNativeHeroSchema,defaul
 import CmsMediaLibrary from "@/components/cms-media-library";
 import CmsCssControls from "@/components/cms-css-controls";
 import CmsLiveVisualCanvas from "@/components/cms-live-visual-canvas";
+import {nativeTextTargets,validatePageNativeText,type CmsNativeKey} from "@/lib/cms-native-bindings";
+import {nativePromoIds,nativePromoLabels,validateNativePromoIds} from "@/lib/cms-promo-bindings";
 import type {CmsCssRule} from "@/lib/cms-css-rules";
 import {renderCmsCssRules} from "@/lib/cms-css-rules";
 import {hasNativePageHero,hasCmsPageIntro,sameCmsPageDraft} from "@/lib/cms-page-editor-support";
@@ -24,6 +26,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
  const [pickedTarget,setPickedTarget]=useState<CmsCssRule["target"]>("hero");
  const [canvasDevice,setCanvasDevice]=useState<"desktop"|"tablet"|"mobile">("desktop");
  const [selectedNative,setSelectedNative]=useState(true);
+ const [selectedPromoId,setSelectedPromoId]=useState<string|null>(null);
  const canvasWidth=canvasDevice==="desktop"?1280:canvasDevice==="tablet"?768:390;
  const [previewKey,setPreviewKey]=useState(0);
  const [draggingId,setDraggingId]=useState<string|null>(null);
@@ -67,9 +70,14 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
   }catch(e){setNotice("Import rejected: "+(e instanceof Error?e.message:String(e)));}
  }
 
+ function patchPromo(id:string,changes:Partial<CmsNativeHero["promoCards"][number]>){setNative(old=>{const existing=old.promoCards.find(c=>c.id===id)||{id,title:"",imageUrl:"",enabled:true};return {...old,promoCards:[...old.promoCards.filter(c=>c.id!==id),{...existing,...changes}]};});}
+ function setNativeText(key:CmsNativeKey,text:string){setNative(old=>({...old,textBindings:text?([...old.textBindings.filter(item=>item.key!==key),{key,text,enabled:true}]):old.textBindings.filter(item=>item.key!==key)}));}
  function update(changes:Partial<CmsSlot>){if(!selectedSlot)return;setSlots(old=>old.map(s=>s.id===selected?{...s,...changes}:s));}
  function modifyNested(id:string,changes:Partial<CmsSlot["children"][number]>){if(!selectedSlot)return;update({children:selectedSlot.children.map(card=>card.id===id?{...card,...changes}:card)});}
- function addNested(){if(!selectedSlot||selectedSlot.children.length>=6)return;update({children:[...selectedSlot.children,{id:crypto.randomUUID(),title:"New editorial card",subtitle:"",imageUrl:"",cta:"Explore",href:"/shop"}]});}
+ function addSubcard(parentId:string){if(!selectedSlot)return;const children=selectedSlot.children.map(card=>card.id===parentId&&card.subcards.length<4?{...card,subcards:[...card.subcards,{id:crypto.randomUUID(),title:"New nested item",subtitle:"",imageUrl:"",cta:"",href:"/shop"}]}:card);update({children});}
+ function patchSubcard(parentId:string,leafId:string,changes:Partial<CmsSlot["children"][number]["subcards"][number]>){if(!selectedSlot)return;update({children:selectedSlot.children.map(card=>card.id===parentId?{...card,subcards:card.subcards.map(x=>x.id===leafId?{...x,...changes}:x)}:card)});}
+ function deleteSubcard(parentId:string,leafId:string){if(!selectedSlot)return;update({children:selectedSlot.children.map(card=>card.id===parentId?{...card,subcards:card.subcards.filter(x=>x.id!==leafId)}:card)});}
+ function addNested(){if(!selectedSlot||selectedSlot.children.length>=6)return;update({children:[...selectedSlot.children,{id:crypto.randomUUID(),title:"New editorial card",subtitle:"",imageUrl:"",cta:"Explore",href:"/shop",subcards:[]}]});}
  function moveNested(id:string,direction:number){if(!selectedSlot)return;const items=[...selectedSlot.children],index=items.findIndex(card=>card.id===id),next=index+direction;if(index<0||next<0||next>=items.length)return;[items[index],items[next]]=[items[next],items[index]];update({children:items});}
  const dirty=!!record&&(JSON.stringify(slots)!==JSON.stringify(record.draft)||JSON.stringify(native)!==JSON.stringify(record.nativeDraft));
  useEffect(()=>{onDirtyChange?.(dirty);return()=>onDirtyChange?.(false);},[dirty,onDirtyChange]);
@@ -125,7 +133,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
   }catch(e){setNotice("Restore error: "+String(e));}
   finally{setBusy(false);}
  }
- async function save(action:"saveDraft"|"publish"){if(!record||busy)return;const valid=cmsSlotSchema.array().max(20).safeParse(slots);const nativeValid=cmsNativeHeroSchema.safeParse(native);if(!nativeValid.success){setNotice("Hero validation: "+nativeValid.error.issues.map(i=>i.message).join("; "));return;}if(!valid.success){setNotice("Validation: "+valid.error.issues.map(i=>i.message).join("; "));return;}
+ async function save(action:"saveDraft"|"publish"){if(!record||busy)return;const valid=cmsSlotSchema.array().max(20).safeParse(slots);const nativeValid=cmsNativeHeroSchema.safeParse(native);if(nativeValid.success&&!validateNativePromoIds(page,nativeValid.data.promoCards)){setNotice("Unsupported native promotional card for this page.");return;}if(nativeValid.success&&!validatePageNativeText(page,nativeValid.data.textBindings)){setNotice("Unsupported native text binding for this page.");return;}if(!nativeValid.success){setNotice("Hero validation: "+nativeValid.error.issues.map(i=>i.message).join("; "));return;}if(!valid.success){setNotice("Validation: "+valid.error.issues.map(i=>i.message).join("; "));return;}
   if(action==="publish"&&!window.confirm("Publish "+slots.length+" editorial block(s) to /"+page+"? Existing native storefront interactions will remain untouched."))return;
   setBusy(true);setNotice("");
   try{
@@ -145,7 +153,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
   }catch(e){setNotice("Error: "+String(e));}finally{setBusy(false);}
  }
  if(!record)return <div className="cse-empty" role="status">{notice||"Loading "+page+" CMS slots…"}</div>;
- return <div className="cse-root"><div className="cse-heading"><div><h3>{page} · Visual Page Editor</h3><p>Click real page elements to edit supported content and styles. Native business data remains protected.</p><span>Draft r{record.revision} · Published r{record.publishedRevision}</span></div><div className="cse-top-actions"><button type="button" onClick={()=>void save("saveDraft")} disabled={busy||mediaBusy}>Save Draft</button><button type="button" className="cse-top-publish" onClick={()=>void save("publish")} disabled={busy||mediaBusy}>Publish Page</button></div></div>
+ return <div className="cse-root"><div className="cse-heading"><div><h3>{page} · Visual Page Editor</h3><p>Click real page elements to edit supported content and styles. Native business data remains protected.</p><span>Draft r{record.revision} · Published r{record.publishedRevision}</span></div><div className="cse-top-actions"><a className="cse-editor-nav-link" href="#global-store-chrome-editor" onClick={()=>setNotice("Global menu and footer links use the secured Header & Footer Builder above. Open Edit Header & Footer to change or reorder links.")}>Header / Footer Menu Editor</a><button type="button" onClick={()=>void save("saveDraft")} disabled={busy||mediaBusy}>Save Draft</button><button type="button" className="cse-top-publish" onClick={()=>void save("publish")} disabled={busy||mediaBusy}>Publish Page</button></div></div>
   <div className="cse-workspace"><section className="cse-list"><div className="cse-section-head"><strong>CMS Sections ({slots.length})</strong><div className="cse-add-control"><select aria-label="Section type to add" value={createKind} onChange={e=>setCreateKind(e.target.value as CmsSlot["kind"])}>{cmsSectionKinds.map(t=><option key={t} value={t}>{t[0].toUpperCase()+t.slice(1)}</option>)}</select><button onClick={add} disabled={slots.length>=20}><Plus size={14}/> Add</button></div></div>
    <button type="button" className={"cse-native-row"+(selectedNative?" active":"")} onClick={()=>{setSelectedNative(true);setSelected(null);setCanvasView("live");setInspectorTab("content");setPickedTarget("hero");}}><span>01 · {hasNativePageHero(page)?"Native Hero & Page Content":"Page Intro & Branding"}</span><small>Edit text · image · colors</small></button>
  <div className="cse-native-element-list" aria-label="Native page selectable element types">
@@ -162,14 +170,14 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
     {(["desktop","tablet","mobile"] as const).map(device=><button key={device} type="button" aria-pressed={canvasDevice===device} onClick={()=>setCanvasDevice(device)}>{device[0].toUpperCase()+device.slice(1)}</button>)}
     <span>{canvasWidth}px maximum · visual editor fits available width; live frame can scroll</span>
    </div>
-   {canvasView==="live"&&<CmsLiveVisualCanvas page={page} src={publicPath} width={canvasWidth} revision={previewKey} draft={native} onPick={(target,id)=>{setPickedTarget(target);if(id&&slots.some(slot=>slot.id===id)){chooseCmsSection(id);return;}setSelectedNative(true);setSelected(null);setInspectorTab(["hero","heading","image"].includes(target)?"content":"design");}}/>}
+   {canvasView==="live"&&<CmsLiveVisualCanvas page={page} src={publicPath} width={canvasWidth} revision={previewKey} draft={native} onPick={(target,id)=>{setPickedTarget(target);if(id?.startsWith("promo:")){setSelectedPromoId(id.slice(6));setSelectedNative(true);setSelected(null);setInspectorTab("content");return;}if(id&&slots.some(slot=>slot.id===id)){chooseCmsSection(id);return;}setSelectedNative(true);setSelected(null);setInspectorTab(["hero","heading","image"].includes(target)?"content":"design");}}/>}
    <div className="cse-preview-viewport" role="region" aria-label={canvasDevice+" draft block preview"} tabIndex={0} hidden={canvasView!=="blocks"}><div className="cse-blocks-canvas" style={{width:"100%",maxWidth:canvasWidth}}>
    <div className="cse-native-block-link"><strong>Real native {page} page</strong><p>The existing page is shown in the real storefront canvas. Use this tab to edit additional CMS sections.</p><button type="button" onClick={()=>{setSelectedNative(true);setCanvasView("live");}}>Select on actual page</button></div>
    {slots.map(s=><div key={s.id} data-cms-draft-slot={s.id}>
    <style>{renderCmsCssRules(s.cssRules,`[data-cms-draft-slot="${s.id}"]`,{hero:".cse-preview-card",heading:".cse-preview-card h3",card:".cse-nested-preview span",button:".cse-preview-card em",image:".cse-preview-card img"})}</style>
    <button type="button" className={"cse-preview-card cse-preview-"+s.kind+(selected===s.id?" active":"")} style={{background:s.style.background,color:s.style.textColor,borderRadius:s.style.radius}} onClick={()=>chooseCmsSection(s.id)}>
     <div style={{padding:s.style.padding,textAlign:s.style.alignment}}><small>{s.badge||"ANUSMITA"}</small><h3 style={{fontSize:s.style.fontSize,color:s.style.textColor}}>{s.title}</h3><p>{s.subtitle}</p>{s.cta&&<em style={{background:s.style.accentColor,borderRadius:Math.min(s.style.radius,24)}}>{s.cta} →</em>}</div>{s.imageUrl&&<img src={s.imageUrl} alt=""/>}
-    {s.kind==="grid"&&<div className="cse-nested-preview">{s.children.map(card=><span key={card.id}>{card.imageUrl&&<img src={card.imageUrl} alt=""/>}<strong>{card.title}</strong><small>{card.subtitle}</small></span>)}</div>}
+    {s.kind==="grid"&&<div className="cse-nested-preview">{s.children.map(card=><span key={card.id}>{card.imageUrl&&<img src={card.imageUrl} alt=""/>}<strong>{card.title}</strong><small>{card.subtitle}</small>{card.subcards.length>0&&<span className="cse-subcard-preview">{card.subcards.map(leaf=><span key={leaf.id}>{leaf.imageUrl&&<img src={leaf.imageUrl} alt=""/>}<strong>{leaf.title}</strong></span>)}</span>}</span>)}</div>}
     <span className="cse-flag">{s.enabled?"Visible":"Hidden"} · {s.placement}</span></button></div>)}
    {!slots.length&&<p className="cse-empty-preview">Use Add to create a banner, image, text or card-grid section.</p>}
    </div></div>
@@ -210,6 +218,22 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
    </div>}
    <p className="cse-muted">Image upload adds a new R2 asset to the draft; it does not publish automatically. Click Save Draft then Publish Page Slots to update the public hero.</p>
   </div>}
+  {inspectorTab==="content"&&<div className="cse-native-text-binding-editor">
+   <h4>Native Cards, Forms & Editorial Text</h4>
+   <p className="cse-muted">Edit approved text inside existing native page elements. These fields change only display copy—not form submissions, real prices, inventory, order data or checkout actions.</p>
+   {Object.entries(nativeTextTargets[page]).map(([key,selector])=>{
+    const binding=native.textBindings.find(item=>item.key===key);
+    return <label key={key}>{key.replace(/([A-Z])/g," $1")} <small>{selector}</small>
+     <input maxLength={240} value={binding?.text||""} placeholder="Keep original text" onChange={e=>setNativeText(key as CmsNativeKey,e.target.value)}/>
+     {binding&&<button type="button" onClick={()=>setNativeText(key as CmsNativeKey,"")}>Restore original {key}</button>}
+    </label>;
+   })}
+  </div>}
+  {inspectorTab==="content"&&(page==="deals"||page==="bundles")&&<div className="cse-native-promo-editor"><h4>Native Promotional Cards · {page}</h4><p className="cse-muted">Edit existing presentation cards. Names/images/visibility only; sample prices and product data cannot be changed here. Use CMS grid to create additional editorial promotions.</p>
+   {nativePromoIds[page].map(id=>{const item=native.promoCards.find(p=>p.id===id);return <div className={"cse-native-promo-item"+(selectedPromoId===id?" active":"")} key={id}><button type="button" onClick={()=>setSelectedPromoId(selectedPromoId===id?null:id)}>{nativePromoLabels[id]} {selectedPromoId===id?"▴":"▾"}</button>
+    {selectedPromoId===id&&<div className="cse-native-promo-fields"><label>Display title<input maxLength={100} value={item?.title||""} placeholder={"Keep "+nativePromoLabels[id]} onChange={e=>patchPromo(id,{title:e.target.value})}/></label><label>Approved image URL<input maxLength={500} value={item?.imageUrl||""} placeholder="Keep original artwork" onChange={e=>patchPromo(id,{imageUrl:e.target.value})}/></label><CmsMediaLibrary scope={page} onChoose={url=>patchPromo(id,{imageUrl:url})}/><label className="cse-checkbox"><input type="checkbox" checked={item?.enabled!==false} onChange={e=>patchPromo(id,{enabled:e.target.checked})}/>Visible</label><button type="button" onClick={()=>setNative(old=>({...old,promoCards:old.promoCards.filter(p=>p.id!==id)}))}>Restore original card</button></div>}
+   </div>;})}
+  </div>}
   {inspectorTab==="design"&&<CmsCssControls rules={native.cssRules} preferredTarget={pickedTarget} disabled={busy||mediaBusy} onChange={cssRules=>setNative(value=>({...value,cssRules}))}/>}
   {inspectorTab==="publish"&&<p className="cse-muted">Publish the configured page styles and editorial content without altering protected commerce logic.</p>}
   </>:selectedSlot?<>{inspectorTab==="content"&&<>
@@ -231,6 +255,9 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
       {card.imageUrl&&<img src={card.imageUrl} className="cse-nested-thumb" alt={"Draft card "+(index+1)+" media"}/>}
       <CmsMediaLibrary scope={page} onChoose={url=>modifyNested(card.id,{imageUrl:url})}/>
       <div className="cse-nested-media"><label>Upload image<input type="file" accept="image/jpeg,image/png,image/webp" disabled={mediaBusy} onChange={e=>{const file=e.currentTarget.files?.[0];if(file)void uploadImage(file,"nested",card.id);e.currentTarget.value="";}}/></label><button type="button" disabled={mediaBusy||!card.imageUrl} onClick={()=>modifyNested(card.id,{imageUrl:""})}>Clear image</button></div>
+      <div className="cse-subcard-editor"><div className="cse-nested-heading"><strong>Nested layout items ({card.subcards.length}/4)</strong><button type="button" disabled={busy||mediaBusy||card.subcards.length>=4} onClick={()=>addSubcard(card.id)}>+ Nested item</button></div>
+       {card.subcards.map(leaf=><div key={leaf.id} className="cse-subcard-entry"><label>Nested item heading<input value={leaf.title} maxLength={100} onChange={e=>patchSubcard(card.id,leaf.id,{title:e.target.value})}/></label><label>Details<textarea value={leaf.subtitle} maxLength={240} onChange={e=>patchSubcard(card.id,leaf.id,{subtitle:e.target.value})}/></label><label>Approved image URL<input value={leaf.imageUrl} maxLength={500} onChange={e=>patchSubcard(card.id,leaf.id,{imageUrl:e.target.value})}/></label><CmsMediaLibrary scope={page} onChoose={url=>patchSubcard(card.id,leaf.id,{imageUrl:url})}/><label>CTA text<input value={leaf.cta} maxLength={40} onChange={e=>patchSubcard(card.id,leaf.id,{cta:e.target.value})}/></label><label>CTA link<input value={leaf.href} maxLength={250} onChange={e=>patchSubcard(card.id,leaf.id,{href:e.target.value})}/></label><button type="button" onClick={()=>deleteSubcard(card.id,leaf.id)}>Remove nested item</button></div>)}
+      </div>
       <label>Button label<input value={card.cta} maxLength={40} onChange={e=>modifyNested(card.id,{cta:e.target.value})}/></label>
       <label>Button destination<input value={card.href} maxLength={250} onChange={e=>modifyNested(card.id,{href:e.target.value})}/></label>
      </div>)}

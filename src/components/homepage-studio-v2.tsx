@@ -158,7 +158,7 @@ export default function HomepageStudioV2(){
    <div className="avs-stats">
     {[[Home,"Active Page","Homepage"],[Layers,"Sections",String(blocks.length)],[LayoutGrid,"Components",String(config.sections.length)],[AlertTriangle,"Draft Changes",dirty?"1 unsaved":"No unsaved edits"],[CheckCircle2,"Saved Revision",String(config.revision)],[ShieldCheck,"Permissions","Owner / Admin"],[Eye,"Preview","Responsive"],[CheckCircle2,"CMS Status",config.saved?"Connected":"Starter Layout"]].map(([I,label,value],i)=><div className="avs-stat" key={i}><span className="avs-stat-icon">{typeof I!=="string"&&<I size={22}/>}</span><div><small>{label as string}</small><strong>{value as string}</strong></div></div>)}
    </div>
-   <section className="avs-chrome-control" aria-label="Global storefront header and footer controls">
+   <section id="global-store-chrome-editor" className="avs-chrome-control" aria-label="Global storefront header and footer controls">
     <div className="avs-chrome-heading"><div><h2>Global Header & Footer</h2><p>Edit announcement, footer copy and section order using the existing secured StoreChrome manager. All storefront pages share these elements.</p></div>
      <button type="button" aria-expanded={chromeOpen} onClick={()=>setChromeOpen(v=>!v)}>{chromeOpen?"Hide Header/Footer Editor":"Edit Header & Footer"}</button>
     </div>
