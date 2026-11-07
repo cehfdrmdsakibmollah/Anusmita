@@ -42,12 +42,12 @@ export function safeCmsCssValue(property:string,value:string):boolean{
  }
 }
 export const nativeCmsSelectors:Record<string,string>={
- shop:".anShopHero",deals:".dealsHero",bundles:".bundlesHero",about:".aboutHero",contact:".contactHero",journal:".journalHero",
+ shop:".anShopHero",deals:".dp-hero",bundles:".bp-hero",about:".ip-about-hero",contact:".ip-contact-hero",journal:".ip-journal-hero",
  cart:".shoppingPage",checkout:".shoppingPage",wishlist:".shoppingPage",
  "gift-cards":".gc-hero","pre-orders":".po-hero","customer-stories":".cs-hero","routine-quiz":".rq-hero","track-order":".to-hero"
 };
 export const nativeCmsCardSelectors:Record<string,string>={
- shop:".anShopNewCard",deals:".dealsCard",bundles:".bundleCard",
+ shop:".anShopNewCard",deals:".dp-card",bundles:".bp-card",
  "gift-cards":".gc-card","pre-orders":".po-grid article",
  "customer-stories":".cs-grid article","routine-quiz":".rq-panel",
  "track-order":".to-result",cart:".shoppingLine",checkout:".shoppingLine",wishlist:".shoppingLine",

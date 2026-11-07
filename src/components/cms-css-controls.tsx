@@ -8,10 +8,10 @@ const defaults:Record<string,string>={
  padding:"20px",margin:"0px",opacity:"1",transform:"scale(1)",
  transition:"all 200ms ease",gap:"12px","object-fit":"cover"
 };
-export default function CmsCssControls({rules,onChange,disabled=false}:{rules:CmsCssRule[];onChange:(rules:CmsCssRule[])=>void;disabled?:boolean}){
+export default function CmsCssControls({rules,onChange,disabled=false,preferredTarget="hero"}:{rules:CmsCssRule[];onChange:(rules:CmsCssRule[])=>void;disabled?:boolean;preferredTarget?:CmsCssRule["target"]}){
  function add(){
   if(disabled||rules.length>=32)return;
-  onChange([...rules,{target:"hero",state:"normal",property:"border-radius",value:"12px"}]);
+  onChange([...rules,{target:preferredTarget,state:"normal",property:"border-radius",value:"12px"}]);
  }
  function patch(index:number,changes:Partial<CmsCssRule>){
   if(disabled)return;

@@ -4,6 +4,8 @@ import {Plus,Save,Upload,Trash2,ArrowUp,ArrowDown,Eye,EyeOff,RefreshCw} from "lu
 import {cmsSlotSchema,defaultCmsStyle,cmsSectionKinds,cmsNativeHeroSchema,defaultCmsNativeHero,type CmsNativeHero,type CmsSlot,type CmsSlotPage} from "@/lib/cms-page-slots";
 import CmsMediaLibrary from "@/components/cms-media-library";
 import CmsCssControls from "@/components/cms-css-controls";
+import CmsLiveVisualCanvas from "@/components/cms-live-visual-canvas";
+import type {CmsCssRule} from "@/lib/cms-css-rules";
 import {renderCmsCssRules} from "@/lib/cms-css-rules";
 import {hasNativePageHero,hasCmsPageIntro,sameCmsPageDraft} from "@/lib/cms-page-editor-support";
 import "./cms-page-slots-editor.css";
@@ -18,7 +20,8 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
  const [restoreRevision,setRestoreRevision]=useState("");
  const [mediaBusy,setMediaBusy]=useState(false);
  const [createKind,setCreateKind]=useState<CmsSlot["kind"]>("banner");
- const [canvasView,setCanvasView]=useState<"live"|"blocks">("blocks");
+ const [canvasView,setCanvasView]=useState<"live"|"blocks">("live");
+ const [pickedTarget,setPickedTarget]=useState<CmsCssRule["target"]>("hero");
  const [canvasDevice,setCanvasDevice]=useState<"desktop"|"tablet"|"mobile">("desktop");
  const [selectedNative,setSelectedNative]=useState(true);
  const canvasWidth=canvasDevice==="desktop"?1280:canvasDevice==="tablet"?768:390;
@@ -28,7 +31,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
  const publicPath=["about","contact","journal"].includes(page)?"/"+page+"/design-preview":"/"+page;
  const [inspectorTab,setInspectorTab]=useState<"content"|"design"|"publish">("content");
  const [record,setRecord]=useState<Payload|null>(null),[slots,setSlots]=useState<CmsSlot[]>([]),[selected,setSelected]=useState<string|null>(null),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[mode,setMode]=useState<"draft"|"published">("draft");
- const load=useCallback(async()=>{const r=await fetch("/api/admin/cms-page-slots?page="+encodeURIComponent(page),{cache:"no-store"});const j=await r.json();if(!r.ok)throw Error(j.error||"Could not fetch CMS slots");const parsed=cmsSlotSchema.array().max(20).parse(j.draft);const nativeParsed=cmsNativeHeroSchema.parse(j.nativeDraft||{});setRecord({...j,history:j.history||[],draft:parsed,nativeDraft:nativeParsed,nativePublished:cmsNativeHeroSchema.parse(j.nativePublished||{})});setRestoreRevision("");setNative(nativeParsed);setSlots(parsed);setSelected(null);setSelectedNative(true);setCanvasView("blocks");setNotice("");},[page]);
+ const load=useCallback(async()=>{const r=await fetch("/api/admin/cms-page-slots?page="+encodeURIComponent(page),{cache:"no-store"});const j=await r.json();if(!r.ok)throw Error(j.error||"Could not fetch CMS slots");const parsed=cmsSlotSchema.array().max(20).parse(j.draft);const nativeParsed=cmsNativeHeroSchema.parse(j.nativeDraft||{});setRecord({...j,history:j.history||[],draft:parsed,nativeDraft:nativeParsed,nativePublished:cmsNativeHeroSchema.parse(j.nativePublished||{})});setRestoreRevision("");setNative(nativeParsed);setSlots(parsed);setSelected(null);setSelectedNative(true);setCanvasView("live");setNotice("");},[page]);
  useEffect(()=>{void load().catch(e=>setNotice("Error: "+String(e)));},[load]);
  const selectedSlot=slots.find(s=>s.id===selected);
  function chooseCmsSection(id:string){setSelected(id);setSelectedNative(false);setCanvasView("blocks");setInspectorTab("content");}
@@ -142,28 +145,26 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
   }catch(e){setNotice("Error: "+String(e));}finally{setBusy(false);}
  }
  if(!record)return <div className="cse-empty" role="status">{notice||"Loading "+page+" CMS slots…"}</div>;
- return <div className="cse-root"><div className="cse-heading"><div><h3>Editable {page} page slots</h3><p>Add banners, text and curated CTA sections without altering the existing storefront logic.</p></div><span>Draft r{record.revision} · Live r{record.publishedRevision}</span></div>
-  <div className="cse-workspace"><section className="cse-list"><div className="cse-section-head"><strong>Page sections ({slots.length})</strong><div className="cse-add-control"><select aria-label="Section type to add" value={createKind} onChange={e=>setCreateKind(e.target.value as CmsSlot["kind"])}>{cmsSectionKinds.map(t=><option key={t} value={t}>{t[0].toUpperCase()+t.slice(1)}</option>)}</select><button onClick={add} disabled={slots.length>=20}><Plus size={14}/> Add</button></div></div>
-   <button type="button" className={"cse-native-row"+(selectedNative?" active":"")} onClick={()=>{setSelectedNative(true);setSelected(null);setCanvasView("blocks");setInspectorTab("content");}}><span>01 · {hasNativePageHero(page)?"Native Hero & Page Content":"Page Intro & Branding"}</span><small>Edit text · image · colors</small></button>
- <div className="cse-protected-row"><strong>Protected native page</strong><small>Products, forms and live logic remain functional</small></div>
+ return <div className="cse-root"><div className="cse-heading"><div><h3>{page} · Visual Page Editor</h3><p>Click real page elements to edit supported content and styles. Native business data remains protected.</p><span>Draft r{record.revision} · Published r{record.publishedRevision}</span></div><div className="cse-top-actions"><button type="button" onClick={()=>void save("saveDraft")} disabled={busy||mediaBusy}>Save Draft</button><button type="button" className="cse-top-publish" onClick={()=>void save("publish")} disabled={busy||mediaBusy}>Publish Page</button></div></div>
+  <div className="cse-workspace"><section className="cse-list"><div className="cse-section-head"><strong>CMS Sections ({slots.length})</strong><div className="cse-add-control"><select aria-label="Section type to add" value={createKind} onChange={e=>setCreateKind(e.target.value as CmsSlot["kind"])}>{cmsSectionKinds.map(t=><option key={t} value={t}>{t[0].toUpperCase()+t.slice(1)}</option>)}</select><button onClick={add} disabled={slots.length>=20}><Plus size={14}/> Add</button></div></div>
+   <button type="button" className={"cse-native-row"+(selectedNative?" active":"")} onClick={()=>{setSelectedNative(true);setSelected(null);setCanvasView("live");setInspectorTab("content");setPickedTarget("hero");}}><span>01 · {hasNativePageHero(page)?"Native Hero & Page Content":"Page Intro & Branding"}</span><small>Edit text · image · colors</small></button>
+ <div className="cse-native-element-list" aria-label="Native page selectable element types">
+ {(["hero","heading","card","button","image"] as const).map(target=><button type="button" key={target} className={selectedNative&&pickedTarget===target?"active":""} onClick={()=>{setSelectedNative(true);setSelected(null);setCanvasView("live");setPickedTarget(target);setInspectorTab(target==="hero"||target==="heading"||target==="image"?"content":"design");}}>{target[0].toUpperCase()+target.slice(1)} <span>{target==="card"?"style":"edit"}</span></button>)}
+ </div>
+ <div className="cse-protected-row"><strong>Original page remains functional</strong><small>Click its visible elements in the live canvas. Product content, payments and order data stay managed in their original modules.</small></div>
  {slots.length===0&&<p className="cse-muted">No custom sections yet. The original page remains visible.</p>}
    {slots.map((s,i)=><div key={s.id} className={"cse-row"+(selected===s.id?" active":"")+(draggingId===s.id?" cse-row-dragging":"")} data-cms-section-id={s.id} draggable={!busy&&!mediaBusy} onDragStart={e=>{if(busy||mediaBusy){e.preventDefault();return;}setDraggingId(s.id);e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",s.id);}} onDragOver={e=>{if(draggingId){e.preventDefault();e.dataTransfer.dropEffect="move";}}} onDrop={e=>{e.preventDefault();dropSection(s.id);}} onDragEnd={()=>setDraggingId(null)}><button type="button" className="cse-touch-handle" title="Touch and drag to reorder" aria-label={"Touch and drag section "+(i+1)} onPointerDown={e=>startTouchSection(e,s.id)} onPointerUp={endTouchSection} onPointerCancel={cancelTouchSection}>⠿</button><button onClick={()=>chooseCmsSection(s.id)}><span>{i+1}.</span><span>{s.title}</span></button><small>{s.kind}</small><button title="Duplicate section" disabled={slots.length>=20} onClick={()=>copySlot(s.id)}>⧉</button><button title="Move up" disabled={i===0} onClick={()=>move(s.id,-1)}><ArrowUp size={13}/></button><button title="Move down" disabled={i===slots.length-1} onClick={()=>move(s.id,1)}><ArrowDown size={13}/></button></div>)}
    <p className="cse-muted">Drag a section row to reorder (desktop), or use the Up/Down buttons. Save Draft and Publish to apply. Before/After placement still preserves native page elements.</p>
   </section>
   <section className="cse-canvas">
-   <div className="cse-preview-head"><strong>{canvasView==="live"?"Published storefront":"Editable page draft canvas"}</strong><div className="cse-canvas-controls"><button type="button" aria-pressed={canvasView==="live"} onClick={()=>setCanvasView("live")}>Live storefront</button><button type="button" aria-pressed={canvasView==="blocks"} onClick={()=>setCanvasView("blocks")}>Visual editor</button><button type="button" onClick={()=>setPreviewKey(v=>v+1)}>Reload</button></div></div>
+   <div className="cse-preview-head"><strong>{canvasView==="live"?"Actual storefront canvas":"CMS section draft canvas"}</strong><div className="cse-canvas-controls"><button type="button" aria-pressed={canvasView==="live"} onClick={()=>setCanvasView("live")}>Edit real page</button><button type="button" aria-pressed={canvasView==="blocks"} onClick={()=>setCanvasView("blocks")}>CMS sections</button><button type="button" onClick={()=>setPreviewKey(v=>v+1)}>Reload</button></div></div>
    <div className="cse-device-controls" role="group" aria-label="Storefront preview viewport">
     {(["desktop","tablet","mobile"] as const).map(device=><button key={device} type="button" aria-pressed={canvasDevice===device} onClick={()=>setCanvasDevice(device)}>{device[0].toUpperCase()+device.slice(1)}</button>)}
     <span>{canvasWidth}px maximum · visual editor fits available width; live frame can scroll</span>
    </div>
-   {canvasView==="live"&&<><p className="cse-muted">Published storefront route. To change the native hero, edit its fields above; draft CMS blocks are shown under Draft blocks. Saving a draft alone does not change the public page.</p><div className="cse-preview-viewport" role="region" aria-label={canvasDevice+" page preview"} tabIndex={0}><iframe key={publicPath+previewKey} className="cse-live-frame" style={{width:canvasWidth}} title={page+" published storefront"} src={publicPath} loading="lazy"/></div></>}
+   {canvasView==="live"&&<CmsLiveVisualCanvas page={page} src={publicPath} width={canvasWidth} revision={previewKey} draft={native} onPick={(target,id)=>{setPickedTarget(target);if(id&&slots.some(slot=>slot.id===id)){chooseCmsSection(id);return;}setSelectedNative(true);setSelected(null);setInspectorTab(["hero","heading","image"].includes(target)?"content":"design");}}/>}
    <div className="cse-preview-viewport" role="region" aria-label={canvasDevice+" draft block preview"} tabIndex={0} hidden={canvasView!=="blocks"}><div className="cse-blocks-canvas" style={{width:"100%",maxWidth:canvasWidth}}>
-   <style>{renderCmsCssRules(native.cssRules,".cse-blocks-canvas",{hero:".cse-native-canvas-card",heading:".cse-native-canvas-card h2",card:".cse-native-canvas-card",button:".cse-native-canvas-card",image:".cse-native-canvas-card img"})}</style>
-   {canvasView==="blocks"&&<button type="button" className={"cse-native-canvas-card"+(selectedNative?" active":"")} style={{background:native.background,color:native.textColor}} onClick={()=>{setSelectedNative(true);setSelected(null);setInspectorTab("content");}}>
-    <div className="cse-native-canvas-copy"><small>{hasNativePageHero(page)?"EDITABLE NATIVE HERO":"EDITABLE PAGE INTRO"}</small><h2>{native.title||(hasNativePageHero(page)?"Original page title preserved":"Add your page heading")}</h2><p>{native.subtitle||"Select to edit content, image and colors."}</p>{native.sectionTitle&&<strong>{native.sectionTitle}</strong>}</div>{native.imageUrl&&<img src={native.imageUrl} alt="Draft page image"/>}
-    <span className="cse-edit-hint">Edit content & design</span>
-   </button>}
-   {canvasView==="blocks"&&<div className="cse-protected-canvas"><strong>Existing {page} functionality preserved</strong><p>Live product cards, forms, checkout and customer actions remain available in the Live storefront tab and cannot be deleted here.</p></div>}
+   <div className="cse-native-block-link"><strong>Real native {page} page</strong><p>The existing page is shown in the real storefront canvas. Use this tab to edit additional CMS sections.</p><button type="button" onClick={()=>{setSelectedNative(true);setCanvasView("live");}}>Select on actual page</button></div>
    {slots.map(s=><div key={s.id} data-cms-draft-slot={s.id}>
    <style>{renderCmsCssRules(s.cssRules,`[data-cms-draft-slot="${s.id}"]`,{hero:".cse-preview-card",heading:".cse-preview-card h3",card:".cse-nested-preview span",button:".cse-preview-card em",image:".cse-preview-card img"})}</style>
    <button type="button" className={"cse-preview-card cse-preview-"+s.kind+(selected===s.id?" active":"")} style={{background:s.style.background,color:s.style.textColor,borderRadius:s.style.radius}} onClick={()=>chooseCmsSection(s.id)}>
@@ -209,7 +210,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
    </div>}
    <p className="cse-muted">Image upload adds a new R2 asset to the draft; it does not publish automatically. Click Save Draft then Publish Page Slots to update the public hero.</p>
   </div>}
-  {inspectorTab==="design"&&<CmsCssControls rules={native.cssRules} disabled={busy||mediaBusy} onChange={cssRules=>setNative(value=>({...value,cssRules}))}/>}
+  {inspectorTab==="design"&&<CmsCssControls rules={native.cssRules} preferredTarget={pickedTarget} disabled={busy||mediaBusy} onChange={cssRules=>setNative(value=>({...value,cssRules}))}/>}
   {inspectorTab==="publish"&&<p className="cse-muted">Publish the configured page styles and editorial content without altering protected commerce logic.</p>}
   </>:selectedSlot?<>{inspectorTab==="content"&&<>
     <label>Block type<select value={selectedSlot.kind} onChange={e=>update({kind:e.target.value as CmsSlot["kind"],children:e.target.value==="grid"?selectedSlot.children:[]})}>{cmsSectionKinds.map(t=><option key={t} value={t}>{t}</option>)}</select></label>
