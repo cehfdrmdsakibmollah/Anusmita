@@ -8,10 +8,10 @@ const defaults:Record<string,string>={
  padding:"20px",margin:"0px",opacity:"1",transform:"scale(1)",
  transition:"all 200ms ease",gap:"12px","object-fit":"cover"
 };
-export default function CmsCssControls({rules,onChange,disabled=false,preferredTarget="hero",preferredElementId,scopeOptions=[]}:{rules:CmsCssRule[];onChange:(rules:CmsCssRule[])=>void;disabled?:boolean;preferredTarget?:CmsCssRule["target"];preferredElementId?:string|null;scopeOptions?:{id:string;label:string}[]}){
+export default function CmsCssControls({rules,onChange,disabled=false,preferredTarget="hero",preferredElementId,scopeOptions=[]}:{rules:CmsCssRule[];onChange:(rules:CmsCssRule[])=>void;disabled?:boolean;preferredTarget?:CmsCssRule["target"];preferredElementId?:string|null;scopeOptions?:{id:string;label:string;target?:CmsCssRule["target"]}[]}){
  function add(){
   if(disabled||rules.length>=32)return;
-  onChange([...rules,{target:preferredElementId&&preferredTarget==="hero"?"card":preferredTarget,...(preferredElementId?{elementId:preferredElementId}:{}),state:"normal",property:"border-radius",value:"12px"}]);
+  onChange([...rules,{target:preferredTarget,...(preferredElementId?{elementId:preferredElementId}:{}),state:"normal",property:"border-radius",value:"12px"}]);
  }
  function patch(index:number,changes:Partial<CmsCssRule>){
   if(disabled)return;
@@ -20,8 +20,8 @@ export default function CmsCssControls({rules,onChange,disabled=false,preferredT
  return <div className="cse-rule-manager">
   <h4>Scoped Custom CSS · Visual Controls</h4>
   <p className="cse-muted">Select exactly what to style. Rules apply to this page/section only, including hover effects. Unsafe values and external CSS are blocked.</p>
-  {rules.map((rule,index)=><div className="cse-rule-row" key={index}>
-   {scopeOptions.length>0&&<label>Apply to<select disabled={disabled} value={rule.elementId||""} onChange={e=>{const elementId=e.target.value||undefined;patch(index,{elementId,target:elementId&&rule.target==="hero"?"card":rule.target});}}><option value="">All matching page elements</option>{scopeOptions.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select></label>}
+  {rules.map((rule,index)=>({rule,index})).sort((a,b)=>Number(b.rule.elementId===preferredElementId)-Number(a.rule.elementId===preferredElementId)).map(({rule,index})=><div className="cse-rule-row" key={index}>
+   {scopeOptions.length>0&&<label>Apply to<select disabled={disabled} value={rule.elementId||""} onChange={e=>{const elementId=e.target.value||undefined;const option=scopeOptions.find(x=>x.id===elementId);patch(index,{elementId,target:option?.target||rule.target});}}><option value="">All matching page elements</option>{scopeOptions.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select></label>}
    <div className="cse-rule-pair">
     <label>Element<select disabled={disabled} value={rule.target} onChange={e=>patch(index,{target:e.target.value as CmsCssRule["target"]})}>{cmsCssTargets.filter(v=>!rule.elementId||v!=="hero").map(v=><option key={v} value={v}>{v}</option>)}</select></label>
     <label>State<select disabled={disabled} value={rule.state} onChange={e=>patch(index,{state:e.target.value as CmsCssRule["state"]})}>{cmsCssStates.map(v=><option key={v} value={v}>{v}</option>)}</select></label>
@@ -33,7 +33,7 @@ export default function CmsCssControls({rules,onChange,disabled=false,preferredT
    <div className="cse-rule-actions"><code>{rule.elementId?rule.elementId+" · ":""}{rule.target}{rule.state==="hover"?":hover":""} {"{"}{rule.property}: {rule.value}{"}"}</code><button type="button" disabled={disabled} onClick={()=>onChange(rules.filter((_,i)=>i!==index))}>Remove</button></div>
    {!safeCmsCssValue(rule.property,rule.value)&&<small role="alert">Enter a safe CSS value before saving.</small>}
   </div>)}
-  <button type="button" onClick={add} disabled={disabled||rules.length>=32}>+ Add CSS property ({rules.length}/32)</button>
+  <button type="button" onClick={add} disabled={disabled||rules.length>=32}>+ Add CSS property for {preferredElementId||preferredTarget} ({rules.length}/32)</button>
   <p className="cse-muted">Examples: width 100%, height 280px, font-weight 700, box-shadow 0 8px 24px #e8c8d5, transform scale(1.03), transition all 200ms ease.</p>
  </div>;
 }
