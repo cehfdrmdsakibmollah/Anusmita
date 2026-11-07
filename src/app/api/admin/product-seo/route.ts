@@ -2,7 +2,7 @@ import {z} from "zod";
 import mongoose from "mongoose";
 import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
-import {Product,ProductSeo,ProductSeoRevision,Audit} from "@/lib/models";
+import {Product,ProductSeo,ProductSeoRevision,ProductSlugRedirect,Audit} from "@/lib/models";
 import {seoRevisionSnapshot} from "@/lib/product-seo-revisions";
 import {verifiedSeoReviewSummary} from "@/lib/product-seo-reviews";
 export const dynamic="force-dynamic";
@@ -11,8 +11,8 @@ const schema=z.object({productId:id,revision:z.number().int().nonnegative(),meta
 export async function GET(req:Request){
  try{await authorize(["owner","admin","inventory","purchasing"],"products.view");const productId=new URL(req.url).searchParams.get("productId")||"";if(!id.safeParse(productId).success)throw new HttpError(400,"Valid product ID required");await db();
  const p=await Product.findById(productId).select("name slug sku brand category description active imageUrls pricePaisa onHand reserved barcode availabilityMode").lean<any>();if(!p)throw new HttpError(404,"Product not found");
- const [doc,verified,history]=await Promise.all([ProductSeo.findOne({productId}).lean<any>(),verifiedSeoReviewSummary(p._id),ProductSeoRevision.find({productId}).sort({revision:-1}).limit(20).select("revision snapshot action createdAt updatedAt actorId -_id").lean<any[]>()]);
- return Response.json({product:{id:productId,name:p.name,slug:p.slug,sku:p.sku,category:p.category,brand:p.brand,description:p.description,active:p.active,imageUrls:p.imageUrls||[],pricePaisa:p.pricePaisa||0,onHand:p.onHand||0,reserved:p.reserved||0,barcode:p.barcode||"",availabilityMode:p.availabilityMode||"now",...verified},seo:{revision:doc?.revision||0,metaTitle:doc?.metaTitle||"",metaDescription:doc?.metaDescription||"",focusKeyword:doc?.focusKeyword||"",keywords:doc?.keywords||[],imageAltTexts:doc?.imageAltTexts||[],ogTitle:doc?.ogTitle||"",ogDescription:doc?.ogDescription||"",robotsIndex:doc?.robotsIndex??true,robotsFollow:doc?.robotsFollow??true,schemaEnabled:doc?.schemaEnabled??true},history:history.map(h=>({revision:h.revision,action:h.action,createdAt:h.createdAt,snapshot:h.snapshot}))},{headers:{"Cache-Control":"private, no-store"}});
+ const [doc,verified,history,redirects]=await Promise.all([ProductSeo.findOne({productId}).lean<any>(),verifiedSeoReviewSummary(p._id),ProductSeoRevision.find({productId}).sort({revision:-1}).limit(20).select("revision snapshot action createdAt updatedAt actorId -_id").lean<any[]>(),ProductSlugRedirect.find({productId}).sort({createdAt:-1}).limit(20).select("sourceSlug createdAt -_id").lean<any[]>()]);
+ return Response.json({product:{id:productId,name:p.name,slug:p.slug,sku:p.sku,category:p.category,brand:p.brand,description:p.description,active:p.active,imageUrls:p.imageUrls||[],pricePaisa:p.pricePaisa||0,onHand:p.onHand||0,reserved:p.reserved||0,barcode:p.barcode||"",availabilityMode:p.availabilityMode||"now",...verified},seo:{revision:doc?.revision||0,metaTitle:doc?.metaTitle||"",metaDescription:doc?.metaDescription||"",focusKeyword:doc?.focusKeyword||"",keywords:doc?.keywords||[],imageAltTexts:doc?.imageAltTexts||[],ogTitle:doc?.ogTitle||"",ogDescription:doc?.ogDescription||"",robotsIndex:doc?.robotsIndex??true,robotsFollow:doc?.robotsFollow??true,schemaEnabled:doc?.schemaEnabled??true},history:history.map(h=>({revision:h.revision,action:h.action,createdAt:h.createdAt,snapshot:h.snapshot})),redirects:redirects.map(r=>({sourceSlug:r.sourceSlug,createdAt:r.createdAt}))},{headers:{"Cache-Control":"private, no-store"}});
  }catch(e){return apiError(e);}
 }
 export async function POST(req:Request){
