@@ -211,3 +211,15 @@
 .cse-subcard-editor{display:grid;gap:10px;padding:10px;border:1px solid #e9c6d5;background:#fff9fb;border-radius:7px}
 .cse-subcard-entry{display:grid;gap:7px;padding:10px;border:1px dashed #dab3c4;border-radius:7px;background:white}
 .cse-editor-nav-link{display:inline-flex;align-items:center;border:1px solid #dca9bf;border-radius:6px;background:white;color:#7f1b45;padding:8px 10px;font:700 11px Arial,sans-serif;text-decoration:none}
+
+
+.cse-native-promo-editor{display:grid;gap:9px;padding:12px;background:#fff9fb;border:1px solid #e8c9d7;border-radius:8px}
+.cse-native-promo-editor h4{font:700 14px Georgia,serif;margin:0;color:#7e1c45}
+.cse-native-promo-item{border:1px solid #ecd4df;border-radius:7px;background:white;overflow:hidden}
+.cse-native-promo-item.active{border-color:#ae3466}
+.cse-native-promo-item>button{width:100%;display:flex;justify-content:space-between;text-align:left;background:#fff5f9;color:#77163f;border:0;padding:10px;font:700 11px Arial,sans-serif;cursor:pointer}
+.cse-native-promo-fields{display:grid;gap:8px;padding:10px}
+.cse-native-promo-fields>button{justify-self:start;border:1px solid #d3a2b5;border-radius:5px;padding:7px;background:#fff;color:#841a42}
+.cse-subcard-preview{display:flex;flex-wrap:wrap;gap:5px;padding:6px;border:1px dashed #cfa9b9}
+.cse-subcard-preview>span{display:flex;flex-wrap:wrap;align-items:center;gap:4px;background:#fff2f7;border-radius:5px;padding:5px;font-size:10px}
+.cse-subcard-preview img{max-width:36px;max-height:36px;object-fit:cover}
