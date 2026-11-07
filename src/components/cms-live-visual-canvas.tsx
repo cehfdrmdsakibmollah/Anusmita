@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
-import {nativeCmsSelectors,nativeCmsCardSelectors,renderCmsCssRules,type CmsCssRule} from "@/lib/cms-css-rules";
+import {nativeCmsSelectors,nativeCmsCardSelectors,renderNativeCmsCssRules,type CmsCssRule} from "@/lib/cms-css-rules";
 import type {CmsNativeHero,CmsSlotPage} from "@/lib/cms-page-slots";
 import {nativeTextTargets} from "@/lib/cms-native-bindings";
 type Target=CmsCssRule["target"];
@@ -65,7 +65,7 @@ export default function CmsLiveVisualCanvas({page,src,width,revision,draft,onPic
   const cssId="cse-local-draft-style";
   let style=doc.getElementById(cssId) as HTMLStyleElement|null;
   if(!style){style=doc.createElement("style");style.id=cssId;doc.head.appendChild(style);}
-  style.textContent=renderCmsCssRules(draft.cssRules,"body",{hero,heading:hero+" h1",card:nativeCmsCardSelectors[page]||".anCmsPublicNestedCard",button:hero+" a, "+hero+" button",image:hero+" img, "+hero+" svg"});
+  style.textContent=renderNativeCmsCssRules(page,draft.cssRules);
   const outlineId="cse-live-picker-style";
   let picker=doc.getElementById(outlineId) as HTMLStyleElement|null;
   if(!picker){picker=doc.createElement("style");picker.id=outlineId;doc.head.appendChild(picker);}
@@ -82,13 +82,29 @@ export default function CmsLiveVisualCanvas({page,src,width,revision,draft,onPic
    const card=cardSel?element.closest(cardSel):null;
    const promoId=card?.getAttribute("data-cms-promo-id");
    let target:Target="hero",chosen:Element|null=root;
-   if(card){target="card";chosen=card;}
-   else if(element.closest("button,a")){target="button";chosen=element.closest("button,a");}
+   // The actual clicked child wins over its enclosing card.
+   if(card){
+    chosen=card;
+    if(element.closest("img,svg,.dp-product-photo,.bp-card-photo"))target="image";
+    else if(element.closest("h3"))target="heading";
+    else if(element.closest("button,a"))target="button";
+    else target="card";
+    chosen=element.closest("img,svg,h3,button,a")||card;
+   }else if(element.closest("button,a")){target="button";chosen=element.closest("button,a");}
    else if(element.closest("h1,h2,h3")){target="heading";chosen=element.closest("h1,h2,h3");}
    else if(element.closest("img,svg")){target="image";chosen=element.closest("img,svg");}
    else if(root&&root.contains(element)){chosen=root;target="hero";}
    chosen?.setAttribute("data-cse-picked","");
-   onPick(target,promoId?"promo:"+promoId:undefined);
+   if(promoId){onPick(target,"promo:"+promoId);return;}
+   for(const [key,selector] of Object.entries(nativeTextTargets[page])){
+    if(element.closest(selector)){onPick(target,"text:"+key);return;}
+   }
+   if(root?.querySelector("h1")?.contains(element)){onPick("heading","field:title");return;}
+   if(root?.querySelector(".dp-hero-copy p, .gc-hero-copy p, .cs-hero-copy p, p")?.contains(element)){onPick("heading","field:subtitle");return;}
+   if(element.closest(sectionSelectors[page]||"___cms_no_match")){onPick("heading","field:sectionTitle");return;}
+   if(element.closest(".dp-native-section-image,.bp-native-section-image")){onPick("image","field:sectionImageUrl");return;}
+   if(root?.contains(element)&&target==="image"){onPick("image","field:imageUrl");return;}
+   onPick(target);
   };
   doc.addEventListener("click",choose,true);
   doc.addEventListener("submit",prevent,true);
