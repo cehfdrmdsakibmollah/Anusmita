@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {cmsSlotPages,type CmsSlotPage} from "@/lib/cms-page-slots";
+import type {CmsSlotPage} from "@/lib/cms-page-slots";
 export const cmsNativeKeys=["eyebrow","promoHeading","promoDescription","helpHeading","formHeading","footerNote"] as const;
 export type CmsNativeKey=typeof cmsNativeKeys[number];
 /** Only approved editorial text nodes are bound. Never target an input value, price, SKU, operational status, CTA URL, or checkout action. */
@@ -29,4 +29,4 @@ export type CmsNativeTextEntry=z.infer<typeof cmsNativeTextEntrySchema>;
 export function validatePageNativeText(page:CmsSlotPage,items:readonly CmsNativeTextEntry[]):boolean{
  return items.every(x=>!!nativeTextTargets[page][x.key]);
 }
-export const nativeBindingPageCount=cmsSlotPages.length;
+
