@@ -46,6 +46,13 @@ export const nativeCmsSelectors:Record<string,string>={
  cart:".shoppingPage",checkout:".shoppingPage",wishlist:".shoppingPage",
  "gift-cards":".gc-hero","pre-orders":".po-hero","customer-stories":".cs-hero","routine-quiz":".rq-hero","track-order":".to-hero"
 };
+export const nativeCmsCardSelectors:Record<string,string>={
+ shop:".anShopNewCard",deals:".dealsCard",bundles:".bundleCard",
+ "gift-cards":".gc-card","pre-orders":".po-grid article",
+ "customer-stories":".cs-grid article","routine-quiz":".rq-panel",
+ "track-order":".to-result",cart:".shoppingLine",checkout:".shoppingLine",wishlist:".shoppingLine",
+ about:".anCmsPublicNestedCard",contact:".anCmsPublicNestedCard",journal:".anCmsPublicNestedCard"
+};
 export function renderCmsCssRules(rules:readonly CmsCssRule[],scope:string,targets:Record<CmsCssRule["target"],string>):string{
  const result:string[]=[];
  for(const rule of rules){
