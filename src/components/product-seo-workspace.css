@@ -25,3 +25,11 @@
 .seoDashboard:has(.ep-workspace) .ep-workspace :is(input,textarea,select){font-family:Arial,Helvetica,sans-serif}
 @media(max-width:950px){.seoDashboard:has(.ep-workspace){grid-template-columns:178px minmax(0,1fr)}}
 @media(max-width:700px){.seoDashboard:has(.ep-workspace){display:block}.seoDashboard:has(.ep-workspace) .seoDashboardSidebar{position:relative;height:auto;max-height:230px;overflow:auto}.seoDashboard:has(.ep-workspace) .seoDashboardMain{padding:10px}}
+
+/* Hybrid Auto/Custom SEO controls: consistent with existing ANUSMITA editorial cards. */
+.ep-mode-card{margin-bottom:14px}
+.ep-mode-card>p{font-size:12px;line-height:1.6;color:#704456}
+.ep-mode-card>p strong{color:#85173f}
+.ep-mode-actions{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+.ep-mode-actions button{min-height:36px}
+.ep-mode-card>small{display:block;color:#825e6e;font-size:11px;line-height:1.5}
