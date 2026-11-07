@@ -7,6 +7,8 @@ import {notFound} from "next/navigation";
 import {ArrowRight,ArrowUpRight,Heart,Package,ShieldCheck,Sparkles,Truck} from "lucide-react";
 import {db} from "@/lib/db";
 import {Product,ProductReview,ProductSeo} from "@/lib/models";
+import {buildProductSeoGraph,safeSeoJsonLd} from "@/lib/product-seo-structured";
+import {verifiedSeoReviewSummary} from "@/lib/product-seo-reviews";
 import {canPublishReview,complementaryCategories,reviewEmptyLabel} from "@/lib/product-trust";
 import {checkoutEnabled} from "@/lib/launch-config";
 import {isPerfumeCategory,shouldListGroup,type ProductVariant} from "@/lib/product-variants";
@@ -22,10 +24,10 @@ import type {ProductDetails} from "@/lib/product-experience";
 type DbProduct=ProductDetails&{
  _id:any;name:string;slug:string;sku:string;brand:string;category:string;origin:string;
  description:string;imageUrls:string[];size:string;variantLabel:string;variantGroup:string;
- pricePaisa:number;quantityDiscounts?:{minQty:2|3|5;percent:number}[];onHand:number;reserved:number;ingredients:string;usageInstructions:string;
+ pricePaisa:number;barcode?:string;availabilityMode?:string;quantityDiscounts?:{minQty:2|3|5;percent:number}[];onHand:number;reserved:number;ingredients:string;usageInstructions:string;
  topNotes:string;heartNotes:string;baseNotes:string
 };
-const projection="name slug sku brand category origin description imageUrls size variantLabel variantGroup pricePaisa quantityDiscounts onHand reserved ingredients usageInstructions topNotes heartNotes baseNotes color colorHex material dimensions compatibility careInstructions warranty sizeGuide skinType benefits";
+const projection="name slug sku brand category origin description imageUrls size variantLabel variantGroup pricePaisa barcode availabilityMode quantityDiscounts onHand reserved ingredients usageInstructions topNotes heartNotes baseNotes color colorHex material dimensions compatibility careInstructions warranty sizeGuide skinType benefits";
 const previewProduct:DbProduct={
  _id:"preview",name:"Radiance Eau de Parfum",slug:"design-preview",
  sku:"",brand:"ANUSMITA",category:"Perfumes",origin:"Other",description:"A preview of the ANUSMITA product detail experience, inspired by our beauty and fragrance collections. Actual fragrance details will be added when a product is published.",
@@ -75,7 +77,7 @@ export async function generateMetadata({params}:Props):Promise<Metadata>{
  if(!p)return {title:"Product not available",robots:{index:false,follow:false}};
  const isPreview=slug==="design-preview";
  const custom=await seoFor(p);
- const title=isPreview?"Product details design preview":(custom?.metaTitle||p.name);
+ const title=isPreview?"Product details design preview":(custom?.metaTitle||(p.name+" | "+(p.brand||"ANUSMITA")).slice(0,70));
  const description=String(custom?.metaDescription||p.description||("Discover "+p.name+" at ANUSMITA Bangladesh")).slice(0,160);
  return {title,description,robots:{
   index:!isPreview&&checkoutEnabled(process.env)&&(custom?.robotsIndex!==false),
@@ -103,28 +105,26 @@ export default async function ProductPage({params}:Props){
  const preview=slug==="design-preview";
  const {variants,related}=await supporting(p);
  const customSeo=await seoFor(p);
- const trust=preview?{reviews:[] as {rating:number;body:string;skinType:string}[],pairings:[] as DbProduct[]}:await (async()=>{
+ const trust=preview?{reviews:[] as {rating:number;body:string;skinType:string}[],pairings:[] as DbProduct[],verifiedReviewCount:0,verifiedRatingValue:0}:await (async()=>{
   try{
    const complements=complementaryCategories(p.category);
-   const [rawReviews,pairings]=await Promise.all([
+   const [rawReviews,pairings,summary]=await Promise.all([
     ProductReview.find({productId:p._id,moderationStatus:"approved",consentToPublish:true,submittedByCustomer:true,verifiedPurchase:true,verifiedAt:{$type:"date"}}).select("rating body skinType consentToPublish submittedByCustomer verifiedPurchase moderationStatus verifiedAt -_id").sort({createdAt:-1}).limit(10).lean<any[]>(),
-    complements.length?Product.find({active:true,category:{$in:complements},_id:{$ne:p._id}}).select(projection).sort({createdAt:-1}).limit(4).lean<DbProduct[]>():Promise.resolve([] as DbProduct[])
+    complements.length?Product.find({active:true,category:{$in:complements},_id:{$ne:p._id}}).select(projection).sort({createdAt:-1}).limit(4).lean<DbProduct[]>():Promise.resolve([] as DbProduct[]),
+    verifiedSeoReviewSummary(p._id)
    ]);
-   return {reviews:rawReviews.filter(r=>canPublishReview(r)).map(r=>({rating:Number(r.rating),body:String(r.body),skinType:String(r.skinType||"")})),pairings};
-  }catch{return {reviews:[] as {rating:number;body:string;skinType:string}[],pairings:[] as DbProduct[]};}
+   return {reviews:rawReviews.filter(r=>canPublishReview(r)).map(r=>({rating:Number(r.rating),body:String(r.body),skinType:String(r.skinType||"")})),pairings,...summary};
+  }catch{return {reviews:[] as {rating:number;body:string;skinType:string}[],pairings:[] as DbProduct[],verifiedReviewCount:0,verifiedRatingValue:0};}
  })();
  const stock=Math.max(0,(p.onHand||0)-(p.reserved||0));
  const canOrder=!preview&&checkoutEnabled(process.env);
  const url=(process.env.NEXT_PUBLIC_SITE_URL||"http://localhost:3000").replace(/\/$/,"")+"/products/"+p.slug;
- const structured=preview||customSeo?.schemaEnabled===false?null:{
-  "@context":"https://schema.org","@type":"Product",name:p.name,
-  sku:p.sku||undefined,description:p.description||p.name,
-  brand:p.brand?{"@type":"Brand",name:p.brand}:undefined,
-  image:p.imageUrls||[],offers:{
-   "@type":"Offer",priceCurrency:"BDT",price:(p.pricePaisa/100).toFixed(2),
-   availability:stock>0?"https://schema.org/InStock":"https://schema.org/OutOfStock",url
-  }
- };
+ const structured=preview?null:buildProductSeoGraph(
+  {...p,active:true,...{verifiedReviewCount:trust.verifiedReviewCount,verifiedRatingValue:trust.verifiedRatingValue}},
+  {metaDescription:customSeo?.metaDescription||"",schemaEnabled:customSeo?.schemaEnabled!==false},
+  (process.env.NEXT_PUBLIC_SITE_URL||"https://anusmita.netlify.app").replace(/\/$/,"")
+ );
+
  return <div className={"anPdp"+(preview?" anPdpDemo":" anPdpReal")}>
   <div className="anWide">
 
@@ -182,8 +182,6 @@ export default async function ProductPage({params}:Props){
    </div>
   </section>
   <section className="anPdpPromise"><Heart size={20}/><span><strong>The ANUSMITA Promise</strong><small>Thoughtful choices, beautiful discoveries, made for you.</small></span></section>
-  {structured&&<script type="application/ld+json" dangerouslySetInnerHTML={{
-   __html:JSON.stringify(structured).replace(/</g,"\\u003c")
-  }}/>}
+  {structured&&<><script type="application/ld+json" dangerouslySetInnerHTML={{__html:safeSeoJsonLd(structured.product)}}/><script type="application/ld+json" dangerouslySetInnerHTML={{__html:safeSeoJsonLd(structured.breadcrumb)}}/></>}
  </div>;
 }
