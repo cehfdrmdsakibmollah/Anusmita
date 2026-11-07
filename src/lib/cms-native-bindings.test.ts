@@ -1,6 +1,7 @@
 import {describe,it,expect} from "vitest";
 import {cmsSlotPages,cmsNativeHeroSchema,cmsSlotSchema} from "./cms-page-slots";
 import {nativeTextTargets,cmsNativeTextSchema,validatePageNativeText} from "./cms-native-bindings";
+import {nativePromoIds,validateNativePromoIds} from "./cms-promo-bindings";
 const card={id:"11111111-1111-4111-8111-111111111111",title:"Parent card",subtitle:"",imageUrl:"",cta:"View",href:"/shop"};
 const leaf={id:"22222222-2222-4222-8222-222222222222",title:"Nested detail",subtitle:"Details",imageUrl:"",cta:"Explore",href:"/shop"};
 describe("Native promotional and nested CMS bindings",()=>{
@@ -23,6 +24,14 @@ describe("Native promotional and nested CMS bindings",()=>{
   const legacy=cmsSlotSchema.parse({id:"33333333-3333-4333-8333-333333333333",title:"Old grid",kind:"grid",position:0,placement:"before",children:[card]});
   expect(legacy.children[0].subcards).toEqual([]);
   expect(cmsSlotSchema.safeParse({...slot,children:[{...card,subcards:[{...leaf,href:"javascript:alert(1)"}]}]}).success).toBe(false);
+ });
+ it("limits native promotional card editing to known Deals/Bundles preview IDs",()=>{
+  expect(nativePromoIds.deals).toHaveLength(8);
+  expect(validateNativePromoIds("deals",[{id:"serum"},{id:"lipstick"}])).toBe(true);
+  expect(validateNativePromoIds("bundles",[{id:"serum"}])).toBe(false);
+  expect(validateNativePromoIds("checkout",[{id:"serum"}])).toBe(false);
+  expect(validateNativePromoIds("deals",[{id:"serum"},{id:"serum"}])).toBe(false);
+  expect(cmsNativeHeroSchema.safeParse({promoCards:[{id:"serum",title:"New editorial headline",imageUrl:"javascript:alert(1)"}]}).success).toBe(false);
  });
  it("limits nested depth and cardinality",()=>{
   const slot={id:"33333333-3333-4333-8333-333333333333",kind:"grid",title:"Bounded",placement:"before",position:0,children:[{...card,subcards:Array(5).fill(0).map((_,i)=>({...leaf,id:`22222222-2222-4222-8222-22222222222${i}`}))}]};
