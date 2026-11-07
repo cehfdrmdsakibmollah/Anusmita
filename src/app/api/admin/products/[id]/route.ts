@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import {z} from "zod";
 import {assertOrigin,authorize,authorizePermission,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
-import {Product,Audit} from "@/lib/models";
+import {Product,ProductSlugRedirect,Audit} from "@/lib/models";
 import {productSchema} from "@/lib/validation";
 import {publicationState,assertFutureSchedule} from "@/lib/publication-state";
 import {validateCommercialState} from "@/lib/commercial-state";
@@ -33,8 +33,17 @@ export async function PATCH(req:Request,ctx:{params:Promise<{id:string}>}){
   const session=await mongoose.startSession();let updated:any;
   try{
    await session.withTransaction(async()=>{
+    const prior=await Product.findOne({_id:id,updatedAt:new Date(expectedUpdatedAt)}).select("slug").session(session);
+    if(!prior)throw new HttpError(409,"Product was edited by someone else. Refresh and try again.");
+    const changedSlug=!!changes.slug&&changes.slug!==prior.slug;
+    if(changedSlug&&await ProductSlugRedirect.exists({sourceSlug:changes.slug}).session(session))
+     throw new HttpError(409,"This slug is reserved by an existing product redirect");
     updated=await Product.findOneAndUpdate({_id:id,updatedAt:new Date(expectedUpdatedAt)},{$set:changes},{session,new:true,runValidators:true});
     if(!updated)throw new HttpError(409,"Product was edited by someone else. Refresh and try again.");
+    if(changedSlug){
+     await ProductSlugRedirect.create([{sourceSlug:prior.slug,productId:updated._id,changedBy:actor.id}],{session});
+     await Audit.create([{actorId:actor.id,action:"product.slug.redirect.created",entity:"ProductSlugRedirect",entityId:String(updated._id),details:{sourceSlug:prior.slug,targetSlug:updated.slug}}],{session});
+    }
     await Audit.create([{actorId:actor.id,action:"product.updated",entity:"Product",entityId:String(updated._id),details:{fields:Object.keys(changes)}}],{session});
    });
   }finally{await session.endSession();}
