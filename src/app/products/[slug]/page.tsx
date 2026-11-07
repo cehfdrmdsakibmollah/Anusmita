@@ -3,10 +3,10 @@ import {SheetProductDetails} from '@/components/sheet-catalogue';
 
 import type {Metadata} from "next";
 import Link from "next/link";
-import {notFound} from "next/navigation";
+import {notFound,permanentRedirect} from "next/navigation";
 import {ArrowRight,ArrowUpRight,Heart,Package,ShieldCheck,Sparkles,Truck} from "lucide-react";
 import {db} from "@/lib/db";
-import {Product,ProductReview,ProductSeo} from "@/lib/models";
+import {Product,ProductReview,ProductSeo,ProductSlugRedirect} from "@/lib/models";
 import {buildProductSeoGraph,safeSeoJsonLd} from "@/lib/product-seo-structured";
 import {verifiedSeoReviewSummary} from "@/lib/product-seo-reviews";
 import {canPublishReview,complementaryCategories,reviewEmptyLabel} from "@/lib/product-trust";
@@ -43,6 +43,18 @@ async function getProduct(slug:string):Promise<DbProduct|null>{
  try{
   await db();
   return await Product.findOne({slug,active:true}).select(projection).lean<DbProduct>();
+ }catch{return null;}
+}
+/** Historical links resolve by product ID, never untrusted redirect URLs. */
+async function historicalTarget(slug:string):Promise<string|null>{
+ if(!shortSlug(slug)||!process.env.MONGODB_URI)return null;
+ try{
+  await db();
+  const redirect=await ProductSlugRedirect.findOne({sourceSlug:slug}).select("productId").lean<{productId:unknown}|null>();
+  if(!redirect)return null;
+  const current=await Product.findOne({_id:redirect.productId,active:true,archived:{$ne:true}}).select("slug").lean<{slug:string}|null>();
+  if(!current||!shortSlug(current.slug)||current.slug===slug)return null;
+  return "/products/"+encodeURIComponent(current.slug);
  }catch{return null;}
 }
 async function seoFor(p:DbProduct){if(p.slug==="design-preview")return null;try{await db();return await ProductSeo.findOne({productId:p._id}).select("metaTitle metaDescription focusKeyword keywords imageAltTexts ogTitle ogDescription robotsIndex robotsFollow schemaEnabled").lean<any>();}catch{return null;}}
@@ -101,7 +113,7 @@ export default async function ProductPage({params}:Props){
  const sheet=!process.env.MONGODB_URI?sheetCatalogue.find(p=>p.slug===slug):undefined;
  if(sheet)return <SheetProductDetails p={sheet}/>;
  const p=await getProduct(slug);
- if(!p)notFound();
+ if(!p){const target=await historicalTarget(slug);if(target)permanentRedirect(target);notFound();}
  const preview=slug==="design-preview";
  const {variants,related}=await supporting(p);
  const customSeo=await seoFor(p);
