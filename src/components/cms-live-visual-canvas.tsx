@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState} from "react";
 import {nativeCmsSelectors,nativeCmsCardSelectors,renderNativeCmsCssRules,type CmsCssRule} from "@/lib/cms-css-rules";
 import type {CmsNativeHero,CmsSlotPage} from "@/lib/cms-page-slots";
+import {isSafeCmsImage} from "@/lib/cms-page-slots";
 import {nativeTextTargets} from "@/lib/cms-native-bindings";
 type Target=CmsCssRule["target"];
 type Props={page:CmsSlotPage;src:string;width:number;revision:number;draft:CmsNativeHero;onPick:(target:Target,slotId?:string)=>void};
@@ -39,7 +40,7 @@ export default function CmsLiveVisualCanvas({page,src,width,revision,draft,onPic
    const media=card.querySelector(".dp-product-photo, .bp-card-photo") as HTMLElement|null;
    if(media){
     let image=media.querySelector('img[data-cse-promo-image]') as HTMLImageElement|null;
-    if(promo.imageUrl){
+    if(promo.imageUrl&&isSafeCmsImage(promo.imageUrl)){
      if(!image){image=doc.createElement("img");image.dataset.csePromoImage="";image.style.cssText="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:1";media.appendChild(image);}
      image.src=promo.imageUrl;
     }else image?.remove();
@@ -54,13 +55,42 @@ export default function CmsLiveVisualCanvas({page,src,width,revision,draft,onPic
    else root.style.removeProperty("background-color");
    const heading=root.querySelector("h1") as HTMLElement|null;
    if(heading){if(draft.textColor!=="#611b37")heading.style.setProperty("color",draft.textColor,"important");else heading.style.removeProperty("color");}
-   if(draft.imageUrl){
-    const imageId="cse-local-draft-image";
-    let image=root.querySelector<HTMLImageElement>('[data-cse-local-image]');
-    if(!image){image=doc.createElement("img");image.dataset.cseLocalImage=imageId;root.appendChild(image);}
-    image.src=draft.imageUrl;image.alt="Unpublished CMS hero image";image.style.cssText="position:absolute;z-index:1;right:0;top:0;width:38%;height:100%;object-fit:contain;pointer-events:none;";
-    if(getComputedStyle(root).position==="static")root.style.position="relative";
-   }else root.querySelector("[data-cse-local-image]")?.remove();
+   // Match the actual published media element instead of positioning a new
+   // overlay over the original SVG illustration.
+   const supportsNativeArt=page==="deals"||page==="bundles";
+   const originalMedia=supportsNativeArt?Array.from(root.querySelectorAll<HTMLElement>(":scope > .dp-hero-photo, :scope > .bp-hero-desktop, :scope > .bp-hero-mobile")):[];
+   const previewMediaClass=page==="deals"?"dp-cms-hero-image":"bp-cms-hero-image";
+   let previewImage=root.querySelector<HTMLImageElement>("[data-cse-local-image]");
+   if(draft.imageUrl&&isSafeCmsImage(draft.imageUrl)){
+    if(!previewImage){previewImage=doc.createElement("img");previewImage.dataset.cseLocalImage="";root.appendChild(previewImage);}
+    previewImage.src=draft.imageUrl;
+    previewImage.alt="Unpublished CMS hero image";
+    if(supportsNativeArt){
+     previewImage.className=previewMediaClass;
+     previewImage.removeAttribute("style");
+     for(const art of originalMedia)art.style.setProperty("display","none","important");
+    }else{
+     previewImage.style.cssText="position:absolute;z-index:2;right:0;top:0;width:38%;height:100%;object-fit:cover;pointer-events:none;";
+     if(doc.defaultView?.getComputedStyle(root).position==="static")root.style.position="relative";
+    }
+   }else{
+    previewImage?.remove();
+    for(const art of originalMedia)art.style.removeProperty("display");
+   }
+
+  }
+  // The editorial image is a separate native field, not the hero artwork.
+  if(page==="deals"){
+   const editorial=doc.querySelector(".dp-editorial");
+   if(editorial){
+    const art=editorial.querySelector<HTMLElement>(":scope > .dp-art");
+    let preview=editorial.querySelector<HTMLImageElement>("[data-cse-section-image]");
+    if(draft.sectionImageUrl&&isSafeCmsImage(draft.sectionImageUrl)){
+     if(!preview){preview=doc.createElement("img");preview.dataset.cseSectionImage="";preview.className="dp-native-section-image";editorial.prepend(preview);}
+     preview.src=draft.sectionImageUrl;
+     art?.style.setProperty("display","none","important");
+    }else{preview?.remove();art?.style.removeProperty("display");}
+   }
   }
   const cssId="cse-local-draft-style";
   let style=doc.getElementById(cssId) as HTMLStyleElement|null;
