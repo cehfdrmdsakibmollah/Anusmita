@@ -3,10 +3,12 @@ import {useCallback,useEffect,useRef,useState} from "react";
 import {Plus,Save,Upload,Trash2,ArrowUp,ArrowDown,Eye,EyeOff,RefreshCw} from "lucide-react";
 import {cmsSlotSchema,defaultCmsStyle,cmsSectionKinds,cmsNativeHeroSchema,defaultCmsNativeHero,type CmsNativeHero,type CmsSlot,type CmsSlotPage} from "@/lib/cms-page-slots";
 import CmsMediaLibrary from "@/components/cms-media-library";
+import CmsCssControls from "@/components/cms-css-controls";
+import {renderCmsCssRules} from "@/lib/cms-css-rules";
 import {hasNativePageHero,hasCmsPageIntro,sameCmsPageDraft} from "@/lib/cms-page-editor-support";
 import "./cms-page-slots-editor.css";
 type Payload={page:CmsSlotPage;revision:number;publishedRevision:number;draft:CmsSlot[];published:CmsSlot[];publishedAt:string|null;nativeDraft:CmsNativeHero;nativePublished:CmsNativeHero;history:{revision:number;action:"saveDraft"|"publish"|"restoreDraft";createdAt:string;slotCount:number}[]};
-const fresh=(position:number,kind:CmsSlot["kind"]="banner"):CmsSlot=>({id:crypto.randomUUID(),placement:"before",kind,style:{...defaultCmsStyle},title:"New ANUSMITA Collection",subtitle:"Discover what is new and thoughtfully curated.",badge:"ANUSMITA EDIT",imageUrl:"",children:[],cta:"Explore Collection",href:"/shop",enabled:true,position});
+const fresh=(position:number,kind:CmsSlot["kind"]="banner"):CmsSlot=>({id:crypto.randomUUID(),placement:"before",kind,style:{...defaultCmsStyle},cssRules:[],title:"New ANUSMITA Collection",subtitle:"Discover what is new and thoughtfully curated.",badge:"ANUSMITA EDIT",imageUrl:"",children:[],cta:"Explore Collection",href:"/shop",enabled:true,position});
 export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{page:CmsSlotPage;onPublished?:()=>void;onDirtyChange?:(dirty:boolean)=>void}){
  const jsonInput=useRef<HTMLInputElement|null>(null);
  const mediaInput=useRef<HTMLInputElement|null>(null);
@@ -152,25 +154,28 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
    <div className="cse-preview-head"><strong>{canvasView==="live"?"Published storefront":"Editable page draft canvas"}</strong><div className="cse-canvas-controls"><button type="button" aria-pressed={canvasView==="live"} onClick={()=>setCanvasView("live")}>Live storefront</button><button type="button" aria-pressed={canvasView==="blocks"} onClick={()=>setCanvasView("blocks")}>Visual editor</button><button type="button" onClick={()=>setPreviewKey(v=>v+1)}>Reload</button></div></div>
    <div className="cse-device-controls" role="group" aria-label="Storefront preview viewport">
     {(["desktop","tablet","mobile"] as const).map(device=><button key={device} type="button" aria-pressed={canvasDevice===device} onClick={()=>setCanvasDevice(device)}>{device[0].toUpperCase()+device.slice(1)}</button>)}
-    <span>{canvasWidth}px viewport · scroll inside canvas to inspect wider pages</span>
+    <span>{canvasWidth}px maximum · visual editor fits available width; live frame can scroll</span>
    </div>
    {canvasView==="live"&&<><p className="cse-muted">Published storefront route. To change the native hero, edit its fields above; draft CMS blocks are shown under Draft blocks. Saving a draft alone does not change the public page.</p><div className="cse-preview-viewport" role="region" aria-label={canvasDevice+" page preview"} tabIndex={0}><iframe key={publicPath+previewKey} className="cse-live-frame" style={{width:canvasWidth}} title={page+" published storefront"} src={publicPath} loading="lazy"/></div></>}
-   <div className="cse-preview-viewport" role="region" aria-label={canvasDevice+" draft block preview"} tabIndex={0} hidden={canvasView!=="blocks"}><div className="cse-blocks-canvas" style={{width:canvasWidth}}>
+   <div className="cse-preview-viewport" role="region" aria-label={canvasDevice+" draft block preview"} tabIndex={0} hidden={canvasView!=="blocks"}><div className="cse-blocks-canvas" style={{width:"100%",maxWidth:canvasWidth}}>
+   <style>{renderCmsCssRules(native.cssRules,".cse-blocks-canvas",{hero:".cse-native-canvas-card",heading:".cse-native-canvas-card h2",card:".cse-native-canvas-card",button:".cse-native-canvas-card",image:".cse-native-canvas-card img"})}</style>
    {canvasView==="blocks"&&<button type="button" className={"cse-native-canvas-card"+(selectedNative?" active":"")} style={{background:native.background,color:native.textColor}} onClick={()=>{setSelectedNative(true);setSelected(null);setInspectorTab("content");}}>
     <div className="cse-native-canvas-copy"><small>{hasNativePageHero(page)?"EDITABLE NATIVE HERO":"EDITABLE PAGE INTRO"}</small><h2>{native.title||(hasNativePageHero(page)?"Original page title preserved":"Add your page heading")}</h2><p>{native.subtitle||"Select to edit content, image and colors."}</p>{native.sectionTitle&&<strong>{native.sectionTitle}</strong>}</div>{native.imageUrl&&<img src={native.imageUrl} alt="Draft page image"/>}
     <span className="cse-edit-hint">Edit content & design</span>
    </button>}
    {canvasView==="blocks"&&<div className="cse-protected-canvas"><strong>Existing {page} functionality preserved</strong><p>Live product cards, forms, checkout and customer actions remain available in the Live storefront tab and cannot be deleted here.</p></div>}
-   {slots.map(s=><button key={s.id} className={"cse-preview-card cse-preview-"+s.kind+(selected===s.id?" active":"")} style={{background:s.style.background,color:s.style.textColor,borderRadius:s.style.radius}} onClick={()=>setSelected(s.id)}>
+   {slots.map(s=><div key={s.id} data-cms-draft-slot={s.id}>
+   <style>{renderCmsCssRules(s.cssRules,`[data-cms-draft-slot="${s.id}"]`,{hero:".cse-preview-card",heading:".cse-preview-card h3",card:".cse-nested-preview span",button:".cse-preview-card em",image:".cse-preview-card img"})}</style>
+   <button type="button" className={"cse-preview-card cse-preview-"+s.kind+(selected===s.id?" active":"")} style={{background:s.style.background,color:s.style.textColor,borderRadius:s.style.radius}} onClick={()=>chooseCmsSection(s.id)}>
     <div style={{padding:s.style.padding,textAlign:s.style.alignment}}><small>{s.badge||"ANUSMITA"}</small><h3 style={{fontSize:s.style.fontSize,color:s.style.textColor}}>{s.title}</h3><p>{s.subtitle}</p>{s.cta&&<em style={{background:s.style.accentColor,borderRadius:Math.min(s.style.radius,24)}}>{s.cta} →</em>}</div>{s.imageUrl&&<img src={s.imageUrl} alt=""/>}
     {s.kind==="grid"&&<div className="cse-nested-preview">{s.children.map(card=><span key={card.id}>{card.imageUrl&&<img src={card.imageUrl} alt=""/>}<strong>{card.title}</strong><small>{card.subtitle}</small></span>)}</div>}
-    <span className="cse-flag">{s.enabled?"Visible":"Hidden"} · {s.placement}</span></button>)}
+    <span className="cse-flag">{s.enabled?"Visible":"Hidden"} · {s.placement}</span></button></div>)}
    {!slots.length&&<p className="cse-empty-preview">Use Add to create a banner, image, text or card-grid section.</p>}
    </div></div>
   </section>
   <section className="cse-inspector"><h3>{selectedNative?"Page Content & Style":"Section Settings"}</h3>
    <div className="cse-inspector-tabs" role="group" aria-label="Inspector panels">{(["content","design","publish"] as const).map(t=><button type="button" key={t} className={inspectorTab===t?"active":""} onClick={()=>setInspectorTab(t)}>{t}</button>)}</div>
-   {selectedNative?<>{(hasNativePageHero(page)||hasCmsPageIntro(page))&&<div className="cse-native-hero">
+   {selectedNative?<>{inspectorTab==="content"&&(hasNativePageHero(page)||hasCmsPageIntro(page))&&<div className="cse-native-hero">
    <div><h4>{hasNativePageHero(page)?"Native Page Hero":"Page Intro Builder"} — {page}</h4><p className="cse-muted">{hasNativePageHero(page)?"Override existing hero title, subtitle, image and colors.":"Add an optional editable title, subtitle and image above existing native content. Blank fields remove the intro."} Cart, product, checkout and order logic remain unchanged.</p></div>
    <div className="cse-native-fields">
     <label>Hero title<input value={native.title} maxLength={130} placeholder="Keep original title" onChange={e=>setNative(n=>({...n,title:e.target.value}))}/></label>
@@ -203,7 +208,10 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
     {native.sectionImageUrl&&<img src={native.sectionImageUrl} className="cse-native-section-thumbnail" alt="Draft replacement artwork"/>}
    </div>}
    <p className="cse-muted">Image upload adds a new R2 asset to the draft; it does not publish automatically. Click Save Draft then Publish Page Slots to update the public hero.</p>
-  </div>}</>:selectedSlot?<>{inspectorTab==="content"&&<>
+  </div>}
+  {inspectorTab==="design"&&<CmsCssControls rules={native.cssRules} disabled={busy||mediaBusy} onChange={cssRules=>setNative(value=>({...value,cssRules}))}/>}
+  {inspectorTab==="publish"&&<p className="cse-muted">Publish the configured page styles and editorial content without altering protected commerce logic.</p>}
+  </>:selectedSlot?<>{inspectorTab==="content"&&<>
     <label>Block type<select value={selectedSlot.kind} onChange={e=>update({kind:e.target.value as CmsSlot["kind"],children:e.target.value==="grid"?selectedSlot.children:[]})}>{cmsSectionKinds.map(t=><option key={t} value={t}>{t}</option>)}</select></label>
     <label>Title<input value={selectedSlot.title} maxLength={110} onChange={e=>update({title:e.target.value})}/></label>
     <label>Subtitle<textarea rows={4} maxLength={400} value={selectedSlot.subtitle} onChange={e=>update({subtitle:e.target.value})}/></label>
@@ -237,6 +245,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
     <label>Corner radius ({selectedSlot.style.radius}px)<input type="range" min={0} max={48} value={selectedSlot.style.radius} onChange={e=>updateStyle({radius:Number(e.target.value)})}/></label>
     <label>Text alignment<select value={selectedSlot.style.alignment} onChange={e=>updateStyle({alignment:e.target.value as CmsSlot["style"]["alignment"]})}><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
     <label>Image layout<select value={selectedSlot.style.imagePosition} onChange={e=>updateStyle({imagePosition:e.target.value as CmsSlot["style"]["imagePosition"]})}><option value="right">Image on right</option><option value="left">Image on left</option><option value="background">Image background</option></select></label>
+     <CmsCssControls rules={selectedSlot.cssRules} disabled={busy||mediaBusy} onChange={cssRules=>update({cssRules})}/>
    </>}
    {inspectorTab==="publish"&&<>
     <label>Placement<select value={selectedSlot.placement} onChange={e=>update({placement:e.target.value as CmsSlot["placement"]})}><option value="before">Before existing page</option><option value="after">After existing page</option></select></label>
