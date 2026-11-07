@@ -2,7 +2,8 @@ import {z} from "zod";
 import mongoose from "mongoose";
 import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
-import {Product,ProductSeo,Audit} from "@/lib/models";
+import {Product,ProductSeo,ProductSeoRevision,Audit} from "@/lib/models";
+import {seoRevisionSnapshot} from "@/lib/product-seo-revisions";
 import {verifiedSeoReviewSummary} from "@/lib/product-seo-reviews";
 export const dynamic="force-dynamic";
 const id=z.string().regex(/^[a-f0-9]{24}$/i);
@@ -10,8 +11,8 @@ const schema=z.object({productId:id,revision:z.number().int().nonnegative(),meta
 export async function GET(req:Request){
  try{await authorize(["owner","admin","inventory","purchasing"],"products.view");const productId=new URL(req.url).searchParams.get("productId")||"";if(!id.safeParse(productId).success)throw new HttpError(400,"Valid product ID required");await db();
  const p=await Product.findById(productId).select("name slug sku brand category description active imageUrls pricePaisa onHand reserved barcode availabilityMode").lean<any>();if(!p)throw new HttpError(404,"Product not found");
- const [doc,verified]=await Promise.all([ProductSeo.findOne({productId}).lean<any>(),verifiedSeoReviewSummary(p._id)]);
- return Response.json({product:{id:productId,name:p.name,slug:p.slug,sku:p.sku,category:p.category,brand:p.brand,description:p.description,active:p.active,imageUrls:p.imageUrls||[],pricePaisa:p.pricePaisa||0,onHand:p.onHand||0,reserved:p.reserved||0,barcode:p.barcode||"",availabilityMode:p.availabilityMode||"now",...verified},seo:{revision:doc?.revision||0,metaTitle:doc?.metaTitle||"",metaDescription:doc?.metaDescription||"",focusKeyword:doc?.focusKeyword||"",keywords:doc?.keywords||[],imageAltTexts:doc?.imageAltTexts||[],ogTitle:doc?.ogTitle||"",ogDescription:doc?.ogDescription||"",robotsIndex:doc?.robotsIndex??true,robotsFollow:doc?.robotsFollow??true,schemaEnabled:doc?.schemaEnabled??true}},{headers:{"Cache-Control":"private, no-store"}});
+ const [doc,verified,history]=await Promise.all([ProductSeo.findOne({productId}).lean<any>(),verifiedSeoReviewSummary(p._id),ProductSeoRevision.find({productId}).sort({revision:-1}).limit(20).select("revision snapshot action createdAt updatedAt actorId -_id").lean<any[]>()]);
+ return Response.json({product:{id:productId,name:p.name,slug:p.slug,sku:p.sku,category:p.category,brand:p.brand,description:p.description,active:p.active,imageUrls:p.imageUrls||[],pricePaisa:p.pricePaisa||0,onHand:p.onHand||0,reserved:p.reserved||0,barcode:p.barcode||"",availabilityMode:p.availabilityMode||"now",...verified},seo:{revision:doc?.revision||0,metaTitle:doc?.metaTitle||"",metaDescription:doc?.metaDescription||"",focusKeyword:doc?.focusKeyword||"",keywords:doc?.keywords||[],imageAltTexts:doc?.imageAltTexts||[],ogTitle:doc?.ogTitle||"",ogDescription:doc?.ogDescription||"",robotsIndex:doc?.robotsIndex??true,robotsFollow:doc?.robotsFollow??true,schemaEnabled:doc?.schemaEnabled??true},history:history.map(h=>({revision:h.revision,action:h.action,createdAt:h.createdAt,snapshot:h.snapshot}))},{headers:{"Cache-Control":"private, no-store"}});
  }catch(e){return apiError(e);}
 }
 export async function POST(req:Request){
@@ -23,6 +24,11 @@ export async function POST(req:Request){
  const old=await ProductSeo.findOne({productId:data.productId}).session(session);
  if((old?.revision||0)!==data.revision)throw new HttpError(409,"SEO was changed by someone else; reload before saving");
  const row=await ProductSeo.findOneAndUpdate({productId:data.productId,revision:data.revision},{$set:{metaTitle:data.metaTitle,metaDescription:data.metaDescription,focusKeyword:data.focusKeyword,keywords:[...new Set(data.keywords.map(x=>x.toLowerCase()))],imageAltTexts:data.imageAltTexts,ogTitle:data.ogTitle,ogDescription:data.ogDescription,robotsIndex:data.robotsIndex,robotsFollow:data.robotsFollow,schemaEnabled:data.schemaEnabled,updatedBy:actor.id},$inc:{revision:1}},{upsert:!old,new:true,session,runValidators:true});if(!row)throw new HttpError(409,"Concurrent SEO edit");revision=row.revision;
+ await ProductSeoRevision.create([{productId:data.productId,revision,snapshot:seoRevisionSnapshot({
+  metaTitle:row.metaTitle,metaDescription:row.metaDescription,focusKeyword:row.focusKeyword,
+  keywords:row.keywords,imageAltTexts:row.imageAltTexts,ogTitle:row.ogTitle,
+  ogDescription:row.ogDescription,robotsIndex:row.robotsIndex,robotsFollow:row.robotsFollow,schemaEnabled:row.schemaEnabled
+ }),actorId:actor.id,action:"save"}],{session});
  await Audit.create([{actorId:actor.id,action:"product.seo.updated",entity:"ProductSeo",entityId:String(row._id),details:{productId:data.productId,revision}}],{session});
  });}finally{await session.endSession();}
  return Response.json({saved:true,revision});
