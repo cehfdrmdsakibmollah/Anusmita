@@ -9,6 +9,7 @@ import {db} from "@/lib/db";
 import {Product,ProductReview,ProductSeo,ProductSlugRedirect} from "@/lib/models";
 import {buildProductSeoGraph,safeSeoJsonLd} from "@/lib/product-seo-structured";
 import {verifiedSeoReviewSummary} from "@/lib/product-seo-reviews";
+import {historicalProductRedirectPath} from "@/lib/product-slug-redirect";
 import {canPublishReview,complementaryCategories,reviewEmptyLabel} from "@/lib/product-trust";
 import {checkoutEnabled} from "@/lib/launch-config";
 import {isPerfumeCategory,shouldListGroup,type ProductVariant} from "@/lib/product-variants";
@@ -53,8 +54,8 @@ async function historicalTarget(slug:string):Promise<string|null>{
   const redirect=await ProductSlugRedirect.findOne({sourceSlug:slug}).select("productId").lean<{productId:unknown}|null>();
   if(!redirect)return null;
   const current=await Product.findOne({_id:redirect.productId,active:true,archived:{$ne:true}}).select("slug").lean<{slug:string}|null>();
-  if(!current||!shortSlug(current.slug)||current.slug===slug)return null;
-  return "/products/"+encodeURIComponent(current.slug);
+  if(!current)return null;
+  return historicalProductRedirectPath(slug,current.slug);
  }catch{return null;}
 }
 async function seoFor(p:DbProduct){if(p.slug==="design-preview")return null;try{await db();return await ProductSeo.findOne({productId:p._id}).select("metaTitle metaDescription focusKeyword keywords imageAltTexts ogTitle ogDescription robotsIndex robotsFollow schemaEnabled").lean<any>();}catch{return null;}}
