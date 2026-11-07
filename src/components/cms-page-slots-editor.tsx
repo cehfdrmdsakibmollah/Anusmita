@@ -9,13 +9,14 @@ import {cloneCmsSlotWithFreshIds,remapImportedCmsSlots} from "@/lib/cms-slot-clo
 import {nativeTextTargets,validatePageNativeText,type CmsNativeKey} from "@/lib/cms-native-bindings";
 import {nativePromoIds,nativePromoLabels,validateNativePromoIds} from "@/lib/cms-promo-bindings";
 import type {CmsCssRule} from "@/lib/cms-css-rules";
-import {renderCmsCssRules,validateNativeCmsCssScopes} from "@/lib/cms-css-rules";
+import {renderCmsCssRules,validateNativeCmsCssScopes,nativeCmsFieldSelectors} from "@/lib/cms-css-rules";
 import {hasNativePageHero,hasCmsPageIntro,sameCmsPageDraft} from "@/lib/cms-page-editor-support";
 import "./cms-page-slots-editor.css";
 type Payload={page:CmsSlotPage;revision:number;publishedRevision:number;draft:CmsSlot[];published:CmsSlot[];publishedAt:string|null;nativeDraft:CmsNativeHero;nativePublished:CmsNativeHero;history:{revision:number;action:"saveDraft"|"publish"|"restoreDraft";createdAt:string;slotCount:number}[]};
 const fresh=(position:number,kind:CmsSlot["kind"]="banner"):CmsSlot=>({id:crypto.randomUUID(),placement:"before",kind,style:{...defaultCmsStyle},cssRules:[],title:"New ANUSMITA Collection",subtitle:"Discover what is new and thoughtfully curated.",badge:"ANUSMITA EDIT",imageUrl:"",children:[],cta:"Explore Collection",href:"/shop",enabled:true,position});
 export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{page:CmsSlotPage;onPublished?:()=>void;onDirtyChange?:(dirty:boolean)=>void}){
  const jsonInput=useRef<HTMLInputElement|null>(null);
+ const inspectorRef=useRef<HTMLElement|null>(null);
  const mediaInput=useRef<HTMLInputElement|null>(null);
  const nativeMediaInput=useRef<HTMLInputElement|null>(null);
  const sectionMediaInput=useRef<HTMLInputElement|null>(null);
@@ -185,7 +186,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
     {(["desktop","tablet","mobile"] as const).map(device=><button key={device} type="button" aria-pressed={canvasDevice===device} onClick={()=>setCanvasDevice(device)}>{device[0].toUpperCase()+device.slice(1)}</button>)}
     <span>{canvasWidth}px maximum · visual editor fits available width; live frame can scroll</span>
    </div>
-   {canvasView==="live"&&<CmsLiveVisualCanvas page={page} src={publicPath} width={canvasWidth} revision={previewKey} draft={native} onPick={(target,id)=>{setPickedTarget(target);if(id?.startsWith("promo:")){setSelectedPromoId(id.slice(6));setSelectedNativeField(null);setSelectedNative(true);setSelected(null);setInspectorTab(target==="card"||target==="button"?"design":"content");return;}if(id&&slots.some(slot=>slot.id===id)){chooseCmsSection(id);return;}setSelectedPromoId(null);setSelectedNativeField(id?.startsWith("text:")||id?.startsWith("field:")?id:null);setSelectedNative(true);setSelected(null);setInspectorTab(id?.startsWith("text:")||id?.startsWith("field:")?"content":target==="hero"?"content":"design");}}/>}
+   {canvasView==="live"&&<CmsLiveVisualCanvas page={page} src={publicPath} width={canvasWidth} revision={previewKey} draft={native} onPick={(target,id)=>{inspectorRef.current?.scrollTo({top:0,behavior:"smooth"});setPickedTarget(target);if(id?.startsWith("promo:")){setSelectedPromoId(id.slice(6));setSelectedNativeField(null);setSelectedNative(true);setSelected(null);setInspectorTab(target==="card"||target==="button"?"design":"content");return;}if(id&&slots.some(slot=>slot.id===id)){chooseCmsSection(id);return;}setSelectedPromoId(null);setSelectedNativeField(id?.startsWith("text:")||id?.startsWith("field:")?id:null);setSelectedNative(true);setSelected(null);setInspectorTab(id?.startsWith("text:")||id?.startsWith("field:")?"content":target==="hero"?"content":"design");}}/>}
    <div className="cse-preview-viewport" role="region" aria-label={canvasDevice+" draft block preview"} tabIndex={0} hidden={canvasView!=="blocks"}><div className="cse-blocks-canvas" style={{width:"100%",maxWidth:canvasWidth}}>
    <div className="cse-native-block-link"><strong>Real native {page} page</strong><p>The existing page is shown in the real storefront canvas. Use this tab to edit additional CMS sections.</p><button type="button" onClick={()=>{setSelectedNative(true);setCanvasView("live");}}>Select on actual page</button></div>
    {slots.map(s=><div key={s.id} data-cms-draft-slot={s.id}>
@@ -197,7 +198,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
    {!slots.length&&<p className="cse-empty-preview">Use Add to create a banner, image, text or card-grid section.</p>}
    </div></div>
   </section>
-  <section className="cse-inspector"><h3>{selectedNative?"Page Content & Style":"Section Settings"}</h3>
+  <section className="cse-inspector" ref={inspectorRef}><h3>{selectedNative?"Page Content & Style":"Section Settings"}</h3>
    <div className="cse-inspector-tabs" role="group" aria-label="Inspector panels">{(["content","design","publish"] as const).map(t=><button type="button" key={t} className={inspectorTab===t?"active":""} onClick={()=>setInspectorTab(t)}>{t==="design"?"Style":t==="publish"?"Advanced":"Content"}</button>)}</div>
    {selectedNative&&<div className="cse-picked-context" role="status"><strong>{selectedPromoId?"Selected promotional card: "+(nativePromoLabels[selectedPromoId]||selectedPromoId):selectedNativeField?"Selected text/image: "+selectedNativeField.replace(/^(text:|field:)/,""):pickedTarget+" selected"}</strong><span>Edits are local until Save Draft and Publish Page. Operational prices, product data and checkout are protected.</span><div className="cse-picked-actions"><button type="button" onClick={()=>setInspectorTab("content")}>Edit content / image</button><button type="button" onClick={()=>setInspectorTab("design")}>Edit CSS / hover</button>{(selectedPromoId||selectedNativeField)&&<button type="button" onClick={()=>{setSelectedPromoId(null);setSelectedNativeField(null);}}>Clear selection</button>}</div></div>}
    {selectedNative&&inspectorTab==="content"&&selectedNativeField&&(()=>{
@@ -265,7 +266,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
     {selectedPromoId===id&&false&&<div className="cse-native-promo-fields"><label>Display title<input maxLength={100} value={item?.title||""} placeholder={"Keep "+nativePromoLabels[id]} onChange={e=>patchPromo(id,{title:e.target.value})}/></label><label>Approved image URL<input maxLength={500} value={item?.imageUrl||""} placeholder="Keep original artwork" onChange={e=>patchPromo(id,{imageUrl:e.target.value})}/></label><CmsMediaLibrary scope={page} onChoose={url=>patchPromo(id,{imageUrl:url})}/><label className="cse-checkbox"><input type="checkbox" checked={item?.enabled!==false} onChange={e=>patchPromo(id,{enabled:e.target.checked})}/>Visible</label><button type="button" onClick={()=>setNative(old=>({...old,promoCards:old.promoCards.filter(p=>p.id!==id)}))}>Restore original card</button></div>}
    </div>;})}
   </div>}
-  {inspectorTab==="design"&&<CmsCssControls rules={native.cssRules} preferredTarget={pickedTarget} preferredElementId={selectedPromoId} scopeOptions={(page==="deals"||page==="bundles")?nativePromoIds[page].map(id=>({id,label:nativePromoLabels[id]})):[]} disabled={busy||mediaBusy} onChange={cssRules=>setNative(value=>({...value,cssRules}))}/>}
+  {inspectorTab==="design"&&<CmsCssControls rules={native.cssRules} preferredTarget={pickedTarget} preferredElementId={selectedPromoId||(selectedNativeField?.startsWith("field:")?selectedNativeField.slice(6):null)} scopeOptions={[...((page==="deals"||page==="bundles")?nativePromoIds[page].map(id=>({id,label:"Card: "+nativePromoLabels[id],target:"card" as const})):[]),...(["title","subtitle","sectionTitle","imageUrl","sectionImageUrl"] as const).filter(id=>!!nativeCmsFieldSelectors[page]?.[id]).map(id=>({id,label:"Native: "+id,target:(id==="imageUrl"||id==="sectionImageUrl"?"image":"heading") as CmsCssRule["target"]}))]} disabled={busy||mediaBusy} onChange={cssRules=>setNative(value=>({...value,cssRules}))}/>}
   {inspectorTab==="publish"&&<p className="cse-muted">Publish the configured page styles and editorial content without altering protected commerce logic.</p>}
   </>:selectedSlot?<>{inspectorTab==="content"&&<>
     <label>Block type<select value={selectedSlot.kind} onChange={e=>update({kind:e.target.value as CmsSlot["kind"],children:e.target.value==="grid"?selectedSlot.children:[]})}>{cmsSectionKinds.map(t=><option key={t} value={t}>{t}</option>)}</select></label>
