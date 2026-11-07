@@ -9,8 +9,12 @@ export default function CmsLiveVisualCanvas({page,src,width,revision,draft,onPic
  const frame=useRef<HTMLIFrameElement>(null);
  const originals=useRef(new WeakMap<Element,string>());
  const [loaded,setLoaded]=useState(0);
+ const viewport=useRef<HTMLDivElement>(null);
+ const [fitWidth,setFitWidth]=useState(680);
  const [problem,setProblem]=useState("");
  const hero=nativeCmsSelectors[page];
+ useEffect(()=>{const el=viewport.current;if(!el)return;const observer=new ResizeObserver(entries=>setFitWidth(Math.max(280,entries[0]?.contentRect.width||680)));observer.observe(el);return()=>observer.disconnect();},[]);
+ const scale=Math.min(1,fitWidth/width);
  useEffect(()=>{
   const iframe=frame.current;let doc:Document|null=null;
   try{doc=iframe?.contentDocument||null;}catch{setProblem("The storefront did not allow same-origin visual inspection.");return;}
@@ -49,8 +53,8 @@ export default function CmsLiveVisualCanvas({page,src,width,revision,draft,onPic
   picker.textContent="[data-cse-picked]{outline:3px solid #ba1759!important;outline-offset:-3px;cursor:crosshair!important;}body *{cursor:crosshair!important;}";
   const prevent=(event:Event)=>{event.preventDefault();event.stopImmediatePropagation();};
   const choose=(event:MouseEvent)=>{
-   const element=event.target instanceof Element?event.target:null;
-   if(!element)return;
+   const element=event.target as Element|null;
+   if(!element||element.nodeType!==1)return;
    prevent(event);
    doc?.querySelectorAll("[data-cse-picked]").forEach(e=>e.removeAttribute("data-cse-picked"));
    const slot=element.closest("[data-cms-slot]");
@@ -73,8 +77,8 @@ export default function CmsLiveVisualCanvas({page,src,width,revision,draft,onPic
  return <div className="cse-live-editor" aria-label={"Real "+page+" storefront visual editor"}>
   <div className="cse-real-banner"><strong>Actual storefront canvas</strong><span>Click a real heading, image, card or button to select its available CMS styling controls. Links and form submissions are disabled inside this editing preview only.</span></div>
   {problem&&<p className="cse-notice" role="status">{problem}</p>}
-  <div className="cse-preview-viewport" role="region" aria-label="Interactive real page canvas" tabIndex={0}>
-   <iframe ref={frame} key={src+revision} src={src} width={width} className="cse-live-frame" style={{width,maxWidth:"none"}} title={"Editable preview of "+page} loading="eager" onLoad={()=>{originals.current=new WeakMap();setLoaded(v=>v+1);}}/>
-  </div>
+  <div ref={viewport} className="cse-live-fit-viewport" role="region" aria-label="Interactive real page canvas" tabIndex={0}><div className="cse-live-fit-stage" style={{height:Math.max(500,Math.round(1100*scale))}}>
+   <iframe ref={frame} key={src+revision} src={src} width={width} className="cse-live-frame" style={{width,maxWidth:"none",height:Math.max(1000,Math.ceil(660/scale)),transform:`scale(${scale})`,transformOrigin:"top left"}} title={"Editable preview of "+page} loading="eager" onLoad={()=>{originals.current=new WeakMap();setLoaded(v=>v+1);}}/>
+  </div></div>
  </div>;
 }
