@@ -1,22 +1,13 @@
 import {ImageResponse} from "next/og";
 import {db} from "@/lib/db";
 import {Product} from "@/lib/models";
+import {trustedOgProductImage} from "@/lib/product-og-image";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export const alt="ANUSMITA product social sharing image";
 export const size={width:1200,height:630};
 export const contentType="image/png";
 
-const trustedMediaHost="anusmita-media.mdsakibmolla545.workers.dev";
-export function trustedOgProductImage(raw:unknown):string|null{
- if(typeof raw!=="string")return null;
- try{
-  const url=new URL(raw);
-  if(url.protocol!=="https:"||url.hostname!==trustedMediaHost||url.port||url.username||url.password||url.hash)return null;
-  if(!url.pathname.startsWith("/")||url.pathname.includes(".."))return null;
-  return url.toString();
- }catch{return null;}
-}
 async function imageData(raw:unknown):Promise<string|null>{
  const url=trustedOgProductImage(raw);
  if(!url)return null;
