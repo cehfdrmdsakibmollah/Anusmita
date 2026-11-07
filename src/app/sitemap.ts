@@ -20,7 +20,7 @@ export default async function sitemap():Promise<MetadataRoute.Sitemap>{
    .select("productId -_id").lean<any[]>();
   const noindex=new Set(optedOut.map(x=>String(x.productId)));
   for(const p of indexableSitemapProducts(products,noindex))
-   entries.push({url:root+"/products/"+encodeURIComponent(p.slug),lastModified:p.updatedAt,changeFrequency:"weekly",priority:0.75});
+   entries.push({url:root+"/products/"+encodeURIComponent(p.slug),lastModified:p.updatedAt||undefined,changeFrequency:"weekly",priority:0.75});
  }catch{/* Degrade to known public routes when the database is unavailable. */}
  return entries;
 }
