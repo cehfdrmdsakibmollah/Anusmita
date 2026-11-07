@@ -4,7 +4,7 @@ import {cmsSlots,cmsNativeHeroSchema,type CmsSlotPage,type CmsSlot} from "@/lib/
 import {shouldRenderCmsIntro} from "@/lib/cms-page-editor-support";
 import CmsNativeTextBinding from "@/components/cms-native-text-binding";
 import {validatePageNativeText,type CmsNativeTextEntry} from "@/lib/cms-native-bindings";
-import {nativeCmsSelectors,nativeCmsCardSelectors,renderCmsCssRules} from "@/lib/cms-css-rules";
+import {renderNativeCmsCssRules,renderCmsCssRules} from "@/lib/cms-css-rules";
 import "./cms-public-slots.css";
 export default async function CmsPublicSlots({page,placement}:{page:CmsSlotPage;placement:"before"|"after"}){
  let slots:CmsSlot[]=[];
@@ -17,7 +17,7 @@ export default async function CmsPublicSlots({page,placement}:{page:CmsSlotPage;
   const parsed=cmsSlots.safeParse(data?.published||[]);
   if(parsed.success)slots=parsed.data.filter(x=>x.enabled&&x.placement===placement).sort((a,b)=>a.position-b.position);
   if(placement==="before"&&shouldRenderCmsIntro(page,data?.nativePublished))intro=cmsNativeHeroSchema.parse(data.nativePublished);
-  if(placement==="before"&&data?.nativePublished){const checked=cmsNativeHeroSchema.safeParse(data.nativePublished);if(checked.success){if(validatePageNativeText(page,checked.data.textBindings))nativeText=checked.data.textBindings;const hero=nativeCmsSelectors[page];if(hero)nativeRules=renderCmsCssRules(checked.data.cssRules,`body`,{hero,heading:hero+" h1",card:nativeCmsCardSelectors[page]||".anCmsPublicNestedCard",button:hero+" a",image:hero+" img, "+hero+" svg"});}}
+  if(placement==="before"&&data?.nativePublished){const checked=cmsNativeHeroSchema.safeParse(data.nativePublished);if(checked.success){if(validatePageNativeText(page,checked.data.textBindings))nativeText=checked.data.textBindings;nativeRules=renderNativeCmsCssRules(page,checked.data.cssRules);}}
  }catch{/* Preserve normal storefront availability even if merchandising database fails. */}
  if(!slots.length&&!intro&&!nativeRules&&!nativeText.length)return null;
  // Style-only native overrides should not create an empty padded CMS section above a storefront.
