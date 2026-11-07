@@ -2,7 +2,6 @@ import {db} from "@/lib/db";
 import {CmsPageSlot} from "@/lib/models";
 import {cmsSlots,cmsNativeHeroSchema,type CmsSlotPage,type CmsSlot} from "@/lib/cms-page-slots";
 import {shouldRenderCmsIntro} from "@/lib/cms-page-editor-support";
-import {cmsNativeHeroSchema} from "@/lib/cms-page-slots";
 import {nativeCmsSelectors,renderCmsCssRules} from "@/lib/cms-css-rules";
 import "./cms-public-slots.css";
 export default async function CmsPublicSlots({page,placement}:{page:CmsSlotPage;placement:"before"|"after"}){
