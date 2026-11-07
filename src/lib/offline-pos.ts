@@ -12,7 +12,9 @@ export const posSaleInput=z.object({
 }).strict();
 export type PosSaleInput=z.infer<typeof posSaleInput>;
 export function bdBusinessDate(input:Date):string{
- return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Dhaka",year:"numeric",month:"2-digit",day:"2-digit"}).format(input);
+ const parts=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Dhaka",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(input);
+ const get=(type:string)=>parts.find(p=>p.type===type)?.value||"";
+ return get("year")+"-"+get("month")+"-"+get("day");
 }
 export function calculatePosCash(lines:readonly {quantity:number;unitPricePaisa:number}[],discountPaisa:number,tenderedPaisa:number){
  if(!lines.length||!Number.isSafeInteger(discountPaisa)||discountPaisa<0||!Number.isSafeInteger(tenderedPaisa))throw Error("Invalid payment");
