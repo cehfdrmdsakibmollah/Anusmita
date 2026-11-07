@@ -62,7 +62,7 @@ export default function PosOperations({canEdit,canManageBranches}:{canEdit:boole
  }
  const chosen=products.find(x=>x._id===productId);
  return <div className="anposops"><header><div><p>ANUSMITA · PHYSICAL STORE MANAGEMENT</p><h1>Branches & Damage Inventory</h1><span>Manage showroom locations and record physical damage against allocated branch stock.</span></div><Link href="/admin/offline-pos"><ArrowLeft size={17}/> Back to POS</Link></header>
-  <nav aria-label="Branch management tabs"><button className={tab==="branches"?"selected":""} onClick={()=>setTab("branches")}><Store size={17}/> Branch Manager</button><button className={tab==="damage"?"selected":""} onClick={()=>setTab("damage")}><AlertTriangle size={17}/> Damage Register</button><button onClick={()=>void refresh()}><RefreshCw size={16}/> Refresh</button><Link href="/admin/warehouse-ledger"><Warehouse size={17}/> Warehouse Transfer</Link></nav>
+  <nav aria-label="Branch management tabs"><button className={tab==="branches"?"selected":""} onClick={()=>setTab("branches")}><Store size={17}/> Branch Manager</button><button className={tab==="damage"?"selected":""} onClick={()=>setTab("damage")}><AlertTriangle size={17}/> Damage Register</button><button onClick={()=>void refresh()}><RefreshCw size={16}/> Refresh</button><Link href="/admin?tab=Warehouse%20Transfers"><Warehouse size={17}/> Warehouse Transfer</Link></nav>
   {error&&<p className="anposops-error" role="alert">{error}</p>}{notice&&<p className="anposops-success" role="status"><ShieldCheck size={17}/>{notice}</p>}
   {tab==="branches"?<div className="anposops-grid">
    <form className="anposops-card" onSubmit={e=>void saveBranch(e)}><h2><Store size={18}/> {editing?"Edit branch":"Create branch"}</h2>
