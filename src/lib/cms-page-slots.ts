@@ -44,8 +44,19 @@ export const cmsNativeHeroSchema=z.object({
 });
 export type CmsNativeHero=z.infer<typeof cmsNativeHeroSchema>;
 export const defaultCmsNativeHero:CmsNativeHero=cmsNativeHeroSchema.parse({});
+export const cmsNestedLeafSchema=z.object({
+ id:z.uuid(),title:z.string().trim().min(1).max(100),
+ subtitle:z.string().trim().max(240).default(""),
+ imageUrl:z.string().trim().max(500).default(""),
+ cta:z.string().trim().max(40).default(""),
+ href:z.string().trim().max(250).default("/shop")
+}).strict().superRefine((item,ctx)=>{
+ if(item.imageUrl&&!isSafeCmsImage(item.imageUrl))ctx.addIssue({code:"custom",path:["imageUrl"],message:"Only approved media assets"});
+ if(!isSafeLink(item.href))ctx.addIssue({code:"custom",path:["href"],message:"Safe internal link required"});
+});
 export const cmsNestedCardSchema=z.object({
  id:z.uuid(),
+ subcards:z.array(cmsNestedLeafSchema).max(4).refine(items=>new Set(items.map(x=>x.id)).size===items.length,"Duplicate nested leaf IDs").default([]),
  title:z.string().trim().min(2).max(100),
  subtitle:z.string().trim().max(240).default(""),
  imageUrl:z.string().trim().max(500).default(""),
