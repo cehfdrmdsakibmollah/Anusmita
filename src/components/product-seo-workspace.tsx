@@ -9,6 +9,7 @@ import {restoreSeoRevisionDraft,type SeoRevisionFields} from "@/lib/product-seo-
 type Product=SeoFacts&{id:string};
 type Seo=SeoFields&{revision:number};
 type SeoHistoryEntry={revision:number;action:"save";createdAt:string;snapshot:SeoRevisionFields};
+type SeoRedirectEntry={sourceSlug:string;createdAt:string};
 type Item={_id:string;name:string;slug:string;sku:string;category:string;active:boolean;imageUrls?:string[]};
 type Tab="overview"|"meta"|"schema"|"media"|"advanced"|"audit"|"history";
 type Platform="google"|"facebook"|"x";
@@ -21,6 +22,7 @@ export default function ProductSeoWorkspace({canEdit=true}:{canEdit?:boolean}){
  const [catalogOpen,setCatalogOpen]=useState(false),[tab,setTab]=useState<Tab>("overview"),[platform,setPlatform]=useState<Platform>("google"),[device,setDevice]=useState<"desktop"|"mobile">("desktop");
  const [product,setProduct]=useState<Product|null>(null),[seo,setSeo]=useState<Seo|null>(null),[saved,setSaved]=useState<Seo|null>(null);
  const [history,setHistory]=useState<SeoHistoryEntry[]>([]);
+ const [redirects,setRedirects]=useState<SeoRedirectEntry[]>([]);
  const [busy,setBusy]=useState(false),[loading,setLoading]=useState(false),[notice,setNotice]=useState(""),[keyword,setKeyword]=useState("");
  const searchId=useRef(0),selectionId=useRef(0);
  const checks=useMemo(()=>product&&seo?analyzeSeo(product,seo):[],[product,seo]);
@@ -43,7 +45,7 @@ export default function ProductSeoWorkspace({canEdit=true}:{canEdit?:boolean}){
    const response=await fetch("/api/admin/product-seo?productId="+encodeURIComponent(id),{cache:"no-store"});
    const json=await response.json();if(!response.ok)throw Error(json.error||"Cannot load product SEO");
    if(request!==selectionId.current)return;
-   setProduct(json.product);setSeo(json.seo);setSaved(structuredClone(json.seo));setHistory(json.history||[]);setCatalogOpen(false);setTab("overview");setNotice("");
+   setProduct(json.product);setSeo(json.seo);setSaved(structuredClone(json.seo));setHistory(json.history||[]);setRedirects(json.redirects||[]);setCatalogOpen(false);setTab("overview");setNotice("");
   }catch(error){if(request===selectionId.current)setNotice(String(error));}
   finally{if(request===selectionId.current)setLoading(false);}
  }
@@ -66,7 +68,7 @@ export default function ProductSeoWorkspace({canEdit=true}:{canEdit?:boolean}){
   if(!response.ok)throw Error(data.error||"Could not reload persisted SEO");
   const result=verifySeoPersistence(expected,data.seo as Seo);
   if(!result.verified)throw Error("Saved SEO differs on refresh: "+result.differences.join(", ")+". Reload before editing again.");
-  if(product?.id===productId)setHistory(data.history||[]);
+  if(product?.id===productId){setHistory(data.history||[]);setRedirects(data.redirects||[]);}
   return data.seo as Seo;
  }
  async function save(event?:React.FormEvent){
@@ -154,7 +156,10 @@ export default function ProductSeoWorkspace({canEdit=true}:{canEdit?:boolean}){
     <button type="button" className="ep-outline" disabled={!canEdit||busy||loading||entry.revision===saved?.revision} onClick={()=>restoreHistoryDraft(entry)}>Restore as draft</button>
    </div>)}</div>:<p className="ep-small">No saved snapshots yet. A snapshot will be recorded on the next successful SEO save.</p>}
    <button type="button" className="ep-outline" disabled={busy||loading} onClick={()=>product&&void choose(product.id)}><RefreshCw size={14}/> Reload history and current SEO</button>
-   <p className="ep-small">Redirects are not enabled in this release. Product slugs remain managed by the Product Editor; do not change a published slug without a redirect.</p>
+   <h3><Link2 size={16}/> Permanent Product URL Redirects</h3>
+   <p>When a product slug changes in Product Editor, its previous URL is reserved and redirects to the current active product URL. No external destinations or editable arbitrary redirect URLs are allowed.</p>
+   {redirects.length?<div className="ep-history-list">{redirects.map(r=><div className="ep-history-item" key={r.sourceSlug}><div><strong>/products/{r.sourceSlug}</strong><small>{new Date(r.createdAt).toLocaleString("en-BD")} · Permanent 308</small><p>Destination: /products/{product?.slug}</p></div><a className="ep-outline" target="_blank" rel="noopener noreferrer" href={"/products/"+encodeURIComponent(r.sourceSlug)}>Test redirect</a></div>)}</div>:<p className="ep-small">No product slug changes recorded since redirect tracking was deployed. Existing URLs are unchanged.</p>}
+   <p className="ep-small">Changing slug in Product Editor requires Product Edit permission and follows existing revision checks. Deactivated products do not redirect to an unpublished destination.</p>
    <a className="ep-outline" href="/admin/products/manage">Open Product Editor <ExternalLink size={14}/></a>
   </section>;
  return <section className="ep-workspace" aria-label="Product SEO workspace">

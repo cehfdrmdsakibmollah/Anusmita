@@ -4,7 +4,7 @@ import {validateProductSubcategory} from "@/lib/product-taxonomy-validation";
 import mongoose from "mongoose";
 import { authorize,authorizePermission,assertOrigin,apiError,HttpError } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { Product,StockMovement,Audit } from "@/lib/models";
+import { Product,ProductSlugRedirect,StockMovement,Audit } from "@/lib/models";
 import { productSchema } from "@/lib/validation";
 import {publicationState,assertFutureSchedule} from "@/lib/publication-state";
 import {validateCommercialState} from "@/lib/commercial-state";
@@ -18,11 +18,12 @@ export async function POST(request:Request) {
   validateCommercialState(data);
   await db();
   await validateProductSubcategory(data.category,data.subcategoryId);
-  const [duplicateSku,duplicateSlug]=await Promise.all([
-   Product.exists({sku:data.sku}),Product.exists({slug:data.slug})
+  const [duplicateSku,activeSlug,redirectSlug]=await Promise.all([
+   Product.exists({sku:data.sku}),Product.exists({slug:data.slug}),ProductSlugRedirect.exists({sourceSlug:data.slug})
   ]);
+  const duplicateSlug=Boolean(activeSlug||redirectSlug);
   if(duplicateSku||duplicateSlug)return Response.json({
-   error:duplicateSku&&duplicateSlug?"SKU and SEO slug already exist":duplicateSku?"SKU already exists":"SEO slug already exists",
+   error:duplicateSku&&duplicateSlug?"SKU and SEO slug already exist":duplicateSku?"SKU already exists":redirectSlug?"SEO slug is reserved by a permanent redirect":"SEO slug already exists",
    code:"PRODUCT_IDENTIFIER_CONFLICT",skuTaken:Boolean(duplicateSku),slugTaken:Boolean(duplicateSlug)
   },{status:409});
   let created:any;const session=await mongoose.startSession();
