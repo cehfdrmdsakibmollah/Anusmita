@@ -46,7 +46,7 @@ export default function CmsLiveVisualCanvas({page,src,width,revision,draft,onPic
   const cssId="cse-local-draft-style";
   let style=doc.getElementById(cssId) as HTMLStyleElement|null;
   if(!style){style=doc.createElement("style");style.id=cssId;doc.head.appendChild(style);}
-  style.textContent=renderCmsCssRules(draft.cssRules,"body",{hero,heading:hero+" h1",card:nativeCmsCardSelectors[page]||".anCmsPublicNestedCard",button:hero+" a, "+hero+" button",image:hero+" img"});
+  style.textContent=renderCmsCssRules(draft.cssRules,"body",{hero,heading:hero+" h1",card:nativeCmsCardSelectors[page]||".anCmsPublicNestedCard",button:hero+" a, "+hero+" button",image:hero+" img, "+hero+" svg"});
   const outlineId="cse-live-picker-style";
   let picker=doc.getElementById(outlineId) as HTMLStyleElement|null;
   if(!picker){picker=doc.createElement("style");picker.id=outlineId;doc.head.appendChild(picker);}
