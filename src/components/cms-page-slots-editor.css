@@ -200,3 +200,14 @@
 .cse-native-element-list button span{font:9px Arial,sans-serif;color:#987a86}
 .cse-native-element-list button.active{background:#8b1342;color:white}
 .cse-native-element-list button.active span{color:#f7d1df}
+
+
+/* Native editorial bindings and bounded second-level card editing */
+.cse-native-text-binding-editor{display:grid;gap:10px;border:1px solid #ead4dd;background:#fff9fb;border-radius:8px;padding:12px}
+.cse-native-text-binding-editor h4{margin:0;color:#78183d;font:700 14px Georgia,serif}
+.cse-native-text-binding-editor label{display:grid;gap:5px}
+.cse-native-text-binding-editor label small{font:10px ui-monospace,monospace;color:#927584;overflow-wrap:anywhere}
+.cse-native-text-binding-editor label button,.cse-subcard-entry>button{justify-self:start;border:1px solid #e2b7ca;background:white;color:#861c46;border-radius:6px;padding:7px 9px;font-size:10px}
+.cse-subcard-editor{display:grid;gap:10px;padding:10px;border:1px solid #e9c6d5;background:#fff9fb;border-radius:7px}
+.cse-subcard-entry{display:grid;gap:7px;padding:10px;border:1px dashed #dab3c4;border-radius:7px;background:white}
+.cse-editor-nav-link{display:inline-flex;align-items:center;border:1px solid #dca9bf;border-radius:6px;background:white;color:#7f1b45;padding:8px 10px;font:700 11px Arial,sans-serif;text-decoration:none}
