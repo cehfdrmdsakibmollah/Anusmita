@@ -6,7 +6,8 @@ import Link from "next/link";
 import {notFound,permanentRedirect} from "next/navigation";
 import {ArrowRight,ArrowUpRight,Heart,Package,ShieldCheck,Sparkles,Truck} from "lucide-react";
 import {db} from "@/lib/db";
-import {Product,ProductReview,ProductSeo,ProductSlugRedirect} from "@/lib/models";
+import {Product,ProductReview,ProductSeo,ProductSlugRedirect,CatalogCategory} from "@/lib/models";
+import {categorySeoPath} from "@/lib/category-seo";
 import {buildProductSeoGraph,safeSeoJsonLd} from "@/lib/product-seo-structured";
 import {autoSeo} from "@/lib/product-seo-audit";
 import {verifiedSeoReviewSummary} from "@/lib/product-seo-reviews";
@@ -60,6 +61,13 @@ async function historicalTarget(slug:string):Promise<string|null>{
  }catch{return null;}
 }
 async function seoFor(p:DbProduct){if(p.slug==="design-preview")return null;try{await db();return await ProductSeo.findOne({productId:p._id}).select("metaTitle metaDescription focusKeyword keywords imageAltTexts ogTitle ogDescription robotsIndex robotsFollow schemaEnabled").lean<any>();}catch{return null;}}
+/** Link to real active category SEO pages only when the registry matches this product. */
+async function realCategoryPath(category:string):Promise<string|null>{
+ try{
+  const record=await CatalogCategory.findOne({name:category,active:true}).select("slug -_id").lean<{slug:string}|null>();
+  return record?categorySeoPath(record.slug):null;
+ }catch{return null;}
+}
 const variant=(p:DbProduct):ProductVariant=>({
  id:String(p._id),slug:p.slug,sku:p.sku||"",color:p.color,colorHex:p.colorHex,size:p.size||p.variantLabel||"",
  pricePaisa:p.pricePaisa,available:Math.max(0,(p.onHand||0)-(p.reserved||0))
@@ -118,8 +126,8 @@ export default async function ProductPage({params}:Props){
  const p=await getProduct(slug);
  if(!p){const target=await historicalTarget(slug);if(target)permanentRedirect(target);notFound();}
  const preview=slug==="design-preview";
- const {variants,related}=await supporting(p);
- const customSeo=await seoFor(p);
+ const [{variants,related},customSeo,categoryPath]=await Promise.all([supporting(p),seoFor(p),preview?Promise.resolve(null):realCategoryPath(p.category)]);
+ const categoryHref=categoryPath||"/?category="+encodeURIComponent(p.category)+"#shop";
  const trust=preview?{reviews:[] as {rating:number;body:string;skinType:string}[],pairings:[] as DbProduct[],verifiedReviewCount:0,verifiedRatingValue:0}:await (async()=>{
   try{
    const complements=complementaryCategories(p.category);
@@ -135,7 +143,7 @@ export default async function ProductPage({params}:Props){
  const canOrder=!preview&&checkoutEnabled(process.env);
  const url=(process.env.NEXT_PUBLIC_SITE_URL||"http://localhost:3000").replace(/\/$/,"")+"/products/"+p.slug;
  const structured=preview?null:buildProductSeoGraph(
-  {...p,active:true,...{verifiedReviewCount:trust.verifiedReviewCount,verifiedRatingValue:trust.verifiedRatingValue}},
+  {...p,active:true,categoryPath:categoryPath||undefined,...{verifiedReviewCount:trust.verifiedReviewCount,verifiedRatingValue:trust.verifiedRatingValue}},
   {metaDescription:customSeo?.metaDescription||"",schemaEnabled:customSeo?.schemaEnabled!==false},
   (process.env.NEXT_PUBLIC_SITE_URL||"https://anusmita.netlify.app").replace(/\/$/,"")
  );
@@ -145,7 +153,7 @@ export default async function ProductPage({params}:Props){
 
    <nav aria-label="Breadcrumb" className="anPdpBreadcrumb">
     <Link href="/">Home</Link><span>›</span><Link href="/#collections">Shop</Link><span>›</span>
-    <Link href={"/?category="+encodeURIComponent(p.category)+"#shop"}>{p.category}</Link><span>›</span><strong>{p.name}</strong>
+    <Link href={categoryHref}>{p.category}</Link><span>›</span><strong>{p.name}</strong>
     {preview&&<span className="anPdpDemoChip" title="No real product, price, review, stock or order">Design preview · Not for sale</span>}
    </nav>
    <div className="anPdpMain">
