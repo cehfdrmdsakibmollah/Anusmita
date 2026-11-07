@@ -52,7 +52,8 @@ export function renderCmsCssRules(rules:readonly CmsCssRule[],scope:string,targe
   if(!safeCmsCssValue(rule.property,rule.value))continue;
   const selector=targets[rule.target];
   if(!selector)continue;
-  result.push(scope+" "+selector+(rule.state==="hover"?":hover":"")+"{"+rule.property+":"+rule.value+"}");
+  const state=rule.state==="hover"?":hover":"";
+  for(const part of selector.split(",").map(x=>x.trim()).filter(Boolean))result.push(scope+" "+part+state+"{"+rule.property+":"+rule.value+" !important}");
  }
  return result.join("\n");
 }
