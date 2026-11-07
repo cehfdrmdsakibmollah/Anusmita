@@ -223,3 +223,13 @@
 .cse-subcard-preview{display:flex;flex-wrap:wrap;gap:5px;padding:6px;border:1px dashed #cfa9b9}
 .cse-subcard-preview>span{display:flex;flex-wrap:wrap;align-items:center;gap:4px;background:#fff2f7;border-radius:5px;padding:5px;font-size:10px}
 .cse-subcard-preview img{max-width:36px;max-height:36px;object-fit:cover}
+
+/* The selected live element's controls stay first in the inspector. */
+.cse-picked-context,.cse-quick-editor{border:1px solid #e6b9ca;border-radius:10px;padding:12px;background:#fff9fb;display:grid;gap:9px;margin:9px 0 14px;min-width:0}
+.cse-picked-context strong,.cse-quick-editor h4{color:#781640;font:700 13px Georgia,serif;margin:0}
+.cse-picked-context span{font:11px/1.5 Arial,sans-serif;color:#795062}
+.cse-picked-actions{display:flex;flex-wrap:wrap;gap:6px}
+.cse-picked-actions button,.cse-quick-editor>button{border:1px solid #dca7bc;background:#fff;border-radius:6px;padding:8px;color:#8b1642;cursor:pointer;font:600 11px Arial,sans-serif}
+.cse-picked-actions button:hover,.cse-quick-editor>button:hover{background:#ffeaf2}
+.cse-quick-editor input:not([type="checkbox"]),.cse-quick-editor textarea{width:100%;box-sizing:border-box;border:1px solid #e2b5c7;border-radius:6px;padding:9px;color:#61203e;background:#fff;min-width:0;font:12px Arial,sans-serif}
+.cse-quick-editor label{display:grid;gap:5px;font:600 11px Arial,sans-serif;color:#782140}
