@@ -327,6 +327,17 @@ const ProductSeoSchema=new Schema({
  updatedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
 },opts);
 export const ProductSeo=mongoose.models.ProductSeo||mongoose.model("ProductSeo",ProductSeoSchema);
+/** Immutable per-save SEO snapshots; never retroactively claim old audit rows are recoverable. */
+const ProductSeoRevisionSchema=new Schema({
+ productId:{type:Schema.Types.ObjectId,ref:"Product",required:true,index:true},
+ revision:{type:Number,required:true,min:1},
+ snapshot:{type:Schema.Types.Mixed,required:true},
+ actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ action:{type:String,enum:["save"],default:"save"}
+},opts);
+ProductSeoRevisionSchema.index({productId:1,revision:1},{unique:true});
+export const ProductSeoRevision=mongoose.models.ProductSeoRevision||mongoose.model("ProductSeoRevision",ProductSeoRevisionSchema);
+
 const CatalogImportSchema = new Schema({
  importKey:{type:String,required:true,unique:true},
  actorId:{type:Schema.Types.ObjectId,ref:"User",required:true},
