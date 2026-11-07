@@ -21,6 +21,6 @@ describe("real POS billing contract",()=>{
   expect(posSaleInput.safeParse({...request,stockAdjustment:1000}).success).toBe(false);
  });
  it("books in Bangladesh local business date",()=>{
-  expect(bdBusinessDate(new Date("2026-11-07T20:30:00Z"))).toBe("11/08/2026");
+  expect(bdBusinessDate(new Date("2026-11-07T20:30:00Z"))).toBe("2026-11-08");
  });
 });
