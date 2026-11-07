@@ -5,6 +5,7 @@ import {cmsSlotSchema,defaultCmsStyle,cmsSectionKinds,cmsNativeHeroSchema,defaul
 import CmsMediaLibrary from "@/components/cms-media-library";
 import CmsCssControls from "@/components/cms-css-controls";
 import CmsLiveVisualCanvas from "@/components/cms-live-visual-canvas";
+import {cloneCmsSlotWithFreshIds,remapImportedCmsSlots} from "@/lib/cms-slot-clone";
 import {nativeTextTargets,validatePageNativeText,type CmsNativeKey} from "@/lib/cms-native-bindings";
 import {nativePromoIds,nativePromoLabels,validateNativePromoIds} from "@/lib/cms-promo-bindings";
 import type {CmsCssRule} from "@/lib/cms-css-rules";
@@ -66,7 +67,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
    if(data?.format!=="anusmita-cms-slots"||data.version!==1||data.page!==page)throw Error("Invalid export or wrong page");
    const validated=cmsSlotSchema.array().max(20).parse(data.slots);
    if(dirty&&!window.confirm("Replace your current unsaved draft with the imported sections?"))return;
-   setSlots(validated.map((s,i)=>({...s,id:crypto.randomUUID(),position:i})));setSelected(null);setNotice("Imported "+validated.length+" safe CMS sections as an unsaved draft. Review and Save Draft before publishing.");
+   setSlots(remapImportedCmsSlots(validated));setSelected(null);setNotice("Imported "+validated.length+" safe CMS sections as an unsaved draft. Review and Save Draft before publishing.");
   }catch(e){setNotice("Import rejected: "+(e instanceof Error?e.message:String(e)));}
  }
 
@@ -83,7 +84,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
  useEffect(()=>{onDirtyChange?.(dirty);return()=>onDirtyChange?.(false);},[dirty,onDirtyChange]);
  useEffect(()=>{if(!dirty)return;const guard=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue="";};window.addEventListener("beforeunload",guard);return()=>window.removeEventListener("beforeunload",guard);},[dirty]);
  function add(){const item=fresh(slots.length,createKind);setSlots(prev=>[...prev,item]);setSelected(item.id);setSelectedNative(false);setCanvasView("blocks");setMode("draft");}
- function copySlot(id:string){const item=slots.find(x=>x.id===id);if(!item||slots.length>=20)return;const next={...item,id:crypto.randomUUID(),position:slots.length};setSlots(old=>[...old,next]);setSelected(next.id);setSelectedNative(false);setCanvasView("blocks");}
+ function copySlot(id:string){const item=slots.find(x=>x.id===id);if(!item||slots.length>=20)return;const next=cloneCmsSlotWithFreshIds(item,slots.length);setSlots(old=>[...old,next]);setSelected(next.id);setSelectedNative(false);setCanvasView("blocks");}
  function updateStyle(changes:Partial<CmsSlot["style"]>){if(!selectedSlot)return;update({style:{...selectedSlot.style,...changes}});}
  function move(id:string,dir:number){const arr=[...slots];const i=arr.findIndex(x=>x.id===id),j=i+dir;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];setSlots(arr.map((s,index)=>({...s,position:index})));}
  function dropSection(targetId:string,sourceId:string|null=draggingId){
