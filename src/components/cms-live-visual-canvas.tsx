@@ -36,8 +36,14 @@ export default function CmsLiveVisualCanvas({page,src,width,revision,draft,onPic
    if(!card)continue;
    card.style.display=promo.enabled?"":"none";
    const label=card.querySelector("h3");write(label,promo.title);
-   const previewImage=card.querySelector("img") as HTMLImageElement|null;
-   if(previewImage&&promo.imageUrl)previewImage.src=promo.imageUrl;
+   const media=card.querySelector(".dp-product-photo, .bp-card-photo") as HTMLElement|null;
+   if(media){
+    let image=media.querySelector('img[data-cse-promo-image]') as HTMLImageElement|null;
+    if(promo.imageUrl){
+     if(!image){image=doc.createElement("img");image.dataset.csePromoImage="";image.style.cssText="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:1";media.appendChild(image);}
+     image.src=promo.imageUrl;
+    }else image?.remove();
+   }
   }
   for(const [key,selector] of Object.entries(nativeTextTargets[page])){
    const entry=draft.textBindings.find(x=>x.key===key&&x.enabled);
