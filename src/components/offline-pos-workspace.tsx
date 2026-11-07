@@ -32,10 +32,11 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,cashierName
  const categories=useMemo(()=>["All Products",...new Set(data.products.map(x=>x.category).filter(Boolean))], [data.products]);
  const visible=useMemo(()=>data.products.filter(p=>(category==="All Products"||p.category===category)&&(!query||[p.name,p.sku,p.barcode].some(x=>x.toLowerCase().includes(query.toLowerCase())))).slice(0,80),[data.products,category,query]);
  const invalidate=()=>{setOpKey(blankId());setConfirmedId("");setReceipt(null);};
- const load=useCallback(async(id:string)=>{
+ const load=useCallback(async(id:string,lookup="")=>{
   setLoading(true);setError("");
   try{
-   const response=await fetch("/api/admin/offline-pos"+(id?"?branchId="+encodeURIComponent(id):""),{cache:"no-store"});
+   const params=new URLSearchParams();if(id)params.set("branchId",id);if(lookup.trim())params.set("q",lookup.trim());
+   const response=await fetch("/api/admin/offline-pos"+(params.size?"?"+params.toString():""),{cache:"no-store"});
    const json=await response.json();
    if(!response.ok)throw Error(json.error||"POS data unavailable");
    setData(json);
@@ -45,9 +46,22 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,cashierName
   finally{setLoading(false);}
  },[]);
  useEffect(()=>{setOnline(navigator.onLine);const up=()=>setOnline(true),down=()=>setOnline(false);window.addEventListener("online",up);window.addEventListener("offline",down);return()=>{window.removeEventListener("online",up);window.removeEventListener("offline",down);}},[]);
- useEffect(()=>{void load(branchId);},[branchId,load]);
+ useEffect(()=>{const timer=setTimeout(()=>void load(branchId,query),query?250:0);return()=>clearTimeout(timer);},[branchId,query,load]);
  useEffect(()=>{const u=new URLSearchParams(window.location.search);if(u.get("view")==="invoices")setView("invoices");},[]);
- function add(p:Product){if(!canCheckout||!p.available)return;invalidate();setNotice("");setCart(old=>{const current=old.find(x=>x.product.id===p.id);return current?old.map(x=>x.product.id===p.id?{...x,quantity:Math.min(p.available,x.quantity+1)}:x):[...old,{product:p,quantity:1}];});}
+ async function scanBarcode(){
+  const value=search.trim();if(!value||!branchId)return;
+  let matched=data.products.find(p=>p.barcode===value||p.sku.toLowerCase()===value.toLowerCase());
+  if(!matched){
+   try{
+    const r=await fetch("/api/admin/offline-pos?branchId="+encodeURIComponent(branchId)+"&q="+encodeURIComponent(value),{cache:"no-store"});
+    const result=await r.json();if(!r.ok)throw Error(result.error||"Product lookup failed");
+    matched=(result.products||[]).find((p:Product)=>p.barcode===value||p.sku.toLowerCase()===value.toLowerCase());
+   }catch(e){setError(e instanceof Error?e.message:"Scan lookup failed");return;}
+  }
+  if(!matched){setError("No allocated active product matches this SKU or barcode.");return;}
+  add(matched);setSearch("");setQuery("");
+ }
+  function add(p:Product){if(!canCheckout||!p.available)return;invalidate();setNotice("");setCart(old=>{const current=old.find(x=>x.product.id===p.id);return current?old.map(x=>x.product.id===p.id?{...x,quantity:Math.min(p.available,x.quantity+1)}:x):[...old,{product:p,quantity:1}];});}
  function quantity(productId:string,value:number){invalidate();setCart(old=>old.map(x=>x.product.id===productId?{...x,quantity:Math.max(1,Math.min(x.product.available||1,value))}:x));}
  function reset(){invalidate();setCart([]);setDiscount("0");setTendered("");setCustomer("");setPhone("");setNotice("");}
  async function checkout(){
@@ -93,7 +107,7 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,cashierName
     {isInvoice?<section className="anpos-panel anpos-invoices"><header><h2>Recent Branch Cash Invoices</h2><button onClick={()=>void load(branchId)} disabled={loading}><RefreshCw size={15}/> Refresh</button></header><p>Only confirmed cash transactions in the selected branch appear here. Sales cannot be deleted from this terminal.</p><div className="anpos-invoice-table"><table><thead><tr><th>Invoice</th><th>Cashier</th><th>Customer</th><th>Date</th><th>Total</th></tr></thead><tbody>{data.sales.map(s=><tr key={s.id}><td>{s.invoiceNumber}</td><td>{s.cashierName}</td><td>{s.customerName||"Walk-in"}</td><td>{new Date(s.createdAt).toLocaleString("en-BD",{timeZone:"Asia/Dhaka"})}</td><td>{money(s.totalPaisa)}</td></tr>)}</tbody></table>{!data.sales.length&&<p>No confirmed sales for this branch.</p>}</div></section>:
     <div className="anpos-layout">
      <section className="anpos-panel anpos-catalog"><header><h2>Browse products</h2><span>{loading?"Loading…":data.products.length+" allocated SKUs"}</span></header>
-      <div className="anpos-search"><Search size={18}/><input ref={barcodeRef} value={search} onChange={e=>{setSearch(e.target.value);setQuery(e.target.value)}} onKeyDown={e=>{if(e.key==="Enter"){const p=data.products.find(x=>x.barcode===search||x.sku.toLowerCase()===search.toLowerCase());if(p){add(p);setSearch("");setQuery("");}}}} placeholder="Scan barcode or search by product name, SKU..." aria-label="Search product or scan barcode"/></div>
+      <div className="anpos-search"><Search size={18}/><input ref={barcodeRef} value={search} onChange={e=>{setSearch(e.target.value);setQuery(e.target.value)}} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();void scanBarcode();}}} placeholder="Scan barcode or search by product name, SKU..." aria-label="Search product or scan barcode"/></div>
       <div className="anpos-filters">{categories.map(c=><button type="button" key={c} className={category===c?"active":""} onClick={()=>setCategory(c)}>{c}</button>)}</div>
       <div className="anpos-products">{visible.map(p=><article className="anpos-product" key={p.id}><div className="anpos-photo">{p.image?<img src={p.image} alt={p.name} loading="lazy"/>:<div className="anpos-no-photo">ANUSMITA</div>}</div><div className="anpos-product-details"><h3 title={p.name}>{p.name}</h3><small>{p.sku}</small><span className={p.available<=5?"low":"ok"}>{p.available<=5?"Low stock: ":"In stock: "}{p.available}</span><div><strong>{money(p.pricePaisa)}</strong><button type="button" aria-label={"Add "+p.name} disabled={!p.available||!canCheckout} onClick={()=>add(p)}><Plus size={17}/></button></div></div></article>)}</div>
       {!visible.length&&<div className="anpos-empty">{branchId?"No matching allocated products. Allocate inventory to this branch in Warehouse Ledger.":"Select an active branch to view allocated inventory."}</div>}
