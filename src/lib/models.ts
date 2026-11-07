@@ -181,6 +181,8 @@ const WarehouseLocationSchema=new Schema({
  code:{type:String,required:true,unique:true,uppercase:true,trim:true,maxlength:24},
  name:{type:String,required:true,trim:true,maxlength:100},
  address:{type:String,default:"",maxlength:250},
+ phone:{type:String,default:"",maxlength:20},
+ managerName:{type:String,default:"",maxlength:100},
  active:{type:Boolean,default:true},
  createdBy:{type:Schema.Types.ObjectId,ref:"User",required:true}
 },opts);
@@ -274,6 +276,22 @@ OfflineSaleSchema.index({branchId:1,createdAt:-1});
 OfflineSaleSchema.index({cashierId:1,businessDate:1});
 OfflineSaleSchema.index({businessDate:1,createdAt:-1});
 export const OfflineSale=mongoose.models.OfflineSale||mongoose.model("OfflineSale",OfflineSaleSchema);
+
+/** Physical branch loss is distinct from a customer sale and does not collect cash. */
+const BranchDamageSchema=new Schema({
+ operationKey:{type:String,required:true,unique:true},
+ branchId:{type:Schema.Types.ObjectId,ref:"WarehouseLocation",required:true,index:true},
+ branchName:{type:String,required:true},
+ productId:{type:Schema.Types.ObjectId,ref:"Product",required:true,index:true},
+ sku:{type:String,required:true},productName:{type:String,required:true},
+ quantity:{type:Number,required:true,min:1},
+ unitCostPaisa:{type:Number,required:true,min:0,default:0},
+ reason:{type:String,required:true,maxlength:300},
+ actorId:{type:Schema.Types.ObjectId,ref:"User",required:true}
+},opts);
+BranchDamageSchema.index({branchId:1,createdAt:-1});
+export const BranchDamage=mongoose.models.BranchDamage||mongoose.model("BranchDamage",BranchDamageSchema);
+
 
 
 const CatalogCategorySchema=new Schema({
