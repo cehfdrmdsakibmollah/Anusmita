@@ -1,6 +1,7 @@
 import {z} from "zod";
 import {isSafeImage,isSafeLink} from "@/lib/home-content";
 import {cmsCssRulesSchema} from "@/lib/cms-css-rules";
+import {cmsNativeTextSchema} from "@/lib/cms-native-bindings";
 export const cmsSlotPages=["shop","deals","bundles","about","contact","journal","cart","checkout","gift-cards","pre-orders","customer-stories","wishlist","routine-quiz","track-order"] as const;
 export const cmsSectionKinds=["hero","banner","text","image","callout","split","grid"] as const;
 export const cmsSectionAlignments=["left","center","right"] as const;
@@ -35,7 +36,8 @@ export const cmsNativeHeroSchema=z.object({
  imageUrl:z.string().trim().max(500).default(""),
  background:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#fff6f9"),
  textColor:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#611b37"),
- cssRules:cmsCssRulesSchema.default([])
+ cssRules:cmsCssRulesSchema.default([]),
+ textBindings:cmsNativeTextSchema.default([])
 }).strict().superRefine((hero,ctx)=>{
  if(hero.imageUrl&&!isSafeCmsImage(hero.imageUrl))ctx.addIssue({code:"custom",path:["imageUrl"],message:"Hero image must be an approved media URL"});
  if(hero.sectionImageUrl&&!isSafeCmsImage(hero.sectionImageUrl))ctx.addIssue({code:"custom",path:["sectionImageUrl"],message:"Native section image must be approved"});
