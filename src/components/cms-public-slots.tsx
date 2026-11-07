@@ -17,6 +17,8 @@ export default async function CmsPublicSlots({page,placement}:{page:CmsSlotPage;
   if(placement==="before"&&data?.nativePublished){const checked=cmsNativeHeroSchema.safeParse(data.nativePublished);if(checked.success){const hero=nativeCmsSelectors[page];if(hero)nativeRules=renderCmsCssRules(checked.data.cssRules,`body`,{hero,heading:hero+" h1",card:nativeCmsCardSelectors[page]||".anCmsPublicNestedCard",button:hero+" a",image:hero+" img, "+hero+" svg"});}}
  }catch{/* Preserve normal storefront availability even if merchandising database fails. */}
  if(!slots.length&&!intro&&!nativeRules)return null;
+ // Style-only native overrides should not create an empty padded CMS section above a storefront.
+ if(!slots.length&&!intro&&nativeRules)return <style>{nativeRules}</style>;
  return <div className="anCmsPublicSlots" data-cms-page={page} data-placement={placement}>
   {nativeRules&&<style>{nativeRules}</style>}
   {intro&&<section className="anCmsPageIntro" aria-label={intro.title||page+" introduction"} style={{background:intro.background,color:intro.textColor}}>
