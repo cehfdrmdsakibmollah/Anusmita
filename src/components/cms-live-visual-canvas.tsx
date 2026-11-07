@@ -31,10 +31,10 @@ export default function CmsLiveVisualCanvas({page,src,width,revision,draft,onPic
   const sectionSelectors:Record<string,string>={shop:".anShopHeading h2",deals:"#deals-title",bundles:"#routine-title","gift-cards":"#gc-title","pre-orders":"#po-journey-title","customer-stories":"#cs-gallery-title","routine-quiz":".rq-help h2","track-order":"#to-form-title",cart:".anFlowHero h2",checkout:".anFlowCheckoutIntro h2",wishlist:".sheetEmpty h2"};
   write(doc.querySelector(sectionSelectors[page]||"___cms_no_match"),draft.sectionTitle);
   if(root){
-   root.style.setProperty("--cse-editor-background",draft.background);
-   root.style.setProperty("background-color",draft.background,"important");
+   if(draft.background!=="#fff6f9")root.style.setProperty("background-color",draft.background,"important");
+   else root.style.removeProperty("background-color");
    const heading=root.querySelector("h1") as HTMLElement|null;
-   if(heading)heading.style.setProperty("color",draft.textColor,"important");
+   if(heading){if(draft.textColor!=="#611b37")heading.style.setProperty("color",draft.textColor,"important");else heading.style.removeProperty("color");}
    if(draft.imageUrl){
     const imageId="cse-local-draft-image";
     let image=root.querySelector<HTMLImageElement>('[data-cse-local-image]');
