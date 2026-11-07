@@ -141,3 +141,28 @@
 .cse-inspector .cse-native-hero h4{font-size:14px;margin:0}
 .cse-inspector .cse-native-image-preview img{max-width:100%}
 @media(max-width:690px){.cse-native-canvas-card{flex-wrap:wrap;padding:16px}.cse-native-canvas-card img{width:100%;max-height:190px}.cse-native-row{min-height:52px}}
+
+
+/* Visual designer: keep responsive draft canvas within the middle pane. */
+.cse-workspace{grid-template-columns:minmax(190px,23%) minmax(0,1fr) minmax(220px,26%)}
+.cse-canvas,.cse-preview-viewport{min-width:0}
+.cse-preview-viewport>.cse-blocks-canvas{box-sizing:border-box;width:100%!important;min-width:0;max-width:100%;padding:10px}
+.cse-native-canvas-card{min-width:0;overflow:hidden}
+.cse-native-canvas-card h2{overflow-wrap:anywhere;font-size:clamp(18px,2.5vw,32px)}
+.cse-preview-card{min-width:0}
+.cse-native-canvas-copy p{overflow-wrap:anywhere}
+.cse-rule-manager{display:grid;gap:10px;margin-top:10px;min-width:0;border-top:1px solid #eed5dd;padding-top:12px}
+.cse-rule-manager h4{font:700 14px Georgia,serif;margin:0}
+.cse-rule-row{display:grid;gap:8px;padding:10px;border:1px solid #ebcdd8;border-radius:8px;background:#fff8fa;min-width:0}
+.cse-rule-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.cse-rule-row label{min-width:0}
+.cse-rule-row select,.cse-rule-row input{width:100%;min-width:0}
+.cse-rule-row input[aria-invalid=true]{border-color:#c51e44!important}
+.cse-rule-actions{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.cse-rule-actions code{overflow-wrap:anywhere;font:10px/1.5 ui-monospace,monospace;color:#70344d}
+.cse-rule-actions button,.cse-rule-manager>button{padding:9px 10px;border:1px solid #cf90ac;border-radius:6px;background:#fff;color:#831843;cursor:pointer;font-size:11px}
+.cse-rule-manager>button{background:#8a113f;color:white;font-weight:700}
+.cse-rule-manager button:disabled{opacity:.55;cursor:not-allowed}
+.cse-rule-row small[role=alert]{color:#b61b45}
+@media(max-width:1180px){.cse-workspace{grid-template-columns:minmax(170px,30%) minmax(0,1fr)}.cse-inspector{grid-column:1/-1}}
+@media(max-width:690px){.cse-workspace{grid-template-columns:minmax(0,1fr)}.cse-inspector{grid-column:auto}.cse-rule-pair{grid-template-columns:1fr}}
