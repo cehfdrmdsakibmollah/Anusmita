@@ -233,3 +233,20 @@
 .cse-picked-actions button:hover,.cse-quick-editor>button:hover{background:#ffeaf2}
 .cse-quick-editor input:not([type="checkbox"]),.cse-quick-editor textarea{width:100%;box-sizing:border-box;border:1px solid #e2b5c7;border-radius:6px;padding:9px;color:#61203e;background:#fff;min-width:0;font:12px Arial,sans-serif}
 .cse-quick-editor label{display:grid;gap:5px;font:600 11px Arial,sans-serif;color:#782140}
+
+
+/* Universal Studio section navigation mirrors the Homepage editing workflow. */
+.cse-workspace-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-bottom:12px;border:1px solid #e8bfd0;border-radius:8px;overflow:hidden;background:#fff}
+.cse-workspace-tabs button{background:#fff;color:#79183e;border:0;border-right:1px solid #ecd5de;padding:10px 4px;font:700 11px Arial,sans-serif;cursor:pointer}
+.cse-workspace-tabs button:last-child{border-right:0}
+.cse-workspace-tabs button.active{background:linear-gradient(160deg,#ae2059,#80052e);color:white}
+.cse-library-panel{border:1px solid #efd5dd;padding:12px 9px;border-radius:8px;background:#fff9fb}
+.cse-library-panel h3{font:700 14px Georgia,serif;color:#831e45;margin:0 0 8px}
+.cse-library-panel p{font:11px/1.5 Arial,sans-serif;color:#79566a;margin:0 0 12px}
+.cse-library-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cse-library-tiles button{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:5px;min-height:66px;padding:9px 5px;border:1px solid #e8c7d4;border-radius:7px;color:#861e48;background:linear-gradient(#fff,#fff4f8);font:600 11px/1.3 Arial,sans-serif;cursor:pointer;white-space:normal}
+.cse-library-tiles button span{font-size:22px}
+.cse-library-tiles button:hover:not(:disabled){border-color:#bc3069;background:#ffeaf3}
+.cse-library-tiles button:disabled{cursor:not-allowed;opacity:.5}
+.cse-inspector-tabs button{text-transform:none}
+@media(max-width:760px){.cse-library-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
