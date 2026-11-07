@@ -3,6 +3,7 @@ import {db} from "@/lib/db";
 import {CmsPageSlot,Audit} from "@/lib/models";
 import {cmsSaveSchema,cmsRestoreSchema,cmsRevisionSchema,cmsNativeHeroSchema,cmsSlots,cmsSlotPages,defaultCmsNativeHero} from "@/lib/cms-page-slots";
 import {validatePageNativeText} from "@/lib/cms-native-bindings";
+import {validateNativePromoIds} from "@/lib/cms-promo-bindings";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const headers={"Cache-Control":"private, no-store"};
@@ -40,6 +41,7 @@ export async function POST(req:Request){
    nextHero=input.nativeHero;
   }
   if(!validatePageNativeText(input.page,nextHero.textBindings||[]))throw new HttpError(400,"Native text binding is not approved for this page");
+  if(!validateNativePromoIds(input.page,nextHero.promoCards||[]))throw new HttpError(400,"Unapproved promotional card identifier for this page");
   const snapshot={revision:revision+1,action:input.action,createdAt:new Date(),slots:nextSlots,nativeHero:nextHero};
   const history=[...(existing?.history||[]),snapshot].slice(-20);
   const update:any={$set:{draft:nextSlots,nativeDraft:nextHero,lastEditedBy:actor.id,history},$inc:{revision:1}};
