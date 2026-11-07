@@ -8,6 +8,7 @@ import {ArrowRight,ArrowUpRight,Heart,Package,ShieldCheck,Sparkles,Truck} from "
 import {db} from "@/lib/db";
 import {Product,ProductReview,ProductSeo,ProductSlugRedirect} from "@/lib/models";
 import {buildProductSeoGraph,safeSeoJsonLd} from "@/lib/product-seo-structured";
+import {autoSeo} from "@/lib/product-seo-audit";
 import {verifiedSeoReviewSummary} from "@/lib/product-seo-reviews";
 import {historicalProductRedirectPath} from "@/lib/product-slug-redirect";
 import {canPublishReview,complementaryCategories,reviewEmptyLabel} from "@/lib/product-trust";
@@ -90,8 +91,9 @@ export async function generateMetadata({params}:Props):Promise<Metadata>{
  if(!p)return {title:"Product not available",robots:{index:false,follow:false}};
  const isPreview=slug==="design-preview";
  const custom=await seoFor(p);
- const title=isPreview?"Product details design preview":(custom?.metaTitle||(p.name+" | "+(p.brand||"ANUSMITA")).slice(0,70));
- const description=String(custom?.metaDescription||p.description||("Discover "+p.name+" at ANUSMITA Bangladesh")).slice(0,160);
+ const fallback=autoSeo({...p,active:!isPreview});
+ const title=isPreview?"Product details design preview":(custom?.metaTitle||fallback.title);
+ const description=String(custom?.metaDescription||fallback.description).slice(0,160);
  return {title,description,robots:{
   index:!isPreview&&checkoutEnabled(process.env)&&(custom?.robotsIndex!==false),
   follow:!isPreview&&checkoutEnabled(process.env)&&(custom?.robotsFollow!==false)
