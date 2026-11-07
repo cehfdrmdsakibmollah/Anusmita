@@ -6,6 +6,7 @@ import CmsMediaLibrary from "@/components/cms-media-library";
 import CmsCssControls from "@/components/cms-css-controls";
 import CmsLiveVisualCanvas from "@/components/cms-live-visual-canvas";
 import {nativeTextTargets,validatePageNativeText,type CmsNativeKey} from "@/lib/cms-native-bindings";
+import {nativePromoIds,nativePromoLabels,validateNativePromoIds} from "@/lib/cms-promo-bindings";
 import type {CmsCssRule} from "@/lib/cms-css-rules";
 import {renderCmsCssRules} from "@/lib/cms-css-rules";
 import {hasNativePageHero,hasCmsPageIntro,sameCmsPageDraft} from "@/lib/cms-page-editor-support";
@@ -25,6 +26,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
  const [pickedTarget,setPickedTarget]=useState<CmsCssRule["target"]>("hero");
  const [canvasDevice,setCanvasDevice]=useState<"desktop"|"tablet"|"mobile">("desktop");
  const [selectedNative,setSelectedNative]=useState(true);
+ const [selectedPromoId,setSelectedPromoId]=useState<string|null>(null);
  const canvasWidth=canvasDevice==="desktop"?1280:canvasDevice==="tablet"?768:390;
  const [previewKey,setPreviewKey]=useState(0);
  const [draggingId,setDraggingId]=useState<string|null>(null);
@@ -68,6 +70,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
   }catch(e){setNotice("Import rejected: "+(e instanceof Error?e.message:String(e)));}
  }
 
+ function patchPromo(id:string,changes:Partial<CmsNativeHero["promoCards"][number]>){setNative(old=>{const existing=old.promoCards.find(c=>c.id===id)||{id,title:"",imageUrl:"",enabled:true};return {...old,promoCards:[...old.promoCards.filter(c=>c.id!==id),{...existing,...changes}]};});}
  function setNativeText(key:CmsNativeKey,text:string){setNative(old=>({...old,textBindings:text?([...old.textBindings.filter(item=>item.key!==key),{key,text,enabled:true}]):old.textBindings.filter(item=>item.key!==key)}));}
  function update(changes:Partial<CmsSlot>){if(!selectedSlot)return;setSlots(old=>old.map(s=>s.id===selected?{...s,...changes}:s));}
  function modifyNested(id:string,changes:Partial<CmsSlot["children"][number]>){if(!selectedSlot)return;update({children:selectedSlot.children.map(card=>card.id===id?{...card,...changes}:card)});}
@@ -130,7 +133,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
   }catch(e){setNotice("Restore error: "+String(e));}
   finally{setBusy(false);}
  }
- async function save(action:"saveDraft"|"publish"){if(!record||busy)return;const valid=cmsSlotSchema.array().max(20).safeParse(slots);const nativeValid=cmsNativeHeroSchema.safeParse(native);if(nativeValid.success&&!validatePageNativeText(page,nativeValid.data.textBindings)){setNotice("Unsupported native text binding for this page.");return;}if(!nativeValid.success){setNotice("Hero validation: "+nativeValid.error.issues.map(i=>i.message).join("; "));return;}if(!valid.success){setNotice("Validation: "+valid.error.issues.map(i=>i.message).join("; "));return;}
+ async function save(action:"saveDraft"|"publish"){if(!record||busy)return;const valid=cmsSlotSchema.array().max(20).safeParse(slots);const nativeValid=cmsNativeHeroSchema.safeParse(native);if(nativeValid.success&&!validateNativePromoIds(page,nativeValid.data.promoCards)){setNotice("Unsupported native promotional card for this page.");return;}if(nativeValid.success&&!validatePageNativeText(page,nativeValid.data.textBindings)){setNotice("Unsupported native text binding for this page.");return;}if(!nativeValid.success){setNotice("Hero validation: "+nativeValid.error.issues.map(i=>i.message).join("; "));return;}if(!valid.success){setNotice("Validation: "+valid.error.issues.map(i=>i.message).join("; "));return;}
   if(action==="publish"&&!window.confirm("Publish "+slots.length+" editorial block(s) to /"+page+"? Existing native storefront interactions will remain untouched."))return;
   setBusy(true);setNotice("");
   try{
@@ -167,7 +170,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
     {(["desktop","tablet","mobile"] as const).map(device=><button key={device} type="button" aria-pressed={canvasDevice===device} onClick={()=>setCanvasDevice(device)}>{device[0].toUpperCase()+device.slice(1)}</button>)}
     <span>{canvasWidth}px maximum · visual editor fits available width; live frame can scroll</span>
    </div>
-   {canvasView==="live"&&<CmsLiveVisualCanvas page={page} src={publicPath} width={canvasWidth} revision={previewKey} draft={native} onPick={(target,id)=>{setPickedTarget(target);if(id&&slots.some(slot=>slot.id===id)){chooseCmsSection(id);return;}setSelectedNative(true);setSelected(null);setInspectorTab(["hero","heading","image"].includes(target)?"content":"design");}}/>}
+   {canvasView==="live"&&<CmsLiveVisualCanvas page={page} src={publicPath} width={canvasWidth} revision={previewKey} draft={native} onPick={(target,id)=>{setPickedTarget(target);if(id?.startsWith("promo:")){setSelectedPromoId(id.slice(6));setSelectedNative(true);setSelected(null);setInspectorTab("content");return;}if(id&&slots.some(slot=>slot.id===id)){chooseCmsSection(id);return;}setSelectedNative(true);setSelected(null);setInspectorTab(["hero","heading","image"].includes(target)?"content":"design");}}/>}
    <div className="cse-preview-viewport" role="region" aria-label={canvasDevice+" draft block preview"} tabIndex={0} hidden={canvasView!=="blocks"}><div className="cse-blocks-canvas" style={{width:"100%",maxWidth:canvasWidth}}>
    <div className="cse-native-block-link"><strong>Real native {page} page</strong><p>The existing page is shown in the real storefront canvas. Use this tab to edit additional CMS sections.</p><button type="button" onClick={()=>{setSelectedNative(true);setCanvasView("live");}}>Select on actual page</button></div>
    {slots.map(s=><div key={s.id} data-cms-draft-slot={s.id}>
@@ -225,6 +228,11 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
      {binding&&<button type="button" onClick={()=>setNativeText(key as CmsNativeKey,"")}>Restore original {key}</button>}
     </label>;
    })}
+  </div>}
+  {inspectorTab==="content"&&(page==="deals"||page==="bundles")&&<div className="cse-native-promo-editor"><h4>Native Promotional Cards · {page}</h4><p className="cse-muted">Edit existing presentation cards. Names/images/visibility only; sample prices and product data cannot be changed here. Use CMS grid to create additional editorial promotions.</p>
+   {nativePromoIds[page].map(id=>{const item=native.promoCards.find(p=>p.id===id);return <div className={"cse-native-promo-item"+(selectedPromoId===id?" active":"")} key={id}><button type="button" onClick={()=>setSelectedPromoId(selectedPromoId===id?null:id)}>{nativePromoLabels[id]} {selectedPromoId===id?"▴":"▾"}</button>
+    {selectedPromoId===id&&<div className="cse-native-promo-fields"><label>Display title<input maxLength={100} value={item?.title||""} placeholder={"Keep "+nativePromoLabels[id]} onChange={e=>patchPromo(id,{title:e.target.value})}/></label><label>Approved image URL<input maxLength={500} value={item?.imageUrl||""} placeholder="Keep original artwork" onChange={e=>patchPromo(id,{imageUrl:e.target.value})}/></label><CmsMediaLibrary scope={page} onChoose={url=>patchPromo(id,{imageUrl:url})}/><label className="cse-checkbox"><input type="checkbox" checked={item?.enabled!==false} onChange={e=>patchPromo(id,{enabled:e.target.checked})}/>Visible</label><button type="button" onClick={()=>setNative(old=>({...old,promoCards:old.promoCards.filter(p=>p.id!==id)}))}>Restore original card</button></div>}
+   </div>;})}
   </div>}
   {inspectorTab==="design"&&<CmsCssControls rules={native.cssRules} preferredTarget={pickedTarget} disabled={busy||mediaBusy} onChange={cssRules=>setNative(value=>({...value,cssRules}))}/>}
   {inspectorTab==="publish"&&<p className="cse-muted">Publish the configured page styles and editorial content without altering protected commerce logic.</p>}
