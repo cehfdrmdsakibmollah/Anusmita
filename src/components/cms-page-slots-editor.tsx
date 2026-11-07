@@ -5,6 +5,7 @@ import {cmsSlotSchema,defaultCmsStyle,cmsSectionKinds,cmsNativeHeroSchema,defaul
 import CmsMediaLibrary from "@/components/cms-media-library";
 import CmsCssControls from "@/components/cms-css-controls";
 import CmsLiveVisualCanvas from "@/components/cms-live-visual-canvas";
+import {nativeTextTargets,validatePageNativeText,type CmsNativeKey} from "@/lib/cms-native-bindings";
 import type {CmsCssRule} from "@/lib/cms-css-rules";
 import {renderCmsCssRules} from "@/lib/cms-css-rules";
 import {hasNativePageHero,hasCmsPageIntro,sameCmsPageDraft} from "@/lib/cms-page-editor-support";
@@ -67,6 +68,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
   }catch(e){setNotice("Import rejected: "+(e instanceof Error?e.message:String(e)));}
  }
 
+ function setNativeText(key:CmsNativeKey,text:string){setNative(old=>({...old,textBindings:text?([...old.textBindings.filter(item=>item.key!==key),{key,text,enabled:true}]):old.textBindings.filter(item=>item.key!==key)}));}
  function update(changes:Partial<CmsSlot>){if(!selectedSlot)return;setSlots(old=>old.map(s=>s.id===selected?{...s,...changes}:s));}
  function modifyNested(id:string,changes:Partial<CmsSlot["children"][number]>){if(!selectedSlot)return;update({children:selectedSlot.children.map(card=>card.id===id?{...card,...changes}:card)});}
  function addNested(){if(!selectedSlot||selectedSlot.children.length>=6)return;update({children:[...selectedSlot.children,{id:crypto.randomUUID(),title:"New editorial card",subtitle:"",imageUrl:"",cta:"Explore",href:"/shop"}]});}
@@ -125,7 +127,7 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
   }catch(e){setNotice("Restore error: "+String(e));}
   finally{setBusy(false);}
  }
- async function save(action:"saveDraft"|"publish"){if(!record||busy)return;const valid=cmsSlotSchema.array().max(20).safeParse(slots);const nativeValid=cmsNativeHeroSchema.safeParse(native);if(!nativeValid.success){setNotice("Hero validation: "+nativeValid.error.issues.map(i=>i.message).join("; "));return;}if(!valid.success){setNotice("Validation: "+valid.error.issues.map(i=>i.message).join("; "));return;}
+ async function save(action:"saveDraft"|"publish"){if(!record||busy)return;const valid=cmsSlotSchema.array().max(20).safeParse(slots);const nativeValid=cmsNativeHeroSchema.safeParse(native);if(nativeValid.success&&!validatePageNativeText(page,nativeValid.data.textBindings)){setNotice("Unsupported native text binding for this page.");return;}if(!nativeValid.success){setNotice("Hero validation: "+nativeValid.error.issues.map(i=>i.message).join("; "));return;}if(!valid.success){setNotice("Validation: "+valid.error.issues.map(i=>i.message).join("; "));return;}
   if(action==="publish"&&!window.confirm("Publish "+slots.length+" editorial block(s) to /"+page+"? Existing native storefront interactions will remain untouched."))return;
   setBusy(true);setNotice("");
   try{
@@ -209,6 +211,17 @@ export default function CmsPageSlotsEditor({page,onPublished,onDirtyChange}:{pag
     {native.sectionImageUrl&&<img src={native.sectionImageUrl} className="cse-native-section-thumbnail" alt="Draft replacement artwork"/>}
    </div>}
    <p className="cse-muted">Image upload adds a new R2 asset to the draft; it does not publish automatically. Click Save Draft then Publish Page Slots to update the public hero.</p>
+  </div>}
+  {inspectorTab==="content"&&<div className="cse-native-text-binding-editor">
+   <h4>Native Cards, Forms & Editorial Text</h4>
+   <p className="cse-muted">Edit approved text inside existing native page elements. These fields change only display copy—not form submissions, real prices, inventory, order data or checkout actions.</p>
+   {Object.entries(nativeTextTargets[page]).map(([key,selector])=>{
+    const binding=native.textBindings.find(item=>item.key===key);
+    return <label key={key}>{key.replace(/([A-Z])/g," $1")} <small>{selector}</small>
+     <input maxLength={240} value={binding?.text||""} placeholder="Keep original text" onChange={e=>setNativeText(key as CmsNativeKey,e.target.value)}/>
+     {binding&&<button type="button" onClick={()=>setNativeText(key as CmsNativeKey,"")}>Restore original {key}</button>}
+    </label>;
+   })}
   </div>}
   {inspectorTab==="design"&&<CmsCssControls rules={native.cssRules} preferredTarget={pickedTarget} disabled={busy||mediaBusy} onChange={cssRules=>setNative(value=>({...value,cssRules}))}/>}
   {inspectorTab==="publish"&&<p className="cse-muted">Publish the configured page styles and editorial content without altering protected commerce logic.</p>}
