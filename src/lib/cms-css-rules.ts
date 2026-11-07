@@ -68,10 +68,35 @@ export function renderCmsCssRules(rules:readonly CmsCssRule[],scope:string,targe
 }
 export const slotCssSelectors={hero:":scope",heading:"h2",card:".anCmsPublicNestedCard",button:"a",image:"img"};
 
+/** Page-owned presentation fields, never arbitrary CSS selectors or commerce state. */
+export const nativeCmsFieldSelectors:Record<string,Partial<Record<"title"|"subtitle"|"sectionTitle"|"imageUrl"|"sectionImageUrl",string>>>={
+ deals:{title:".dp-hero h1",subtitle:".dp-hero-copy p",sectionTitle:"#deals-title",imageUrl:".dp-hero>.dp-cms-hero-image, .dp-hero>.dp-hero-photo",sectionImageUrl:".dp-editorial>.dp-native-section-image, .dp-editorial>.dp-art"},
+ bundles:{title:".bp-hero h1",subtitle:".bp-hero p",sectionTitle:"#routine-title",imageUrl:".bp-hero>.bp-cms-hero-image, .bp-hero>.bp-hero-desktop, .bp-hero>.bp-hero-mobile",sectionImageUrl:".bp-feature-photo"},
+ shop:{title:".anShopHero h1",subtitle:".anShopHero p",sectionTitle:".anShopHeading h2"},
+ "gift-cards":{title:".gc-hero h1",subtitle:".gc-hero p",sectionTitle:"#gc-title"},
+ "pre-orders":{title:".po-hero h1",subtitle:".po-hero p",sectionTitle:"#po-journey-title"},
+ "customer-stories":{title:".cs-hero h1",subtitle:".cs-hero p",sectionTitle:"#cs-gallery-title"},
+ "routine-quiz":{title:".rq-hero h1",subtitle:".rq-hero p",sectionTitle:".rq-help h2"},
+ "track-order":{title:".to-hero h1",subtitle:".to-hero p",sectionTitle:"#to-form-title"},
+ cart:{title:".anFlowHero h1",subtitle:".anFlowHero p",sectionTitle:".anFlowHero h2"},
+ checkout:{title:".anFlowCheckoutIntro h1",subtitle:".anFlowCheckoutIntro p",sectionTitle:".anFlowCheckoutIntro h2"},
+ wishlist:{title:".shoppingPage h1",sectionTitle:".sheetEmpty h2"},
+ about:{title:".ip-about-hero h1"},contact:{title:".ip-contact-hero h1"},journal:{title:".ip-journal-hero h1"}
+};
+export function nativeCmsFieldScope(page:string,elementId:string,target:CmsCssRule["target"]):string|null{
+ const fields=nativeCmsFieldSelectors[page];
+ const key=elementId as keyof NonNullable<typeof fields>;
+ const selector=fields?.[key];
+ if(!selector)return null;
+ if(key==="imageUrl"||key==="sectionImageUrl")return target==="image"?selector:null;
+ if(key==="title"||key==="subtitle"||key==="sectionTitle")return target==="heading"?selector:null;
+ return null;
+}
+
 /** Native per-card scopes are server-defined IDs, never user-supplied CSS selectors. */
 export function validateNativeCmsCssScopes(page:string,rules:readonly CmsCssRule[]):boolean{
  const ids=page==="deals"||page==="bundles"?new Set<string>(nativePromoIds[page]):new Set<string>();
- return rules.every(rule=>!rule.elementId||ids.has(rule.elementId));
+ return rules.every(rule=>!rule.elementId||ids.has(rule.elementId)||!!nativeCmsFieldScope(page,rule.elementId,rule.target));
 }
 
 /** Shared by public pages and preview to avoid editor/public selector drift. */
@@ -85,6 +110,8 @@ export function renderNativeCmsCssRules(page:string,rules:readonly CmsCssRule[],
   if(!safeCmsCssValue(rule.property,rule.value))continue;
   if(!rule.elementId){output.push(renderCmsCssRules([rule],scope,defaults));continue;}
   if(!validateNativeCmsCssScopes(page,[rule]))continue;
+  const fieldSelector=nativeCmsFieldScope(page,rule.elementId,rule.target);
+  if(fieldSelector){output.push(renderCmsCssRules([{...rule,elementId:undefined}],scope,{...defaults,[rule.target]:fieldSelector}));continue;}
   const base=card+'[data-cms-promo-id="'+rule.elementId+'"]';
   const scoped=rule.target==="card"?base:
    rule.target==="heading"?base+" h3":
