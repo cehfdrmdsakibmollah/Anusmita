@@ -42,3 +42,18 @@
 .ep-history-item p{font-size:12px;line-height:1.5;white-space:normal;overflow-wrap:anywhere;color:#5b3d4b;margin:7px 0 0}
 .ep-history-item button{flex-shrink:0;white-space:nowrap}
 @media(max-width:640px){.ep-history-item{flex-direction:column}.ep-history-item button{width:100%}}
+
+/* Live public HTML verification: compact, readable evidence and explicit mismatches. */
+.ep-public-verification{margin:16px 0;padding:16px;border:1px solid #e8cbd5;border-radius:12px;background:#fffafb;display:grid;gap:11px}
+.ep-public-verification h3{display:flex;gap:8px;align-items:center;margin:0;font-size:15px;color:#861945}
+.ep-public-verification p,.ep-public-verification>small{font-size:12px;line-height:1.6;color:#704759;margin:0}
+.ep-public-verification>button{justify-self:start}
+.ep-public-results{display:grid;gap:8px}
+.ep-public-results>strong{color:#7e1741;font-size:13px}
+.ep-public-results>small{color:#856b77;font-size:11px}
+.ep-public-results dl{margin:0;display:grid;gap:7px}
+.ep-public-results dl>div{display:grid;grid-template-columns:115px minmax(0,1fr);gap:9px;border-bottom:1px solid #efdce3;padding:6px 0}
+.ep-public-results dt{font-size:11px;font-weight:700;color:#8f4661}
+.ep-public-results dd{font-size:12px;margin:0;overflow-wrap:anywhere;color:#553047}
+.ep-public-results .ep-public-problem{border-left:3px solid #bf315c;padding:7px 10px;background:#fff1f5;color:#9a244e}
+@media(max-width:580px){.ep-public-results dl>div{grid-template-columns:1fr;gap:2px}}
