@@ -3,7 +3,7 @@ export const posId=z.string().regex(/^[0-9a-f]{24}$/i);
 export const posSaleInput=z.object({
  operationKey:z.string().uuid(),
  branchId:posId,
- lines:z.array(z.object({productId:posId,quantity:z.number().int().min(1).max(100)}).strict()).min(1).max(40),
+ lines:z.array(z.object({productId:posId,quantity:z.number().int().min(1).max(100),expectedUnitPricePaisa:z.number().int().positive().max(1000000000)}).strict()).min(1).max(40),
  customerName:z.string().trim().max(100).default(""),
  customerPhone:z.string().trim().regex(/^(|01[0-9]{9})$/).default(""),
  paymentMethod:z.literal("cash"),
@@ -31,4 +31,11 @@ export function calculatePosCash(lines:readonly {quantity:number;unitPricePaisa:
 }
 export function assertUniquePosLines(lines:readonly {productId:string}[]){
  if(new Set(lines.map(x=>x.productId)).size!==lines.length)throw Error("Duplicate products in a single POS sale");
+}
+
+/** Never charge against a stale displayed price after offline draft restoration. */
+export function assertPosPriceSnapshot(current:number,expected:number){
+ if(!Number.isSafeInteger(current)||current<=0||!Number.isSafeInteger(expected)||expected<=0)
+  throw new Error("Invalid current or displayed price");
+ if(current!==expected)throw new Error("Product price changed. Refresh the catalog and review the cart before sale.");
 }
