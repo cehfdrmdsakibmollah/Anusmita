@@ -325,6 +325,10 @@ const PosCashReturnSchema=new Schema({
  reason:{type:String,required:true,maxlength:500},
  disposition:{type:String,enum:["quarantine","damaged"],required:true},
  status:{type:String,enum:["cash_refunded"],default:"cash_refunded"},
+ inspectionState:{type:String,enum:["pending","restocked","disposed"],default:"pending"},
+ inspectionNote:{type:String,default:"",maxlength:500},
+ inspectedAt:{type:Date,default:null},
+ inspectedBy:{type:Schema.Types.ObjectId,ref:"User",default:null},
  businessDate:{type:String,required:true}
 },opts);
 PosCashReturnSchema.index({saleId:1,createdAt:-1});
