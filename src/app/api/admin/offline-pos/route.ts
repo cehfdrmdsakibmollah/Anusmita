@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
-import {Product,WarehouseLocation,WarehouseBalance,StockMovement,OfflineSale,PosCashShift,PosCashReturn,Audit} from "@/lib/models";
+import {Product,WarehouseLocation,WarehouseBalance,StockMovement,OfflineSale,PosCashShift,PosCashReturn,JournalEntry,Audit} from "@/lib/models";
 import {posSaleInput,bdBusinessDate,calculatePosCash,assertUniquePosLines,assertPosPriceSnapshot} from "@/lib/offline-pos";
+import {posCashSalePosting} from "@/lib/pos-journal";
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
 const roles=["owner","admin","sales"] as const;
@@ -98,6 +99,12 @@ export async function POST(request:Request){
     const now=new Date(),date=bdBusinessDate(now);
     const invoiceNumber="POS-"+date.replace(/-/g,"")+"-"+data.operationKey.slice(0,8).toUpperCase();
     const [sale]=await OfflineSale.create([{operationKey:data.operationKey,invoiceNumber,branchId:data.branchId,branchName:branch.name,cashierId:actor.id,cashierName:actor.name,shiftId:shift._id,customerName:data.customerName,customerPhone:data.customerPhone,paymentMethod:"cash",lines,...financials,businessDate:date}],{session});
+    const knownCosts=lines.every(line=>Number.isSafeInteger(line.unitCostPaisa)&&line.unitCostPaisa>=0);
+    const cost=knownCosts?lines.reduce((sum,line)=>sum+Number(line.unitCostPaisa)*line.quantity,0):null;
+    const posting=posCashSalePosting(financials.totalPaisa,cost);
+    await JournalEntry.create([{entryKey:"pos:sale:"+String(sale._id),transactionDate:now,reference:invoiceNumber,
+      note:knownCosts?"POS cash sale and actual sale-time cost":"POS cash sale; cost basis not available",
+      ...posting,createdBy:actor.id}],{session});
     await Audit.create([{actorId:actor.id,action:"pos.cash.sale.completed",entity:"OfflineSale",entityId:String(sale._id),details:{branchId:data.branchId,invoiceNumber,totalPaisa:financials.totalPaisa,items:lines.length}}],{session});
     output={id:String(sale._id),invoiceNumber,alreadyApplied:false,totalPaisa:financials.totalPaisa,changePaisa:financials.changePaisa};
    },{readConcern:{level:"snapshot"},writeConcern:{w:"majority"}});

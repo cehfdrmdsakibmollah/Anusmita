@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
-import {OfflineSale,PosCashReturn,PosCashShift,Audit} from "@/lib/models";
+import {OfflineSale,PosCashReturn,PosCashShift,JournalEntry,Audit} from "@/lib/models";
 import {bdBusinessDate} from "@/lib/offline-pos";
 import {posReturnInput,cashRefundForReturn,remainingReturnQuantity} from "@/lib/pos-cash-returns";
+import {posCashRefundPosting} from "@/lib/pos-journal";
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
 const roles=["owner","admin"] as const;
@@ -76,6 +77,8 @@ export async function POST(request:Request){
      branchId:sale.branchId,branchName:sale.branchName,managerId:actor.id,managerName:actor.name,shiftId:shift._id,
      lines:entries.map(({returnedTotalQuantity,...line})=>line),grossReturnPaisa:gross,refundedPaisa:refund,
      reason:data.reason,disposition:data.disposition,businessDate:date}],{session});
+    await JournalEntry.create([{entryKey:"pos:refund:"+String(result._id),transactionDate:new Date(),reference:sale.invoiceNumber,
+      note:"Cash refund against original POS invoice",...posCashRefundPosting(refund),createdBy:actor.id}],{session});
     await Audit.create([{actorId:actor.id,action:"pos.cash.refund.completed",entity:"PosCashReturn",entityId:String(result._id),
      details:{saleId:String(sale._id),invoiceNumber:sale.invoiceNumber,branchId:String(sale.branchId),refundPaisa:refund,
       disposition:data.disposition,items:entries.reduce((n,l)=>n+l.quantity,0)}}],{session});

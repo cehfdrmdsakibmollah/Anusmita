@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 import {z} from "zod";
 import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
-import {Product,WarehouseLocation,WarehouseBalance,BranchDamage,StockMovement,Audit} from "@/lib/models";
+import {posInventoryDispositionPosting} from "@/lib/pos-journal";
+import {Product,WarehouseLocation,WarehouseBalance,BranchDamage,StockMovement,JournalEntry,Audit} from "@/lib/models";
 export const dynamic="force-dynamic";
 const id=z.string().regex(/^[0-9a-f]{24}$/i);
 const input=z.object({
@@ -39,6 +40,11 @@ export async function POST(request:Request){
    if(!product)throw new HttpError(409,"Not enough unreserved global stock. Nothing recorded");
    const [damage]=await BranchDamage.create([{...data,branchName:branch.name,productName:product.name,sku:product.sku,unitCostPaisa:Math.max(0,Number(product.costPaisa||0)),actorId:actor.id}],{session});
    await StockMovement.create([{productId:data.productId,type:"damage",deltaOnHand:-data.quantity,actorId:actor.id,note:"Branch damage "+data.operationKey+": "+data.reason}],{session});
+   const cost=damage.unitCostPaisa*data.quantity;
+   if(cost>0){
+    await JournalEntry.create([{entryKey:"pos:damage:"+String(damage._id),transactionDate:new Date(),reference:damage.sku,
+     note:"POS branch stock damage at "+branch.name,...posInventoryDispositionPosting("damage",cost),createdBy:actor.id}],{session});
+   }
    await Audit.create([{actorId:actor.id,action:"pos.branch.damage.recorded",entity:"BranchDamage",entityId:String(damage._id),details:{branchId:data.branchId,productId:data.productId,quantity:data.quantity}}],{session});
    result={id:String(damage._id),alreadyApplied:false};
   },{readConcern:{level:"snapshot"},writeConcern:{w:"majority"}});}finally{await session.endSession();}
