@@ -65,7 +65,7 @@ export async function PATCH(request:Request){
     // changing shift.cashSalesPaisa causes a write conflict or CAS rejection.
     const closed=await PosCashShift.findOneAndUpdate({
      _id:data.shiftId,cashierId:actor.id,status:"open",
-     cashSalesPaisa:shift.cashSalesPaisa,cashRefundsPaisa:shift.cashRefundsPaisa||0,saleCount:shift.saleCount
+     cashSalesPaisa:shift.cashSalesPaisa,cashRefundsPaisa:shift.cashRefundsPaisa||{$in:[0,null]},saleCount:shift.saleCount
     },{$set:{...money,status:"closed",closingNote:data.closingNote,closedAt:new Date(),closedBy:actor.id}},{new:true,session});
     if(!closed)throw new HttpError(409,"Another sale changed this shift. Reload before closing.");
     await Audit.create([{actorId:actor.id,action:"pos.cash.shift.closed",entity:"PosCashShift",entityId:String(closed._id),
