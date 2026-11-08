@@ -271,6 +271,18 @@ const PosCashShiftSchema=new Schema({
 PosCashShiftSchema.index({branchId:1,cashierId:1},{unique:true,partialFilterExpression:{status:"open"}});
 PosCashShiftSchema.index({branchId:1,openedAt:-1});
 export const PosCashShift=mongoose.models.PosCashShift||mongoose.model("PosCashShift",PosCashShiftSchema);
+/** Branch-specific employee incentive setting. Never issues payroll or cash payouts. */
+const PosCommissionPolicySchema=new Schema({
+ branchId:{type:Schema.Types.ObjectId,ref:"WarehouseLocation",required:true,index:true},
+ cashierId:{type:Schema.Types.ObjectId,ref:"User",required:true,index:true},
+ rateBps:{type:Number,required:true,min:0,max:2000},
+ active:{type:Boolean,default:true},
+ updatedBy:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ reason:{type:String,required:true,maxlength:300}
+},opts);
+PosCommissionPolicySchema.index({branchId:1,cashierId:1},{unique:true});
+export const PosCommissionPolicy=mongoose.models.PosCommissionPolicy||mongoose.model("PosCommissionPolicy",PosCommissionPolicySchema);
+
 const OfflineSaleSchema=new Schema({
  operationKey:{type:String,required:true,unique:true},
  invoiceNumber:{type:String,required:true,unique:true},
@@ -279,6 +291,8 @@ const OfflineSaleSchema=new Schema({
  cashierId:{type:Schema.Types.ObjectId,ref:"User",required:true,index:true},
  cashierName:{type:String,required:true},
  shiftId:{type:Schema.Types.ObjectId,ref:"PosCashShift",default:null,index:true},
+ commissionRateBps:{type:Number,default:null,min:0,max:2000},
+ commissionPaisa:{type:Number,default:null,min:0},
  exchangeReturnId:{type:Schema.Types.ObjectId,ref:"PosCashReturn",default:null},
  customerName:{type:String,default:""},customerPhone:{type:String,default:""},
  paymentMethod:{type:String,enum:["cash"],required:true,default:"cash"},
