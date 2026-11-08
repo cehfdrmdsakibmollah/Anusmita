@@ -55,7 +55,7 @@ export async function POST(request:Request){
      if(!item)throw new HttpError(409,"Return product does not belong to invoice");
      const prev=Number(sale.returnedQuantities?.get?.(line.productId)??sale.returnedQuantities?.[line.productId]??0);
      if(line.quantity>remainingReturnQuantity(item.quantity,prev))throw new HttpError(409,"Requested quantity exceeds unreturned invoice quantity");
-     return {productId:line.productId,sku:item.sku,name:item.name,quantity:line.quantity,grossPaisa:item.unitPricePaisa*line.quantity,returnedTotalQuantity:prev+line.quantity};
+     return {productId:line.productId,sku:item.sku,name:item.name,quantity:line.quantity,grossPaisa:item.unitPricePaisa*line.quantity,unitCostPaisa:Number.isSafeInteger(item.unitCostPaisa)&&item.unitCostPaisa>=0?item.unitCostPaisa:null,returnedTotalQuantity:prev+line.quantity};
     });
     const gross=entries.reduce((sum,x)=>sum+x.grossPaisa,0);
     let refund:number;
