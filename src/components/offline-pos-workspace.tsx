@@ -9,7 +9,7 @@ type Product={id:string;name:string;sku:string;barcode:string;category:string;im
 type Sale={id:string;invoiceNumber:string;totalPaisa:number;createdAt:string;cashierName:string;customerName:string};
 type CartLine={product:Product;quantity:number};
 type PosResponse={branches:Branch[];products:Product[];sales:Sale[];today:{salesPaisa:number;refundsPaisa:number;netCashPaisa:number;orders:number;items:number};lowStock:{productId:string;name:string;sku:string;quantity:number}[]};
-type Receipt={invoiceNumber:string;branch:string;cashier:string;customer:string;lines:{name:string;sku:string;quantity:number;unitPricePaisa:number}[];subtotalPaisa:number;discountPaisa:number;totalPaisa:number;tenderedPaisa:number;changePaisa:number;date:string};
+type Receipt={invoiceNumber:string;branch:string;cashier:string;customer:string;lines:{name:string;sku:string;quantity:number;unitPricePaisa:number}[];subtotalPaisa:number;discountPaisa:number;totalPaisa:number;tenderedPaisa:number;changePaisa:number;date:string;refundedPaisa?:number;reprint?:boolean};
 const money=(paisa:number)=>"৳ "+new Intl.NumberFormat("en-BD",{maximumFractionDigits:2}).format((paisa||0)/100);
 const empty:PosResponse={branches:[],products:[],sales:[],today:{salesPaisa:0,refundsPaisa:0,netCashPaisa:0,orders:0,items:0},lowStock:[]};
 const blankId=()=>crypto.randomUUID();
@@ -24,6 +24,7 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
  const [opKey,setOpKey]=useState(blankId),[confirmedId,setConfirmedId]=useState("");
  const [paperSize,setPaperSize]=useState<"58"|"80">("80"),[previewReceipt,setPreviewReceipt]=useState(false);
  const [shiftActive,setShiftActive]=useState(false);
+ const [reprintBusy,setReprintBusy]=useState(false);
  const [exchangeReturnId,setExchangeReturnId]=useState("");
  const [held,setHeld]=useState<HeldPosCart[]>([]),[heldBusy,setHeldBusy]=useState(false),[needsRevalidation,setNeedsRevalidation]=useState(false),[restoredHoldId,setRestoredHoldId]=useState<string|null>(null);
  const barcodeRef=useRef<HTMLInputElement>(null);
@@ -137,6 +138,23 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
   }catch(e){setError((e instanceof Error?e.message:"POS checkout failed")+". If network status is uncertain, use the same checkout to retry; do not start a new cart.");}
   finally{setBusy(false);}
  }
+ async function reprintInvoice(id:string){
+  if(reprintBusy)return;setReprintBusy(true);setError("");
+  try{
+   const response=await fetch("/api/admin/offline-pos/invoices/"+encodeURIComponent(id),{cache:"no-store"});
+   const details=await response.json();
+   if(!response.ok)throw Error(details.error||"Cannot load confirmed invoice");
+   setReceipt({
+    invoiceNumber:details.invoiceNumber,branch:details.branchName,cashier:details.cashierName,
+    customer:details.customerName,lines:details.lines,subtotalPaisa:details.subtotalPaisa,
+    discountPaisa:details.discountPaisa,totalPaisa:details.totalPaisa,tenderedPaisa:details.tenderedPaisa,
+    changePaisa:details.changePaisa,date:new Date(details.date).toLocaleString("en-BD",{timeZone:"Asia/Dhaka"}),
+    refundedPaisa:details.refundedPaisa||0,reprint:true
+   });
+   setPreviewReceipt(true);
+  }catch(e){setError(e instanceof Error?e.message:"Receipt cannot be loaded");}
+  finally{setReprintBusy(false);}
+ }
  function print(){if(receipt){setPreviewReceipt(false);window.print();}}
  useEffect(()=>{
   function shortcut(event:KeyboardEvent){
@@ -175,7 +193,7 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
      <div><span className="anpos-kpi-icon purple"><Boxes/></span><div><small>Branch Products</small><strong>{data.products.length}</strong><em>Available allocated SKUs</em></div></div>
     </section>
     <section className="anpos-tabs" aria-label="POS workflows"><button className={!isInvoice?"active":""} onClick={()=>setView("billing")}><ShoppingCart size={17}/> POS Billing</button><button className={isInvoice?"active":""} onClick={()=>setView("invoices")}><FileText size={17}/> Invoices</button><Link href="/admin/inventory"><Package size={16}/> Inventory</Link><Link href="/admin?tab=Warehouse%20Transfers"><ArrowLeftRight size={16}/> Stock Transfers</Link><button className="anpos-scan" onClick={()=>{setView("billing");barcodeRef.current?.focus()}}><ScanBarcode size={17}/> Scan Barcode</button></section>
-    {isInvoice?<section className="anpos-panel anpos-invoices"><header><h2>Recent Branch Cash Invoices</h2><button onClick={()=>void load(branchId)} disabled={loading}><RefreshCw size={15}/> Refresh</button></header><p>Only confirmed cash transactions in the selected branch appear here. Sales cannot be deleted from this terminal.</p><div className="anpos-invoice-table"><table><thead><tr><th>Invoice</th><th>Cashier</th><th>Customer</th><th>Date</th><th>Total</th></tr></thead><tbody>{data.sales.map(s=><tr key={s.id}><td>{s.invoiceNumber}</td><td>{s.cashierName}</td><td>{s.customerName||"Walk-in"}</td><td>{new Date(s.createdAt).toLocaleString("en-BD",{timeZone:"Asia/Dhaka"})}</td><td>{money(s.totalPaisa)}</td></tr>)}</tbody></table>{!data.sales.length&&<p>No confirmed sales for this branch.</p>}</div></section>:
+    {isInvoice?<section className="anpos-panel anpos-invoices"><header><h2>Recent Branch Cash Invoices</h2><button onClick={()=>void load(branchId)} disabled={loading}><RefreshCw size={15}/> Refresh</button></header><p>Only confirmed cash transactions in the selected branch appear here. Sales cannot be deleted from this terminal.</p><div className="anpos-invoice-table"><table><thead><tr><th>Invoice</th><th>Cashier</th><th>Customer</th><th>Date</th><th>Total</th><th>Receipt</th></tr></thead><tbody>{data.sales.map(s=><tr key={s.id}><td>{s.invoiceNumber}</td><td>{s.cashierName}</td><td>{s.customerName||"Walk-in"}</td><td>{new Date(s.createdAt).toLocaleString("en-BD",{timeZone:"Asia/Dhaka"})}</td><td>{money(s.totalPaisa)}</td><td><button type="button" className="anpos-reprint-button" disabled={reprintBusy} onClick={()=>void reprintInvoice(s.id)}><Printer size={14}/> Reprint</button></td></tr>)}</tbody></table>{!data.sales.length&&<p>No confirmed sales for this branch.</p>}</div></section>:
     <div className="anpos-layout">
      <section className="anpos-panel anpos-catalog"><header><h2>Browse products</h2><span>{loading?"Loading…":data.products.length+" allocated SKUs"}</span></header>
       <div className="anpos-search"><Search size={18}/><input ref={barcodeRef} value={search} onChange={e=>{setSearch(e.target.value);setQuery(e.target.value)}} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();void scanBarcode();}}} placeholder="Scan barcode or search by product name, SKU..." aria-label="Search product or scan barcode"/></div>
@@ -203,8 +221,8 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
     </div>}
    </div>
   </main>
-  {receipt&&previewReceipt&&<div className="anpos-receipt-overlay" role="dialog" aria-modal="true" aria-label="Last cash receipt preview"><div className="anpos-receipt-modal"><header><strong>Confirmed Receipt · {paperSize}mm Preview</strong><button type="button" onClick={()=>setPreviewReceipt(false)} aria-label="Close receipt preview"><X size={18}/></button></header><section><h2>ANUSMITA</h2><p>{receipt.branch} · {receipt.date}</p><p>{receipt.invoiceNumber}</p><p>Cashier: {receipt.cashier}</p>{receipt.lines.map(l=><div key={l.sku}><span>{l.name} × {l.quantity}</span><strong>{money(l.unitPricePaisa*l.quantity)}</strong></div>)}<hr/><div><span>Subtotal</span><strong>{money(receipt.subtotalPaisa)}</strong></div><div><span>Discount</span><strong>{money(receipt.discountPaisa)}</strong></div><div><strong>Total</strong><strong>{money(receipt.totalPaisa)}</strong></div><div><span>Cash</span><strong>{money(receipt.tenderedPaisa)}</strong></div><div><span>Change</span><strong>{money(receipt.changePaisa)}</strong></div><p>Thank you for shopping at ANUSMITA</p></section><footer><button onClick={print}><Printer size={16}/> Print {paperSize}mm</button><button onClick={()=>setPreviewReceipt(false)}>Close</button></footer></div></div>}
+  {receipt&&previewReceipt&&<div className="anpos-receipt-overlay" role="dialog" aria-modal="true" aria-label="Last cash receipt preview"><div className="anpos-receipt-modal"><header><strong>Confirmed Receipt · {paperSize}mm Preview</strong><button type="button" onClick={()=>setPreviewReceipt(false)} aria-label="Close receipt preview"><X size={18}/></button></header><section><h2>ANUSMITA</h2><p>{receipt.branch} · {receipt.date}</p><p>{receipt.invoiceNumber}{receipt.reprint?" · COPY":""}</p><p>Cashier: {receipt.cashier}</p>{receipt.lines.map(l=><div key={l.sku}><span>{l.name} × {l.quantity}</span><strong>{money(l.unitPricePaisa*l.quantity)}</strong></div>)}<hr/><div><span>Subtotal</span><strong>{money(receipt.subtotalPaisa)}</strong></div><div><span>Discount</span><strong>{money(receipt.discountPaisa)}</strong></div><div><strong>Total</strong><strong>{money(receipt.totalPaisa)}</strong></div><div><span>Cash</span><strong>{money(receipt.tenderedPaisa)}</strong></div><div><span>Change</span><strong>{money(receipt.changePaisa)}</strong></div>{Boolean(receipt.refundedPaisa)&&<p>Refunds recorded separately: {money(receipt.refundedPaisa||0)} · this is the ORIGINAL SALE receipt.</p>}<p>Thank you for shopping at ANUSMITA</p></section><footer><button onClick={print}><Printer size={16}/> Print {paperSize}mm</button><button onClick={()=>setPreviewReceipt(false)}>Close</button></footer></div></div>}
   <style>{`@media print{@page{size:${paperSize}mm auto;margin:2mm}.anpos-print{width:${Number(paperSize)-6}mm!important;font-size:${paperSize==="58"?"9px":"11px"}!important}}`}</style>
-  {receipt&&<div className="anpos-print" aria-hidden="true"><h1>ANUSMITA</h1><p>IN-STORE CASH RECEIPT</p><p>{receipt.branch}</p><p>{receipt.date}</p><p>{receipt.invoiceNumber}</p><p>Cashier: {receipt.cashier}</p><p>Customer: {receipt.customer||"Walk-in"}</p><hr/>{receipt.lines.map(l=><div key={l.sku}>{l.name} × {l.quantity}<span>{money(l.quantity*l.unitPricePaisa)}</span></div>)}<hr/><div>Subtotal <span>{money(receipt.subtotalPaisa)}</span></div><div>Discount <span>{money(receipt.discountPaisa)}</span></div><div><b>Total</b><b>{money(receipt.totalPaisa)}</b></div><div>Cash <span>{money(receipt.tenderedPaisa)}</span></div><div>Change <span>{money(receipt.changePaisa)}</span></div><p>Thank you for shopping at ANUSMITA</p></div>}
+  {receipt&&<div className="anpos-print" aria-hidden="true"><h1>ANUSMITA</h1><p>IN-STORE CASH RECEIPT</p><p>{receipt.branch}</p><p>{receipt.date}</p><p>{receipt.invoiceNumber}{receipt.reprint?" · DUPLICATE COPY":""}</p><p>Cashier: {receipt.cashier}</p><p>Customer: {receipt.customer||"Walk-in"}</p><hr/>{receipt.lines.map(l=><div key={l.sku}>{l.name} × {l.quantity}<span>{money(l.quantity*l.unitPricePaisa)}</span></div>)}<hr/><div>Subtotal <span>{money(receipt.subtotalPaisa)}</span></div><div>Discount <span>{money(receipt.discountPaisa)}</span></div><div><b>Total</b><b>{money(receipt.totalPaisa)}</b></div><div>Cash <span>{money(receipt.tenderedPaisa)}</span></div><div>Change <span>{money(receipt.changePaisa)}</span></div>{Boolean(receipt.refundedPaisa)&&<p>Refunds separately recorded: {money(receipt.refundedPaisa||0)}. This receipt documents the original purchase.</p>}<p>Thank you for shopping at ANUSMITA</p></div>}
  </div>;
 }
