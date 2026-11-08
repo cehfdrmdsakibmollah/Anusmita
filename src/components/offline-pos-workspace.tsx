@@ -130,7 +130,7 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,cashierName
    setConfirmedId(json.invoiceNumber);
    setNotice((json.alreadyApplied?"Existing confirmed invoice: ":"Sale confirmed and stock deducted: ")+json.invoiceNumber);
    setCart([]);setTendered("");setDiscount("0");setCustomer("");setPhone("");setOpKey(blankId());
-   if(restoredHoldId){await deleteHeldCart(restoredHoldId);setRestoredHoldId(null);await refreshHolds(branchId);}setNeedsRevalidation(false);
+   if(restoredHoldId){try{await deleteHeldCart(restoredHoldId);await refreshHolds(branchId);}catch{setNotice("Sale confirmed. The local held draft could not be removed; delete it manually to avoid reuse.");}setRestoredHoldId(null);}setNeedsRevalidation(false);
    await load(branchId);
   }catch(e){setError((e instanceof Error?e.message:"POS checkout failed")+". If network status is uncertain, use the same checkout to retry; do not start a new cart.");}
   finally{setBusy(false);}
