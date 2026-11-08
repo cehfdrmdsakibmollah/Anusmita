@@ -5,6 +5,22 @@ import {PosCashReturn,WarehouseLocation,WarehouseBalance,Product,StockMovement,A
 import {inspectPosReturnInput,validatePosInspection} from "@/lib/pos-return-inspection";
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
+export async function GET(request:Request){
+ try{
+  await authorize(["owner","admin","inventory"],"inventory.view");
+  const raw=new URL(request.url).searchParams.get("branchId")||"";
+  if(raw&&!/^[a-f0-9]{24}$/i.test(raw))throw new HttpError(400,"Invalid branch");
+  await db();
+  const records=await PosCashReturn.find(raw?{branchId:raw}:{}).select("invoiceNumber branchId branchName disposition inspectionState inspectionNote inspectedAt lines createdAt")
+   .sort({createdAt:-1}).limit(100).lean<any[]>();
+  return Response.json({returns:records.map(r=>({
+   id:String(r._id),invoiceNumber:r.invoiceNumber,branchId:String(r.branchId),branchName:r.branchName,
+   disposition:r.disposition,inspectionState:r.inspectionState||"pending",
+   inspectionNote:r.inspectionNote||"",inspectedAt:r.inspectedAt,createdAt:r.createdAt,
+   lines:r.lines.map((l:any)=>({sku:l.sku,name:l.name,quantity:l.quantity}))
+  }))},{headers:{"Cache-Control":"private, no-store"}});
+ }catch(e){return apiError(e);}
+}
 export async function POST(request:Request){
  try{
   assertOrigin(request);
