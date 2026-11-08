@@ -6,9 +6,9 @@ export const closeCashShiftInput=z.object({
  closingCountPaisa:shiftMoney,
  closingNote:z.string().trim().max(500).default("")
 }).strict();
-export function reconcileCashShift(openingFloatPaisa:number,cashSalesPaisa:number,closingCountPaisa:number){
- if(![openingFloatPaisa,cashSalesPaisa,closingCountPaisa].every(v=>Number.isSafeInteger(v)&&v>=0))throw Error("Invalid cash reconciliation");
- const expectedCashPaisa=openingFloatPaisa+cashSalesPaisa;
- if(!Number.isSafeInteger(expectedCashPaisa))throw Error("Cash amount exceeds safe limit");
+export function reconcileCashShift(openingFloatPaisa:number,cashSalesPaisa:number,closingCountPaisa:number,cashRefundsPaisa=0){
+ if(![openingFloatPaisa,cashSalesPaisa,closingCountPaisa,cashRefundsPaisa].every(v=>Number.isSafeInteger(v)&&v>=0))throw Error("Invalid cash reconciliation");
+ const expectedCashPaisa=openingFloatPaisa+cashSalesPaisa-cashRefundsPaisa;
+ if(!Number.isSafeInteger(expectedCashPaisa)||expectedCashPaisa<0)throw Error("Cash amount exceeds safe limit");
  return {expectedCashPaisa,closingCountPaisa,variancePaisa:closingCountPaisa-expectedCashPaisa};
 }

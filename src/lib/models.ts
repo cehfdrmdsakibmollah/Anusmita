@@ -259,6 +259,7 @@ const PosCashShiftSchema=new Schema({
  openingFloatPaisa:{type:Number,required:true,min:0},
  expectedCashPaisa:{type:Number,required:true,min:0},
  cashSalesPaisa:{type:Number,required:true,min:0,default:0},
+ cashRefundsPaisa:{type:Number,required:true,min:0,default:0},
  saleCount:{type:Number,required:true,min:0,default:0},
  closingCountPaisa:{type:Number,default:null,min:0},
  variancePaisa:{type:Number,default:null},
@@ -292,12 +293,44 @@ const OfflineSaleSchema=new Schema({
  tenderedPaisa:{type:Number,required:true,min:0},
  changePaisa:{type:Number,required:true,min:0},
  businessDate:{type:String,required:true},
+ returnedGrossPaisa:{type:Number,min:0,default:0},
+ refundedPaisa:{type:Number,min:0,default:0},
+ returnedQuantities:{type:Map,of:Number,default:{}},
  status:{type:String,enum:["completed"],default:"completed"}
 },opts);
 OfflineSaleSchema.index({branchId:1,createdAt:-1});
 OfflineSaleSchema.index({cashierId:1,businessDate:1});
 OfflineSaleSchema.index({businessDate:1,createdAt:-1});
 export const OfflineSale=mongoose.models.OfflineSale||mongoose.model("OfflineSale",OfflineSaleSchema);
+
+/** Cash refunds remain separate, immutable events. Returned units are quarantined
+ * until a future explicit inspection workflow; never silently increase sellable stock. */
+const PosCashReturnSchema=new Schema({
+ operationKey:{type:String,required:true,unique:true},
+ saleId:{type:Schema.Types.ObjectId,ref:"OfflineSale",required:true,index:true},
+ invoiceNumber:{type:String,required:true},
+ branchId:{type:Schema.Types.ObjectId,ref:"WarehouseLocation",required:true,index:true},
+ branchName:{type:String,required:true},
+ managerId:{type:Schema.Types.ObjectId,ref:"User",required:true},
+ managerName:{type:String,required:true},
+ shiftId:{type:Schema.Types.ObjectId,ref:"PosCashShift",required:true},
+ lines:{type:[new Schema({
+  productId:{type:Schema.Types.ObjectId,ref:"Product",required:true},
+  sku:{type:String,required:true},name:{type:String,required:true},
+  quantity:{type:Number,required:true,min:1},
+  grossPaisa:{type:Number,required:true,min:1}
+ },{_id:false})],required:true},
+ grossReturnPaisa:{type:Number,required:true,min:1},
+ refundedPaisa:{type:Number,required:true,min:1},
+ reason:{type:String,required:true,maxlength:500},
+ disposition:{type:String,enum:["quarantine","damaged"],required:true},
+ status:{type:String,enum:["cash_refunded"],default:"cash_refunded"},
+ businessDate:{type:String,required:true}
+},opts);
+PosCashReturnSchema.index({saleId:1,createdAt:-1});
+PosCashReturnSchema.index({branchId:1,businessDate:1});
+export const PosCashReturn=mongoose.models.PosCashReturn||mongoose.model("PosCashReturn",PosCashReturnSchema);
+
 
 /** Physical branch loss is distinct from a customer sale and does not collect cash. */
 const BranchDamageSchema=new Schema({
