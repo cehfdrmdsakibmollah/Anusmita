@@ -100,7 +100,7 @@ export async function POST(request:Request){
     const invoiceNumber="POS-"+date.replace(/-/g,"")+"-"+data.operationKey.slice(0,8).toUpperCase();
     const [sale]=await OfflineSale.create([{operationKey:data.operationKey,invoiceNumber,branchId:data.branchId,branchName:branch.name,cashierId:actor.id,cashierName:actor.name,shiftId:shift._id,customerName:data.customerName,customerPhone:data.customerPhone,paymentMethod:"cash",lines,...financials,businessDate:date}],{session});
     const knownCosts=lines.every(line=>Number.isSafeInteger(line.unitCostPaisa)&&line.unitCostPaisa>=0);
-    const cost=knownCosts?lines.reduce((sum,line)=>sum+line.unitCostPaisa*line.quantity,0):null;
+    const cost=knownCosts?lines.reduce((sum,line)=>sum+Number(line.unitCostPaisa)*line.quantity,0):null;
     const posting=posCashSalePosting(financials.totalPaisa,cost);
     await JournalEntry.create([{entryKey:"pos:sale:"+String(sale._id),transactionDate:now,reference:invoiceNumber,
       note:knownCosts?"POS cash sale and actual sale-time cost":"POS cash sale; cost basis not available",
