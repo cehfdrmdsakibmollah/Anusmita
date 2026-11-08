@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
-import {PosCashReturn,WarehouseLocation,WarehouseBalance,Product,StockMovement,Audit} from "@/lib/models";
+import {PosCashReturn,WarehouseLocation,WarehouseBalance,Product,StockMovement,JournalEntry,Audit} from "@/lib/models";
 import {inspectPosReturnInput,validatePosInspection} from "@/lib/pos-return-inspection";
+import {posInventoryDispositionPosting} from "@/lib/pos-journal";
+import {knownLineCost} from "@/lib/pos-profit-report";
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
 export async function GET(request:Request){
@@ -54,6 +56,14 @@ export async function POST(request:Request){
        {$inc:{quantity:item.quantity}},{session,new:true,upsert:true,setDefaultsOnInsert:true});
       await StockMovement.create([{productId:item.productId,type:"receive",deltaOnHand:item.quantity,actorId:actor.id,
        note:"Inspected POS return "+record.invoiceNumber+" / "+String(record._id)+" approved for resale"}],{session});
+     }
+    }
+    if(input.outcome==="restocked"){
+     const cost=knownLineCost(record.lines);
+     if(cost.complete&&cost.costPaisa>0){
+      await JournalEntry.create([{entryKey:"pos:restock:"+String(record._id),transactionDate:new Date(),reference:record.invoiceNumber,
+       note:"Inspected return approved for resale; reverse known original COGS",...posInventoryDispositionPosting("restock",cost.costPaisa),
+       createdBy:actor.id}],{session});
      }
     }
     await Audit.create([{actorId:actor.id,action:input.outcome==="restocked"?"pos.return.inspection.restocked":"pos.return.inspection.disposed",
