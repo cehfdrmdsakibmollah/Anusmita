@@ -12,7 +12,7 @@ describe("POS period contribution reporting",()=>{
  });
  it("subtracts refunds and damaged inventory, reverses only inspected restock costs",()=>{
   expect(posPeriodMargin({salesPaisa:200000,refundsPaisa:40000,costOfGoodsPaisa:80000,restockedCostPaisa:12000,damageCostPaisa:5000,costComplete:true}))
-   .toEqual({netRevenuePaisa:160000,netCostPaisa:73000,grossContributionPaisa:87000,marginPercent:54.37});
+   .toEqual({netRevenuePaisa:160000,netCostPaisa:73000,grossContributionPaisa:87000,marginPercent:54.38});
  });
  it("returns unknown contribution rather than fake profitability when cost data incomplete",()=>{
   const r=posPeriodMargin({salesPaisa:20000,refundsPaisa:0,costOfGoodsPaisa:0,restockedCostPaisa:0,damageCostPaisa:0,costComplete:false});
