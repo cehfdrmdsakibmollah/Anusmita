@@ -8,5 +8,5 @@ export default async function OfflinePosPage(){
  const user=await currentUser();
  if(!user)redirect("/admin/login");
  if(!["owner","admin","sales"].includes(user.role)||user.permissions?.["orders.view"]===false)redirect("/admin/dashboard");
- return <OfflinePosWorkspace canCheckout={user.role==="owner"||user.permissions?.["orders.edit"]!==false} cashierName={user.name} canDiscount={["owner","admin"].includes(user.role)}/>;
+ return <OfflinePosWorkspace canCheckout={user.role==="owner"||user.permissions?.["orders.edit"]!==false} cashierName={user.name} cashierId={user.id} canDiscount={["owner","admin"].includes(user.role)}/>;
 }

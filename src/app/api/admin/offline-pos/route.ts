@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {Product,WarehouseLocation,WarehouseBalance,StockMovement,OfflineSale,PosCashShift,Audit} from "@/lib/models";
-import {posSaleInput,bdBusinessDate,calculatePosCash,assertUniquePosLines} from "@/lib/offline-pos";
+import {posSaleInput,bdBusinessDate,calculatePosCash,assertUniquePosLines,assertPosPriceSnapshot} from "@/lib/offline-pos";
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
 const roles=["owner","admin","sales"] as const;
@@ -58,7 +58,7 @@ export async function POST(request:Request){
     if(prior){
      const same=String(prior.branchId)===data.branchId&&prior.tenderedPaisa===data.tenderedPaisa&&prior.discountPaisa===data.discountPaisa&&
       prior.customerName===data.customerName&&prior.customerPhone===data.customerPhone&&prior.lines.length===data.lines.length&&
-      data.lines.every(l=>prior.lines.some((saved:any)=>String(saved.productId)===l.productId&&saved.quantity===l.quantity));
+      data.lines.every(l=>prior.lines.some((saved:any)=>String(saved.productId)===l.productId&&saved.quantity===l.quantity&&saved.unitPricePaisa===l.expectedUnitPricePaisa));
      if(!same)throw new HttpError(409,"Idempotency key was already used for another checkout");
      output={id:String(prior._id),invoiceNumber:prior.invoiceNumber,alreadyApplied:true,totalPaisa:prior.totalPaisa,changePaisa:prior.changePaisa};return;
     }
@@ -73,6 +73,7 @@ export async function POST(request:Request){
     const lines=sorted.map(line=>{
      const product=lookup.get(line.productId);
      if(!product||!Number.isSafeInteger(product.pricePaisa)||product.pricePaisa<=0)throw new HttpError(409,"Invalid active product price");
+     try{assertPosPriceSnapshot(product.pricePaisa,line.expectedUnitPricePaisa);}catch{throw new HttpError(409,"Price changed for "+product.sku+". Refresh the catalog and reconfirm the cart before charging cash.");}
      return {...line,name:product.name,sku:product.sku,unitPricePaisa:product.pricePaisa,lineTotalPaisa:product.pricePaisa*line.quantity};
     });
     let financials;
