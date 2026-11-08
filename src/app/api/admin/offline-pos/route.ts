@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
-import {Product,WarehouseLocation,WarehouseBalance,StockMovement,OfflineSale,Audit} from "@/lib/models";
+import {Product,WarehouseLocation,WarehouseBalance,StockMovement,OfflineSale,PosCashShift,Audit} from "@/lib/models";
 import {posSaleInput,bdBusinessDate,calculatePosCash,assertUniquePosLines} from "@/lib/offline-pos";
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
@@ -63,6 +63,8 @@ export async function POST(request:Request){
      output={id:String(prior._id),invoiceNumber:prior.invoiceNumber,alreadyApplied:true,totalPaisa:prior.totalPaisa,changePaisa:prior.changePaisa};return;
     }
     const branch=await WarehouseLocation.findOne({_id:data.branchId,active:true}).session(session).lean<any>();
+    const shift=await PosCashShift.findOne({branchId:data.branchId,cashierId:actor.id,status:"open"}).session(session).lean<any>();
+    if(!shift)throw new HttpError(409,"Open your cashier shift at this branch before completing a cash sale");
     if(!branch)throw new HttpError(409,"Selected branch is inactive or missing");
     const sorted=[...data.lines].sort((a,b)=>a.productId.localeCompare(b.productId));
     const catalog=await Product.find({_id:{$in:sorted.map(l=>l.productId)},active:true,archived:{$ne:true}}).select("name sku pricePaisa onHand reserved").session(session).lean<any[]>();
@@ -85,9 +87,15 @@ export async function POST(request:Request){
      if(!product)throw new HttpError(409,"Global available stock changed for "+line.sku+"; no sale recorded");
      await StockMovement.create([{productId:line.productId,type:"fulfil",deltaOnHand:-line.quantity,actorId:actor.id,note:"In-store POS sale "+data.operationKey+" at "+branch.code}],{session});
     }
+    // Account for cash within the same transaction as sale and stock.
+    // Closing a shift concurrently will conflict on this exact shift document.
+    const activeShift=await PosCashShift.findOneAndUpdate({_id:shift._id,status:"open"},
+     {$inc:{cashSalesPaisa:financials.totalPaisa,expectedCashPaisa:financials.totalPaisa,saleCount:1}},
+     {session,new:true});
+    if(!activeShift)throw new HttpError(409,"Cashier shift has closed; checkout was not recorded");
     const now=new Date(),date=bdBusinessDate(now);
     const invoiceNumber="POS-"+date.replace(/-/g,"")+"-"+data.operationKey.slice(0,8).toUpperCase();
-    const [sale]=await OfflineSale.create([{operationKey:data.operationKey,invoiceNumber,branchId:data.branchId,branchName:branch.name,cashierId:actor.id,cashierName:actor.name,customerName:data.customerName,customerPhone:data.customerPhone,paymentMethod:"cash",lines,...financials,businessDate:date}],{session});
+    const [sale]=await OfflineSale.create([{operationKey:data.operationKey,invoiceNumber,branchId:data.branchId,branchName:branch.name,cashierId:actor.id,cashierName:actor.name,shiftId:shift._id,customerName:data.customerName,customerPhone:data.customerPhone,paymentMethod:"cash",lines,...financials,businessDate:date}],{session});
     await Audit.create([{actorId:actor.id,action:"pos.cash.sale.completed",entity:"OfflineSale",entityId:String(sale._id),details:{branchId:data.branchId,invoiceNumber,totalPaisa:financials.totalPaisa,items:lines.length}}],{session});
     output={id:String(sale._id),invoiceNumber,alreadyApplied:false,totalPaisa:financials.totalPaisa,changePaisa:financials.changePaisa};
    },{readConcern:{level:"snapshot"},writeConcern:{w:"majority"}});
