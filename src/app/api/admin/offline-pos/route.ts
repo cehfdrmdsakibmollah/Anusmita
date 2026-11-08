@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
-import {Product,WarehouseLocation,WarehouseBalance,StockMovement,OfflineSale,PosCashShift,PosCashReturn,JournalEntry,Audit} from "@/lib/models";
+import {Product,WarehouseLocation,WarehouseBalance,StockMovement,OfflineSale,PosCashShift,PosCashReturn,JournalEntry,PosCommissionPolicy,Audit} from "@/lib/models";
 import {posSaleInput,bdBusinessDate,calculatePosCash,assertUniquePosLines,assertPosPriceSnapshot} from "@/lib/offline-pos";
 import {posCashSalePosting} from "@/lib/pos-journal";
+import {commissionAccrual} from "@/lib/pos-commission";
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
 const roles=["owner","admin","sales"] as const;
@@ -103,9 +104,12 @@ export async function POST(request:Request){
      {$inc:{cashSalesPaisa:financials.totalPaisa,expectedCashPaisa:financials.totalPaisa,saleCount:1}},
      {session,new:true});
     if(!activeShift)throw new HttpError(409,"Cashier shift has closed; checkout was not recorded");
+    const policy=await PosCommissionPolicy.findOne({branchId:data.branchId,cashierId:actor.id,active:true}).session(session).lean<any>();
+    const commissionRateBps=policy?policy.rateBps:null;
+    const commissionPaisa=policy?commissionAccrual(financials.totalPaisa,policy.rateBps):null;
     const now=new Date(),date=bdBusinessDate(now);
     const invoiceNumber="POS-"+date.replace(/-/g,"")+"-"+data.operationKey.slice(0,8).toUpperCase();
-    const [sale]=await OfflineSale.create([{operationKey:data.operationKey,invoiceNumber,branchId:data.branchId,branchName:branch.name,cashierId:actor.id,cashierName:actor.name,shiftId:shift._id,exchangeReturnId:data.exchangeReturnId||null,customerName:data.customerName,customerPhone:data.customerPhone,paymentMethod:"cash",lines,...financials,businessDate:date}],{session});
+    const [sale]=await OfflineSale.create([{operationKey:data.operationKey,invoiceNumber,branchId:data.branchId,branchName:branch.name,cashierId:actor.id,cashierName:actor.name,shiftId:shift._id,commissionRateBps,commissionPaisa,exchangeReturnId:data.exchangeReturnId||null,customerName:data.customerName,customerPhone:data.customerPhone,paymentMethod:"cash",lines,...financials,businessDate:date}],{session});
     const knownCosts=lines.every(line=>Number.isSafeInteger(line.unitCostPaisa)&&line.unitCostPaisa>=0);
     const cost=knownCosts?lines.reduce((sum,line)=>sum+Number(line.unitCostPaisa)*line.quantity,0):null;
     const posting=posCashSalePosting(financials.totalPaisa,cost);
