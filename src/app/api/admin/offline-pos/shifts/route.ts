@@ -9,7 +9,7 @@ const roles=["owner","admin","sales"] as const;
 const view=(s:any)=>s?({
  id:String(s._id),branchId:String(s.branchId),branchName:s.branchName,cashierName:s.cashierName,
  status:s.status,openedAt:s.openedAt,closedAt:s.closedAt,openingFloatPaisa:s.openingFloatPaisa,
- cashSalesPaisa:s.cashSalesPaisa,saleCount:s.saleCount,expectedCashPaisa:s.expectedCashPaisa,
+ cashSalesPaisa:s.cashSalesPaisa,cashRefundsPaisa:s.cashRefundsPaisa||0,saleCount:s.saleCount,expectedCashPaisa:s.expectedCashPaisa,
  closingCountPaisa:s.closingCountPaisa,variancePaisa:s.variancePaisa,closingNote:s.closingNote
 }):null;
 export async function GET(request:Request){
@@ -60,16 +60,16 @@ export async function PATCH(request:Request){
    await session.withTransaction(async()=>{
     const shift=await PosCashShift.findOne({_id:data.shiftId,cashierId:actor.id,status:"open"}).session(session).lean<any>();
     if(!shift)throw new HttpError(409,"Shift was already closed or belongs to another cashier");
-    const money=reconcileCashShift(shift.openingFloatPaisa,shift.cashSalesPaisa,data.closingCountPaisa);
+    const money=reconcileCashShift(shift.openingFloatPaisa,shift.cashSalesPaisa,data.closingCountPaisa,shift.cashRefundsPaisa||0);
     // Compare cash accumulation in this same atomic update; a concurrent sale
     // changing shift.cashSalesPaisa causes a write conflict or CAS rejection.
     const closed=await PosCashShift.findOneAndUpdate({
      _id:data.shiftId,cashierId:actor.id,status:"open",
-     cashSalesPaisa:shift.cashSalesPaisa,saleCount:shift.saleCount
+     cashSalesPaisa:shift.cashSalesPaisa,cashRefundsPaisa:shift.cashRefundsPaisa||0,saleCount:shift.saleCount
     },{$set:{...money,status:"closed",closingNote:data.closingNote,closedAt:new Date(),closedBy:actor.id}},{new:true,session});
     if(!closed)throw new HttpError(409,"Another sale changed this shift. Reload before closing.");
     await Audit.create([{actorId:actor.id,action:"pos.cash.shift.closed",entity:"PosCashShift",entityId:String(closed._id),
-     details:{branchId:String(closed.branchId),saleCount:closed.saleCount,expectedCashPaisa:closed.expectedCashPaisa,closingCountPaisa:closed.closingCountPaisa,variancePaisa:closed.variancePaisa}}],{session});
+     details:{branchId:String(closed.branchId),saleCount:closed.saleCount,cashRefundsPaisa:closed.cashRefundsPaisa||0,expectedCashPaisa:closed.expectedCashPaisa,closingCountPaisa:closed.closingCountPaisa,variancePaisa:closed.variancePaisa}}],{session});
     result=view(closed);
    },{readConcern:{level:"snapshot"},writeConcern:{w:"majority"}});
   }finally{await session.endSession();}
