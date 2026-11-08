@@ -49,6 +49,7 @@ export async function POST(request:Request){
   assertOrigin(request);
   const actor=await authorize([...roles],"orders.edit");
   const data=posSaleInput.parse(await request.json());
+  if(data.exchangeReturnId&&actor.role==="sales")throw new HttpError(403,"Only a manager may link a replacement sale to a refunded invoice");
   if(data.discountPaisa>0&&actor.role==="sales")throw new HttpError(403,"Cashier discounts require manager authorization");
   try{assertUniquePosLines(data.lines);}catch(e){throw new HttpError(400,String(e));}
   await db();
@@ -59,7 +60,7 @@ export async function POST(request:Request){
     const prior=await OfflineSale.findOne({operationKey:data.operationKey}).session(session).lean<any>();
     if(prior){
      const same=String(prior.branchId)===data.branchId&&prior.tenderedPaisa===data.tenderedPaisa&&prior.discountPaisa===data.discountPaisa&&
-      prior.customerName===data.customerName&&prior.customerPhone===data.customerPhone&&prior.lines.length===data.lines.length&&
+      String(prior.exchangeReturnId||"")===String(data.exchangeReturnId||"")&&prior.customerName===data.customerName&&prior.customerPhone===data.customerPhone&&prior.lines.length===data.lines.length&&
       data.lines.every(l=>prior.lines.some((saved:any)=>String(saved.productId)===l.productId&&saved.quantity===l.quantity&&saved.unitPricePaisa===l.expectedUnitPricePaisa));
      if(!same)throw new HttpError(409,"Idempotency key was already used for another checkout");
      output={id:String(prior._id),invoiceNumber:prior.invoiceNumber,alreadyApplied:true,totalPaisa:prior.totalPaisa,changePaisa:prior.changePaisa};return;
@@ -68,6 +69,12 @@ export async function POST(request:Request){
     const shift=await PosCashShift.findOne({branchId:data.branchId,cashierId:actor.id,status:"open"}).session(session).lean<any>();
     if(!shift)throw new HttpError(409,"Open your cashier shift at this branch before completing a cash sale");
     if(!branch)throw new HttpError(409,"Selected branch is inactive or missing");
+    if(data.exchangeReturnId){
+     const sourceReturn=await PosCashReturn.findOne({_id:data.exchangeReturnId,branchId:data.branchId,status:"cash_refunded"}).session(session).lean<any>();
+     if(!sourceReturn)throw new HttpError(409,"Replacement sale requires a valid cash-refunded return from this same branch");
+     if(await OfflineSale.exists({exchangeReturnId:data.exchangeReturnId}).session(session))
+      throw new HttpError(409,"This return is already linked to another replacement sale");
+    }
     const sorted=[...data.lines].sort((a,b)=>a.productId.localeCompare(b.productId));
     const catalog=await Product.find({_id:{$in:sorted.map(l=>l.productId)},active:true,archived:{$ne:true}}).select("name sku pricePaisa costPaisa onHand reserved").session(session).lean<any[]>();
     if(catalog.length!==sorted.length)throw new HttpError(409,"One or more products are not active");
@@ -98,14 +105,14 @@ export async function POST(request:Request){
     if(!activeShift)throw new HttpError(409,"Cashier shift has closed; checkout was not recorded");
     const now=new Date(),date=bdBusinessDate(now);
     const invoiceNumber="POS-"+date.replace(/-/g,"")+"-"+data.operationKey.slice(0,8).toUpperCase();
-    const [sale]=await OfflineSale.create([{operationKey:data.operationKey,invoiceNumber,branchId:data.branchId,branchName:branch.name,cashierId:actor.id,cashierName:actor.name,shiftId:shift._id,customerName:data.customerName,customerPhone:data.customerPhone,paymentMethod:"cash",lines,...financials,businessDate:date}],{session});
+    const [sale]=await OfflineSale.create([{operationKey:data.operationKey,invoiceNumber,branchId:data.branchId,branchName:branch.name,cashierId:actor.id,cashierName:actor.name,shiftId:shift._id,exchangeReturnId:data.exchangeReturnId||null,customerName:data.customerName,customerPhone:data.customerPhone,paymentMethod:"cash",lines,...financials,businessDate:date}],{session});
     const knownCosts=lines.every(line=>Number.isSafeInteger(line.unitCostPaisa)&&line.unitCostPaisa>=0);
     const cost=knownCosts?lines.reduce((sum,line)=>sum+Number(line.unitCostPaisa)*line.quantity,0):null;
     const posting=posCashSalePosting(financials.totalPaisa,cost);
     await JournalEntry.create([{entryKey:"pos:sale:"+String(sale._id),transactionDate:now,reference:invoiceNumber,
       note:knownCosts?"POS cash sale and actual sale-time cost":"POS cash sale; cost basis not available",
       ...posting,createdBy:actor.id}],{session});
-    await Audit.create([{actorId:actor.id,action:"pos.cash.sale.completed",entity:"OfflineSale",entityId:String(sale._id),details:{branchId:data.branchId,invoiceNumber,totalPaisa:financials.totalPaisa,items:lines.length}}],{session});
+    await Audit.create([{actorId:actor.id,action:"pos.cash.sale.completed",entity:"OfflineSale",entityId:String(sale._id),details:{branchId:data.branchId,invoiceNumber,totalPaisa:financials.totalPaisa,items:lines.length,exchangeReturnId:data.exchangeReturnId||null}}],{session});
     output={id:String(sale._id),invoiceNumber,alreadyApplied:false,totalPaisa:financials.totalPaisa,changePaisa:financials.changePaisa};
    },{readConcern:{level:"snapshot"},writeConcern:{w:"majority"}});
   }finally{await session.endSession();}
