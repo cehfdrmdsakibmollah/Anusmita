@@ -279,6 +279,7 @@ const OfflineSaleSchema=new Schema({
  cashierId:{type:Schema.Types.ObjectId,ref:"User",required:true,index:true},
  cashierName:{type:String,required:true},
  shiftId:{type:Schema.Types.ObjectId,ref:"PosCashShift",default:null,index:true},
+ exchangeReturnId:{type:Schema.Types.ObjectId,ref:"PosCashReturn",default:null},
  customerName:{type:String,default:""},customerPhone:{type:String,default:""},
  paymentMethod:{type:String,enum:["cash"],required:true,default:"cash"},
  lines:{type:[new Schema({
@@ -301,6 +302,7 @@ const OfflineSaleSchema=new Schema({
 },opts);
 OfflineSaleSchema.index({branchId:1,createdAt:-1});
 OfflineSaleSchema.index({cashierId:1,businessDate:1});
+OfflineSaleSchema.index({exchangeReturnId:1},{unique:true,partialFilterExpression:{exchangeReturnId:{$type:"objectId"}}});
 OfflineSaleSchema.index({businessDate:1,createdAt:-1});
 export const OfflineSale=mongoose.models.OfflineSale||mongoose.model("OfflineSale",OfflineSaleSchema);
 
