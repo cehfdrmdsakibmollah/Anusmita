@@ -96,7 +96,7 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
    const json=await response.json();
    if(!response.ok)throw Error(json.error||"POS data unavailable");
    setData(json);
-   if(!id&&json.branches?.length)setBranchId(json.branches[0].id);
+   if(!id&&json.branches?.length){const requested=new URLSearchParams(window.location.search).get("branchId");setBranchId(json.branches.find((b:Branch)=>b.id===requested)?.id||json.branches[0].id);}
    setCart(old=>old.map(line=>({product:json.products?.find((p:Product)=>p.id===line.product.id)||line.product,quantity:line.quantity})));
   }catch(e){setError(e instanceof Error?e.message:"Unable to load POS");}
   finally{setLoading(false);}
