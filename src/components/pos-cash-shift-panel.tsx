@@ -1,7 +1,7 @@
 "use client";
 import {useCallback,useEffect,useState} from "react";
 import {Wallet,LockKeyhole,RefreshCw,AlertCircle} from "lucide-react";
-type Shift={id:string;branchName:string;cashierName:string;status:"open"|"closed";openedAt:string;closedAt:string|null;openingFloatPaisa:number;cashSalesPaisa:number;expectedCashPaisa:number;saleCount:number;closingCountPaisa:number|null;variancePaisa:number|null;closingNote:string};
+type Shift={id:string;branchName:string;cashierName:string;status:"open"|"closed";openedAt:string;closedAt:string|null;openingFloatPaisa:number;cashSalesPaisa:number;cashRefundsPaisa:number;expectedCashPaisa:number;saleCount:number;closingCountPaisa:number|null;variancePaisa:number|null;closingNote:string};
 type ResponseShape={current:Shift|null;history:Shift[]};
 const money=(n:number)=>"৳ "+(n/100).toLocaleString("en-BD",{minimumFractionDigits:2,maximumFractionDigits:2});
 const paisa=(text:string)=>Math.round(Number(text||0)*100);
@@ -33,7 +33,7 @@ export default function PosCashShiftPanel({branchId,canCheckout,onActiveChange}:
  return <section className="anpos-shift" aria-label="Cashier shift reconciliation">
   <header><h2><Wallet size={17}/> Cashier Shift</h2><div><span className={shift?"anpos-shift-open":"anpos-shift-closed"}>{shift?"Drawer open":"No active shift"}</span><button type="button" aria-label="Refresh shift" onClick={()=>void load()} disabled={!branchId||busy}><RefreshCw size={15}/></button></div></header>
   {!branchId?<p>Select a branch to manage the cash drawer.</p>:shift?
-   <div className="anpos-shift-body"><div className="anpos-shift-metrics"><div><small>Opening Float</small><strong>{money(shift.openingFloatPaisa)}</strong></div><div><small>Cash Sales · {shift.saleCount}</small><strong>{money(shift.cashSalesPaisa)}</strong></div><div><small>Expected Drawer</small><strong>{money(shift.expectedCashPaisa)}</strong></div></div>
+   <div className="anpos-shift-body"><div className="anpos-shift-metrics"><div><small>Opening Float</small><strong>{money(shift.openingFloatPaisa)}</strong></div><div><small>Cash Sales · {shift.saleCount}</small><strong>{money(shift.cashSalesPaisa)}</strong></div><div><small>Cash Refunds</small><strong>{money(shift.cashRefundsPaisa||0)}</strong></div><div><small>Expected Drawer</small><strong>{money(shift.expectedCashPaisa)}</strong></div></div>
     <div className="anpos-shift-close"><label>Counted drawer cash (৳)<input type="number" min="0" step=".01" value={count} onChange={e=>setCount(e.target.value)} placeholder="Enter physically counted cash"/></label>
     {count!==""&&valid(paisa(count))&&<div className="anpos-shift-variance">Variance: <strong>{money(paisa(count)-shift.expectedCashPaisa)}</strong></div>}
     <label>Closing note (optional)<input maxLength={500} value={note} onChange={e=>setNote(e.target.value)} placeholder="Handover / reason for variance"/></label>
