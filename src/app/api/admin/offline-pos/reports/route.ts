@@ -4,6 +4,7 @@ import {db} from "@/lib/db";
 import {OfflineSale,PosCashReturn,BranchDamage,PosCashShift,WarehouseLocation} from "@/lib/models";
 import {bdBusinessDate} from "@/lib/offline-pos";
 import {knownLineCost,posPeriodMargin} from "@/lib/pos-profit-report";
+import {netSaleCommission} from "@/lib/pos-commission";
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
 const validDate=(x:string)=>/^\d{4}-\d{2}-\d{2}$/.test(x)&&!Number.isNaN(Date.parse(x+"T00:00:00Z"));
@@ -22,7 +23,7 @@ export async function GET(request:Request){
   const businessRange={businessDate:{$gte:from,$lte:to},...branchFilter};
   const [branches,sales,returns,damages,shifts,restocks]=await Promise.all([
    WarehouseLocation.find({}).select("name code active").sort({name:1}).limit(200).lean<any[]>(),
-   OfflineSale.find(businessRange).select("invoiceNumber cashierId cashierName branchId branchName totalPaisa lines").lean<any[]>(),
+   OfflineSale.find(businessRange).select("invoiceNumber cashierId cashierName branchId branchName totalPaisa refundedPaisa commissionPaisa commissionRateBps lines").lean<any[]>(),
    PosCashReturn.find(businessRange).select("invoiceNumber refundedPaisa lines inspectionState inspectedAt").lean<any[]>(),
    BranchDamage.find({...branchFilter,createdAt:{$gte:new Date(from+"T00:00:00+06:00"),$lt:new Date(new Date(to+"T00:00:00+06:00").getTime()+86400000)}})
     .select("unitCostPaisa quantity").lean<any[]>(),
@@ -32,14 +33,17 @@ export async function GET(request:Request){
     .select("lines").lean<any[]>()
   ]);
   let salesPaisa=0,refundsPaisa=0,costOfGoodsPaisa=0,restockedCostPaisa=0,damageCostPaisa=0,costComplete=true,missingCostInvoices=0;
-  const cashier=new Map<string,{cashierId:string;name:string;salesPaisa:number;orders:number;items:number}>();
+  const cashier=new Map<string,{cashierId:string;name:string;salesPaisa:number;orders:number;items:number;commissionPaisa:number;unratedSales:number}>();
   for(const s of sales){
    salesPaisa+=s.totalPaisa;
    const calc=knownLineCost(s.lines);
    if(!calc.complete){costComplete=false;missingCostInvoices++;}
    costOfGoodsPaisa+=calc.costPaisa;
-   const id=String(s.cashierId),row=cashier.get(id)||{cashierId:id,name:s.cashierName,salesPaisa:0,orders:0,items:0};
-   row.salesPaisa+=s.totalPaisa;row.orders++;row.items+=s.lines.reduce((n:number,l:any)=>n+l.quantity,0);cashier.set(id,row);
+   const id=String(s.cashierId),row=cashier.get(id)||{cashierId:id,name:s.cashierName,salesPaisa:0,orders:0,items:0,commissionPaisa:0,unratedSales:0};
+   row.salesPaisa+=s.totalPaisa;row.orders++;row.items+=s.lines.reduce((n:number,l:any)=>n+l.quantity,0);
+   const accrual=netSaleCommission(s.commissionPaisa??null,s.totalPaisa,s.refundedPaisa||0);
+   if(accrual===null)row.unratedSales++;else row.commissionPaisa+=accrual;
+   cashier.set(id,row);
   }
   for(const r of returns)refundsPaisa+=r.refundedPaisa;
   for(const r of restocks){const c=knownLineCost(r.lines);if(!c.complete)costComplete=false;restockedCostPaisa+=c.costPaisa;}
@@ -55,6 +59,7 @@ export async function GET(request:Request){
    restockedCostPaisa:costComplete?restockedCostPaisa:null,damageCostPaisa:costComplete?damageCostPaisa:null,
    ...margin,grossContributionPaisa:costComplete?margin.grossContributionPaisa:null,
    costComplete,missingCostInvoices,invoiceCount:sales.length,refundCount:returns.length,
+   commission:{accruedPaisa:[...cashier.values()].reduce((n,r)=>n+r.commissionPaisa,0),unknownInvoices:[...cashier.values()].reduce((n,r)=>n+r.unratedSales,0),payoutsSupported:false},
    cashier:[...cashier.values()].sort((a,b)=>b.salesPaisa-a.salesPaisa),
    shifts:{total:shifts.length,closed:shifts.filter(s=>s.status==="closed").length,
     totalAbsoluteVariancePaisa:shifts.filter(s=>s.status==="closed").reduce((v,s)=>v+Math.abs(s.variancePaisa||0),0)}
