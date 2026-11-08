@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
-import {Product,WarehouseLocation,WarehouseBalance,StockMovement,OfflineSale,PosCashShift,Audit} from "@/lib/models";
+import {Product,WarehouseLocation,WarehouseBalance,StockMovement,OfflineSale,PosCashShift,PosCashReturn,Audit} from "@/lib/models";
 import {posSaleInput,bdBusinessDate,calculatePosCash,assertUniquePosLines,assertPosPriceSnapshot} from "@/lib/offline-pos";
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
@@ -34,12 +34,13 @@ export async function GET(request:Request){
   }
   const sales=validBranch?await OfflineSale.find({branchId}).select("invoiceNumber totalPaisa createdAt cashierName branchName status lines customerName tenderedPaisa changePaisa subtotalPaisa discountPaisa").sort({createdAt:-1}).limit(25).lean<any[]>():[];
   const date=bdBusinessDate(new Date());
-  const [summary,lowStock]=validBranch?await Promise.all([
+  const [summary,lowStock,refundSummary]=validBranch?await Promise.all([
    OfflineSale.aggregate([{$match:{branchId:new mongoose.Types.ObjectId(branchId),businessDate:date}},{$group:{_id:null,sales:{$sum:"$totalPaisa"},orders:{$sum:1},items:{$sum:{$sum:"$lines.quantity"}}}}]),
-   WarehouseBalance.find({locationId:branchId,quantity:{$lte:5,$gt:0}}).populate("productId","sku name reorderLevel").limit(30).lean<any[]>()
-  ]):[[],[]];
+   WarehouseBalance.find({locationId:branchId,quantity:{$lte:5,$gt:0}}).populate("productId","sku name reorderLevel").limit(30).lean<any[]>(),
+   PosCashReturn.aggregate([{$match:{branchId:new mongoose.Types.ObjectId(branchId),businessDate:date}},{$group:{_id:null,refundedPaisa:{$sum:"$refundedPaisa"}}}])
+  ]):[[],[],[]];
   const s=summary[0]||{sales:0,orders:0,items:0};
-  return Response.json({branches:branches.map(b=>({id:String(b._id),name:b.name,code:b.code,address:b.address})),products,sales:sales.map(a=>({id:String(a._id),invoiceNumber:a.invoiceNumber,totalPaisa:a.totalPaisa,createdAt:a.createdAt,cashierName:a.cashierName,customerName:a.customerName})),today:{salesPaisa:s.sales||0,orders:s.orders||0,items:s.items||0},lowStock:lowStock.map(b=>({productId:String(b.productId?._id),name:b.productId?.name||"Product",sku:b.productId?.sku||"",quantity:b.quantity}))},{headers:{"Cache-Control":"private, no-store"}});
+  return Response.json({branches:branches.map(b=>({id:String(b._id),name:b.name,code:b.code,address:b.address})),products,sales:sales.map(a=>({id:String(a._id),invoiceNumber:a.invoiceNumber,totalPaisa:a.totalPaisa,createdAt:a.createdAt,cashierName:a.cashierName,customerName:a.customerName})),today:{salesPaisa:s.sales||0,refundsPaisa:refundSummary[0]?.refundedPaisa||0,netCashPaisa:(s.sales||0)-(refundSummary[0]?.refundedPaisa||0),orders:s.orders||0,items:s.items||0},lowStock:lowStock.map(b=>({productId:String(b.productId?._id),name:b.productId?.name||"Product",sku:b.productId?.sku||"",quantity:b.quantity}))},{headers:{"Cache-Control":"private, no-store"}});
  }catch(error){return apiError(error);}
 }
 export async function POST(request:Request){
