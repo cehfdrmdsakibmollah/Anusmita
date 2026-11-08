@@ -20,7 +20,7 @@ export default function PosReports(){
   finally{setBusy(false);}
  }
  useEffect(()=>{void load();},[]);
- return <main className="anpos-reports"><header><div><span>ANUSMITA · POS FINANCIAL CONTROL</span><h1>POS Performance & Contribution</h1><p>Actual branch cash sales, refunds, product-cost snapshots and cashier performance.</p></div><Link href="/admin/offline-pos"><ArrowLeft size={17}/> Back to POS</Link></header>
+ return <main className="anpos-reports"><header><div><span>ANUSMITA · POS FINANCIAL CONTROL</span><h1>POS Performance & Contribution</h1><p>Actual branch cash sales, refunds, product-cost snapshots and cashier performance.</p></div><div className="anpos-report-headlinks"><Link href="/admin/offline-pos/controls"><ShieldCheck size={16}/> Commission & Exceptions</Link><Link href="/admin/offline-pos"><ArrowLeft size={17}/> Back to POS</Link></div></header>
   <div className="anpos-report-filters"><label>From<input type="date" value={from} onChange={e=>setFrom(e.target.value)}/></label><label>To<input type="date" value={to} onChange={e=>setTo(e.target.value)}/></label><label>Store<select value={branch} onChange={e=>setBranch(e.target.value)}><option value="">All branches</option>{data?.branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label><button disabled={busy} onClick={()=>void load()}><RefreshCw size={16}/> {busy?"Loading…":"Generate Report"}</button><button className="light" disabled={!data} onClick={()=>window.print()}><Printer size={15}/> Print Report</button></div>
   {error&&<p className="anpos-report-error" role="alert"><AlertTriangle size={16}/>{error}</p>}
   {data&&<><div className="anpos-report-cards">
