@@ -27,6 +27,13 @@ describe("real POS billing contract",()=>{
   const request={operationKey:"11111111-1111-4111-8111-111111111111",branchId:"aaaaaaaaaaaaaaaaaaaaaaaa",lines:[{productId:"bbbbbbbbbbbbbbbbbbbbbbbb",quantity:1}],paymentMethod:"cash",discountPaisa:0,tenderedPaisa:145000};
   expect(posSaleInput.safeParse(request).success).toBe(false);
  });
+  it("accepts only a valid original refund ObjectId for a linked replacement sale",()=>{
+  const basic={operationKey:"11111111-1111-4111-8111-111111111111",branchId:"aaaaaaaaaaaaaaaaaaaaaaaa",
+   lines:[{productId:"bbbbbbbbbbbbbbbbbbbbbbbb",quantity:1,expectedUnitPricePaisa:12500}],paymentMethod:"cash",discountPaisa:0,tenderedPaisa:12500};
+  expect(posSaleInput.safeParse({...basic,exchangeReturnId:"cccccccccccccccccccccccc"}).success).toBe(true);
+  expect(posSaleInput.safeParse({...basic,exchangeReturnId:"../somewhere"}).success).toBe(false);
+  expect(posSaleInput.safeParse({...basic,exchangeRefundPaisa:500000}).success).toBe(false);
+ });
   it("books in Bangladesh local business date",()=>{
   expect(bdBusinessDate(new Date("2026-11-07T20:30:00Z"))).toBe("2026-11-08");
  });
