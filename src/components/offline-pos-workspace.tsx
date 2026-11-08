@@ -22,6 +22,7 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,cashierName
  const [loading,setLoading]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const [online,setOnline]=useState(true),[view,setView]=useState<"billing"|"invoices">("billing"),[receipt,setReceipt]=useState<Receipt|null>(null);
  const [opKey,setOpKey]=useState(blankId),[confirmedId,setConfirmedId]=useState("");
+ const [paperSize,setPaperSize]=useState<"58"|"80">("80"),[previewReceipt,setPreviewReceipt]=useState(false);
  const [shiftActive,setShiftActive]=useState(false);
  const [held,setHeld]=useState<HeldPosCart[]>([]),[heldBusy,setHeldBusy]=useState(false),[needsRevalidation,setNeedsRevalidation]=useState(false),[restoredHoldId,setRestoredHoldId]=useState<string|null>(null);
  const barcodeRef=useRef<HTMLInputElement>(null);
@@ -135,7 +136,21 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,cashierName
   }catch(e){setError((e instanceof Error?e.message:"POS checkout failed")+". If network status is uncertain, use the same checkout to retry; do not start a new cart.");}
   finally{setBusy(false);}
  }
- function print(){if(receipt)window.print();}
+ function print(){if(receipt){setPreviewReceipt(false);window.print();}}
+ useEffect(()=>{
+  function shortcut(event:KeyboardEvent){
+   if(event.repeat||busy||heldBusy)return;
+   if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){
+    event.preventDefault();barcodeRef.current?.focus();barcodeRef.current?.select();
+   }else if(event.key==="F7"&&cart.length){
+    event.preventDefault();void holdCart();
+   }else if(event.key==="F9"&&cart.length&&canCheckout&&shiftActive&&online&&validDiscount&&validTender&&branchStockValid&&!needsRevalidation){
+    event.preventDefault();void checkout();
+   }
+  }
+  window.addEventListener("keydown",shortcut);
+  return ()=>window.removeEventListener("keydown",shortcut);
+ },[cart,canCheckout,shiftActive,online,validDiscount,validTender,branchStockValid,needsRevalidation,busy,heldBusy,holdCart,checkout]);
  const isInvoice=view==="invoices";
  return <div className="anpos">
   <aside className="anpos-sidebar">
@@ -174,8 +189,9 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,cashierName
        <div className="anpos-paymethods"><button className="active" type="button" onClick={()=>setPaymentMethod("cash")}><Wallet size={16}/> Cash</button><span>Card / MFS requires a verified payment provider</span></div>
        <div className="anpos-cash"><label className="anpos-label">Cash Received (৳)<input type="number" min="0" step=".01" value={tendered} onChange={e=>{invalidate();setTendered(e.target.value)}} placeholder="0.00"/></label><div><small>Change Return</small><strong>{money(change)}</strong></div></div>
        <div className="anpos-hold-actions"><button type="button" disabled={!cart.length||heldBusy} onClick={()=>void holdCart()}><Clock3 size={15}/> Hold Sale Locally</button>{needsRevalidation&&<button type="button" disabled={!online||heldBusy} onClick={()=>void recheckCart()}><RefreshCw size={15}/> Recheck Cart Prices & Stock</button>}</div>
+       <div className="anpos-paper-options"><label>Thermal paper <select aria-label="Receipt paper width" value={paperSize} onChange={e=>setPaperSize(e.target.value as "58"|"80")}><option value="80">80 mm</option><option value="58">58 mm</option></select></label><button type="button" disabled={!receipt} onClick={()=>setPreviewReceipt(true)}><Printer size={15}/> Receipt Preview</button></div>
        <div className="anpos-actions"><button type="button" onClick={print} disabled={!receipt}><Printer size={16}/> Print Last Receipt</button><button className="anpos-complete" type="button" onClick={()=>void checkout()} disabled={!canCheckout||!shiftActive||needsRevalidation||!online||busy||!branchId||!cart.length||!branchStockValid||!validDiscount||!validTender}><Check size={18}/>{busy?"Processing…":"Complete Cash Sale"}</button></div>
-       <small className="anpos-safety">Cash sales require an open cashier shift and verified current prices. Held offline drafts are never automatically charged. Stock and drawer totals are updated in a single authenticated server transaction. No checkout is confirmed while offline.</small>
+       <small className="anpos-safety">Shortcuts: Ctrl+K focus barcode · F7 hold cart · F9 complete eligible cash sale. Print layouts use browser print settings; physical printer compatibility must be tested. Cash sales require an open cashier shift and verified current prices. Held offline drafts are never automatically charged. Stock and drawer totals are updated in a single authenticated server transaction. No checkout is confirmed while offline.</small>
       </div>
      </section>
      <aside className="anpos-right"><section className="anpos-panel anpos-held"><header><h2><Clock3 size={16}/> Held Drafts ({held.length})</h2></header><p>Browser-only drafts. Not paid sales. Cash/customer details are never stored.</p>{held.slice(0,8).map(d=><div className="anpos-held-row" key={d.id}><span><strong>{d.lines.reduce((n,l)=>n+l.quantity,0)} items · {money(d.lines.reduce((n,l)=>n+l.unitPricePaisa*l.quantity,0))}</strong><small>{new Date(d.createdAt).toLocaleString("en-BD")}</small></span><button type="button" onClick={()=>resumeHold(d)}>Resume</button><button type="button" aria-label="Delete held draft" onClick={()=>void removeHold(d.id)}><Trash2 size={14}/></button></div>)}{!held.length&&<p>No locally held carts for this cashier and branch.</p>}</section><PosCashShiftPanel branchId={branchId} canCheckout={canCheckout} onActiveChange={setShiftActive}/><section className="anpos-panel anpos-alerts"><header><h2><AlertTriangle size={17}/> Stock Alerts (≤5)</h2><Link href="/admin/inventory">View All</Link></header>{data.lowStock.slice(0,8).map(s=><div key={s.productId}><div><strong>{s.name}</strong><small>{s.sku}</small></div><b>{s.quantity}</b></div>)}{!data.lowStock.length&&<p>No branch low-stock alerts available.</p>}</section>
@@ -186,6 +202,8 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,cashierName
     </div>}
    </div>
   </main>
+  {receipt&&previewReceipt&&<div className="anpos-receipt-overlay" role="dialog" aria-modal="true" aria-label="Last cash receipt preview"><div className="anpos-receipt-modal"><header><strong>Confirmed Receipt · {paperSize}mm Preview</strong><button type="button" onClick={()=>setPreviewReceipt(false)} aria-label="Close receipt preview"><X size={18}/></button></header><section><h2>ANUSMITA</h2><p>{receipt.branch} · {receipt.date}</p><p>{receipt.invoiceNumber}</p><p>Cashier: {receipt.cashier}</p>{receipt.lines.map(l=><div key={l.sku}><span>{l.name} × {l.quantity}</span><strong>{money(l.unitPricePaisa*l.quantity)}</strong></div>)}<hr/><div><span>Subtotal</span><strong>{money(receipt.subtotalPaisa)}</strong></div><div><span>Discount</span><strong>{money(receipt.discountPaisa)}</strong></div><div><strong>Total</strong><strong>{money(receipt.totalPaisa)}</strong></div><div><span>Cash</span><strong>{money(receipt.tenderedPaisa)}</strong></div><div><span>Change</span><strong>{money(receipt.changePaisa)}</strong></div><p>Thank you for shopping at ANUSMITA</p></section><footer><button onClick={print}><Printer size={16}/> Print {paperSize}mm</button><button onClick={()=>setPreviewReceipt(false)}>Close</button></footer></div></div>}
+  <style>{`@media print{@page{size:${paperSize}mm auto;margin:2mm}.anpos-print{width:${Number(paperSize)-6}mm!important;font-size:${paperSize==="58"?"9px":"11px"}!important}}`}</style>
   {receipt&&<div className="anpos-print" aria-hidden="true"><h1>ANUSMITA</h1><p>IN-STORE CASH RECEIPT</p><p>{receipt.branch}</p><p>{receipt.date}</p><p>{receipt.invoiceNumber}</p><p>Cashier: {receipt.cashier}</p><p>Customer: {receipt.customer||"Walk-in"}</p><hr/>{receipt.lines.map(l=><div key={l.sku}>{l.name} × {l.quantity}<span>{money(l.quantity*l.unitPricePaisa)}</span></div>)}<hr/><div>Subtotal <span>{money(receipt.subtotalPaisa)}</span></div><div>Discount <span>{money(receipt.discountPaisa)}</span></div><div><b>Total</b><b>{money(receipt.totalPaisa)}</b></div><div>Cash <span>{money(receipt.tenderedPaisa)}</span></div><div>Change <span>{money(receipt.changePaisa)}</span></div><p>Thank you for shopping at ANUSMITA</p></div>}
  </div>;
 }
