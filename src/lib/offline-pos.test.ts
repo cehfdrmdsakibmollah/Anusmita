@@ -1,5 +1,5 @@
 import {describe,it,expect} from "vitest";
-import {posSaleInput,calculatePosCash,assertUniquePosLines,bdBusinessDate} from "./offline-pos";
+import {posSaleInput,calculatePosCash,assertUniquePosLines,bdBusinessDate,assertPosPriceSnapshot} from "./offline-pos";
 const line=(quantity:number,unitPricePaisa:number)=>({quantity,unitPricePaisa});
 describe("real POS billing contract",()=>{
  it("calculates exact integer cash totals and change, not floats",()=>{
@@ -14,13 +14,20 @@ describe("real POS billing contract",()=>{
  it("rejects duplicate product IDs and invalid quantities",()=>{
   expect(()=>assertUniquePosLines([{productId:"same"},{productId:"same"}])).toThrow();
   expect(()=>assertUniquePosLines([{productId:"a"},{productId:"b"}])).not.toThrow();
-  const request={operationKey:"11111111-1111-4111-8111-111111111111",branchId:"aaaaaaaaaaaaaaaaaaaaaaaa",lines:[{productId:"bbbbbbbbbbbbbbbbbbbbbbbb",quantity:2}],paymentMethod:"cash",discountPaisa:0,tenderedPaisa:300000};
+  const request={operationKey:"11111111-1111-4111-8111-111111111111",branchId:"aaaaaaaaaaaaaaaaaaaaaaaa",lines:[{productId:"bbbbbbbbbbbbbbbbbbbbbbbb",quantity:2,expectedUnitPricePaisa:145000}],paymentMethod:"cash",discountPaisa:0,tenderedPaisa:300000};
   expect(posSaleInput.safeParse(request).success).toBe(true);
-  expect(posSaleInput.safeParse({...request,lines:[{productId:"bbbbbbbbbbbbbbbbbbbbbbbb",quantity:0}]}).success).toBe(false);
+  expect(posSaleInput.safeParse({...request,lines:[{productId:"bbbbbbbbbbbbbbbbbbbbbbbb",quantity:0,expectedUnitPricePaisa:145000}]}).success).toBe(false);
   expect(posSaleInput.safeParse({...request,paymentMethod:"card"}).success).toBe(false);
   expect(posSaleInput.safeParse({...request,stockAdjustment:1000}).success).toBe(false);
  });
- it("books in Bangladesh local business date",()=>{
+ it("rejects stale displayed prices instead of charging unexpected server totals",()=>{
+  expect(()=>assertPosPriceSnapshot(145000,145000)).not.toThrow();
+  expect(()=>assertPosPriceSnapshot(145100,145000)).toThrow("price changed");
+  expect(()=>assertPosPriceSnapshot(0,100)).toThrow();
+  const request={operationKey:"11111111-1111-4111-8111-111111111111",branchId:"aaaaaaaaaaaaaaaaaaaaaaaa",lines:[{productId:"bbbbbbbbbbbbbbbbbbbbbbbb",quantity:1}],paymentMethod:"cash",discountPaisa:0,tenderedPaisa:145000};
+  expect(posSaleInput.safeParse(request).success).toBe(false);
+ });
+  it("books in Bangladesh local business date",()=>{
   expect(bdBusinessDate(new Date("2026-11-07T20:30:00Z"))).toBe("2026-11-08");
  });
 });
