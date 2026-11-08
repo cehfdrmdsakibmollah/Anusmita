@@ -249,6 +249,27 @@ export const WarehouseEvent=mongoose.models.WarehouseEvent||mongoose.model("Ware
 export const WarehouseLocation=mongoose.models.WarehouseLocation||mongoose.model("WarehouseLocation",WarehouseLocationSchema);
 
 /** Cashier POS transactions are immutable. Their idempotency key blocks double-charging retries. */
+/** Cash drawer controlled per branch and authenticated cashier. */
+const PosCashShiftSchema=new Schema({
+ branchId:{type:Schema.Types.ObjectId,ref:"WarehouseLocation",required:true,index:true},
+ branchName:{type:String,required:true,maxlength:100},
+ cashierId:{type:Schema.Types.ObjectId,ref:"User",required:true,index:true},
+ cashierName:{type:String,required:true,maxlength:100},
+ status:{type:String,enum:["open","closed"],required:true,default:"open"},
+ openingFloatPaisa:{type:Number,required:true,min:0},
+ expectedCashPaisa:{type:Number,required:true,min:0},
+ cashSalesPaisa:{type:Number,required:true,min:0,default:0},
+ saleCount:{type:Number,required:true,min:0,default:0},
+ closingCountPaisa:{type:Number,default:null,min:0},
+ variancePaisa:{type:Number,default:null},
+ closingNote:{type:String,default:"",maxlength:500},
+ openedAt:{type:Date,required:true,default:Date.now},
+ closedAt:{type:Date,default:null},
+ closedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
+},opts);
+PosCashShiftSchema.index({branchId:1,cashierId:1},{unique:true,partialFilterExpression:{status:"open"}});
+PosCashShiftSchema.index({branchId:1,openedAt:-1});
+export const PosCashShift=mongoose.models.PosCashShift||mongoose.model("PosCashShift",PosCashShiftSchema);
 const OfflineSaleSchema=new Schema({
  operationKey:{type:String,required:true,unique:true},
  invoiceNumber:{type:String,required:true,unique:true},
@@ -256,6 +277,7 @@ const OfflineSaleSchema=new Schema({
  branchName:{type:String,required:true},
  cashierId:{type:Schema.Types.ObjectId,ref:"User",required:true,index:true},
  cashierName:{type:String,required:true},
+ shiftId:{type:Schema.Types.ObjectId,ref:"PosCashShift",default:null,index:true},
  customerName:{type:String,default:""},customerPhone:{type:String,default:""},
  paymentMethod:{type:String,enum:["cash"],required:true,default:"cash"},
  lines:{type:[new Schema({
