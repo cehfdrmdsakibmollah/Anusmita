@@ -3,6 +3,7 @@ export const posId=z.string().regex(/^[0-9a-f]{24}$/i);
 export const posSaleInput=z.object({
  operationKey:z.string().uuid(),
  branchId:posId,
+ exchangeReturnId:posId.optional(),
  lines:z.array(z.object({productId:posId,quantity:z.number().int().min(1).max(100),expectedUnitPricePaisa:z.number().int().positive().max(1000000000)}).strict()).min(1).max(40),
  customerName:z.string().trim().max(100).default(""),
  customerPhone:z.string().trim().regex(/^(|01[0-9]{9})$/).default(""),
