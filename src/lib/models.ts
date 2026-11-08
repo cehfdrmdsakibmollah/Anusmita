@@ -285,6 +285,7 @@ const OfflineSaleSchema=new Schema({
   productId:{type:Schema.Types.ObjectId,ref:"Product",required:true},
   sku:{type:String,required:true},name:{type:String,required:true},
   quantity:{type:Number,required:true,min:1},unitPricePaisa:{type:Number,required:true,min:0},
+  unitCostPaisa:{type:Number,default:null,min:0},
   lineTotalPaisa:{type:Number,required:true,min:0}
  },{_id:false})],required:true},
  subtotalPaisa:{type:Number,required:true,min:1},
@@ -318,7 +319,8 @@ const PosCashReturnSchema=new Schema({
   productId:{type:Schema.Types.ObjectId,ref:"Product",required:true},
   sku:{type:String,required:true},name:{type:String,required:true},
   quantity:{type:Number,required:true,min:1},
-  grossPaisa:{type:Number,required:true,min:1}
+  grossPaisa:{type:Number,required:true,min:1},
+  unitCostPaisa:{type:Number,default:null,min:0}
  },{_id:false})],required:true},
  grossReturnPaisa:{type:Number,required:true,min:1},
  refundedPaisa:{type:Number,required:true,min:1},

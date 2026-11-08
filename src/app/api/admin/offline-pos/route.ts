@@ -68,14 +68,14 @@ export async function POST(request:Request){
     if(!shift)throw new HttpError(409,"Open your cashier shift at this branch before completing a cash sale");
     if(!branch)throw new HttpError(409,"Selected branch is inactive or missing");
     const sorted=[...data.lines].sort((a,b)=>a.productId.localeCompare(b.productId));
-    const catalog=await Product.find({_id:{$in:sorted.map(l=>l.productId)},active:true,archived:{$ne:true}}).select("name sku pricePaisa onHand reserved").session(session).lean<any[]>();
+    const catalog=await Product.find({_id:{$in:sorted.map(l=>l.productId)},active:true,archived:{$ne:true}}).select("name sku pricePaisa costPaisa onHand reserved").session(session).lean<any[]>();
     if(catalog.length!==sorted.length)throw new HttpError(409,"One or more products are not active");
     const lookup=new Map(catalog.map(p=>[String(p._id),p]));
     const lines=sorted.map(line=>{
      const product=lookup.get(line.productId);
      if(!product||!Number.isSafeInteger(product.pricePaisa)||product.pricePaisa<=0)throw new HttpError(409,"Invalid active product price");
      try{assertPosPriceSnapshot(product.pricePaisa,line.expectedUnitPricePaisa);}catch{throw new HttpError(409,"Price changed for "+product.sku+". Refresh the catalog and reconfirm the cart before charging cash.");}
-     return {...line,name:product.name,sku:product.sku,unitPricePaisa:product.pricePaisa,lineTotalPaisa:product.pricePaisa*line.quantity};
+     return {...line,name:product.name,sku:product.sku,unitPricePaisa:product.pricePaisa,unitCostPaisa:Number.isSafeInteger(product.costPaisa)&&product.costPaisa>=0?product.costPaisa:null,lineTotalPaisa:product.pricePaisa*line.quantity};
     });
     let financials;
     try{financials=calculatePosCash(lines,data.discountPaisa,data.tenderedPaisa);}
