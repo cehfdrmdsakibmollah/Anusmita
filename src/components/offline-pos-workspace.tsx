@@ -25,6 +25,7 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
  const [paperSize,setPaperSize]=useState<"58"|"80">("80"),[previewReceipt,setPreviewReceipt]=useState(false);
  const [shiftActive,setShiftActive]=useState(false);
  const [reprintBusy,setReprintBusy]=useState(false);
+ const [retryAllowed,setRetryAllowed]=useState(false);
  const [pendingOperation,setPendingOperation]=useState<{key:string;branchId:string}|null>(null),[resolving,setResolving]=useState(false);
  const [exchangeReturnId,setExchangeReturnId]=useState("");
  const [held,setHeld]=useState<HeldPosCart[]>([]),[heldBusy,setHeldBusy]=useState(false),[needsRevalidation,setNeedsRevalidation]=useState(false),[restoredHoldId,setRestoredHoldId]=useState<string|null>(null);
@@ -37,14 +38,17 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
    const saved=JSON.parse(raw);
    if(typeof saved.key==="string"&&/^[0-9a-f-]{36}$/i.test(saved.key)&&/^[0-9a-f]{24}$/i.test(saved.branchId)){
     setPendingOperation({key:saved.key,branchId:saved.branchId});
+    setOpKey(saved.key);
    }
   }catch{/* Browser storage unavailable. Server remains authoritative. */}
  },[pendingStorageKey]);
  function persistPending(key:string,location:string){
+  setRetryAllowed(false);
   setPendingOperation({key,branchId:location});
   try{localStorage.setItem(pendingStorageKey,JSON.stringify({key,branchId:location}));}catch{}
  }
  function clearPending(){
+  setRetryAllowed(false);
   setPendingOperation(null);
   try{localStorage.removeItem(pendingStorageKey);}catch{}
  }
@@ -53,7 +57,8 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
   try{
    const response=await fetch("/api/admin/offline-pos/operations/"+encodeURIComponent(key),{cache:"no-store"});
    if(response.status===404){
-    if(!quiet)setError("No confirmed invoice found for this operation yet. It may still be processing. Check again before reusing the SAME checkout key.");
+    setRetryAllowed(true);
+    if(!quiet)setError("No confirmed invoice found for this operation yet. It may still be processing. Only retry the EXACT SAME checkout and operation key.");
     return false;
    }
    const payload=await response.json();
@@ -208,8 +213,8 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
   function add(p:Product){if(!canCheckout||!p.available)return;invalidate();setNotice("");setCart(old=>{const current=old.find(x=>x.product.id===p.id);return current?old.map(x=>x.product.id===p.id?{...x,quantity:Math.min(p.available,x.quantity+1)}:x):[...old,{product:p,quantity:1}];});}
  function quantity(productId:string,value:number){invalidate();setCart(old=>old.map(x=>x.product.id===productId?{...x,quantity:Math.max(1,Math.min(x.product.available||1,value))}:x));}
  function reset(){invalidate();setCart([]);setDiscount("0");setTendered("");setCustomer("");setPhone("");setNotice("");}
- async function checkout(){
-  if(!canCheckout||pendingOperation||(exchangeReturnId&&!canExchange)||!shiftActive||needsRevalidation||!branchId||!online||!cart.length||!branchStockValid||!validDiscount||!validTender||busy){setError("Check branch stock, cash amount and permissions before checkout.");return;}
+ async function checkout(retry=false){
+  if(!canCheckout||(pendingOperation&&(!retry||pendingOperation.key!==opKey))||(exchangeReturnId&&!canExchange)||!shiftActive||needsRevalidation||!branchId||!online||!cart.length||!branchStockValid||!validDiscount||!validTender||busy){setError("Check branch stock, cash amount and permissions before checkout.");return;}
   const snapshot={branch:selectedBranch?.name||"",cashier:cashierName,customer,lines:cart.map(l=>({name:l.product.name,sku:l.product.sku,quantity:l.quantity,unitPricePaisa:l.product.pricePaisa})),subtotalPaisa:subtotal,discountPaisa,totalPaisa:grandTotal,tenderedPaisa,changePaisa:change,date:new Date().toLocaleString("en-BD",{timeZone:"Asia/Dhaka"})};
   setBusy(true);setError("");setNotice("");
   persistPending(opKey,branchId);
@@ -279,7 +284,7 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
     {!online&&<div className="anpos-warning" role="alert"><WifiOff size={19}/> Connection unavailable. Draft carts remain visible, but stock cannot be reserved or a sale confirmed until online. No offline sale has been recorded.</div>}
     {error&&<div className="anpos-error" role="alert"><AlertTriangle size={18}/>{error}<button aria-label="Dismiss error" onClick={()=>setError("")}><X size={16}/></button></div>}
     {notice&&<div className="anpos-success" role="status"><ShieldCheck size={18}/>{notice}</div>}
-    {pendingOperation&&<div className="anpos-pending" role="status"><AlertTriangle size={18}/><span><strong>Checkout confirmation pending verification.</strong> Check whether the previous operation created an invoice before attempting another cash sale. The check is read-only.</span><button type="button" disabled={resolving} onClick={()=>void resolvePending(pendingOperation.key)}><RefreshCw size={15}/>{resolving?"Checking…":"Check Last Checkout"}</button></div>}
+    {pendingOperation&&<div className="anpos-pending" role="status"><AlertTriangle size={18}/><span><strong>Checkout confirmation pending verification.</strong> Check whether the previous operation created an invoice before attempting another cash sale. The check is read-only.</span><button type="button" disabled={resolving} onClick={()=>void resolvePending(pendingOperation.key)}><RefreshCw size={15}/>{resolving?"Checking…":"Check Last Checkout"}</button>{retryAllowed&&pendingOperation.key===opKey&&cart.length>0&&<button type="button" disabled={busy||resolving||!online||!shiftActive||needsRevalidation||!branchStockValid||!validDiscount||!validTender} onClick={()=>void checkout(true)}>Retry SAME checkout key</button>}</div>}
     <section className="anpos-kpis" aria-label="Branch overview">
      <div><span className="anpos-kpi-icon pink"><Wallet/></span><div><small>Today's Net Cash Sales</small><strong>{money(data.today.netCashPaisa)}</strong><em>Refunds: {money(data.today.refundsPaisa||0)} · {selectedBranch?.name||"Select a branch"}</em></div></div>
      <div><span className="anpos-kpi-icon green"><ShoppingCart/></span><div><small>Completed Sales</small><strong>{data.today.orders}</strong><em>Confirmed invoices</em></div></div>
