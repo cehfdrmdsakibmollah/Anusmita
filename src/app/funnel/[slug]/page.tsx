@@ -9,10 +9,10 @@ export const dynamic="force-dynamic";
 async function fetchFunnel(slug:string){
  if(!funnelSlug.safeParse(slug).success)return null;
  await db();
- const doc=await FunnelPage.findOne({slug,published:true,archived:{$ne:true}})
-  .select("title description seoTitle noIndex blocks").lean<any>();
+ const doc=await FunnelPage.findOne({slug,published:true,archived:{$ne:true},$or:[{endsAt:null},{endsAt:{$gt:new Date()}}]})
+  .select("title description seoTitle noIndex endsAt blocks").lean<any>();
  if(!doc)return null;
- const parsed=funnelContent.safeParse({title:doc.title,description:doc.description||"",seoTitle:doc.seoTitle||"",noIndex:!!doc.noIndex,blocks:doc.blocks||[]});
+ const parsed=funnelContent.safeParse({title:doc.title,description:doc.description||"",seoTitle:doc.seoTitle||"",noIndex:!!doc.noIndex,endsAt:doc.endsAt?doc.endsAt.toISOString():"",blocks:doc.blocks||[]});
  return parsed.success?parsed.data:null;
 }
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{
