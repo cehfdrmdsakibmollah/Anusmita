@@ -29,7 +29,7 @@ export function FunnelBlocks({blocks,selected,onPick}:{blocks:Block[];selected?:
    block.kind==="coupon"?<div className="anFunnelCoupon"><h2>{block.title}</h2><p>{block.body}</p><code>{block.buttonLabel}</code></div>:null}
   </>;
   return onPick?
-   <div key={block.id} className={"anFunnelBlock anFunnelEditable"+(selected===block.id?" selected":"")} style={style} onClick={()=>onPick(block.id)} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==="Enter")onPick(block.id)}}>{content}</div>:
+   <div key={block.id} className={"anFunnelBlock anFunnelEditable"+(selected===block.id?" selected":"")} style={style} onClick={event=>{event.preventDefault();onPick(block.id)}} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==="Enter")onPick(block.id)}}>{content}</div>:
    <section key={block.id} className="anFunnelBlock" style={style}>{content}</section>;
  })}
  </div>;
