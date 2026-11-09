@@ -114,3 +114,18 @@
 .anFunnelWorkspaceMain .anFBSlideEditor label{min-width:0}
 .anFunnelWorkspaceMain .anFBSlideEditor textarea{resize:vertical;min-height:55px}
 .anFunnelWorkspaceMain .anFBSlideEditor button:disabled{opacity:.45}
+
+
+/* Media editing panels: preserve original admin sidebar and public funnel styles. */
+.anFunnelWorkspaceMain .anFBMediaPanel{display:grid;gap:10px;padding:10px;border:1px solid #ecd1dd;border-radius:10px;background:#fff8fb;min-width:0}
+.anFunnelWorkspaceMain .anFBMediaHeading{display:grid;gap:3px;font-size:11px;color:#752044}
+.anFunnelWorkspaceMain .anFBMediaHeading strong{font-size:12px}
+.anFunnelWorkspaceMain .anFBMediaHeading span,.anFunnelWorkspaceMain .anFBMediaPanel small{font-size:10px;line-height:1.5;color:#a4768e}
+.anFunnelWorkspaceMain .anFBMediaPreview{width:100%;max-height:220px;min-height:110px;border:1px solid #ecd4de;object-fit:contain;background:#fff;border-radius:8px}
+.anFunnelWorkspaceMain .anFBMediaPlaceholder{display:grid;justify-items:center;align-content:center;gap:9px;min-height:140px;padding:15px;background:#f8e8ef;border:1px dashed #d4a8bd;border-radius:9px;color:#9c5476;font-size:11px;text-align:center}
+.anFunnelWorkspaceMain .anFBMediaActions{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.anFunnelWorkspaceMain .anFBMediaActions button{flex:1;min-width:95px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;border:1px solid #deb7c7;border-radius:7px;background:#fff;color:#81254d;font-size:10px;font-weight:700}
+.anFunnelWorkspaceMain .anFBMediaActions button:first-child{background:#8d153e;color:white;border-color:#8d153e}
+.anFunnelWorkspaceMain .anFBMediaActions button:disabled{opacity:.5}
+.anFunnelWorkspaceMain .anFBSlideCard .anFBMediaActions{gap:5px}
+.anFunnelWorkspaceMain .anFBSlideCard .anFBMediaActions button{font-size:10px}

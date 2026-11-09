@@ -22,7 +22,14 @@ export function FunnelBlocks({blocks,selected,onPick}:{blocks:Block[];selected?:
    {block.kind==="divider"?<hr/>:
    block.kind==="slider"||block.kind==="carousel"?<FunnelSlides slides={block.slides} mode={block.kind} autoplay={block.autoplay} intervalMs={block.intervalMs} showArrows={block.showArrows} showDots={block.showDots} editing={!!onPick}/>:
    block.kind==="banner"?<div className="anFunnelHeroGrid anFunnelBanner"><div><h2 style={headingStyle}>{block.title}</h2><p>{block.body}</p>{block.buttonLabel&&<Button url={block.buttonUrl} label={block.buttonLabel}/>}</div>{image?<img src={image} alt={block.title||"Campaign banner"}/>:<div className="anFunnelImagePlaceholder">Add banner image</div>}</div>:
-   block.kind==="image"?image?<img loading="lazy" src={image} alt={block.title||"Campaign image"}/>:<div className="anFunnelImagePlaceholder">Add a campaign image</div>:
+   block.kind==="image"?<figure className="anFunnelEditableImage">
+    {image?<img loading="lazy" src={image} alt={block.title||"Campaign image"}/>:<div className="anFunnelImagePlaceholder">Add a campaign image</div>}
+    {(block.body||block.buttonLabel||(block.title&&block.title!=="New image"))&&<figcaption>
+     {block.title&&block.title!=="New image"&&<h2 style={headingStyle}>{block.title}</h2>}
+     {block.body&&<p>{block.body}</p>}
+     {block.buttonLabel&&<Button url={block.buttonUrl} label={block.buttonLabel}/>}
+    </figcaption>}
+   </figure>:
    block.kind==="hero"?<div className="anFunnelHeroGrid"><div><span className="anFunnelEyebrow">ANUSMITA · DISCOVER YOUR GLOW</span><h1 style={headingStyle}>{block.title}</h1><p>{block.body}</p>{block.buttonLabel&&<Button url={block.buttonUrl} label={block.buttonLabel}/>}</div>{image&&<img loading="eager" src={image} alt={block.title}/>}</div>:
    block.kind==="heading"?<h2 style={headingStyle}>{block.title}</h2>:
    block.kind==="paragraph"?<p>{block.body}</p>:

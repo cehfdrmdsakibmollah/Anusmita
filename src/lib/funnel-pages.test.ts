@@ -43,6 +43,21 @@ describe("secure ANUSMITA funnel campaign contracts",()=>{
   expect(funnelContent.safeParse({...base().content,blocks:[{...block,slides:[{...slide,onload:"alert(1)"}]}]}).success).toBe(false);
   expect(funnelContent.safeParse({...base().content,blocks:[{...block,slides:[{...slide,imageUrl:"https://cdn.example.com/slide.jpg",title:"Holiday",buttonUrl:"/shop"}]}]}).success).toBe(true);
  });
+  it("preserves independent banner, slider, carousel, and image media editing data",()=>{
+  const banner=initialFunnelBlock("banner");
+  const slider=initialFunnelBlock("slider");
+  const image=initialFunnelBlock("image");
+  const content={...base().content,blocks:[
+   {...banner,imageUrl:"https://cdn.example.com/banner.webp",title:"Custom Banner",buttonLabel:"Order Now",buttonUrl:"/shop"},
+   {...slider,slides:[{...slider.slides[0],imageUrl:"https://cdn.example.com/one.webp",title:"Slide one"},
+                       {...slider.slides[1],imageUrl:"https://cdn.example.com/two.webp",title:"Slide two"}]},
+   {...image,imageUrl:"https://cdn.example.com/picture.webp",body:"My caption",buttonLabel:"Browse",buttonUrl:"/shop"}
+  ]};
+  const parsed=funnelContent.parse(content);
+  expect(parsed.blocks[0].imageUrl).toContain("banner.webp");
+  expect(parsed.blocks[1].slides.map(x=>x.imageUrl)).toHaveLength(2);
+  expect(parsed.blocks[2].buttonLabel).toBe("Browse");
+ });
   it("does not accept unbounded page content",()=>{
   const content={...base().content,title:"a".repeat(101)};
   expect(funnelContent.safeParse(content).success).toBe(false);
