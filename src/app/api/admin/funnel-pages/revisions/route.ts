@@ -23,7 +23,7 @@ export async function POST(request:Request){
  try{
   assertOrigin(request);const actor=await authorize(["owner","admin"],"settings.edit");
   const data=rollback.parse(await request.json());await db();
-  const session=await mongoose.startSession();let nextRevision=0;
+  const session=await mongoose.startSession();let nextRevision=0;let restoredContent:any=null;
   try{
    await session.withTransaction(async()=>{
     const [page,source]=await Promise.all([
@@ -32,7 +32,7 @@ export async function POST(request:Request){
     ]);
     if(!page)throw new HttpError(409,"Campaign changed. Reload before restoring.");
     if(!source)throw new HttpError(404,"Revision no longer available");
-    const content=funnelContent.parse(source.content);
+    const content=funnelContent.parse(source.content);restoredContent=content;
     const updated=await FunnelPage.findOneAndUpdate({slug:data.slug,revision:data.currentRevision},
      {$set:{draftContent:content,updatedBy:actor.id},$inc:{revision:1}},{session,new:true});
     if(!updated)throw new HttpError(409,"Concurrent edit");
@@ -42,6 +42,6 @@ export async function POST(request:Request){
      details:{slug:data.slug,sourceRevision:data.sourceRevision,newRevision:nextRevision,liveUnchanged:true}}],{session});
    },{readConcern:{level:"snapshot"},writeConcern:{w:"majority"}});
   }finally{await session.endSession();}
-  return Response.json({restoredAsDraft:true,revision:nextRevision},{headers:{"Cache-Control":"no-store"}});
+  return Response.json({restoredAsDraft:true,revision:nextRevision,content:restoredContent},{headers:{"Cache-Control":"no-store"}});
  }catch(e:any){if(e?.code===11000)return Response.json({error:"Concurrent version update"},{status:409});return apiError(e);}
 }
