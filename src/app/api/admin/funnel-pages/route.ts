@@ -10,13 +10,13 @@ export async function GET(){
  try{
   await authorize([...readable],"settings.view");await db();
   const pages=await FunnelPage.find({}).sort({updatedAt:-1}).limit(200)
-   .select("slug title description seoTitle noIndex blocks draftContent revision published archived publishedAt updatedAt")
+   .select("slug title description seoTitle noIndex endsAt blocks draftContent revision published archived publishedAt updatedAt")
    .lean<any[]>();
   return Response.json({pages:pages.map(p=>{
    const draft=p.draftContent&&typeof p.draftContent==="object"?p.draftContent:null;
    const current=draft||p;
    return {id:String(p._id),slug:p.slug,title:current.title,description:current.description||"",
-    seoTitle:current.seoTitle||"",noIndex:!!current.noIndex,blocks:current.blocks||[],
+    seoTitle:current.seoTitle||"",noIndex:!!current.noIndex,endsAt:current.endsAt?new Date(current.endsAt).toISOString():"",blocks:current.blocks||[],
     published:!!p.published,archived:!!p.archived,revision:p.revision,hasDraft:!!draft,updatedAt:p.updatedAt,publishedAt:p.publishedAt||null};
   })},{headers:{"Cache-Control":"private, no-store"}});
  }catch(e){return apiError(e);}
@@ -36,12 +36,12 @@ export async function POST(request:Request){
     if(data.mode==="publish"&&existing?.archived)throw new HttpError(409,"Restore the archived page before publishing");
     if(data.mode==="archive"&&!existing)throw new HttpError(404,"Save the page before archiving");
     const publishedContent={title:data.content.title,description:data.content.description,seoTitle:data.content.seoTitle,
-     noIndex:data.content.noIndex,blocks:data.content.blocks};
+     noIndex:data.content.noIndex,endsAt:data.content.endsAt,blocks:data.content.blocks};
     const draftOnly=data.mode==="draft"&&!!existing?.published&&!existing?.archived;
     const update=data.mode==="archive"?{archived:true,published:false,draftContent:null,updatedBy:actor.id}:
       data.mode==="restore"?{archived:false,published:false,draftContent:publishedContent,updatedBy:actor.id}:
       draftOnly?{draftContent:publishedContent,updatedBy:actor.id}:
-      {...publishedContent,archived:false,published:data.mode==="publish",
+      {...publishedContent,endsAt:data.content.endsAt?new Date(data.content.endsAt):null,archived:false,published:data.mode==="publish",
        publishedAt:data.mode==="publish"?new Date():null,draftContent:null,updatedBy:actor.id};
     const saved=await FunnelPage.findOneAndUpdate({slug:data.slug,revision:data.revision},
      {$set:update,$inc:{revision:1}},{upsert:!existing,new:true,runValidators:true,session});
