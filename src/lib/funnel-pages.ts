@@ -7,6 +7,11 @@ export const funnelStyle=z.object({
  padding:z.string().max(50).optional(),margin:z.string().max(50).optional(),gap:z.string().max(40).optional(),
  backgroundColor:z.string().max(40).optional(),color:z.string().max(40).optional(),
  fontSize:z.string().max(40).optional(),fontWeight:z.enum(["400","500","600","700","800"]).optional(),
+ fontFamily:z.enum(["Georgia","Arial","serif","sans-serif"]).optional(),
+ lineHeight:z.string().max(20).optional(),letterSpacing:z.string().max(24).optional(),
+ borderWidth:z.string().max(24).optional(),borderColor:z.string().max(40).optional(),
+ borderStyle:z.enum(["none","solid","dashed","dotted"]).optional(),
+ opacity:z.string().max(12).optional(),
  textAlign:z.enum(["left","center","right"]).optional(),borderRadius:z.string().max(40).optional(),
  boxShadow:z.enum(["none","soft","medium","strong"]).optional(),
  display:z.enum(["block","flex","grid"]).optional(),flexDirection:z.enum(["row","column"]).optional(),
@@ -52,7 +57,13 @@ export function safeFunnelStyle(style:z.infer<typeof funnelStyle>):Record<string
  for(const key of ["width","minHeight","fontSize","borderRadius","gap"] as const){const value=style[key];if(value&&cssLength.test(value))out[key]=value;}
  for(const key of ["padding","margin"] as const){const value=style[key];if(value&&cssSpacing.test(value))out[key]=value;}
  for(const key of ["backgroundColor","color"] as const){const value=style[key];if(value&&cssColor.test(value))out[key]=value;}
- if(style.fontWeight)out.fontWeight=Number(style.fontWeight);
+ for(const key of ["borderWidth","letterSpacing"] as const){const value=style[key];if(value&&/^(?:0|-?[0-9]{1,3}(?:\.[0-9]{1,2})?px)$/.test(value))out[key]=value;}
+ if(style.lineHeight&&/^(?:[1-3](?:\.[0-9]{1,2})?|[0-9]{1,3}px)$/.test(style.lineHeight))out.lineHeight=style.lineHeight;
+ if(style.borderColor&&cssColor.test(style.borderColor))out.borderColor=style.borderColor;
+ if(style.borderStyle)out.borderStyle=style.borderStyle;
+ if(style.opacity&&/^(?:0(?:\.[0-9]{1,2})?|1(?:\.0{1,2})?)$/.test(style.opacity))out.opacity=Number(style.opacity);
+ if(style.fontFamily)out.fontFamily=style.fontFamily;
+  if(style.fontWeight)out.fontWeight=Number(style.fontWeight);
  if(style.textAlign)out.textAlign=style.textAlign;
  if(style.display)out.display=style.display;
  if(style.flexDirection)out.flexDirection=style.flexDirection;
