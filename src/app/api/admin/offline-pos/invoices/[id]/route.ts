@@ -5,11 +5,11 @@ export const dynamic="force-dynamic";
 export const runtime="nodejs";
 export async function GET(_request:Request,{params}:{params:Promise<{id:string}>}){
  try{
-  await authorize(["owner","admin","sales"],"orders.view");
+  const actor=await authorize(["owner","admin","sales"],"orders.view");
   const {id}=await params;
   if(!/^[0-9a-f]{24}$/i.test(id))throw new HttpError(400,"Invalid invoice ID");
   await db();
-  const invoice=await OfflineSale.findOne({_id:id,status:"completed"}).select("invoiceNumber branchId branchName cashierName customerName paymentMethod lines subtotalPaisa discountPaisa totalPaisa tenderedPaisa changePaisa createdAt refundedPaisa").lean<any>();
+  const invoice=await OfflineSale.findOne({_id:id,status:"completed",...(actor.role==="sales"?{cashierId:actor.id}:{})}).select("invoiceNumber branchId branchName cashierName customerName paymentMethod lines subtotalPaisa discountPaisa totalPaisa tenderedPaisa changePaisa createdAt refundedPaisa").lean<any>();
   if(!invoice)throw new HttpError(404,"Confirmed invoice not found");
   const refunds=await PosCashReturn.find({saleId:invoice._id}).select("createdAt refundedPaisa reason disposition").sort({createdAt:1}).lean<any[]>();
   return Response.json({

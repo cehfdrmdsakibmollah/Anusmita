@@ -2,7 +2,7 @@
 import {useCallback,useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import PosCashShiftPanel from "@/components/pos-cash-shift-panel";
-import {holdOwnerBranch,listHeldCarts,saveHeldCart,deleteHeldCart,type HeldPosCart} from "@/lib/pos-held-carts";
+import {holdOwnerBranch,listHeldCarts,saveHeldCart,deleteHeldCart,encodeHeldCartBackup,parseHeldCartBackup,type HeldPosCart} from "@/lib/pos-held-carts";
 import {Store,LayoutDashboard,ShoppingCart,Package,Boxes,ArrowLeftRight,AlertTriangle,FileText,Users,ChartNoAxesColumnIncreasing,Settings,Search,RefreshCw,Bell,ScanBarcode,Plus,Minus,Trash2,Printer,Check,WifiOff,Wallet,ShoppingBag,ArrowUpRight,ShieldCheck,Clock3,History,Building2,X} from "lucide-react";
 type Branch={id:string;name:string;code:string;address:string};
 type Product={id:string;name:string;sku:string;barcode:string;category:string;image:string;pricePaisa:number;branchStock:number;available:number;reorderLevel:number};
@@ -28,6 +28,9 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
  const [exchangeReturnId,setExchangeReturnId]=useState("");
  const [held,setHeld]=useState<HeldPosCart[]>([]),[heldBusy,setHeldBusy]=useState(false),[needsRevalidation,setNeedsRevalidation]=useState(false),[restoredHoldId,setRestoredHoldId]=useState<string|null>(null);
  const barcodeRef=useRef<HTMLInputElement>(null);
+ const backupInputRef=useRef<HTMLInputElement>(null);
+ const latestCartRef=useRef(cart),loadSequence=useRef(0);
+ useEffect(()=>{latestCartRef.current=cart;},[cart]);
  const refreshHolds=useCallback(async(id:string)=>{
   if(!id){setHeld([]);return;}
   try{setHeld(await listHeldCarts(holdOwnerBranch(cashierId,id)));}
@@ -72,7 +75,39 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
   }catch(e){setError(e instanceof Error?e.message:"Cart validation failed");}
   finally{setHeldBusy(false);}
  }
- async function removeHold(id:string){
+ function exportHolds(){
+  if(!branchId)return;
+  try{
+   const content=encodeHeldCartBackup(holdOwnerBranch(cashierId,branchId),held);
+   const blob=new Blob([content],{type:"application/json"});
+   const url=URL.createObjectURL(blob);
+   const a=document.createElement("a");a.href=url;a.download="anusmita-pos-drafts-"+branchId+".json";a.click();
+   // URL persists briefly until the browser begins the download.
+   window.setTimeout(()=>URL.revokeObjectURL(url),10000);
+   setNotice("Local held draft backup downloaded. It contains product snapshots only; protect the file from unauthorized access.");
+  }catch(e){setError(e instanceof Error?e.message:"Draft export failed");}
+ }
+ async function importHolds(file:File|undefined){
+  if(!file||!branchId||heldBusy)return;
+  setHeldBusy(true);setError("");
+  try{
+   if(file.size>1024*1024)throw Error("Backup exceeds 1 MB");
+   const owner=holdOwnerBranch(cashierId,branchId);
+   const drafts=parseHeldCartBackup(await file.text(),owner);
+   const existing=await listHeldCarts(owner);
+   if(drafts.length+existing.length>25)throw Error("Too many drafts for this cashier and branch (maximum 25)");
+   if(!window.confirm("Import "+drafts.length+" held drafts? They will remain unverified and cannot be charged until stock and prices are rechecked."))return;
+   let imported=0;
+   for(const draft of drafts){
+    await saveHeldCart({...draft,id:crypto.randomUUID(),createdAt:new Date().toISOString()});
+    imported++;
+   }
+   await refreshHolds(branchId);
+   setNotice(imported+" local held drafts imported. Resume each and recheck current prices and stock before checkout.");
+  }catch(e){setError(e instanceof Error?e.message:"Draft import failed");await refreshHolds(branchId);}
+  finally{if(backupInputRef.current)backupInputRef.current.value="";setHeldBusy(false);}
+ }
+  async function removeHold(id:string){
   if(!window.confirm("Delete this local held draft? This does not affect recorded sales."))return;
   try{await deleteHeldCart(id);if(restoredHoldId===id)setRestoredHoldId(null);await refreshHolds(branchId);}
   catch(e){setError(e instanceof Error?e.message:"Unable to delete held cart");}
@@ -90,17 +125,24 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
  const visible=useMemo(()=>data.products.filter(p=>(category==="All Products"||p.category===category)&&(!query||[p.name,p.sku,p.barcode].some(x=>x.toLowerCase().includes(query.toLowerCase())))).slice(0,80),[data.products,category,query]);
  const invalidate=()=>{setOpKey(blankId());setConfirmedId("");setReceipt(null);};
  const load=useCallback(async(id:string,lookup="")=>{
+  const sequence=++loadSequence.current;
   setLoading(true);setError("");
   try{
    const params=new URLSearchParams();if(id)params.set("branchId",id);if(lookup.trim())params.set("q",lookup.trim());
    const response=await fetch("/api/admin/offline-pos"+(params.size?"?"+params.toString():""),{cache:"no-store"});
    const json=await response.json();
+   if(sequence!==loadSequence.current)return;
    if(!response.ok)throw Error(json.error||"POS data unavailable");
    setData(json);
    if(!id&&json.branches?.length){const requested=new URLSearchParams(window.location.search).get("branchId");setBranchId(json.branches.find((b:Branch)=>b.id===requested)?.id||json.branches[0].id);}
-   setCart(old=>old.map(line=>({product:json.products?.find((p:Product)=>p.id===line.product.id)||line.product,quantity:line.quantity})));
-  }catch(e){setError(e instanceof Error?e.message:"Unable to load POS");}
-  finally{setLoading(false);}
+   // Background refresh does not mutate product snapshots the cashier approved.
+   const drift=latestCartRef.current.some(line=>{
+    const latest=(json.products||[]).find((p:Product)=>p.id===line.product.id);
+    return latest&&(latest.pricePaisa!==line.product.pricePaisa||line.quantity>latest.available);
+   });
+   if(drift){setNeedsRevalidation(true);setNotice("Catalog price or stock changed. Recheck the cart before charging cash.");}
+  }catch(e){if(sequence===loadSequence.current)setError(e instanceof Error?e.message:"Unable to load POS");}
+  finally{if(sequence===loadSequence.current)setLoading(false);}
  },[]);
  useEffect(()=>{setOnline(navigator.onLine);const up=()=>setOnline(true),down=()=>setOnline(false);window.addEventListener("online",up);window.addEventListener("offline",down);return()=>{window.removeEventListener("online",up);window.removeEventListener("offline",down);}},[]);
  useEffect(()=>{const timer=setTimeout(()=>void load(branchId,query),query?250:0);return()=>clearTimeout(timer);},[branchId,query,load]);
@@ -213,7 +255,7 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
        <small className="anpos-safety">Shortcuts: Ctrl+K focus barcode · F7 hold cart · F9 complete eligible cash sale. Print layouts use browser print settings; physical printer compatibility must be tested. Cash sales require an open cashier shift and verified current prices. Held offline drafts are never automatically charged. Stock and drawer totals are updated in a single authenticated server transaction. No checkout is confirmed while offline.</small>
       </div>
      </section>
-     <aside className="anpos-right"><section className="anpos-panel anpos-held"><header><h2><Clock3 size={16}/> Held Drafts ({held.length})</h2></header><p>Browser-only drafts. Not paid sales. Cash/customer details are never stored.</p>{held.slice(0,8).map(d=><div className="anpos-held-row" key={d.id}><span><strong>{d.lines.reduce((n,l)=>n+l.quantity,0)} items · {money(d.lines.reduce((n,l)=>n+l.unitPricePaisa*l.quantity,0))}</strong><small>{new Date(d.createdAt).toLocaleString("en-BD")}</small></span><button type="button" onClick={()=>resumeHold(d)}>Resume</button><button type="button" aria-label="Delete held draft" onClick={()=>void removeHold(d.id)}><Trash2 size={14}/></button></div>)}{!held.length&&<p>No locally held carts for this cashier and branch.</p>}</section><PosCashShiftPanel branchId={branchId} canCheckout={canCheckout} onActiveChange={setShiftActive}/><section className="anpos-panel anpos-alerts"><header><h2><AlertTriangle size={17}/> Stock Alerts (≤5)</h2><Link href="/admin/inventory">View All</Link></header>{data.lowStock.slice(0,8).map(s=><div key={s.productId}><div><strong>{s.name}</strong><small>{s.sku}</small></div><b>{s.quantity}</b></div>)}{!data.lowStock.length&&<p>No branch low-stock alerts available.</p>}</section>
+     <aside className="anpos-right"><section className="anpos-panel anpos-held"><header><h2><Clock3 size={16}/> Held Drafts ({held.length})</h2></header><p>Browser-only drafts. Not paid sales. Cash/customer details are never stored.</p><div className="anpos-draft-tools"><button type="button" onClick={exportHolds} disabled={!held.length||heldBusy}>Export Backup</button><button type="button" onClick={()=>backupInputRef.current?.click()} disabled={heldBusy||!branchId}>Import Backup</button><input ref={backupInputRef} aria-label="Import saved held drafts JSON backup" type="file" accept="application/json,.json" hidden onChange={e=>void importHolds(e.target.files?.[0])}/></div>{held.slice(0,8).map(d=><div className="anpos-held-row" key={d.id}><span><strong>{d.lines.reduce((n,l)=>n+l.quantity,0)} items · {money(d.lines.reduce((n,l)=>n+l.unitPricePaisa*l.quantity,0))}</strong><small>{new Date(d.createdAt).toLocaleString("en-BD")}</small></span><button type="button" onClick={()=>resumeHold(d)}>Resume</button><button type="button" aria-label="Delete held draft" onClick={()=>void removeHold(d.id)}><Trash2 size={14}/></button></div>)}{!held.length&&<p>No locally held carts for this cashier and branch.</p>}</section><PosCashShiftPanel branchId={branchId} canCheckout={canCheckout} onActiveChange={setShiftActive}/><section className="anpos-panel anpos-alerts"><header><h2><AlertTriangle size={17}/> Stock Alerts (≤5)</h2><Link href="/admin/inventory">View All</Link></header>{data.lowStock.slice(0,8).map(s=><div key={s.productId}><div><strong>{s.name}</strong><small>{s.sku}</small></div><b>{s.quantity}</b></div>)}{!data.lowStock.length&&<p>No branch low-stock alerts available.</p>}</section>
       <section className="anpos-panel anpos-performance"><header><h2>Branch Performance</h2></header><p>Today's confirmed cash sales</p><strong>{money(data.today.netCashPaisa)}</strong><div className="anpos-progress"><span style={{width:data.today.salesPaisa>0?"100%":"0%"}}/></div><small>{selectedBranch?.name||"No branch selected"}</small></section>
       <section className="anpos-panel anpos-recent"><header><h2><History size={17}/> Recent Invoices</h2><button onClick={()=>setView("invoices")}>View All</button></header>{data.sales.slice(0,4).map(s=><div key={s.id}><span>{s.invoiceNumber}<small>{s.cashierName}</small></span><strong>{money(s.totalPaisa)}</strong></div>)}{!data.sales.length&&<p>No confirmed branch sales yet.</p>}</section>
       <section className="anpos-panel anpos-links"><h2>Inventory ERP Tools</h2><Link href="/admin/offline-pos/reports"><ChartNoAxesColumnIncreasing size={17}/> POS Finance & Cashier Reports <ArrowUpRight size={15}/></Link><Link href="/admin/offline-pos/management"><Store size={17}/> Branches & Damage Register <ArrowUpRight size={15}/></Link><Link href="/admin/offline-pos/returns"><ArrowLeftRight size={17}/> Cash Returns & Refunds <ArrowUpRight size={15}/></Link><Link href="/admin?tab=Warehouse%20Transfers"><Boxes size={17}/> Warehouse stock & transfer <ArrowUpRight size={15}/></Link><Link href="/admin/inventory"><AlertTriangle size={17}/> Damage & stock adjustment <ArrowUpRight size={15}/></Link><Link href="/admin/staff"><Users size={17}/> Staff & permissions <ArrowUpRight size={15}/></Link></section>
