@@ -20,7 +20,7 @@ const elementIcons={hero:ImageIcon,banner:ImageIcon,slider:Rows3,carousel:Layers
 export default function FunnelBuilder(){
  const upload=useRef<HTMLInputElement>(null),imageFile=useRef<HTMLInputElement>(null),slideFile=useRef<HTMLInputElement>(null),dragged=useRef<number|null>(null);
  const [pages,setPages]=useState<Funnel[]>([]),[page,setPage]=useState<Funnel|null>(null);
- const [saved,setSaved]=useState(""),[selected,setSelected]=useState<string|null>(null),[rightTab,setRightTab]=useState<"content"|"style"|"seo"|"history"|"advanced">("style");
+ const [saved,setSaved]=useState(""),[selected,setSelected]=useState<string|null>(null),[rightTab,setRightTab]=useState<"content"|"style"|"seo"|"history"|"advanced">("content");
  const [revisions,setRevisions]=useState<{revision:number;mode:string;createdAt:string;title:string;blockCount:number}[]>([]);
  const [selectedSlide,setSelectedSlide]=useState<string|null>(null);
  const [leftTab,setLeftTab]=useState<"elements"|"sections"|"templates">("elements"),[elementSearch,setElementSearch]=useState(""),[showPages,setShowPages]=useState(false),[showLayers,setShowLayers]=useState(true);
@@ -58,11 +58,11 @@ export default function FunnelBuilder(){
  useEffect(()=>{if(!dirty)return;const before=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue="";};window.addEventListener("beforeunload",before);return()=>window.removeEventListener("beforeunload",before);},[dirty]);
  function choose(next:Funnel){
   if(dirty&&!window.confirm("Discard unsaved campaign edits?"))return;
-  resetHistory();const copy=structuredClone(next);copy.blocks=copy.blocks.map(b=>funnelBlock.parse(b));setPage(copy);setSaved(JSON.stringify(copy));setSelected(copy.blocks[0]?.id||null);setNotice("");setError("");
+  resetHistory();const copy=structuredClone(next);copy.blocks=copy.blocks.map(b=>funnelBlock.parse(b));setPage(copy);setSaved(JSON.stringify(copy));setSelected(copy.blocks[0]?.id||null);setSelectedSlide(copy.blocks[0]?.slides?.[0]?.id||null);setRightTab("content");setNotice("");setError("");
  }
  function create(){
   if(dirty&&!window.confirm("Discard unsaved changes?"))return;
-  resetHistory();const next=empty();setPage(next);setSaved(JSON.stringify(next));setSelected(next.blocks[0].id);setNotice("");setError("");
+  resetHistory();const next=empty();setPage(next);setSaved(JSON.stringify(next));setSelected(next.blocks[0].id);setSelectedSlide(null);setRightTab("content");setNotice("");setError("");
  }
  function patch(values:Partial<Funnel>){setPage(p=>p?{...p,...values}:p);}
  function updateBlock(id:string,values:Partial<Block>){
