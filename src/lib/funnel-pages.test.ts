@@ -16,7 +16,13 @@ describe("secure ANUSMITA funnel campaign contracts",()=>{
   expect(funnelWrite.safeParse({...base(),slug:"../admin"}).success).toBe(false);
   expect(safeFunnelStyle({backgroundColor:"red;position:fixed",padding:"10px; transform:scale(5)",width:"100%"})).toEqual({width:"100%"});
  });
- it("blocks javascript/data link schemes",()=>{
+ it("sanitizes typography, borders and effects while preserving valid controls",()=>{
+  expect(safeFunnelStyle({fontFamily:"Georgia",lineHeight:"1.2",letterSpacing:"-0.5px",borderWidth:"2px",borderStyle:"solid",borderColor:"#5a0f2e",opacity:"0.75"})).toMatchObject({
+   fontFamily:"Georgia",lineHeight:"1.2",letterSpacing:"-0.5px",borderWidth:"2px",borderStyle:"solid",borderColor:"#5a0f2e",opacity:0.75
+  });
+  expect(safeFunnelStyle({letterSpacing:"0px;position:fixed",lineHeight:"expression(alert(1))",opacity:"2"})).toEqual({});
+ });
+  it("blocks javascript/data link schemes",()=>{
   expect(safeFunnelUrl("javascript:alert(1)")).toBe("");
   expect(safeFunnelUrl("data:text/html,evil")).toBe("");
   expect(safeFunnelUrl("/shop")).toBe("/shop");
