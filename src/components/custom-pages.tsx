@@ -81,10 +81,11 @@ export default function CustomPages(){
  function copyLink(){if(!page)return;void navigator.clipboard.writeText(window.location.origin+"/pages/"+page.slug).then(()=>setNotice("Public URL copied."),()=>setNotice("Copy: "+window.location.origin+"/pages/"+page.slug));}
  const key=lang==="bn"?"textBn":"text";
  return <section className="anPolicyStudio">
-  <header className="anPsHeader"><div className="anPsTitle"><span className="anPsBrandIcon"><FileText size={25}/></span><div><div className="anPsBreadcrumb">Admin / Content & Engagement / Custom Pages</div><h1>Custom Pages & Policy Builder <small>PRO</small></h1><p>Create, edit, preview and publish secure content pages without changing existing storefront policies.</p></div></div>
+  <header className="anPsHeader"><div className="anPsTitle"><span className="anPsBrandIcon"><FileText size={25}/></span><div><div className="anPsBreadcrumb">Admin / Content & Engagement / Custom Pages</div><h1>Custom Pages & Policy Builder <small>PRO</small></h1><p>Create and publish secure policy pages, or open the new visual funnel builder for ad campaigns.</p></div></div>
    <div className="anPsHeaderActions"><a href="/" target="_blank" rel="noreferrer"><Eye size={15}/> View Live Site</a><button type="button" className="primary" onClick={create}><Plus size={17}/> New Custom Page</button></div></header>
   <nav className="anPsMasterRibbon" aria-label="Page builder tools">
    <button type="button" className="active" onClick={()=>setTab("settings")}><Layers size={15}/> Pages Builder</button>
+   <a href="/admin/custom-pages/funnels"><Layers size={15}/> Funnel Campaign Studio</a>
    <button type="button" onClick={()=>setTab("seo")}><FileText size={15}/> SEO & OpenGraph</button>
    <button type="button" onClick={()=>{setShowAdd(true);setTab("settings");}}><LayoutList size={15}/> Blocks Library</button>
    <button type="button" onClick={()=>setTab("preview")}><Eye size={15}/> Live Draft Preview</button>
