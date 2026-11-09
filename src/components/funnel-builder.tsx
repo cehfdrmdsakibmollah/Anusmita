@@ -10,7 +10,7 @@ type Block=z.infer<typeof funnelBlock>;
 type Content=z.infer<typeof funnelContent>;
 type Style=z.infer<typeof funnelStyle>;
 type Funnel={id?:string;slug:string;revision:number;published:boolean;archived:boolean;hasDraft?:boolean;updatedAt?:string;publishedAt?:string|null}&Content;
-const empty=():Funnel=>({slug:"",revision:0,published:false,archived:false,title:"",description:"",seoTitle:"",noIndex:false,endsAt:"",blocks:[initialFunnelBlock("hero") as Block,initialFunnelBlock("features") as Block]});
+const empty=():Funnel=>({slug:"new-campaign-"+crypto.randomUUID().slice(0,8),revision:0,published:false,archived:false,title:"New Campaign",description:"",seoTitle:"",noIndex:false,endsAt:"",blocks:[initialFunnelBlock("hero") as Block,initialFunnelBlock("features") as Block]});
 const names:Record<Block["kind"],string>={hero:"Hero Banner",banner:"Editable Banner",slider:"Auto Image Slider",carousel:"Image Carousel",heading:"Heading",paragraph:"Paragraph",image:"Image",button:"CTA Button",features:"Feature Grid",faq:"FAQ Accordion",divider:"Divider",countdown:"Countdown Timer",trust:"Trust / Benefit Cards",coupon:"Coupon Display"};
 const slugify=(value:string)=>value.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,80);
 const getContent=(p:Funnel):Content=>({title:p.title,description:p.description,seoTitle:p.seoTitle,noIndex:p.noIndex,endsAt:p.endsAt,blocks:p.blocks});
@@ -130,9 +130,9 @@ export default function FunnelBuilder(){
  }
   function clonePage(){
   if(!page)return;
-  const next={...structuredClone(page),id:undefined,title:page.title+" (Copy)",slug:"",revision:0,published:false,archived:false,hasDraft:false,
+  const next={...structuredClone(page),id:undefined,title:page.title+" (Copy)",slug:"campaign-copy-"+crypto.randomUUID().slice(0,8),revision:0,published:false,archived:false,hasDraft:false,
    blocks:page.blocks.map(b=>({...b,id:crypto.randomUUID()}))};
-  resetHistory();setPage(next);setSelected(next.blocks[0].id);setSaved(JSON.stringify(next));setNotice("Campaign cloned locally. Enter a new unique slug, then save as draft.");
+  resetHistory();setPage(next);setSelected(next.blocks[0].id);setSaved(JSON.stringify(next));setNotice("Campaign cloned locally with a new unique slug. You can edit its slug before saving.");
  }
  async function uploadImage(file?:File,slideId?:string){
   if(!file||!page||!active||uploading)return;
@@ -220,7 +220,7 @@ export default function FunnelBuilder(){
     <div className="anFBSectionHeading"><strong>Campaign Pages</strong><button className="anFBMiniButton" onClick={()=>setShowPages(v=>!v)}>{showPages?"Hide":"Browse"}</button></div>{showPages&&<div className="anFBPageList">{filtered.map(p=><button key={p.slug} onClick={()=>choose(p)} className={page?.slug===p.slug?"active":""}><span><strong>{p.title}</strong><small>/funnel/{p.slug}</small></span><em>{p.archived?"Archived":p.published?"Live":"Draft"}</em></button>)}{!filtered.length&&<p>No saved funnels yet</p>}</div>}
     <div className="anFBAssets"><button onClick={()=>setLeftTab("templates")}><Layers3 size={15}/> Saved Blocks <strong>{page?.blocks.length||0}</strong></button><button onClick={()=>setLeftTab("templates")}><LayoutTemplate size={15}/> Global Templates <strong>3</strong></button><button onClick={()=>upload.current?.click()}><Copy size={15}/> Import Components</button></div>
    </aside>
-   <section className="anFBCenter">{page?<><div className="anFBToolbar"><div><input className="anFBPageTitle" aria-label="Funnel title" value={page.title} maxLength={100} placeholder="Campaign title" onChange={e=>patch({title:e.target.value,slug:page.revision? page.slug:slugify(e.target.value)})}/><small className="anFBPageStatus"><span className={page.published&&!page.archived?"live":"draft"}>{page.archived?"Archived":page.published?"● Live":"● Draft"}</span> /funnel/{page.slug||"new-campaign"} · Rev {page.revision}{page.hasDraft?" · Unpublished changes":""}</small></div>
+   <section className="anFBCenter">{page?<><div className="anFBToolbar"><div><input className="anFBPageTitle" aria-label="Funnel title" value={page.title} maxLength={100} placeholder="Campaign title" onChange={e=>patch({title:e.target.value})}/><small className="anFBPageStatus"><span className={page.published&&!page.archived?"live":"draft"}>{page.archived?"Archived":page.published?"● Live":"● Draft"}</span> /funnel/{page.slug||"new-campaign"} · Rev {page.revision}{page.hasDraft?" · Unpublished changes":""}</small></div>
     <div className="anFBToolbarRight"><button aria-label="Desktop preview" className={viewport==="desktop"?"active":""} onClick={()=>setViewport("desktop")}><Monitor size={16}/></button><button aria-label="Tablet preview" className={viewport==="tablet"?"active":""} onClick={()=>setViewport("tablet")}><Tablet size={16}/></button><button aria-label="Mobile preview" className={viewport==="mobile"?"active":""} onClick={()=>setViewport("mobile")}><Smartphone size={16}/></button></div></div>
     <div className="anFBActionbar"><div className="anFBUndoGroup"><button type="button" aria-label="Undo edit" onClick={undoEdit}><RotateCcw size={15}/></button><button type="button" aria-label="Redo edit" onClick={redoEdit}><RotateCw size={15}/></button></div><button onClick={()=>void save("draft")} disabled={busy}><Save size={15}/> Save Draft</button><button className="primary" onClick={()=>void save("publish")} disabled={busy||page.archived}><Check size={15}/> Publish</button>{page.published&&!page.archived&&<Link href={"/funnel/"+page.slug} target="_blank"><Eye size={15}/> Live</Link>}<span>{dirty?"Unsaved changes":"All changes saved"}</span></div>
     <div className={"anFBCanvasStage "+viewport}><div className="anFunnelRoot anFBPreviewRoot"><div className="anFunnelPublicHeader"><span className="anFunnelLogo">ANUSMITA</span><span>Discover Your Glow</span></div><FunnelBlocks blocks={page.blocks} selected={selected} onPick={setSelected}/></div></div>
@@ -233,8 +233,15 @@ export default function FunnelBuilder(){
        <label>Block Type<select value={active.kind} onChange={e=>updateBlock(active.id,{kind:e.target.value as Block["kind"]})}>{funnelKinds.map(k=><option key={k} value={k}>{names[k]}</option>)}</select></label>
        <label>Title<input maxLength={220} value={active.title} onChange={e=>updateBlock(active.id,{title:e.target.value})}/></label>
        <label>Body<textarea maxLength={2400} rows={4} value={active.body} onChange={e=>updateBlock(active.id,{body:e.target.value})}/></label>
-       {["hero","banner","image"].includes(active.kind)&&<><label>Image URL (HTTPS or /path)<input value={active.imageUrl} onChange={e=>updateBlock(active.id,{imageUrl:e.target.value})} placeholder="https://…"/></label><input ref={imageFile} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void uploadImage(e.target.files?.[0])}/><button type="button" disabled={uploading||!page.slug} onClick={()=>imageFile.current?.click()}><Upload size={15}/> {uploading?"Uploading…":"Upload to Cloudflare R2"}</button></>}
-       {["hero","button","coupon"].includes(active.kind)&&<><label>Button / Coupon Label<input value={active.buttonLabel} onChange={e=>updateBlock(active.id,{buttonLabel:e.target.value})}/></label><label>Destination URL<input value={active.buttonUrl} onChange={e=>updateBlock(active.id,{buttonUrl:e.target.value})} placeholder="/shop"/></label></>}
+       {["hero","banner","image"].includes(active.kind)&&<div className="anFBMediaPanel">
+        <div className="anFBMediaHeading"><strong>{active.kind==="banner"?"Banner Image":active.kind==="image"?"Image Media":"Hero Banner Image"}</strong><span>Independent image · JPG/PNG/WebP · 3 MB</span></div>
+        {active.imageUrl?<img className="anFBMediaPreview" src={active.imageUrl} alt={active.title||"Selected funnel image"}/>:<div className="anFBMediaPlaceholder"><ImageIcon size={23}/><span>No image selected — upload your own image</span></div>}
+        <input ref={imageFile} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void uploadImage(e.target.files?.[0])}/>
+        <div className="anFBMediaActions"><button type="button" disabled={uploading} onClick={()=>imageFile.current?.click()}><Upload size={15}/> {uploading?"Uploading…":active.imageUrl?"Replace Image":"Upload Image"}</button><button type="button" disabled={!active.imageUrl||uploading} onClick={()=>updateBlock(active.id,{imageUrl:""})}><Trash2 size={14}/> Remove</button></div>
+        <label>Image URL (HTTPS or /path)<input value={active.imageUrl} onChange={e=>updateBlock(active.id,{imageUrl:e.target.value})} placeholder="https://…"/></label>
+        <small>Image changes update the canvas immediately. Save Draft then Publish to update the public funnel.</small>
+       </div>}
+       {["hero","banner","button","coupon"].includes(active.kind)&&<><label>Button / Coupon Label<input value={active.buttonLabel} onChange={e=>updateBlock(active.id,{buttonLabel:e.target.value})}/></label><label>Destination URL<input value={active.buttonUrl} onChange={e=>updateBlock(active.id,{buttonUrl:e.target.value})} placeholder="/shop"/></label></>}
        {(active.kind==="slider"||active.kind==="carousel")&&<div className="anFBSlideEditor">
         <h4>{names[active.kind]} · {active.slides.length} slides</h4>
         <label>Autoplay<input type="checkbox" checked={active.autoplay} onChange={e=>updateBlock(active.id,{autoplay:e.target.checked})}/></label>
@@ -242,10 +249,11 @@ export default function FunnelBuilder(){
         <label>Show Arrows<input type="checkbox" checked={active.showArrows} onChange={e=>updateBlock(active.id,{showArrows:e.target.checked})}/></label>
         <label>Show Dots<input type="checkbox" checked={active.showDots} onChange={e=>updateBlock(active.id,{showDots:e.target.checked})}/></label>
         <input ref={slideFile} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>void uploadImage(e.target.files?.[0],selectedSlide||active.slides[0]?.id)}/>
+        <div className="anFBMediaHeading"><strong>Slide Image Manager</strong><span>Each slide has its own image, text and link</span></div>
         {active.slides.map((slide,i)=><div key={slide.id} className="anFBSlideCard">
          <div className="anFBSlideCardTop"><strong>Slide {i+1}</strong><button disabled={i===0} onClick={()=>moveSlide(active.id,i,-1)} aria-label="Move earlier"><ArrowUp size={14}/></button><button disabled={i===active.slides.length-1} onClick={()=>moveSlide(active.id,i,1)} aria-label="Move later"><ArrowDown size={14}/></button><button disabled={active.slides.length<=1} onClick={()=>removeSlide(active.id,slide.id)} aria-label="Delete slide"><Trash2 size={14}/></button></div>
          <label>Image URL<input value={slide.imageUrl} onChange={e=>patchSlide(active.id,slide.id,{imageUrl:e.target.value})} placeholder="https://…"/></label>
-         <button type="button" disabled={uploading||!page.slug} onClick={()=>{setSelectedSlide(slide.id);slideFile.current?.click()}}><Upload size={14}/> {uploading?"Uploading…":"Upload Image to R2"}</button>
+         <div className="anFBMediaActions"><button type="button" disabled={uploading} onClick={()=>{setSelectedSlide(slide.id);slideFile.current?.click()}}><Upload size={14}/> {uploading?"Uploading…":slide.imageUrl?"Replace Slide Image":"Upload Slide Image"}</button><button type="button" disabled={!slide.imageUrl||uploading} onClick={()=>patchSlide(active.id,slide.id,{imageUrl:""})}><Trash2 size={14}/> Remove Image</button></div>
          {slide.imageUrl&&<img className="anFBSlideThumb" src={slide.imageUrl} alt={slide.alt||slide.title}/>}
          <label>Title<input maxLength={220} value={slide.title} onChange={e=>patchSlide(active.id,slide.id,{title:e.target.value})}/></label>
          <label>Description<textarea maxLength={700} rows={2} value={slide.body} onChange={e=>patchSlide(active.id,slide.id,{body:e.target.value})}/></label>
