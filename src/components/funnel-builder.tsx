@@ -247,7 +247,7 @@ export default function FunnelBuilder(){
         <label>Image URL (HTTPS or /path)<input value={active.imageUrl} onChange={e=>updateBlock(active.id,{imageUrl:e.target.value})} placeholder="https://…"/></label>
         <small>Image changes update the canvas immediately. Save Draft then Publish to update the public funnel.</small>
        </div>}
-       {["hero","banner","button","coupon"].includes(active.kind)&&<><label>Button / Coupon Label<input value={active.buttonLabel} onChange={e=>updateBlock(active.id,{buttonLabel:e.target.value})}/></label><label>Destination URL<input value={active.buttonUrl} onChange={e=>updateBlock(active.id,{buttonUrl:e.target.value})} placeholder="/shop"/></label></>}
+       {["hero","banner","image","button","coupon"].includes(active.kind)&&<><label>Button / Coupon Label<input value={active.buttonLabel} onChange={e=>updateBlock(active.id,{buttonLabel:e.target.value})}/></label><label>Destination URL<input value={active.buttonUrl} onChange={e=>updateBlock(active.id,{buttonUrl:e.target.value})} placeholder="/shop"/></label></>}
        {(active.kind==="slider"||active.kind==="carousel")&&<div className="anFBSlideEditor">
         <h4>{names[active.kind]} · {active.slides.length} slides</h4>
         <label>Autoplay<input type="checkbox" checked={active.autoplay} onChange={e=>updateBlock(active.id,{autoplay:e.target.checked})}/></label>
