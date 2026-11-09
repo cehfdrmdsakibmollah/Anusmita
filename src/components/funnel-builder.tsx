@@ -18,7 +18,7 @@ const numbered=["width","minHeight","fontSize","borderRadius","padding","margin"
 const colored=["backgroundColor","color"] as const;
 const elementIcons={hero:ImageIcon,banner:ImageIcon,slider:Rows3,carousel:Layers3,heading:Heading1,paragraph:Type,image:ImageIcon,button:MousePointer2,features:Rows3,faq:Rows3,divider:Minus,countdown:Clock3,trust:Star,coupon:Package} as const;
 export default function FunnelBuilder(){
- const upload=useRef<HTMLInputElement>(null),imageFile=useRef<HTMLInputElement>(null),slideFile=useRef<HTMLInputElement>(null),dragged=useRef<number|null>(null);
+ const upload=useRef<HTMLInputElement>(null),imageFile=useRef<HTMLInputElement>(null),slideFile=useRef<HTMLInputElement>(null),targetSlideRef=useRef<string|null>(null),dragged=useRef<number|null>(null);
  const [pages,setPages]=useState<Funnel[]>([]),[page,setPage]=useState<Funnel|null>(null);
  const [saved,setSaved]=useState(""),[selected,setSelected]=useState<string|null>(null),[rightTab,setRightTab]=useState<"content"|"style"|"seo"|"history"|"advanced">("content");
  const [revisions,setRevisions]=useState<{revision:number;mode:string;createdAt:string;title:string;blockCount:number}[]>([]);
@@ -153,7 +153,7 @@ export default function FunnelBuilder(){
    if(slideId)patchSlide(id,slideId,{imageUrl:json.url});else updateBlock(id,{imageUrl:json.url});
    setNotice("Campaign image uploaded to Cloudflare R2. Save draft or publish to use it on your funnel.");
   }catch(e){setError(e instanceof Error?e.message:"Upload failed");}
-  finally{setUploading(false);if(imageFile.current)imageFile.current.value="";if(slideFile.current)slideFile.current.value="";}
+  finally{setUploading(false);if(imageFile.current)imageFile.current.value="";if(slideFile.current)slideFile.current.value="";targetSlideRef.current=null;}
  }
   async function loadRevisions(){
   if(!page?.slug)return;
@@ -254,12 +254,12 @@ export default function FunnelBuilder(){
         <label>Autoplay Seconds<input type="number" min="2" max="15" value={active.intervalMs/1000} onChange={e=>updateBlock(active.id,{intervalMs:Math.min(15000,Math.max(2000,Math.round((Number(e.target.value)||5)*1000)))})}/></label>
         <label>Show Arrows<input type="checkbox" checked={active.showArrows} onChange={e=>updateBlock(active.id,{showArrows:e.target.checked})}/></label>
         <label>Show Dots<input type="checkbox" checked={active.showDots} onChange={e=>updateBlock(active.id,{showDots:e.target.checked})}/></label>
-        <input ref={slideFile} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>void uploadImage(e.target.files?.[0],selectedSlide||active.slides[0]?.id)}/>
+        <input ref={slideFile} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>void uploadImage(e.target.files?.[0],targetSlideRef.current||active.slides[0]?.id)}/>
         <div className="anFBMediaHeading"><strong>Slide Image Manager</strong><span>Each slide has its own image, text and link</span></div>
         {active.slides.map((slide,i)=><div key={slide.id} className="anFBSlideCard">
          <div className="anFBSlideCardTop"><strong>Slide {i+1}</strong><button disabled={i===0} onClick={()=>moveSlide(active.id,i,-1)} aria-label="Move earlier"><ArrowUp size={14}/></button><button disabled={i===active.slides.length-1} onClick={()=>moveSlide(active.id,i,1)} aria-label="Move later"><ArrowDown size={14}/></button><button disabled={active.slides.length<=1} onClick={()=>removeSlide(active.id,slide.id)} aria-label="Delete slide"><Trash2 size={14}/></button></div>
          <label>Image URL<input value={slide.imageUrl} onChange={e=>patchSlide(active.id,slide.id,{imageUrl:e.target.value})} placeholder="https://…"/></label>
-         <div className="anFBMediaActions"><button type="button" disabled={uploading} onClick={()=>{setSelectedSlide(slide.id);slideFile.current?.click()}}><Upload size={14}/> {uploading?"Uploading…":slide.imageUrl?"Replace Slide Image":"Upload Slide Image"}</button><button type="button" disabled={!slide.imageUrl||uploading} onClick={()=>patchSlide(active.id,slide.id,{imageUrl:""})}><Trash2 size={14}/> Remove Image</button></div>
+         <div className="anFBMediaActions"><button type="button" disabled={uploading} onClick={()=>{targetSlideRef.current=slide.id;setSelectedSlide(slide.id);slideFile.current?.click()}}><Upload size={14}/> {uploading?"Uploading…":slide.imageUrl?"Replace Slide Image":"Upload Slide Image"}</button><button type="button" disabled={!slide.imageUrl||uploading} onClick={()=>patchSlide(active.id,slide.id,{imageUrl:""})}><Trash2 size={14}/> Remove Image</button></div>
          {slide.imageUrl&&<img className="anFBSlideThumb" src={slide.imageUrl} alt={slide.alt||slide.title}/>}
          <label>Title<input maxLength={220} value={slide.title} onChange={e=>patchSlide(active.id,slide.id,{title:e.target.value})}/></label>
          <label>Description<textarea maxLength={700} rows={2} value={slide.body} onChange={e=>patchSlide(active.id,slide.id,{body:e.target.value})}/></label>
