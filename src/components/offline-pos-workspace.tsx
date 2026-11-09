@@ -29,6 +29,8 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
  const [held,setHeld]=useState<HeldPosCart[]>([]),[heldBusy,setHeldBusy]=useState(false),[needsRevalidation,setNeedsRevalidation]=useState(false),[restoredHoldId,setRestoredHoldId]=useState<string|null>(null);
  const barcodeRef=useRef<HTMLInputElement>(null);
  const backupInputRef=useRef<HTMLInputElement>(null);
+ const latestCartRef=useRef(cart),loadSequence=useRef(0);
+ useEffect(()=>{latestCartRef.current=cart;},[cart]);
  const refreshHolds=useCallback(async(id:string)=>{
   if(!id){setHeld([]);return;}
   try{setHeld(await listHeldCarts(holdOwnerBranch(cashierId,id)));}
@@ -123,25 +125,24 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
  const visible=useMemo(()=>data.products.filter(p=>(category==="All Products"||p.category===category)&&(!query||[p.name,p.sku,p.barcode].some(x=>x.toLowerCase().includes(query.toLowerCase())))).slice(0,80),[data.products,category,query]);
  const invalidate=()=>{setOpKey(blankId());setConfirmedId("");setReceipt(null);};
  const load=useCallback(async(id:string,lookup="")=>{
+  const sequence=++loadSequence.current;
   setLoading(true);setError("");
   try{
    const params=new URLSearchParams();if(id)params.set("branchId",id);if(lookup.trim())params.set("q",lookup.trim());
    const response=await fetch("/api/admin/offline-pos"+(params.size?"?"+params.toString():""),{cache:"no-store"});
    const json=await response.json();
+   if(sequence!==loadSequence.current)return;
    if(!response.ok)throw Error(json.error||"POS data unavailable");
    setData(json);
    if(!id&&json.branches?.length){const requested=new URLSearchParams(window.location.search).get("branchId");setBranchId(json.branches.find((b:Branch)=>b.id===requested)?.id||json.branches[0].id);}
-   setCart(old=>{
-    // Background refresh must never silently update the price used to confirm a sale.
-    const drift=old.some(line=>{
-     const latest=(json.products||[]).find((p:Product)=>p.id===line.product.id);
-     return latest&&(latest.pricePaisa!==line.product.pricePaisa||line.quantity>latest.available);
-    });
-    if(drift){setNeedsRevalidation(true);setNotice("Catalog price or stock changed. Recheck the cart before charging cash.");}
-    return old;
+   // Background refresh does not mutate product snapshots the cashier approved.
+   const drift=latestCartRef.current.some(line=>{
+    const latest=(json.products||[]).find((p:Product)=>p.id===line.product.id);
+    return latest&&(latest.pricePaisa!==line.product.pricePaisa||line.quantity>latest.available);
    });
-  }catch(e){setError(e instanceof Error?e.message:"Unable to load POS");}
-  finally{setLoading(false);}
+   if(drift){setNeedsRevalidation(true);setNotice("Catalog price or stock changed. Recheck the cart before charging cash.");}
+  }catch(e){if(sequence===loadSequence.current)setError(e instanceof Error?e.message:"Unable to load POS");}
+  finally{if(sequence===loadSequence.current)setLoading(false);}
  },[]);
  useEffect(()=>{setOnline(navigator.onLine);const up=()=>setOnline(true),down=()=>setOnline(false);window.addEventListener("online",up);window.addEventListener("offline",down);return()=>{window.removeEventListener("online",up);window.removeEventListener("offline",down);}},[]);
  useEffect(()=>{const timer=setTimeout(()=>void load(branchId,query),query?250:0);return()=>clearTimeout(timer);},[branchId,query,load]);
