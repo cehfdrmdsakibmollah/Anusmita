@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
-import {FunnelPage,Audit} from "@/lib/models";
+import {FunnelPage,FunnelRevision,Audit} from "@/lib/models";
 import {funnelWrite} from "@/lib/funnel-pages";
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
@@ -46,6 +46,7 @@ export async function POST(request:Request){
     const saved=await FunnelPage.findOneAndUpdate({slug:data.slug,revision:data.revision},
      {$set:update,$inc:{revision:1}},{upsert:!existing,new:true,runValidators:true,session});
     if(!saved)throw new HttpError(409,"Concurrent editor update");
+    await FunnelRevision.create([{slug:data.slug,revision:saved.revision,mode:data.mode,content:publishedContent,actorId:actor.id}],{session});
     await Audit.create([{actorId:actor.id,action:"funnel.page."+data.mode,entity:"FunnelPage",entityId:String(saved._id),
      details:{slug:data.slug,revision:saved.revision,mode:data.mode,draftOnly}}],{session});
     output={saved:true,revision:saved.revision,slug:data.slug,published:!!saved.published,archived:!!saved.archived};
