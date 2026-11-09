@@ -67,3 +67,5 @@
 .anpos-reprint-button{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:7px;border:1px solid #e2b2c6;background:#fff4f8;color:#8d2351;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer}.anpos-reprint-button:disabled{opacity:.45;cursor:not-allowed}
 
 .anpos-draft-tools{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:0 12px 12px}.anpos-draft-tools button{border:1px solid #e3b6cb;background:#fff4f8;color:#82244b;padding:8px 10px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer}.anpos-draft-tools button:disabled{opacity:.45;cursor:not-allowed}
+
+.anpos-pending{display:flex;flex-wrap:wrap;align-items:center;gap:9px;border:1px solid #e5c185;border-radius:10px;background:#fff7e5;color:#80521d;padding:12px;font-size:11px;line-height:1.5}.anpos-pending>span{flex:1 1 300px}.anpos-pending button{display:inline-flex;align-items:center;gap:6px;padding:9px 11px;background:#fff;border:1px solid #dcb979;border-radius:7px;color:#85511e;font-weight:700;cursor:pointer}.anpos-pending button:disabled{opacity:.5;cursor:not-allowed}
