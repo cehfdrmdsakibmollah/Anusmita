@@ -17,10 +17,10 @@ const getContent=(p:Funnel):Content=>({title:p.title,description:p.description,s
 const numbered=["width","minHeight","fontSize","borderRadius","padding","margin","gap"] as const;
 const colored=["backgroundColor","color"] as const;
 export default function FunnelBuilder(){
- const upload=useRef<HTMLInputElement>(null),dragged=useRef<number|null>(null);
+ const upload=useRef<HTMLInputElement>(null),imageFile=useRef<HTMLInputElement>(null),dragged=useRef<number|null>(null);
  const [pages,setPages]=useState<Funnel[]>([]),[page,setPage]=useState<Funnel|null>(null);
  const [saved,setSaved]=useState(""),[selected,setSelected]=useState<string|null>(null),[rightTab,setRightTab]=useState<"content"|"style"|"seo">("content");
- const [viewport,setViewport]=useState<"desktop"|"tablet"|"mobile">("desktop"),[notice,setNotice]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false),[search,setSearch]=useState("");
+ const [viewport,setViewport]=useState<"desktop"|"tablet"|"mobile">("desktop"),[notice,setNotice]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false),[uploading,setUploading]=useState(false),[search,setSearch]=useState("");
  const dirty=!!page&&JSON.stringify(page)!==saved;
  const active=page?.blocks.find(b=>b.id===selected);
  const filtered=useMemo(()=>pages.filter(x=>(x.title+" "+x.slug).toLowerCase().includes(search.toLowerCase())),[pages,search]);
@@ -70,7 +70,22 @@ export default function FunnelBuilder(){
    blocks:page.blocks.map(b=>({...b,id:crypto.randomUUID()}))};
   setPage(next);setSelected(next.blocks[0].id);setSaved(JSON.stringify(next));setNotice("Campaign cloned locally. Enter a new unique slug, then save as draft.");
  }
- async function save(mode:"draft"|"publish"|"archive"|"restore"){
+ async function uploadImage(file?:File){
+  if(!file||!page||!active||uploading)return;
+  if(!page.slug){setError("Set a campaign slug before uploading images.");return;}
+  if(file.size>3*1024*1024||!["image/jpeg","image/png","image/webp"].includes(file.type)){setError("JPG, PNG or WebP images must be under 3 MB.");return;}
+  const id=active.id;setUploading(true);setError("");
+  try{
+   const data=new FormData();data.set("slug",page.slug);data.set("file",file);
+   const response=await fetch("/api/admin/funnel-pages/media",{method:"POST",body:data});
+   const json=await response.json();
+   if(!response.ok)throw Error(json.error||"Image upload failed");
+   updateBlock(id,{imageUrl:json.url});
+   setNotice("Campaign image uploaded to Cloudflare R2. Save draft or publish to use it on your funnel.");
+  }catch(e){setError(e instanceof Error?e.message:"Upload failed");}
+  finally{setUploading(false);if(imageFile.current)imageFile.current.value="";}
+ }
+  async function save(mode:"draft"|"publish"|"archive"|"restore"){
   if(!page||busy)return;
   const payload=funnelWrite.safeParse({slug:page.slug,revision:page.revision,mode,content:getContent(page)});
   if(!payload.success){setError("Invalid title, slug, CSS, image or block data. Check required fields before saving.");return;}
@@ -127,7 +142,7 @@ export default function FunnelBuilder(){
        <label>Block Type<select value={active.kind} onChange={e=>updateBlock(active.id,{kind:e.target.value as Block["kind"]})}>{funnelKinds.map(k=><option key={k} value={k}>{names[k]}</option>)}</select></label>
        <label>Title<input maxLength={220} value={active.title} onChange={e=>updateBlock(active.id,{title:e.target.value})}/></label>
        <label>Body<textarea maxLength={2400} rows={4} value={active.body} onChange={e=>updateBlock(active.id,{body:e.target.value})}/></label>
-       {["hero","image"].includes(active.kind)&&<label>Image URL (HTTPS or /path)<input value={active.imageUrl} onChange={e=>updateBlock(active.id,{imageUrl:e.target.value})} placeholder="https://…"/></label>}
+       {["hero","image"].includes(active.kind)&&<><label>Image URL (HTTPS or /path)<input value={active.imageUrl} onChange={e=>updateBlock(active.id,{imageUrl:e.target.value})} placeholder="https://…"/></label><input ref={imageFile} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void uploadImage(e.target.files?.[0])}/><button type="button" disabled={uploading||!page.slug} onClick={()=>imageFile.current?.click()}><Upload size={15}/> {uploading?"Uploading…":"Upload to Cloudflare R2"}</button></>}
        {["hero","button","coupon"].includes(active.kind)&&<><label>Button / Coupon Label<input value={active.buttonLabel} onChange={e=>updateBlock(active.id,{buttonLabel:e.target.value})}/></label><label>Destination URL<input value={active.buttonUrl} onChange={e=>updateBlock(active.id,{buttonUrl:e.target.value})} placeholder="/shop"/></label></>}
        {active.kind==="countdown"&&<label>Expiration (ISO datetime)<input type="datetime-local" value={active.expiresAt.slice(0,16)} onChange={e=>updateBlock(active.id,{expiresAt:e.target.value?new Date(e.target.value).toISOString():""})}/></label>}
        {["features","faq","trust"].includes(active.kind)&&<><strong>Cards / Accordion Items</strong>{active.items.map((it,i)=><div key={i} className="anFBItem"><label>Title<input value={it.title} maxLength={140} onChange={e=>setItem(i,"title",e.target.value)}/></label><label>Description<textarea value={it.body} maxLength={500} onChange={e=>setItem(i,"body",e.target.value)}/></label><button onClick={()=>updateBlock(active.id,{items:active.items.filter((_,j)=>j!==i)})}><Trash2 size={14}/> Remove</button></div>)}<button disabled={active.items.length>=12} onClick={()=>updateBlock(active.id,{items:[...active.items,{title:"New item",body:"Description"}]})}><Plus size={14}/> Add Item</button></>}
