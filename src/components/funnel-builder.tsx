@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import {Archive,ArrowDown,ArrowUp,Check,Copy,Download,Eye,FilePlus2,GripVertical,Image as ImageIcon,Layers3,Monitor,Plus,RefreshCw,Save,Smartphone,Tablet,Trash2,Upload,Undo2,Type,Heading1,MousePointer2,RectangleHorizontal,Minus,Clock3,Star,Package,Settings2,ChartNoAxesColumnIncreasing,Search,ChevronDown,ChevronUp,Maximize2,LayoutTemplate,Rows3,PanelRight,RotateCcw,RotateCw,Crown} from "lucide-react";
 import type {z} from "zod";
-import {funnelKinds,funnelWrite,funnelContent,initialFunnelBlock,initialFunnelSlide,type funnelBlock,type funnelStyle} from "@/lib/funnel-pages";
+import {funnelKinds,funnelWrite,funnelContent,initialFunnelBlock,initialFunnelSlide,funnelBlock,type funnelStyle} from "@/lib/funnel-pages";
 import {FunnelBlocks} from "./funnel-blocks";
 import "./funnel-builder.css";
 type Block=z.infer<typeof funnelBlock>;
@@ -58,7 +58,7 @@ export default function FunnelBuilder(){
  useEffect(()=>{if(!dirty)return;const before=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue="";};window.addEventListener("beforeunload",before);return()=>window.removeEventListener("beforeunload",before);},[dirty]);
  function choose(next:Funnel){
   if(dirty&&!window.confirm("Discard unsaved campaign edits?"))return;
-  resetHistory();const copy=structuredClone(next);setPage(copy);setSaved(JSON.stringify(copy));setSelected(copy.blocks[0]?.id||null);setNotice("");setError("");
+  resetHistory();const copy=structuredClone(next);copy.blocks=copy.blocks.map(b=>funnelBlock.parse(b));setPage(copy);setSaved(JSON.stringify(copy));setSelected(copy.blocks[0]?.id||null);setNotice("");setError("");
  }
  function create(){
   if(dirty&&!window.confirm("Discard unsaved changes?"))return;
@@ -66,7 +66,7 @@ export default function FunnelBuilder(){
  }
  function patch(values:Partial<Funnel>){setPage(p=>p?{...p,...values}:p);}
  function updateBlock(id:string,values:Partial<Block>){
-  setPage(p=>p?{...p,blocks:p.blocks.map(b=>b.id===id?{...b,...values}:b)}:p);
+  setPage(p=>p?{...p,blocks:p.blocks.map(b=>b.id===id?funnelBlock.parse({...b,...values}):b)}:p);
  }
  function patchSlide(blockId:string,slideId:string,values:Partial<Block["slides"][number]>){
   setPage(p=>p?{...p,blocks:p.blocks.map(b=>b.id===blockId?{...b,slides:b.slides.map(sl=>sl.id===slideId?{...sl,...values}:sl)}:b)}:p);
