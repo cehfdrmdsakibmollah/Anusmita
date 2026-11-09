@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
-import {Archive,ArrowDown,ArrowUp,Check,Copy,Download,Eye,FilePlus2,GripVertical,Image as ImageIcon,Layers3,Monitor,Plus,RefreshCw,Save,Smartphone,Tablet,Trash2,Upload,Undo2} from "lucide-react";
+import {Archive,ArrowDown,ArrowUp,Check,Copy,Download,Eye,FilePlus2,GripVertical,Image as ImageIcon,Layers3,Monitor,Plus,RefreshCw,Save,Smartphone,Tablet,Trash2,Upload,Undo2,Type,Heading1,MousePointer2,RectangleHorizontal,Minus,Clock3,Star,Package,Settings2,ChartNoAxesColumnIncreasing,Search,ChevronDown,ChevronUp,Maximize2,LayoutTemplate,Rows3,PanelRight,RotateCcw,RotateCw,Crown} from "lucide-react";
 import type {z} from "zod";
 import {funnelKinds,funnelWrite,funnelContent,initialFunnelBlock,type funnelBlock,type funnelStyle} from "@/lib/funnel-pages";
 import {FunnelBlocks} from "./funnel-blocks";
@@ -16,15 +16,38 @@ const slugify=(value:string)=>value.toLowerCase().replace(/[^a-z0-9]+/g,"-").rep
 const getContent=(p:Funnel):Content=>({title:p.title,description:p.description,seoTitle:p.seoTitle,noIndex:p.noIndex,endsAt:p.endsAt,blocks:p.blocks});
 const numbered=["width","minHeight","fontSize","borderRadius","padding","margin","gap"] as const;
 const colored=["backgroundColor","color"] as const;
+const elementIcons={hero:ImageIcon,heading:Heading1,paragraph:Type,image:ImageIcon,button:MousePointer2,features:Rows3,faq:Rows3,divider:Minus,countdown:Clock3,trust:Star,coupon:Package} as const;
 export default function FunnelBuilder(){
  const upload=useRef<HTMLInputElement>(null),imageFile=useRef<HTMLInputElement>(null),dragged=useRef<number|null>(null);
  const [pages,setPages]=useState<Funnel[]>([]),[page,setPage]=useState<Funnel|null>(null);
  const [saved,setSaved]=useState(""),[selected,setSelected]=useState<string|null>(null),[rightTab,setRightTab]=useState<"content"|"style"|"seo"|"history">("content");
  const [revisions,setRevisions]=useState<{revision:number;mode:string;createdAt:string;title:string;blockCount:number}[]>([]);
+ const [leftTab,setLeftTab]=useState<"elements"|"sections"|"templates">("elements"),[elementSearch,setElementSearch]=useState(""),[showPages,setShowPages]=useState(false),[showLayers,setShowLayers]=useState(true);
  const [viewport,setViewport]=useState<"desktop"|"tablet"|"mobile">("desktop"),[notice,setNotice]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false),[uploading,setUploading]=useState(false),[search,setSearch]=useState("");
+ const previous=useRef<Funnel|null>(null),past=useRef<Funnel[]>([]),future=useRef<Funnel[]>([]),skipHistory=useRef(false);
  const dirty=!!page&&JSON.stringify(page)!==saved;
  const active=page?.blocks.find(b=>b.id===selected);
  const filtered=useMemo(()=>pages.filter(x=>(x.title+" "+x.slug).toLowerCase().includes(search.toLowerCase())),[pages,search]);
+ useEffect(()=>{
+  if(!page){previous.current=null;return;}
+  if(skipHistory.current){skipHistory.current=false;previous.current=structuredClone(page);return;}
+  if(previous.current&&JSON.stringify(previous.current)!==JSON.stringify(page)){
+   past.current=[...past.current.slice(-49),structuredClone(previous.current)];
+   future.current=[];
+  }
+  previous.current=structuredClone(page);
+ },[page]);
+ function undoEdit(){
+  if(!page||!past.current.length)return;
+  const old=past.current.pop()!;
+  future.current.push(structuredClone(page));skipHistory.current=true;setPage(old);
+ }
+ function redoEdit(){
+  if(!page||!future.current.length)return;
+  const next=future.current.pop()!;
+  past.current.push(structuredClone(page));skipHistory.current=true;setPage(next);
+ }
+ function resetHistory(){previous.current=null;past.current=[];future.current=[];}
  async function load(){
   const response=await fetch("/api/admin/funnel-pages",{cache:"no-store"}),json=await response.json();
   if(!response.ok)throw Error(json.error||"Unable to load campaign pages");
@@ -34,11 +57,11 @@ export default function FunnelBuilder(){
  useEffect(()=>{if(!dirty)return;const before=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue="";};window.addEventListener("beforeunload",before);return()=>window.removeEventListener("beforeunload",before);},[dirty]);
  function choose(next:Funnel){
   if(dirty&&!window.confirm("Discard unsaved campaign edits?"))return;
-  const copy=structuredClone(next);setPage(copy);setSaved(JSON.stringify(copy));setSelected(copy.blocks[0]?.id||null);setNotice("");setError("");
+  resetHistory();const copy=structuredClone(next);setPage(copy);setSaved(JSON.stringify(copy));setSelected(copy.blocks[0]?.id||null);setNotice("");setError("");
  }
  function create(){
   if(dirty&&!window.confirm("Discard unsaved changes?"))return;
-  const next=empty();setPage(next);setSaved(JSON.stringify(next));setSelected(next.blocks[0].id);setNotice("");setError("");
+  resetHistory();const next=empty();setPage(next);setSaved(JSON.stringify(next));setSelected(next.blocks[0].id);setNotice("");setError("");
  }
  function patch(values:Partial<Funnel>){setPage(p=>p?{...p,...values}:p);}
  function updateBlock(id:string,values:Partial<Block>){
@@ -93,7 +116,7 @@ export default function FunnelBuilder(){
   if(!page)return;
   const next={...structuredClone(page),id:undefined,title:page.title+" (Copy)",slug:"",revision:0,published:false,archived:false,hasDraft:false,
    blocks:page.blocks.map(b=>({...b,id:crypto.randomUUID()}))};
-  setPage(next);setSelected(next.blocks[0].id);setSaved(JSON.stringify(next));setNotice("Campaign cloned locally. Enter a new unique slug, then save as draft.");
+  resetHistory();setPage(next);setSelected(next.blocks[0].id);setSaved(JSON.stringify(next));setNotice("Campaign cloned locally. Enter a new unique slug, then save as draft.");
  }
  async function uploadImage(file?:File){
   if(!file||!page||!active||uploading)return;
@@ -164,7 +187,7 @@ export default function FunnelBuilder(){
    const parsed=JSON.parse(await file.text()),validated=funnelContent.parse(parsed?.kind==="anusmita.funnel-page"&&parsed?.version===1?parsed.content:null);
    if(dirty&&!window.confirm("Discard unsaved work to import?"))return;
    const next:{[K in keyof Funnel]:Funnel[K]}={...empty(),...validated,blocks:validated.blocks.map(b=>({...b,id:crypto.randomUUID()}))};
-   setPage(next);setSaved(JSON.stringify(next));setSelected(next.blocks[0].id);setNotice("JSON imported as a new draft. Choose a unique slug.");
+   resetHistory();setPage(next);setSaved(JSON.stringify(next));setSelected(next.blocks[0].id);setNotice("JSON imported as a new draft. Choose a unique slug.");
   }catch(e){setError("Import rejected: "+(e instanceof Error?e.message:String(e)));}
   finally{if(upload.current)upload.current.value="";}
  }
