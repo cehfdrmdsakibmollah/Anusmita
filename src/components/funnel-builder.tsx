@@ -64,7 +64,31 @@ export default function FunnelBuilder(){
   if(!page||page.blocks.length===1)return;
   patch({blocks:page.blocks.filter(b=>b.id!==id)});if(selected===id)setSelected(page.blocks.find(b=>b.id!==id)?.id||null);
  }
- function clonePage(){
+ function applyPreset(name:"product"|"offer"|"story"){
+  if(!page)return;
+  if(!window.confirm("Replace this campaign's current blocks with the "+name+" template?"))return;
+  const make=(kind:Block["kind"],values:Partial<Block>={})=>({...initialFunnelBlock(kind),...values,id:crypto.randomUUID()}) as Block;
+  const blocks=name==="product"?[
+   make("hero",{title:"Meet your new favorite",body:"Introduce your product and its verified benefits.",buttonLabel:"Explore the Collection",buttonUrl:"/shop"}),
+   make("features",{title:"Why customers choose ANUSMITA",items:[{title:"Quality",body:"Add verified product details."},{title:"Easy Shopping",body:"Discover available collections."},{title:"Support",body:"Contact our team with your questions."}]}),
+   make("image",{title:"Showcase your product"}),
+   make("faq",{title:"Frequently asked questions",items:[{title:"How do I place an order?",body:"Browse our store and proceed through official checkout."}]}),
+   make("button",{buttonLabel:"Shop Now",buttonUrl:"/shop"})
+  ]:name==="offer"?[
+   make("hero",{title:"A special offer awaits",body:"Highlight the actual campaign terms and dates.",buttonLabel:"Shop Offers",buttonUrl:"/deals"}),
+   make("countdown",{title:"Campaign ends in",body:"Offer expires at the published campaign deadline.",expiresAt:page.endsAt||""}),
+   make("trust",{title:"Shop with confidence",items:[{title:"Verified Product",body:"Add genuine product details."},{title:"Customer Care",body:"Our team is available to help."}]}),
+   make("button",{buttonLabel:"Explore Deals",buttonUrl:"/deals"})
+  ]:[
+   make("hero",{title:"Our Story",body:"Tell visitors what makes your brand special.",buttonLabel:"Meet ANUSMITA",buttonUrl:"/about"}),
+   make("heading",{title:"What inspires us"}),
+   make("paragraph",{body:"Describe your brand's mission, products and customer promise."}),
+   make("features",{title:"What we value",items:[{title:"Care",body:"Describe your brand's care standards."},{title:"Design",body:"Describe your approach to quality."}]}),
+   make("button",{buttonLabel:"View Collection",buttonUrl:"/shop"})
+  ];
+  patch({blocks});setSelected(blocks[0].id);setNotice(name+" template applied locally. Review all text and media before publishing.");
+ }
+  function clonePage(){
   if(!page)return;
   const next={...structuredClone(page),id:undefined,title:page.title+" (Copy)",slug:"",revision:0,published:false,archived:false,hasDraft:false,
    blocks:page.blocks.map(b=>({...b,id:crypto.randomUUID()}))};
@@ -126,7 +150,7 @@ export default function FunnelBuilder(){
   {error&&<p role="alert" className="anFBError">{error}</p>}{notice&&<p role="status" className="anFBNotice">{notice}</p>}
   <div className="anFBGrid">
    <aside className="anFBLeft"><div className="anFBSectionHeading"><strong>Campaign Pages</strong><span>{pages.length}</span></div><input className="anFBSearch" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search campaigns…"/><div className="anFBPageList">{filtered.map(p=><button key={p.slug} onClick={()=>choose(p)} className={page?.slug===p.slug?"active":""}><span><strong>{p.title}</strong><small>/funnel/{p.slug}</small></span><em>{p.archived?"Archived":p.published?"Live":"Draft"}</em></button>)}{!filtered.length&&<p>No saved funnels yet</p>}</div>
-    <div className="anFBSectionHeading"><strong>Elements Library</strong><span>{funnelKinds.length}</span></div><div className="anFBElements">{funnelKinds.map(kind=><button key={kind} disabled={!page||page.blocks.length>=50} onClick={()=>add(kind)}><Plus size={14}/>{names[kind]}</button>)}</div>
+    <div className="anFBSectionHeading"><strong>Funnel Templates</strong><span>3</span></div><div className="anFBPresets"><button disabled={!page} onClick={()=>applyPreset("product")}>Product Launch</button><button disabled={!page} onClick={()=>applyPreset("offer")}>Flash Sale / Offer</button><button disabled={!page} onClick={()=>applyPreset("story")}>Brand Story</button></div><div className="anFBSectionHeading"><strong>Elements Library</strong><span>{funnelKinds.length}</span></div><div className="anFBElements">{funnelKinds.map(kind=><button key={kind} disabled={!page||page.blocks.length>=50} onClick={()=>add(kind)}><Plus size={14}/>{names[kind]}</button>)}</div>
     <small>Only safe visual blocks. Arbitrary scripts and customer data collection are disabled.</small>
    </aside>
    <section className="anFBCenter">{page?<><div className="anFBToolbar"><div><input className="anFBPageTitle" aria-label="Funnel title" value={page.title} maxLength={100} placeholder="Campaign title" onChange={e=>patch({title:e.target.value,slug:page.revision? page.slug:slugify(e.target.value)})}/><small>/funnel/{page.slug||"new-campaign"} · Rev {page.revision} · {page.archived?"Archived":page.published?"Published":"Draft"}{page.hasDraft?" · Unpublished changes":""}</small></div>
