@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import {Archive,ArrowDown,ArrowUp,Check,Copy,Download,Eye,FilePlus2,GripVertical,Image as ImageIcon,Layers3,Monitor,Plus,RefreshCw,Save,Smartphone,Tablet,Trash2,Upload,Undo2,Type,Heading1,MousePointer2,RectangleHorizontal,Minus,Clock3,Star,Package,Settings2,ChartNoAxesColumnIncreasing,Search,ChevronDown,ChevronUp,Maximize2,LayoutTemplate,Rows3,PanelRight,RotateCcw,RotateCw,Crown} from "lucide-react";
 import type {z} from "zod";
-import {funnelKinds,funnelWrite,funnelContent,initialFunnelBlock,type funnelBlock,type funnelStyle} from "@/lib/funnel-pages";
+import {funnelKinds,funnelWrite,funnelContent,initialFunnelBlock,initialFunnelSlide,funnelBlock,type funnelStyle} from "@/lib/funnel-pages";
 import {FunnelBlocks} from "./funnel-blocks";
 import "./funnel-builder.css";
 type Block=z.infer<typeof funnelBlock>;
@@ -11,17 +11,18 @@ type Content=z.infer<typeof funnelContent>;
 type Style=z.infer<typeof funnelStyle>;
 type Funnel={id?:string;slug:string;revision:number;published:boolean;archived:boolean;hasDraft?:boolean;updatedAt?:string;publishedAt?:string|null}&Content;
 const empty=():Funnel=>({slug:"",revision:0,published:false,archived:false,title:"",description:"",seoTitle:"",noIndex:false,endsAt:"",blocks:[initialFunnelBlock("hero") as Block,initialFunnelBlock("features") as Block]});
-const names:Record<Block["kind"],string>={hero:"Hero Banner",heading:"Heading",paragraph:"Paragraph",image:"Image",button:"CTA Button",features:"Feature Grid",faq:"FAQ Accordion",divider:"Divider",countdown:"Countdown Timer",trust:"Trust / Benefit Cards",coupon:"Coupon Display"};
+const names:Record<Block["kind"],string>={hero:"Hero Banner",banner:"Editable Banner",slider:"Auto Image Slider",carousel:"Image Carousel",heading:"Heading",paragraph:"Paragraph",image:"Image",button:"CTA Button",features:"Feature Grid",faq:"FAQ Accordion",divider:"Divider",countdown:"Countdown Timer",trust:"Trust / Benefit Cards",coupon:"Coupon Display"};
 const slugify=(value:string)=>value.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,80);
 const getContent=(p:Funnel):Content=>({title:p.title,description:p.description,seoTitle:p.seoTitle,noIndex:p.noIndex,endsAt:p.endsAt,blocks:p.blocks});
 const numbered=["width","minHeight","fontSize","borderRadius","padding","margin","gap"] as const;
 const colored=["backgroundColor","color"] as const;
-const elementIcons={hero:ImageIcon,heading:Heading1,paragraph:Type,image:ImageIcon,button:MousePointer2,features:Rows3,faq:Rows3,divider:Minus,countdown:Clock3,trust:Star,coupon:Package} as const;
+const elementIcons={hero:ImageIcon,banner:ImageIcon,slider:Rows3,carousel:Layers3,heading:Heading1,paragraph:Type,image:ImageIcon,button:MousePointer2,features:Rows3,faq:Rows3,divider:Minus,countdown:Clock3,trust:Star,coupon:Package} as const;
 export default function FunnelBuilder(){
- const upload=useRef<HTMLInputElement>(null),imageFile=useRef<HTMLInputElement>(null),dragged=useRef<number|null>(null);
+ const upload=useRef<HTMLInputElement>(null),imageFile=useRef<HTMLInputElement>(null),slideFile=useRef<HTMLInputElement>(null),dragged=useRef<number|null>(null);
  const [pages,setPages]=useState<Funnel[]>([]),[page,setPage]=useState<Funnel|null>(null);
- const [saved,setSaved]=useState(""),[selected,setSelected]=useState<string|null>(null),[rightTab,setRightTab]=useState<"content"|"style"|"seo"|"history"|"advanced">("style");
+ const [saved,setSaved]=useState(""),[selected,setSelected]=useState<string|null>(null),[rightTab,setRightTab]=useState<"content"|"style"|"seo"|"history"|"advanced">("content");
  const [revisions,setRevisions]=useState<{revision:number;mode:string;createdAt:string;title:string;blockCount:number}[]>([]);
+ const [selectedSlide,setSelectedSlide]=useState<string|null>(null);
  const [leftTab,setLeftTab]=useState<"elements"|"sections"|"templates">("elements"),[elementSearch,setElementSearch]=useState(""),[showPages,setShowPages]=useState(false),[showLayers,setShowLayers]=useState(true);
  const [viewport,setViewport]=useState<"desktop"|"tablet"|"mobile">("desktop"),[notice,setNotice]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false),[uploading,setUploading]=useState(false),[search,setSearch]=useState("");
  const previous=useRef<Funnel|null>(null),past=useRef<Funnel[]>([]),future=useRef<Funnel[]>([]),skipHistory=useRef(false);
@@ -57,15 +58,30 @@ export default function FunnelBuilder(){
  useEffect(()=>{if(!dirty)return;const before=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue="";};window.addEventListener("beforeunload",before);return()=>window.removeEventListener("beforeunload",before);},[dirty]);
  function choose(next:Funnel){
   if(dirty&&!window.confirm("Discard unsaved campaign edits?"))return;
-  resetHistory();const copy=structuredClone(next);setPage(copy);setSaved(JSON.stringify(copy));setSelected(copy.blocks[0]?.id||null);setNotice("");setError("");
+  resetHistory();const copy=structuredClone(next);copy.blocks=copy.blocks.map(b=>funnelBlock.parse(b));setPage(copy);setSaved(JSON.stringify(copy));setSelected(copy.blocks[0]?.id||null);setSelectedSlide(copy.blocks[0]?.slides?.[0]?.id||null);setRightTab("content");setNotice("");setError("");
  }
  function create(){
   if(dirty&&!window.confirm("Discard unsaved changes?"))return;
-  resetHistory();const next=empty();setPage(next);setSaved(JSON.stringify(next));setSelected(next.blocks[0].id);setNotice("");setError("");
+  resetHistory();const next=empty();setPage(next);setSaved(JSON.stringify(next));setSelected(next.blocks[0].id);setSelectedSlide(null);setRightTab("content");setNotice("");setError("");
  }
  function patch(values:Partial<Funnel>){setPage(p=>p?{...p,...values}:p);}
  function updateBlock(id:string,values:Partial<Block>){
-  setPage(p=>p?{...p,blocks:p.blocks.map(b=>b.id===id?{...b,...values}:b)}:p);
+  setPage(p=>p?{...p,blocks:p.blocks.map(b=>b.id===id?funnelBlock.parse({...b,...values}):b)}:p);
+ }
+ function patchSlide(blockId:string,slideId:string,values:Partial<Block["slides"][number]>){
+  setPage(p=>p?{...p,blocks:p.blocks.map(b=>b.id===blockId?{...b,slides:b.slides.map(sl=>sl.id===slideId?{...sl,...values}:sl)}:b)}:p);
+ }
+ function addSlide(blockId:string){
+  const block=page?.blocks.find(b=>b.id===blockId);if(!block||block.slides.length>=16)return;
+  const next=initialFunnelSlide();updateBlock(blockId,{slides:[...block.slides,next]});setSelectedSlide(next.id);
+ }
+ function removeSlide(blockId:string,slideId:string){
+  const block=page?.blocks.find(b=>b.id===blockId);if(!block||block.slides.length<=1)return;
+  const slides=block.slides.filter(sl=>sl.id!==slideId);updateBlock(blockId,{slides});setSelectedSlide(slides[0]?.id||null);
+ }
+ function moveSlide(blockId:string,index:number,delta:number){
+  const block=page?.blocks.find(b=>b.id===blockId);if(!block||index+delta<0||index+delta>=block.slides.length)return;
+  const slides=[...block.slides],removed=slides.splice(index,1);slides.splice(index+delta,0,removed[0]);updateBlock(blockId,{slides});
  }
  function updateStyle(id:string,key:keyof Style,value:string){
   setPage(p=>p?{...p,blocks:p.blocks.map(b=>b.id===id?{...b,style:{...b.style,[key]:value}}:b)}:p);
@@ -73,7 +89,7 @@ export default function FunnelBuilder(){
  function add(kind:Block["kind"]){
   if(!page||page.blocks.length>=50)return;
   const block=initialFunnelBlock(kind) as Block;
-  patch({blocks:[...page.blocks,block]});setSelected(block.id);setRightTab("content");
+  patch({blocks:[...page.blocks,block]});setSelected(block.id);setSelectedSlide(block.slides[0]?.id||null);setRightTab("content");
  }
  function move(from:number,to:number){
   if(!page||from<0||to<0||from>=page.blocks.length||to>=page.blocks.length||from===to)return;
@@ -118,7 +134,7 @@ export default function FunnelBuilder(){
    blocks:page.blocks.map(b=>({...b,id:crypto.randomUUID()}))};
   resetHistory();setPage(next);setSelected(next.blocks[0].id);setSaved(JSON.stringify(next));setNotice("Campaign cloned locally. Enter a new unique slug, then save as draft.");
  }
- async function uploadImage(file?:File){
+ async function uploadImage(file?:File,slideId?:string){
   if(!file||!page||!active||uploading)return;
   if(!page.slug){setError("Set a campaign slug before uploading images.");return;}
   if(file.size>3*1024*1024||!["image/jpeg","image/png","image/webp"].includes(file.type)){setError("JPG, PNG or WebP images must be under 3 MB.");return;}
@@ -128,10 +144,10 @@ export default function FunnelBuilder(){
    const response=await fetch("/api/admin/funnel-pages/media",{method:"POST",body:data});
    const json=await response.json();
    if(!response.ok)throw Error(json.error||"Image upload failed");
-   updateBlock(id,{imageUrl:json.url});
+   if(slideId)patchSlide(id,slideId,{imageUrl:json.url});else updateBlock(id,{imageUrl:json.url});
    setNotice("Campaign image uploaded to Cloudflare R2. Save draft or publish to use it on your funnel.");
   }catch(e){setError(e instanceof Error?e.message:"Upload failed");}
-  finally{setUploading(false);if(imageFile.current)imageFile.current.value="";}
+  finally{setUploading(false);if(imageFile.current)imageFile.current.value="";if(slideFile.current)slideFile.current.value="";}
  }
   async function loadRevisions(){
   if(!page?.slug)return;
@@ -217,8 +233,28 @@ export default function FunnelBuilder(){
        <label>Block Type<select value={active.kind} onChange={e=>updateBlock(active.id,{kind:e.target.value as Block["kind"]})}>{funnelKinds.map(k=><option key={k} value={k}>{names[k]}</option>)}</select></label>
        <label>Title<input maxLength={220} value={active.title} onChange={e=>updateBlock(active.id,{title:e.target.value})}/></label>
        <label>Body<textarea maxLength={2400} rows={4} value={active.body} onChange={e=>updateBlock(active.id,{body:e.target.value})}/></label>
-       {["hero","image"].includes(active.kind)&&<><label>Image URL (HTTPS or /path)<input value={active.imageUrl} onChange={e=>updateBlock(active.id,{imageUrl:e.target.value})} placeholder="https://…"/></label><input ref={imageFile} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void uploadImage(e.target.files?.[0])}/><button type="button" disabled={uploading||!page.slug} onClick={()=>imageFile.current?.click()}><Upload size={15}/> {uploading?"Uploading…":"Upload to Cloudflare R2"}</button></>}
+       {["hero","banner","image"].includes(active.kind)&&<><label>Image URL (HTTPS or /path)<input value={active.imageUrl} onChange={e=>updateBlock(active.id,{imageUrl:e.target.value})} placeholder="https://…"/></label><input ref={imageFile} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void uploadImage(e.target.files?.[0])}/><button type="button" disabled={uploading||!page.slug} onClick={()=>imageFile.current?.click()}><Upload size={15}/> {uploading?"Uploading…":"Upload to Cloudflare R2"}</button></>}
        {["hero","button","coupon"].includes(active.kind)&&<><label>Button / Coupon Label<input value={active.buttonLabel} onChange={e=>updateBlock(active.id,{buttonLabel:e.target.value})}/></label><label>Destination URL<input value={active.buttonUrl} onChange={e=>updateBlock(active.id,{buttonUrl:e.target.value})} placeholder="/shop"/></label></>}
+       {(active.kind==="slider"||active.kind==="carousel")&&<div className="anFBSlideEditor">
+        <h4>{names[active.kind]} · {active.slides.length} slides</h4>
+        <label>Autoplay<input type="checkbox" checked={active.autoplay} onChange={e=>updateBlock(active.id,{autoplay:e.target.checked})}/></label>
+        <label>Autoplay Seconds<input type="number" min="2" max="15" value={active.intervalMs/1000} onChange={e=>updateBlock(active.id,{intervalMs:Math.min(15000,Math.max(2000,Math.round((Number(e.target.value)||5)*1000)))})}/></label>
+        <label>Show Arrows<input type="checkbox" checked={active.showArrows} onChange={e=>updateBlock(active.id,{showArrows:e.target.checked})}/></label>
+        <label>Show Dots<input type="checkbox" checked={active.showDots} onChange={e=>updateBlock(active.id,{showDots:e.target.checked})}/></label>
+        <input ref={slideFile} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>void uploadImage(e.target.files?.[0],selectedSlide||active.slides[0]?.id)}/>
+        {active.slides.map((slide,i)=><div key={slide.id} className="anFBSlideCard">
+         <div className="anFBSlideCardTop"><strong>Slide {i+1}</strong><button disabled={i===0} onClick={()=>moveSlide(active.id,i,-1)} aria-label="Move earlier"><ArrowUp size={14}/></button><button disabled={i===active.slides.length-1} onClick={()=>moveSlide(active.id,i,1)} aria-label="Move later"><ArrowDown size={14}/></button><button disabled={active.slides.length<=1} onClick={()=>removeSlide(active.id,slide.id)} aria-label="Delete slide"><Trash2 size={14}/></button></div>
+         <label>Image URL<input value={slide.imageUrl} onChange={e=>patchSlide(active.id,slide.id,{imageUrl:e.target.value})} placeholder="https://…"/></label>
+         <button type="button" disabled={uploading||!page.slug} onClick={()=>{setSelectedSlide(slide.id);slideFile.current?.click()}}><Upload size={14}/> {uploading?"Uploading…":"Upload Image to R2"}</button>
+         {slide.imageUrl&&<img className="anFBSlideThumb" src={slide.imageUrl} alt={slide.alt||slide.title}/>}
+         <label>Title<input maxLength={220} value={slide.title} onChange={e=>patchSlide(active.id,slide.id,{title:e.target.value})}/></label>
+         <label>Description<textarea maxLength={700} rows={2} value={slide.body} onChange={e=>patchSlide(active.id,slide.id,{body:e.target.value})}/></label>
+         <label>Image Alt Text<input maxLength={160} value={slide.alt} onChange={e=>patchSlide(active.id,slide.id,{alt:e.target.value})}/></label>
+         <label>CTA Text<input value={slide.buttonLabel} onChange={e=>patchSlide(active.id,slide.id,{buttonLabel:e.target.value})}/></label>
+         <label>CTA URL<input value={slide.buttonUrl} onChange={e=>patchSlide(active.id,slide.id,{buttonUrl:e.target.value})}/></label>
+        </div>)}
+        <button type="button" disabled={active.slides.length>=16} onClick={()=>addSlide(active.id)}><Plus size={15}/> Add New Slide</button>
+       </div>}
        {active.kind==="countdown"&&<label>Expiration (ISO datetime)<input type="datetime-local" value={active.expiresAt.slice(0,16)} onChange={e=>updateBlock(active.id,{expiresAt:e.target.value?new Date(e.target.value).toISOString():""})}/></label>}
        {["features","faq","trust"].includes(active.kind)&&<><strong>Cards / Accordion Items</strong>{active.items.map((it,i)=><div key={i} className="anFBItem"><label>Title<input value={it.title} maxLength={140} onChange={e=>setItem(i,"title",e.target.value)}/></label><label>Description<textarea value={it.body} maxLength={500} onChange={e=>setItem(i,"body",e.target.value)}/></label><button onClick={()=>updateBlock(active.id,{items:active.items.filter((_,j)=>j!==i)})}><Trash2 size={14}/> Remove</button></div>)}<button disabled={active.items.length>=12} onClick={()=>updateBlock(active.id,{items:[...active.items,{title:"New item",body:"Description"}]})}><Plus size={14}/> Add Item</button></>}
        </>:rightTab==="advanced"?<>

@@ -29,7 +29,21 @@ describe("secure ANUSMITA funnel campaign contracts",()=>{
   expect(safeFunnelUrl("https://example.com")).toBe("https://example.com");
   expect(safeFunnelUrl("http://example.com/file.jpg",true)).toBe("");
  });
- it("does not accept unbounded page content",()=>{
+ it("accepts fully configurable banner, slider and carousel blocks",()=>{
+  for(const kind of ["banner","slider","carousel"] as const){
+   const block=initialFunnelBlock(kind);
+   expect(funnelContent.safeParse({...base().content,blocks:[block]}).success).toBe(true);
+  }
+ });
+ it("rejects duplicate slide identities, invalid timing and injected per-slide fields",()=>{
+  const block=initialFunnelBlock("slider");
+  const slide=block.slides[0];
+  expect(funnelContent.safeParse({...base().content,blocks:[{...block,slides:[slide,slide]}]}).success).toBe(false);
+  expect(funnelContent.safeParse({...base().content,blocks:[{...block,intervalMs:100}]}).success).toBe(false);
+  expect(funnelContent.safeParse({...base().content,blocks:[{...block,slides:[{...slide,onload:"alert(1)"}]}]}).success).toBe(false);
+  expect(funnelContent.safeParse({...base().content,blocks:[{...block,slides:[{...slide,imageUrl:"https://cdn.example.com/slide.jpg",title:"Holiday",buttonUrl:"/shop"}]}]}).success).toBe(true);
+ });
+  it("does not accept unbounded page content",()=>{
   const content={...base().content,title:"a".repeat(101)};
   expect(funnelContent.safeParse(content).success).toBe(false);
  });
