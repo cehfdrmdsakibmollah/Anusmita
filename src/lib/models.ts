@@ -423,6 +423,22 @@ const ContentPageSchema=new Schema({
  updatedBy:{type:Schema.Types.ObjectId,ref:"User",default:null}
 },opts);
 export const ContentPage=mongoose.models.ContentPage||mongoose.model("ContentPage",ContentPageSchema);
+/** Separate funnel campaigns intentionally do not modify legal/policy ContentPage records. */
+const FunnelPageSchema=new Schema({
+ slug:{type:String,required:true,unique:true,lowercase:true,trim:true,maxlength:80},
+ title:{type:String,required:true,maxlength:100},
+ description:{type:String,default:"",maxlength:160},
+ seoTitle:{type:String,default:"",maxlength:70},
+ noIndex:{type:Boolean,default:false},
+ blocks:{type:[Schema.Types.Mixed],default:[]},
+ draftContent:{type:Schema.Types.Mixed,default:null},
+ published:{type:Boolean,default:false},archived:{type:Boolean,default:false},
+ publishedAt:{type:Date,default:null},revision:{type:Number,min:0,default:0},
+ updatedBy:{type:Schema.Types.ObjectId,ref:"User",required:true}
+},opts);
+FunnelPageSchema.index({published:1,archived:1});
+export const FunnelPage=mongoose.models.FunnelPage||mongoose.model("FunnelPage",FunnelPageSchema);
+
 const LoyaltyWalletSchema=new Schema({
  customerPhone:{type:String,required:true,unique:true},
  balancePoints:{type:Number,default:0},
