@@ -19,7 +19,8 @@ const colored=["backgroundColor","color"] as const;
 export default function FunnelBuilder(){
  const upload=useRef<HTMLInputElement>(null),imageFile=useRef<HTMLInputElement>(null),dragged=useRef<number|null>(null);
  const [pages,setPages]=useState<Funnel[]>([]),[page,setPage]=useState<Funnel|null>(null);
- const [saved,setSaved]=useState(""),[selected,setSelected]=useState<string|null>(null),[rightTab,setRightTab]=useState<"content"|"style"|"seo">("content");
+ const [saved,setSaved]=useState(""),[selected,setSelected]=useState<string|null>(null),[rightTab,setRightTab]=useState<"content"|"style"|"seo"|"history">("content");
+ const [revisions,setRevisions]=useState<{revision:number;mode:string;createdAt:string;title:string;blockCount:number}[]>([]);
  const [viewport,setViewport]=useState<"desktop"|"tablet"|"mobile">("desktop"),[notice,setNotice]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false),[uploading,setUploading]=useState(false),[search,setSearch]=useState("");
  const dirty=!!page&&JSON.stringify(page)!==saved;
  const active=page?.blocks.find(b=>b.id===selected);
@@ -109,6 +110,32 @@ export default function FunnelBuilder(){
   }catch(e){setError(e instanceof Error?e.message:"Upload failed");}
   finally{setUploading(false);if(imageFile.current)imageFile.current.value="";}
  }
+  async function loadRevisions(){
+  if(!page?.slug)return;
+  setError("");
+  try{
+   const r=await fetch("/api/admin/funnel-pages/revisions?slug="+encodeURIComponent(page.slug),{cache:"no-store"});
+   const json=await r.json();if(!r.ok)throw Error(json.error||"Unable to load revisions");
+   setRevisions(json.revisions||[]);
+  }catch(e){setError(e instanceof Error?e.message:"Cannot load revisions");}
+ }
+ async function rollback(sourceRevision:number){
+  if(!page||busy)return;
+  if(dirty){setError("Save or discard current edits before restoring a revision.");return;}
+  if(!window.confirm("Restore revision "+sourceRevision+" as a new draft? Published content will remain unchanged."))return;
+  setBusy(true);setError("");
+  try{
+   const r=await fetch("/api/admin/funnel-pages/revisions",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({slug:page.slug,sourceRevision,currentRevision:page.revision})});
+   const json=await r.json();if(!r.ok)throw Error(json.error||"Rollback failed");
+   const updated={...page,...json.content,revision:json.revision,hasDraft:true};
+   setPage(updated);setSaved(JSON.stringify(updated));setSelected(updated.blocks[0]?.id||null);
+   setNotice("Version "+sourceRevision+" restored as draft. Review and publish manually when ready.");
+   await load();
+   setRightTab("content");
+  }catch(e){setError(e instanceof Error?e.message:"Rollback failed");}
+  finally{setBusy(false);}
+ }
   async function save(mode:"draft"|"publish"|"archive"|"restore"){
   if(!page||busy)return;
   const payload=funnelWrite.safeParse({slug:page.slug,revision:page.revision,mode,content:getContent(page)});
@@ -159,8 +186,8 @@ export default function FunnelBuilder(){
     <div className={"anFBCanvasStage "+viewport}><div className="anFunnelRoot anFBPreviewRoot"><div className="anFunnelPublicHeader"><span className="anFunnelLogo">ANUSMITA</span><span>Discover Your Glow</span></div><FunnelBlocks blocks={page.blocks} selected={selected} onPick={setSelected}/></div></div>
     <div className="anFBOutline"><strong>Layers ({page.blocks.length})</strong>{page.blocks.map((b,i)=><div draggable key={b.id} onDragStart={()=>{dragged.current=i}} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(dragged.current!==null)move(dragged.current,i);dragged.current=null}} className={selected===b.id?"selected":""}><button onClick={()=>setSelected(b.id)}><GripVertical size={15}/>{i+1}. {names[b.kind]}</button><button title="Move up" disabled={i===0} onClick={()=>move(i,i-1)}><ArrowUp size={14}/></button><button title="Move down" disabled={i===page.blocks.length-1} onClick={()=>move(i,i+1)}><ArrowDown size={14}/></button><button title="Duplicate" onClick={()=>duplicate(b.id)}><Copy size={14}/></button><button title="Delete" disabled={page.blocks.length===1} onClick={()=>remove(b.id)}><Trash2 size={14}/></button></div>)}</div>
    </>:<div className="anFBEmpty"><ImageIcon size={38}/><h2>Build your next high-converting page</h2><p>Select a saved campaign or create a funnel to start adding sections.</p><button onClick={create}><Plus size={16}/> Create Funnel</button></div>}</section>
-   <aside className="anFBRight">{page?<><div className="anFBInspectorTabs"><button className={rightTab==="content"?"active":""} onClick={()=>setRightTab("content")}>Content</button><button className={rightTab==="style"?"active":""} onClick={()=>setRightTab("style")}>Style</button><button className={rightTab==="seo"?"active":""} onClick={()=>setRightTab("seo")}>SEO</button></div>
-    {rightTab==="seo"?<div className="anFBFields"><h3>Campaign Settings</h3><label>URL Slug<input disabled={page.revision>0} value={page.slug} onChange={e=>patch({slug:e.target.value.toLowerCase()})} maxLength={80}/></label><label>Meta Title<input value={page.seoTitle} maxLength={70} onChange={e=>patch({seoTitle:e.target.value})}/></label><label>Meta Description<textarea value={page.description} maxLength={160} onChange={e=>patch({description:e.target.value})}/></label><label>Campaign Expiration (optional)<input type="datetime-local" value={page.endsAt?new Date(page.endsAt).toISOString().slice(0,16):""} onChange={e=>patch({endsAt:e.target.value?new Date(e.target.value).toISOString():""})}/></label><p>Once expired, the public funnel route automatically becomes unavailable. Existing draft/history records remain stored.</p><label className="anFBCheck"><input type="checkbox" checked={page.noIndex} onChange={e=>patch({noIndex:e.target.checked})}/> NoIndex</label><button onClick={()=>void save(page.archived?"restore":"archive")} disabled={busy}>{page.archived?<Undo2 size={15}/>:<Archive size={15}/>} {page.archived?"Restore as Draft":"Archive Page"}</button><p>Archive hides published content without deleting saved records.</p></div>:
+   <aside className="anFBRight">{page?<><div className="anFBInspectorTabs"><button className={rightTab==="content"?"active":""} onClick={()=>setRightTab("content")}>Content</button><button className={rightTab==="style"?"active":""} onClick={()=>setRightTab("style")}>Style</button><button className={rightTab==="seo"?"active":""} onClick={()=>setRightTab("seo")}>SEO</button><button className={rightTab==="history"?"active":""} onClick={()=>{setRightTab("history");void loadRevisions();}}>History</button></div>
+    {rightTab==="history"?<div className="anFBFields"><h3>Revision History</h3><p>Restoring a version creates a new draft; published pages do not change until you publish again.</p><button onClick={()=>void loadRevisions()}><RefreshCw size={15}/> Refresh History</button>{revisions.map(v=><div key={v.revision} className="anFBItem"><strong>Revision {v.revision} · {v.mode}</strong><small>{new Date(v.createdAt).toLocaleString("en-BD")}</small><span>{v.title} · {v.blockCount} blocks</span><button disabled={busy||dirty} onClick={()=>void rollback(v.revision)}><Undo2 size={14}/> Restore as Draft</button></div>)}</div>:rightTab==="seo"?<div className="anFBFields"><h3>Campaign Settings</h3><label>URL Slug<input disabled={page.revision>0} value={page.slug} onChange={e=>patch({slug:e.target.value.toLowerCase()})} maxLength={80}/></label><label>Meta Title<input value={page.seoTitle} maxLength={70} onChange={e=>patch({seoTitle:e.target.value})}/></label><label>Meta Description<textarea value={page.description} maxLength={160} onChange={e=>patch({description:e.target.value})}/></label><label>Campaign Expiration (optional)<input type="datetime-local" value={page.endsAt?new Date(page.endsAt).toISOString().slice(0,16):""} onChange={e=>patch({endsAt:e.target.value?new Date(e.target.value).toISOString():""})}/></label><p>Once expired, the public funnel route automatically becomes unavailable. Existing draft/history records remain stored.</p><label className="anFBCheck"><input type="checkbox" checked={page.noIndex} onChange={e=>patch({noIndex:e.target.checked})}/> NoIndex</label><button onClick={()=>void save(page.archived?"restore":"archive")} disabled={busy}>{page.archived?<Undo2 size={15}/>:<Archive size={15}/>} {page.archived?"Restore as Draft":"Archive Page"}</button><p>Archive hides published content without deleting saved records.</p></div>:
      active?<div className="anFBFields"><h3>{names[active.kind]}</h3>
       {rightTab==="content"?<>
        <label>Block Type<select value={active.kind} onChange={e=>updateBlock(active.id,{kind:e.target.value as Block["kind"]})}>{funnelKinds.map(k=><option key={k} value={k}>{names[k]}</option>)}</select></label>
