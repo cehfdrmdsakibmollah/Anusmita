@@ -24,6 +24,7 @@ export const funnelBlock=z.object({
 export const funnelContent=z.object({
  title:z.string().trim().min(3).max(100),description:z.string().trim().max(160).default(""),
  seoTitle:z.string().trim().max(70).default(""),noIndex:z.boolean().default(false),
+ endsAt:z.union([z.string().datetime(),z.literal("")]).default(""),
  blocks:z.array(funnelBlock).min(1).max(50).refine(blocks=>new Set(blocks.map(b=>b.id)).size===blocks.length,"Duplicate block IDs")
 }).strict();
 export const funnelWrite=z.object({
