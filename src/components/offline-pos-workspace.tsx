@@ -25,9 +25,54 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
  const [paperSize,setPaperSize]=useState<"58"|"80">("80"),[previewReceipt,setPreviewReceipt]=useState(false);
  const [shiftActive,setShiftActive]=useState(false);
  const [reprintBusy,setReprintBusy]=useState(false);
+ const [pendingOperation,setPendingOperation]=useState<{key:string;branchId:string}|null>(null),[resolving,setResolving]=useState(false);
  const [exchangeReturnId,setExchangeReturnId]=useState("");
  const [held,setHeld]=useState<HeldPosCart[]>([]),[heldBusy,setHeldBusy]=useState(false),[needsRevalidation,setNeedsRevalidation]=useState(false),[restoredHoldId,setRestoredHoldId]=useState<string|null>(null);
  const barcodeRef=useRef<HTMLInputElement>(null);
+ const pendingStorageKey="anusmita-pos-pending-"+cashierId;
+ useEffect(()=>{
+  try{
+   const raw=localStorage.getItem(pendingStorageKey);
+   if(!raw)return;
+   const saved=JSON.parse(raw);
+   if(typeof saved.key==="string"&&/^[0-9a-f-]{36}$/i.test(saved.key)&&/^[0-9a-f]{24}$/i.test(saved.branchId)){
+    setPendingOperation({key:saved.key,branchId:saved.branchId});
+   }
+  }catch{/* Browser storage unavailable. Server remains authoritative. */}
+ },[pendingStorageKey]);
+ function persistPending(key:string,location:string){
+  setPendingOperation({key,branchId:location});
+  try{localStorage.setItem(pendingStorageKey,JSON.stringify({key,branchId:location}));}catch{}
+ }
+ function clearPending(){
+  setPendingOperation(null);
+  try{localStorage.removeItem(pendingStorageKey);}catch{}
+ }
+ async function resolvePending(key:string,quiet=false):Promise<boolean>{
+  setResolving(true);
+  try{
+   const response=await fetch("/api/admin/offline-pos/operations/"+encodeURIComponent(key),{cache:"no-store"});
+   if(response.status===404){
+    if(!quiet)setError("No confirmed invoice found for this operation yet. It may still be processing. Check again before reusing the SAME checkout key.");
+    return false;
+   }
+   const payload=await response.json();
+   if(!response.ok)throw Error(payload.error||"Unable to verify checkout");
+   const x=payload.invoice;
+   setReceipt({invoiceNumber:x.invoiceNumber,branch:x.branchName,cashier:x.cashierName,customer:x.customerName,
+    lines:x.lines,subtotalPaisa:x.subtotalPaisa,discountPaisa:x.discountPaisa,totalPaisa:x.totalPaisa,
+    tenderedPaisa:x.tenderedPaisa,changePaisa:x.changePaisa,date:new Date(x.date).toLocaleString("en-BD",{timeZone:"Asia/Dhaka"}),reprint:true});
+   clearPending();
+   // Only discard the displayed cart when it matches this operation, never a different draft.
+   if(key===opKey){setCart([]);setTendered("");setDiscount("0");setCustomer("");setPhone("");setOpKey(blankId());setExchangeReturnId("");setNeedsRevalidation(false);}
+   setNotice("Recovered confirmed cash invoice "+x.invoiceNumber+". No second sale was created.");
+   setError("");
+   void load(x.branchId);
+   return true;
+  }catch(e){if(!quiet)setError(e instanceof Error?e.message:"Cannot verify checkout");return false;}
+  finally{setResolving(false);}
+ }
+
  const backupInputRef=useRef<HTMLInputElement>(null);
  const latestCartRef=useRef(cart),loadSequence=useRef(0);
  useEffect(()=>{latestCartRef.current=cart;},[cart]);
@@ -164,20 +209,27 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
  function quantity(productId:string,value:number){invalidate();setCart(old=>old.map(x=>x.product.id===productId?{...x,quantity:Math.max(1,Math.min(x.product.available||1,value))}:x));}
  function reset(){invalidate();setCart([]);setDiscount("0");setTendered("");setCustomer("");setPhone("");setNotice("");}
  async function checkout(){
-  if(!canCheckout||(exchangeReturnId&&!canExchange)||!shiftActive||needsRevalidation||!branchId||!online||!cart.length||!branchStockValid||!validDiscount||!validTender||busy){setError("Check branch stock, cash amount and permissions before checkout.");return;}
+  if(!canCheckout||pendingOperation||(exchangeReturnId&&!canExchange)||!shiftActive||needsRevalidation||!branchId||!online||!cart.length||!branchStockValid||!validDiscount||!validTender||busy){setError("Check branch stock, cash amount and permissions before checkout.");return;}
   const snapshot={branch:selectedBranch?.name||"",cashier:cashierName,customer,lines:cart.map(l=>({name:l.product.name,sku:l.product.sku,quantity:l.quantity,unitPricePaisa:l.product.pricePaisa})),subtotalPaisa:subtotal,discountPaisa,totalPaisa:grandTotal,tenderedPaisa,changePaisa:change,date:new Date().toLocaleString("en-BD",{timeZone:"Asia/Dhaka"})};
   setBusy(true);setError("");setNotice("");
+  persistPending(opKey,branchId);
   try{
    const response=await fetch("/api/admin/offline-pos",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({operationKey:opKey,branchId,...(exchangeReturnId?{exchangeReturnId}:{}),lines:cart.map(l=>({productId:l.product.id,quantity:l.quantity,expectedUnitPricePaisa:l.product.pricePaisa})),paymentMethod,discountPaisa,tenderedPaisa,customerName:customer.trim(),customerPhone:phone.trim()})});
    const json=await response.json();
    if(!response.ok)throw Error(json.error||"Cash sale was not confirmed");
    setReceipt({...snapshot,invoiceNumber:json.invoiceNumber,totalPaisa:json.totalPaisa,changePaisa:json.changePaisa});
    setConfirmedId(json.invoiceNumber);
+   clearPending();
    setNotice((json.alreadyApplied?"Existing confirmed invoice: ":"Sale confirmed and stock deducted: ")+json.invoiceNumber);
    setCart([]);setTendered("");setDiscount("0");setCustomer("");setPhone("");setOpKey(blankId());setExchangeReturnId("");
    if(restoredHoldId){try{await deleteHeldCart(restoredHoldId);await refreshHolds(branchId);}catch{setNotice("Sale confirmed. The local held draft could not be removed; delete it manually to avoid reuse.");}setRestoredHoldId(null);}setNeedsRevalidation(false);
    await load(branchId);
-  }catch(e){setError((e instanceof Error?e.message:"POS checkout failed")+". If network status is uncertain, use the same checkout to retry; do not start a new cart.");}
+  }catch(e){
+   const message=e instanceof Error?e.message:"POS checkout failed";
+   setError(message+". Checkout status may be uncertain. Use Check Last Checkout before any retry; the same operation key is preserved.");
+   // A retry or a network interruption must not silently create a new idempotency key.
+   void resolvePending(opKey,true);
+  }
   finally{setBusy(false);}
  }
  async function reprintInvoice(id:string){
@@ -227,6 +279,7 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
     {!online&&<div className="anpos-warning" role="alert"><WifiOff size={19}/> Connection unavailable. Draft carts remain visible, but stock cannot be reserved or a sale confirmed until online. No offline sale has been recorded.</div>}
     {error&&<div className="anpos-error" role="alert"><AlertTriangle size={18}/>{error}<button aria-label="Dismiss error" onClick={()=>setError("")}><X size={16}/></button></div>}
     {notice&&<div className="anpos-success" role="status"><ShieldCheck size={18}/>{notice}</div>}
+    {pendingOperation&&<div className="anpos-pending" role="status"><AlertTriangle size={18}/><span><strong>Checkout confirmation pending verification.</strong> Check whether the previous operation created an invoice before attempting another cash sale. The check is read-only.</span><button type="button" disabled={resolving} onClick={()=>void resolvePending(pendingOperation.key)}><RefreshCw size={15}/>{resolving?"Checking…":"Check Last Checkout"}</button></div>}
     <section className="anpos-kpis" aria-label="Branch overview">
      <div><span className="anpos-kpi-icon pink"><Wallet/></span><div><small>Today's Net Cash Sales</small><strong>{money(data.today.netCashPaisa)}</strong><em>Refunds: {money(data.today.refundsPaisa||0)} · {selectedBranch?.name||"Select a branch"}</em></div></div>
      <div><span className="anpos-kpi-icon green"><ShoppingCart/></span><div><small>Completed Sales</small><strong>{data.today.orders}</strong><em>Confirmed invoices</em></div></div>
@@ -251,7 +304,7 @@ export default function OfflinePosWorkspace({canCheckout,canDiscount,canExchange
        <div className="anpos-cash"><label className="anpos-label">Cash Received (৳)<input type="number" min="0" step=".01" value={tendered} onChange={e=>{invalidate();setTendered(e.target.value)}} placeholder="0.00"/></label><div><small>Change Return</small><strong>{money(change)}</strong></div></div>
        <div className="anpos-hold-actions"><button type="button" disabled={!cart.length||heldBusy} onClick={()=>void holdCart()}><Clock3 size={15}/> Hold Sale Locally</button>{needsRevalidation&&<button type="button" disabled={!online||heldBusy} onClick={()=>void recheckCart()}><RefreshCw size={15}/> Recheck Cart Prices & Stock</button>}</div>
        <div className="anpos-paper-options"><label>Thermal paper <select aria-label="Receipt paper width" value={paperSize} onChange={e=>setPaperSize(e.target.value as "58"|"80")}><option value="80">80 mm</option><option value="58">58 mm</option></select></label><button type="button" disabled={!receipt} onClick={()=>setPreviewReceipt(true)}><Printer size={15}/> Receipt Preview</button></div>
-       <div className="anpos-actions"><button type="button" onClick={print} disabled={!receipt}><Printer size={16}/> Print Last Receipt</button><button className="anpos-complete" type="button" onClick={()=>void checkout()} disabled={!canCheckout||(Boolean(exchangeReturnId)&&!canExchange)||!shiftActive||needsRevalidation||!online||busy||!branchId||!cart.length||!branchStockValid||!validDiscount||!validTender}><Check size={18}/>{busy?"Processing…":"Complete Cash Sale"}</button></div>
+       <div className="anpos-actions"><button type="button" onClick={print} disabled={!receipt}><Printer size={16}/> Print Last Receipt</button><button className="anpos-complete" type="button" onClick={()=>void checkout()} disabled={!canCheckout||Boolean(pendingOperation)||(Boolean(exchangeReturnId)&&!canExchange)||!shiftActive||needsRevalidation||!online||busy||!branchId||!cart.length||!branchStockValid||!validDiscount||!validTender}><Check size={18}/>{busy?"Processing…":"Complete Cash Sale"}</button></div>
        <small className="anpos-safety">Shortcuts: Ctrl+K focus barcode · F7 hold cart · F9 complete eligible cash sale. Print layouts use browser print settings; physical printer compatibility must be tested. Cash sales require an open cashier shift and verified current prices. Held offline drafts are never automatically charged. Stock and drawer totals are updated in a single authenticated server transaction. No checkout is confirmed while offline.</small>
       </div>
      </section>
