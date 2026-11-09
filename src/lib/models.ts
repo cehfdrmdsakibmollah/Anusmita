@@ -439,6 +439,16 @@ const FunnelPageSchema=new Schema({
 },opts);
 FunnelPageSchema.index({published:1,archived:1});
 export const FunnelPage=mongoose.models.FunnelPage||mongoose.model("FunnelPage",FunnelPageSchema);
+const FunnelRevisionSchema=new Schema({
+ slug:{type:String,required:true,index:true},
+ revision:{type:Number,required:true,min:1},
+ mode:{type:String,enum:["draft","publish","archive","restore","rollback"],required:true},
+ content:{type:Schema.Types.Mixed,required:true},
+ actorId:{type:Schema.Types.ObjectId,ref:"User",required:true}
+},opts);
+FunnelRevisionSchema.index({slug:1,revision:1},{unique:true});
+export const FunnelRevision=mongoose.models.FunnelRevision||mongoose.model("FunnelRevision",FunnelRevisionSchema);
+
 
 const LoyaltyWalletSchema=new Schema({
  customerPhone:{type:String,required:true,unique:true},
