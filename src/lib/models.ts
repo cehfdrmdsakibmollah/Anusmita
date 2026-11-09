@@ -430,6 +430,7 @@ const FunnelPageSchema=new Schema({
  description:{type:String,default:"",maxlength:160},
  seoTitle:{type:String,default:"",maxlength:70},
  noIndex:{type:Boolean,default:false},
+ endsAt:{type:Date,default:null},
  blocks:{type:[Schema.Types.Mixed],default:[]},
  draftContent:{type:Schema.Types.Mixed,default:null},
  published:{type:Boolean,default:false},archived:{type:Boolean,default:false},
