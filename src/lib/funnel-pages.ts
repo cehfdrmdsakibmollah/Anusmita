@@ -1,6 +1,6 @@
 import {z} from "zod";
 export const funnelSlug=z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(80);
-export const funnelKinds=["hero","heading","paragraph","image","button","features","faq","divider","countdown","trust","coupon"] as const;
+export const funnelKinds=["hero","banner","slider","carousel","heading","paragraph","image","button","features","faq","divider","countdown","trust","coupon"] as const;
 const blockKind=z.enum(funnelKinds);
 export const funnelStyle=z.object({
  width:z.string().max(40).optional(),minHeight:z.string().max(40).optional(),
@@ -18,12 +18,24 @@ export const funnelStyle=z.object({
  justifyContent:z.enum(["start","center","end","space-between"]).optional(),
  gridColumns:z.enum(["1","2","3","4"]).optional()
 }).strict();
+export const funnelSlide=z.object({
+ id:z.string().uuid(),
+ imageUrl:z.string().max(2048).default(""),
+ title:z.string().max(220).default(""),
+ body:z.string().max(700).default(""),
+ buttonLabel:z.string().max(100).default(""),
+ buttonUrl:z.string().max(400).default(""),
+ alt:z.string().max(160).default("")
+}).strict();
 export const funnelBlock=z.object({
  id:z.string().uuid(),kind:blockKind,
  title:z.string().max(220).default(""),body:z.string().max(2400).default(""),
  imageUrl:z.string().max(2048).default(""),buttonLabel:z.string().max(100).default(""),
  buttonUrl:z.string().max(400).default(""),expiresAt:z.string().max(40).default(""),
  items:z.array(z.object({title:z.string().max(140),body:z.string().max(500)}).strict()).max(12).default([]),
+ slides:z.array(funnelSlide).max(16).default([]).refine(slides=>new Set(slides.map(s=>s.id)).size===slides.length,"Duplicate slide IDs"),
+ autoplay:z.boolean().default(true),intervalMs:z.number().int().min(2000).max(15000).default(5000),
+ showArrows:z.boolean().default(true),showDots:z.boolean().default(true),
  style:funnelStyle.default({})
 }).strict();
 export const funnelContent=z.object({
@@ -74,7 +86,11 @@ export function safeFunnelStyle(style:z.infer<typeof funnelStyle>):Record<string
  }[style.boxShadow];
  return out;
 }
+export function initialFunnelSlide(){
+ return {id:crypto.randomUUID(),imageUrl:"",title:"Your campaign title",body:"Add your own description",
+  buttonLabel:"Shop Now",buttonUrl:"/shop",alt:""};
+}
 export function initialFunnelBlock(kind:typeof funnelKinds[number]){
  const id=crypto.randomUUID();
- return {id,kind,title:kind==="hero"?"Discover your glow":kind==="faq"?"Frequently asked questions":"New "+kind,body:kind==="hero"?"A beautiful discovery, made for you.":"",imageUrl:"",buttonLabel:kind==="hero"||kind==="button"?"Shop Now":"",buttonUrl:"/shop",expiresAt:"",items:kind==="faq"?[{title:"How can I order?",body:"Use the official checkout to place your order."}]:[],style:{}};
+ return {id,kind,title:kind==="slider"?"Image Slider":kind==="carousel"?"Image Carousel":kind==="banner"?"Campaign Banner":kind==="hero"?"Discover your glow":kind==="faq"?"Frequently asked questions":"New "+kind,body:kind==="hero"?"A beautiful discovery, made for you.":"",imageUrl:"",buttonLabel:kind==="hero"||kind==="button"?"Shop Now":"",buttonUrl:"/shop",expiresAt:"",items:kind==="faq"?[{title:"How can I order?",body:"Use the official checkout to place your order."}]:[],slides:kind==="slider"||kind==="carousel"?[initialFunnelSlide(),initialFunnelSlide()]:[],autoplay:true,intervalMs:5000,showArrows:true,showDots:true,style:{}};
 }
