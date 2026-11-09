@@ -16,11 +16,12 @@ export function FunnelBlocks({blocks,selected,onPick}:{blocks:Block[];selected?:
  {blocks.map(block=>{
   const style=safeFunnelStyle(block.style) as CSSProperties;
   const image=safeFunnelUrl(block.imageUrl,true);
+  const headingStyle:CSSProperties={color:style.color,fontFamily:style.fontFamily,fontSize:style.fontSize,fontWeight:style.fontWeight,lineHeight:style.lineHeight,letterSpacing:style.letterSpacing,textAlign:style.textAlign};
   const content=<>
    {block.kind==="divider"?<hr/>:
    block.kind==="image"?image?<img loading="lazy" src={image} alt={block.title||"Campaign image"}/>:<div className="anFunnelImagePlaceholder">Add a campaign image</div>:
-   block.kind==="hero"?<div className="anFunnelHeroGrid"><div><span className="anFunnelEyebrow">ANUSMITA · DISCOVER YOUR GLOW</span><h1>{block.title}</h1><p>{block.body}</p>{block.buttonLabel&&<Button url={block.buttonUrl} label={block.buttonLabel}/>}</div>{image&&<img loading="eager" src={image} alt={block.title}/>}</div>:
-   block.kind==="heading"?<h2>{block.title}</h2>:
+   block.kind==="hero"?<div className="anFunnelHeroGrid"><div><span className="anFunnelEyebrow">ANUSMITA · DISCOVER YOUR GLOW</span><h1 style={headingStyle}>{block.title}</h1><p>{block.body}</p>{block.buttonLabel&&<Button url={block.buttonUrl} label={block.buttonLabel}/>}</div>{image&&<img loading="eager" src={image} alt={block.title}/>}</div>:
+   block.kind==="heading"?<h2 style={headingStyle}>{block.title}</h2>:
    block.kind==="paragraph"?<p>{block.body}</p>:
    block.kind==="button"?<Button url={block.buttonUrl} label={block.buttonLabel}/>:
    block.kind==="countdown"?<div className="anFunnelCountdown"><h2>{block.title||"Limited time offer"}</h2><FunnelCountdown expiresAt={block.expiresAt}/><p>{block.body}</p></div>:
