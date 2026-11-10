@@ -129,3 +129,12 @@
 .anFunnelWorkspaceMain .anFBMediaActions button:disabled{opacity:.5}
 .anFunnelWorkspaceMain .anFBSlideCard .anFBMediaActions{gap:5px}
 .anFunnelWorkspaceMain .anFBSlideCard .anFBMediaActions button{font-size:10px}
+
+
+/* R2 media diagnostics: clear difference between credential, Worker and upload errors. */
+.anFunnelWorkspaceMain .anFBMediaReadiness{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px;padding:9px;border-radius:8px;font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+.anFunnelWorkspaceMain .anFBMediaReadiness.ready{border:1px solid #b9dcc8;background:#effaf2;color:#256944}
+.anFunnelWorkspaceMain .anFBMediaReadiness.checking{border:1px solid #e5cfa5;background:#fff8e8;color:#8c6128}
+.anFunnelWorkspaceMain .anFBMediaReadiness.unavailable{border:1px solid #e9b4c4;background:#fff0f3;color:#a32149}
+.anFunnelWorkspaceMain .anFBMediaReadiness button{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid currentColor;border-radius:6px;color:inherit;background:transparent;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap}
+.anFunnelWorkspaceMain .anFBMediaReadiness button:disabled{opacity:.5}
