@@ -24,7 +24,7 @@ export default function FunnelBuilder(){
  const [revisions,setRevisions]=useState<{revision:number;mode:string;createdAt:string;title:string;blockCount:number}[]>([]);
  const [selectedSlide,setSelectedSlide]=useState<string|null>(null);
  const [leftTab,setLeftTab]=useState<"elements"|"sections"|"templates">("elements"),[elementSearch,setElementSearch]=useState(""),[showPages,setShowPages]=useState(false),[showLayers,setShowLayers]=useState(true);
- const [viewport,setViewport]=useState<"desktop"|"tablet"|"mobile">("desktop"),[notice,setNotice]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false),[uploading,setUploading]=useState(false),[search,setSearch]=useState("");
+ const [viewport,setViewport]=useState<"desktop"|"tablet"|"mobile">("desktop"),[notice,setNotice]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false),[uploading,setUploading]=useState(false),[mediaStatus,setMediaStatus]=useState<"checking"|"ready"|"unavailable">("checking"),[mediaProblem,setMediaProblem]=useState(""),[search,setSearch]=useState("");
  const previous=useRef<Funnel|null>(null),past=useRef<Funnel[]>([]),future=useRef<Funnel[]>([]),skipHistory=useRef(false);
  const dirty=!!page&&JSON.stringify(page)!==saved;
  const active=page?.blocks.find(b=>b.id===selected);
@@ -140,7 +140,19 @@ export default function FunnelBuilder(){
    blocks:page.blocks.map(b=>({...b,id:crypto.randomUUID()}))};
   resetHistory();setPage(next);setSelected(next.blocks[0].id);setSaved(JSON.stringify(next));setNotice("Campaign cloned locally with a new unique slug. You can edit its slug before saving.");
  }
- async function uploadImage(file?:File,slideId?:string){
+ async function checkMedia():Promise<boolean>{
+  setMediaStatus("checking");
+  try{
+   const response=await fetch("/api/admin/funnel-pages/media",{cache:"no-store"});
+   const body=await response.json().catch(()=>({error:"Media service returned an invalid response"}));
+   if(!response.ok)throw Error(body.error||"Media service unavailable ("+response.status+")");
+   setMediaStatus("ready");setMediaProblem("");return true;
+  }catch(error){
+   setMediaStatus("unavailable");setMediaProblem(error instanceof Error?error.message:"Media service is unavailable");return false;
+  }
+ }
+ useEffect(()=>{void checkMedia();},[]);
+  async function uploadImage(file?:File,slideId?:string){
   if(!file||!page||!active||uploading)return;
   if(!page.slug){setError("Set a campaign slug before uploading images.");return;}
   if(file.size>3*1024*1024||!["image/jpeg","image/png","image/webp"].includes(file.type)){setError("JPG, PNG or WebP images must be under 3 MB.");return;}
@@ -148,9 +160,10 @@ export default function FunnelBuilder(){
   try{
    const data=new FormData();data.set("slug",page.slug);data.set("file",file);
    const response=await fetch("/api/admin/funnel-pages/media",{method:"POST",body:data});
-   const json=await response.json();
-   if(!response.ok)throw Error(json.error||"Image upload failed");
+   const json=await response.json().catch(()=>({error:"Upload server returned a non-JSON error"}));
+   if(!response.ok)throw Error(json.error||"Image upload failed (HTTP "+response.status+")");
    if(slideId)patchSlide(id,slideId,{imageUrl:json.url});else updateBlock(id,{imageUrl:json.url});
+   setMediaStatus("ready");setMediaProblem("");
    setNotice("Campaign image uploaded to Cloudflare R2. Save draft or publish to use it on your funnel.");
   }catch(e){setError(e instanceof Error?e.message:"Upload failed");}
   finally{setUploading(false);if(imageFile.current)imageFile.current.value="";if(slideFile.current)slideFile.current.value="";targetSlideRef.current=null;}
@@ -240,7 +253,7 @@ export default function FunnelBuilder(){
        <label>Title<input maxLength={220} value={active.title} onChange={e=>updateBlock(active.id,{title:e.target.value})}/></label>
        <label>Body<textarea maxLength={2400} rows={4} value={active.body} onChange={e=>updateBlock(active.id,{body:e.target.value})}/></label>
        {["hero","banner","image"].includes(active.kind)&&<div className="anFBMediaPanel">
-        <div className="anFBMediaHeading"><strong>{active.kind==="banner"?"Banner Image":active.kind==="image"?"Image Media":"Hero Banner Image"}</strong><span>Independent image · JPG/PNG/WebP · 3 MB</span></div>
+        <div className="anFBMediaHeading"><strong>{active.kind==="banner"?"Banner Image":active.kind==="image"?"Image Media":"Hero Banner Image"}</strong><span>Independent image · JPG/PNG/WebP · 3 MB</span></div><div className={"anFBMediaReadiness "+mediaStatus}>{mediaStatus==="ready"?"R2 upload connection ready":mediaStatus==="checking"?"Checking upload connection…":"Image upload unavailable: "+mediaProblem}<button type="button" disabled={mediaStatus==="checking"} onClick={()=>void checkMedia()}><RefreshCw size={13}/> Recheck</button></div>
         {active.imageUrl?<img className="anFBMediaPreview" src={active.imageUrl} alt={active.title||"Selected funnel image"}/>:<div className="anFBMediaPlaceholder"><ImageIcon size={23}/><span>No image selected — upload your own image</span></div>}
         <input ref={imageFile} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void uploadImage(e.target.files?.[0])}/>
         <div className="anFBMediaActions"><button type="button" disabled={uploading} onClick={()=>imageFile.current?.click()}><Upload size={15}/> {uploading?"Uploading…":active.imageUrl?"Replace Image":"Upload Image"}</button><button type="button" disabled={!active.imageUrl||uploading} onClick={()=>updateBlock(active.id,{imageUrl:""})}><Trash2 size={14}/> Remove</button></div>
@@ -255,7 +268,7 @@ export default function FunnelBuilder(){
         <label>Show Arrows<input type="checkbox" checked={active.showArrows} onChange={e=>updateBlock(active.id,{showArrows:e.target.checked})}/></label>
         <label>Show Dots<input type="checkbox" checked={active.showDots} onChange={e=>updateBlock(active.id,{showDots:e.target.checked})}/></label>
         <input ref={slideFile} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>void uploadImage(e.target.files?.[0],targetSlideRef.current||active.slides[0]?.id)}/>
-        <div className="anFBMediaHeading"><strong>Slide Image Manager</strong><span>Each slide has its own image, text and link</span></div>
+        <div className="anFBMediaHeading"><strong>Slide Image Manager</strong><span>Each slide has its own image, text and link</span></div><div className={"anFBMediaReadiness "+mediaStatus}>{mediaStatus==="ready"?"R2 upload connection ready":mediaStatus==="checking"?"Checking upload connection…":"Image upload unavailable: "+mediaProblem}<button type="button" disabled={mediaStatus==="checking"} onClick={()=>void checkMedia()}><RefreshCw size={13}/> Recheck</button></div>
         {active.slides.map((slide,i)=><div key={slide.id} className="anFBSlideCard">
          <div className="anFBSlideCardTop"><strong>Slide {i+1}</strong><button disabled={i===0} onClick={()=>moveSlide(active.id,i,-1)} aria-label="Move earlier"><ArrowUp size={14}/></button><button disabled={i===active.slides.length-1} onClick={()=>moveSlide(active.id,i,1)} aria-label="Move later"><ArrowDown size={14}/></button><button disabled={active.slides.length<=1} onClick={()=>removeSlide(active.id,slide.id)} aria-label="Delete slide"><Trash2 size={14}/></button></div>
          <label>Image URL<input value={slide.imageUrl} onChange={e=>patchSlide(active.id,slide.id,{imageUrl:e.target.value})} placeholder="https://…"/></label>
