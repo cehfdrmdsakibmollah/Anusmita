@@ -1,6 +1,6 @@
 // Only storefront image keys are public. Bucket listing and writes require the server secret.
 export const MAX_BYTES = 3 * 1024 * 1024;
-export const KEY = /^public\/(?:(?:products|staff-avatars)\/[a-f0-9]{24}|homepage|cms\/(?:shop|deals|bundles|about|contact|journal|cart|checkout|gift-cards|pre-orders|customer-stories|wishlist|routine-quiz|track-order))\/[a-f0-9-]{36}\.(png|jpg|webp)$/;
+export const KEY = /^public\/(?:(?:products|staff-avatars)\/[a-f0-9]{24}|homepage|cms\/(?:shop|deals|bundles|about|contact|journal|cart|checkout|gift-cards|pre-orders|customer-stories|wishlist|routine-quiz|track-order)|funnel\/[a-z0-9]+(?:-[a-z0-9]+)*)\/[a-f0-9-]{36}\.(png|jpg|webp)$/;
 export function imageType(bytes) {
   if(bytes.length<12)return null;
   if(bytes[0]===255&&bytes[1]===216&&bytes[2]===255)return 'image/jpeg';
@@ -29,7 +29,7 @@ export default {
       if(!authorized(request,env))return error(403,'Access denied');
       if(request.method!=='GET')return error(405,'Method not allowed');
       const u=new URL(request.url),prefix=u.searchParams.get('prefix')||'';
-      if(!/^public\/(?:homepage\/|cms\/(?:shop|deals|bundles|about|contact|journal|cart|checkout|gift-cards|pre-orders|customer-stories|wishlist|routine-quiz|track-order)\/)$/.test(prefix))return error(400,'Invalid media namespace');
+      if(!/^public\/(?:homepage\/|cms\/(?:shop|deals|bundles|about|contact|journal|cart|checkout|gift-cards|pre-orders|customer-stories|wishlist|routine-quiz|track-order)\/|funnel\/[a-z0-9]+(?:-[a-z0-9]+)*\/)$/.test(prefix))return error(400,'Invalid media namespace');
       const rawLimit=Number(u.searchParams.get('limit')||30);
       if(!Number.isInteger(rawLimit)||rawLimit<1||rawLimit>100)return error(400,'Invalid page size');
       const cursor=u.searchParams.get('cursor')||undefined;

@@ -11,6 +11,7 @@ describe('R2 media boundary',()=>{
    '/public/homepage/11111111-1111-4111-8111-111111111111.png',
    '/public/cms/deals/11111111-1111-4111-8111-111111111111.png',
    '/public/cms/track-order/11111111-1111-4111-8111-111111111111.png',
+   '/public/funnel/new-campaign-f42a87cd/11111111-1111-4111-8111-111111111111.png',
    path
   ];
   for(const key of keys){
@@ -22,7 +23,7 @@ describe('R2 media boundary',()=>{
  });
  it('rejects unapproved CMS namespaces and unauthenticated asset listing',async()=>{
   const env={UPLOAD_SECRET:secret,MEDIA:{list:vi.fn()}};
-  for(const key of ['/public/cms/not-real/11111111-1111-4111-8111-111111111111.png','/public/cms/deals/private.txt']){
+  for(const key of ['/public/cms/not-real/11111111-1111-4111-8111-111111111111.png','/public/cms/deals/private.txt','/public/funnel/../../private/11111111-1111-4111-8111-111111111111.png','/public/funnel/bad_slug/11111111-1111-4111-8111-111111111111.png']){
    const resp=await worker.fetch(new Request('https://media.example'+key),env);expect(resp.status).toBe(404);
   }
   expect((await worker.fetch(new Request('https://media.example/assets?prefix=public/cms/deals/'),env)).status).toBe(403);
@@ -35,6 +36,9 @@ describe('R2 media boundary',()=>{
   const json=await r.json();expect(json.objects).toHaveLength(1);expect(json.objects[0].key).toContain('cms/deals');
   expect(list).toHaveBeenCalledWith({prefix:'public/cms/deals/',limit:20});
   expect((await worker.fetch(new Request('https://media.example/assets?prefix=public/products/1/',{headers:{authorization:'Bearer '+secret}}),{UPLOAD_SECRET:secret,MEDIA:{list}})).status).toBe(400);
+  const f=await worker.fetch(new Request('https://media.example/assets?prefix=public/funnel/new-campaign-f42a87cd/',{headers:{authorization:'Bearer '+secret}}),{UPLOAD_SECRET:secret,MEDIA:{list}});
+  expect(f.status).toBe(200);
+  expect((await worker.fetch(new Request('https://media.example/assets?prefix=public/funnel/bad_slug/',{headers:{authorization:'Bearer '+secret}}),{UPLOAD_SECRET:secret,MEDIA:{list}})).status).toBe(400);
  });
  it('rejects avatar keys outside registered staff namespace',async()=>{const put=vi.fn();const r=await worker.fetch(new Request('https://media.example/public/staff-avatars/unauthorized/avatar.png',{method:'PUT',body:bytes}),{MEDIA:{put},UPLOAD_SECRET:secret});expect(r.status).toBe(404);expect(put).not.toHaveBeenCalled()});
  it('rejects unauthenticated writes before accessing storage',async()=>{const put=vi.fn();const r=await worker.fetch(request('PUT',bytes),{MEDIA:{put},UPLOAD_SECRET:secret});expect(r.status).toBe(403);expect(put).not.toHaveBeenCalled();});
