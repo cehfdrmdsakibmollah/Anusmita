@@ -4,6 +4,7 @@ import {useEffect,useMemo,useState} from "react";
 import {ArrowDown,ArrowUp,ExternalLink,ImagePlus,Plus,RefreshCcw,Save,Trash2} from "lucide-react";
 import type {HomeBlock,HomeSection} from "@/lib/home-content";
 import {homeStarterBlocks,sectionKeys} from "@/lib/home-content";
+import HomepageVisualPreview from "./homepage-visual-preview";
 type Config={revision:number;blocks:HomeBlock[];sections:HomeSection[];saved:boolean};
 type CatalogProduct={_id:string;name:string;sku:string;active:boolean};
 const kinds=["hero","category","promotion","editorial","announcement"] as const;
@@ -81,6 +82,12 @@ export default function HomepageManager(){
     <button type="button" className="button small light" onClick={()=>void load()}><RefreshCcw size={15}/> Refresh</button></div>
   </div>
   {message&&<p className={message.startsWith("Error")?"error":"success"} role="status">{message}</p>}
+  <HomepageVisualPreview
+   blocks={config.blocks.map(b=>draft?.id===b.id?draft:b).concat(draft&&!editing?[draft]:[])}
+   sections={config.sections}
+   selectedId={draft?.id||null}
+   onSelect={block=>{const current=config.blocks.find(b=>b.id===block.id);if(!current)return;setKind(current.kind);setEditing(current);setDraft({...current});}}
+  />
   <div className="homeCmsKinds" role="group" aria-label="Select homepage content type">
    {kinds.map(k=><button key={k} type="button" className={kind===k?"active":""} onClick={()=>{
     setKind(k);setEditing(null);setDraft(null);
