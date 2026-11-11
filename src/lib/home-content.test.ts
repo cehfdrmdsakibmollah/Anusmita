@@ -2,6 +2,15 @@
 import {describe,it,expect} from "vitest";
 import {blockSchema,homeStarterBlocks,homeStarterSections,cmsOperation,publicBlocks,isSafeImage,isSafeLink,uniqueSections} from "./home-content";
 describe("ANUSMITA homepage CMS safety",()=>{
+ it("accepts a complete validated visual draft but rejects malformed snapshots",()=>{
+  const valid={action:"replace",revision:2,blocks:homeStarterBlocks,sections:homeStarterSections};
+  expect(cmsOperation.safeParse(valid).success).toBe(true);
+  expect(cmsOperation.safeParse({...valid,revision:-1}).success).toBe(false);
+  expect(cmsOperation.safeParse({...valid,blocks:[{...homeStarterBlocks[0],href:"https://evil.invalid"}]}).success).toBe(false);
+  expect(cmsOperation.safeParse({...valid,sections:[{...homeStarterSections[0],productIds:["not-an-object-id"]}]}).success).toBe(false);
+  expect(isSafeImage("https://anusmita-media.mdsakibmolla545.workers.dev/public/products/000000000000000000000000/11111111-1111-4111-8111-111111111111.webp")).toBe(true);
+  expect(isSafeImage("https://evil.invalid/public/products/000000000000000000000000/11111111-1111-4111-8111-111111111111.webp")).toBe(false);
+ });
  it("has real categories with no fabricated products, pricing, stock or discounts",()=>{
   expect(homeStarterBlocks.filter(x=>x.kind==="category").map(x=>x.title)).toEqual(["Skincare","Beauty","Fashion","Watches","Mobile Accessories","Bed Sheets","Perfumes","Bags"]);
   expect(homeStarterBlocks.filter(x=>x.kind==="promotion")).toHaveLength(1);
