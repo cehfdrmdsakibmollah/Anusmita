@@ -12,7 +12,7 @@ function Button({url,label}:{url:string;label:string}){
  if(href.startsWith("/"))return <Link className="anFunnelCta" href={href}>{label||"Shop Now"}</Link>;
  return <a className="anFunnelCta" href={href} rel="noopener noreferrer" target="_blank">{label||"Shop Now"}</a>;
 }
-export function FunnelBlocks({blocks,selected,onPick}:{blocks:Block[];selected?:string|null;onPick?:(id:string)=>void}){
+export function FunnelBlocks({blocks,selected,selectedSlide,onPick,onPickSlide}:{blocks:Block[];selected?:string|null;selectedSlide?:string|null;onPick?:(id:string)=>void;onPickSlide?:(blockId:string,slideId:string)=>void}){
  return <div className="anFunnelBody">
  {blocks.map(block=>{
   const style=safeFunnelStyle(block.style) as CSSProperties;
@@ -20,7 +20,7 @@ export function FunnelBlocks({blocks,selected,onPick}:{blocks:Block[];selected?:
   const headingStyle:CSSProperties={color:style.color,fontFamily:style.fontFamily,fontSize:style.fontSize,fontWeight:style.fontWeight,lineHeight:style.lineHeight,letterSpacing:style.letterSpacing,textAlign:style.textAlign};
   const content=<>
    {block.kind==="divider"?<hr/>:
-   block.kind==="slider"||block.kind==="carousel"?<FunnelSlides slides={block.slides} mode={block.kind} autoplay={block.autoplay} intervalMs={block.intervalMs} showArrows={block.showArrows} showDots={block.showDots} editing={!!onPick}/>:
+   block.kind==="slider"||block.kind==="carousel"?<FunnelSlides slides={block.slides} mode={block.kind} autoplay={block.autoplay} intervalMs={block.intervalMs} showArrows={block.showArrows} showDots={block.showDots} editing={!!onPick} selectedSlide={selected===block.id?selectedSlide:undefined} onPickSlide={onPickSlide?slideId=>onPickSlide(block.id,slideId):undefined}/>:
    block.kind==="banner"?<div className="anFunnelHeroGrid anFunnelBanner"><div><h2 style={headingStyle}>{block.title}</h2><p>{block.body}</p>{block.buttonLabel&&<Button url={block.buttonUrl} label={block.buttonLabel}/>}</div>{image?<img src={image} alt={block.title||"Campaign banner"}/>:<div className="anFunnelImagePlaceholder">Add banner image</div>}</div>:
    block.kind==="image"?<figure className="anFunnelEditableImage">
     {image?<img loading="lazy" src={image} alt={block.title||"Campaign image"}/>:<div className="anFunnelImagePlaceholder">Add a campaign image</div>}

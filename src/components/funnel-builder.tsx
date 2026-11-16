@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import {Archive,ArrowDown,ArrowUp,Check,Copy,Download,Eye,FilePlus2,GripVertical,Image as ImageIcon,Layers3,Monitor,Plus,RefreshCw,Save,Smartphone,Tablet,Trash2,Upload,Undo2,Type,Heading1,MousePointer2,RectangleHorizontal,Minus,Clock3,Star,Package,Settings2,ChartNoAxesColumnIncreasing,Search,ChevronDown,ChevronUp,Maximize2,LayoutTemplate,Rows3,PanelRight,RotateCcw,RotateCw,Crown} from "lucide-react";
 import type {z} from "zod";
-import {funnelKinds,funnelWrite,funnelContent,initialFunnelBlock,initialFunnelSlide,funnelBlock,type funnelStyle} from "@/lib/funnel-pages";
+import {funnelKinds,funnelSlug,funnelWrite,funnelContent,initialFunnelBlock,initialFunnelSlide,funnelBlock,type funnelStyle} from "@/lib/funnel-pages";
 import {FunnelBlocks} from "./funnel-blocks";
 import "./funnel-builder.css";
 type Block=z.infer<typeof funnelBlock>;
@@ -26,6 +26,7 @@ export default function FunnelBuilder(){
  const [leftTab,setLeftTab]=useState<"elements"|"sections"|"templates">("elements"),[elementSearch,setElementSearch]=useState(""),[showPages,setShowPages]=useState(false),[showLayers,setShowLayers]=useState(true);
  const [viewport,setViewport]=useState<"desktop"|"tablet"|"mobile">("desktop"),[notice,setNotice]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false),[uploading,setUploading]=useState(false),[mediaStatus,setMediaStatus]=useState<"checking"|"ready"|"unavailable">("checking"),[mediaProblem,setMediaProblem]=useState(""),[search,setSearch]=useState("");
  const previous=useRef<Funnel|null>(null),past=useRef<Funnel[]>([]),future=useRef<Funnel[]>([]),skipHistory=useRef(false);
+ const pending=busy||uploading;
  const dirty=!!page&&JSON.stringify(page)!==saved;
  const active=page?.blocks.find(b=>b.id===selected);
  const filtered=useMemo(()=>pages.filter(x=>(x.title+" "+x.slug).toLowerCase().includes(search.toLowerCase())),[pages,search]);
@@ -145,28 +146,37 @@ export default function FunnelBuilder(){
   try{
    const response=await fetch("/api/admin/funnel-pages/media",{cache:"no-store"});
    const body=await response.json().catch(()=>({error:"Media service returned an invalid response"}));
-   if(!response.ok)throw Error(body.error||"Media service unavailable ("+response.status+")");
+   if(!response.ok||body?.ready!==true)throw Error(body?.error||"Media service unavailable ("+response.status+")");
    setMediaStatus("ready");setMediaProblem("");return true;
   }catch(error){
    setMediaStatus("unavailable");setMediaProblem(error instanceof Error?error.message:"Media service is unavailable");return false;
   }
  }
  useEffect(()=>{void checkMedia();},[]);
-  async function uploadImage(file?:File,slideId?:string){
-  if(!file||!page||!active||uploading)return;
-  if(!page.slug){setError("Set a campaign slug before uploading images.");return;}
-  if(file.size>3*1024*1024||!["image/jpeg","image/png","image/webp"].includes(file.type)){setError("JPG, PNG or WebP images must be under 3 MB.");return;}
-  const id=active.id;setUploading(true);setError("");
+ async function uploadImage(input:HTMLInputElement,slideId?:string){
+  const file=input.files?.[0];
+  input.value="";
+  if(!file||!page||!active||pending)return;
+  setNotice("");
+  const slug=funnelSlug.safeParse(page.slug);
+  if(!slug.success){setError("Use a valid campaign slug with letters, numbers and single hyphens before uploading.");return;}
+  if(!file.size||file.size>3*1024*1024||!["image/jpeg","image/png","image/webp"].includes(file.type)){
+   setError("Select a non-empty JPG, PNG or WebP image up to 3 MB.");return;
+  }
+  const id=active.id;
+  setUploading(true);setError("");
   try{
-   const data=new FormData();data.set("slug",page.slug);data.set("file",file);
+   const data=new FormData();data.set("slug",slug.data);data.set("file",file);
    const response=await fetch("/api/admin/funnel-pages/media",{method:"POST",body:data});
-   const json=await response.json().catch(()=>({error:"Upload server returned a non-JSON error"}));
-   if(!response.ok)throw Error(json.error||"Image upload failed (HTTP "+response.status+")");
+   const json=await response.json().catch(()=>null);
+   if(!response.ok)throw Error(json?.error||"Image upload failed (HTTP "+response.status+")");
+   if(typeof json?.url!=="string"||!json.url.startsWith("https://")||json.url.length>2048)
+    throw Error("The upload response did not include a valid image URL.");
    if(slideId)patchSlide(id,slideId,{imageUrl:json.url});else updateBlock(id,{imageUrl:json.url});
    setMediaStatus("ready");setMediaProblem("");
-   setNotice("Campaign image uploaded to Cloudflare R2. Save draft or publish to use it on your funnel.");
+   setNotice("Image uploaded. Save Draft or Publish to keep the change.");
   }catch(e){setError(e instanceof Error?e.message:"Upload failed");}
-  finally{setUploading(false);if(imageFile.current)imageFile.current.value="";if(slideFile.current)slideFile.current.value="";targetSlideRef.current=null;}
+  finally{setUploading(false);}
  }
   async function loadRevisions(){
   if(!page?.slug)return;
@@ -178,7 +188,7 @@ export default function FunnelBuilder(){
   }catch(e){setError(e instanceof Error?e.message:"Cannot load revisions");}
  }
  async function rollback(sourceRevision:number){
-  if(!page||busy)return;
+  if(!page||pending)return;
   if(dirty){setError("Save or discard current edits before restoring a revision.");return;}
   if(!window.confirm("Restore revision "+sourceRevision+" as a new draft? Published content will remain unchanged."))return;
   setBusy(true);setError("");
@@ -195,7 +205,7 @@ export default function FunnelBuilder(){
   finally{setBusy(false);}
  }
   async function save(mode:"draft"|"publish"|"archive"|"restore"){
-  if(!page||busy)return;
+  if(!page||pending)return;
   const payload=funnelWrite.safeParse({slug:page.slug,revision:page.revision,mode,content:getContent(page)});
   if(!payload.success){setError("Invalid title, slug, CSS, image or block data. Check required fields before saving.");return;}
   if(mode==="publish"&&!window.confirm("Publish /funnel/"+page.slug+" publicly?"))return;
@@ -204,9 +214,9 @@ export default function FunnelBuilder(){
   try{
    const r=await fetch("/api/admin/funnel-pages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload.data)});
    const j=await r.json();if(!r.ok)throw Error(j.error||"Unable to save funnel");
-   const updated={...page,revision:j.revision,published:j.published,archived:j.archived,hasDraft:mode==="draft"&&page.published};
+   const updated={...page,...payload.data.content,slug:payload.data.slug,revision:j.revision,published:j.published,archived:j.archived,hasDraft:mode==="draft"&&page.published};
    setPage(updated);setSaved(JSON.stringify(updated));await load();
-   setNotice(mode==="publish"?"Campaign published to /funnel/"+page.slug:mode==="archive"?"Campaign archived safely":mode==="restore"?"Campaign restored to draft":"Funnel draft saved; existing published version remains unchanged.");
+   setNotice(mode==="publish"?"Campaign published to /funnel/"+updated.slug:mode==="archive"?"Campaign archived safely":mode==="restore"?"Campaign restored to draft":"Funnel draft saved; existing published version remains unchanged.");
   }catch(e){setError(e instanceof Error?e.message:"Save failed");}
   finally{setBusy(false);}
  }
@@ -230,10 +240,10 @@ export default function FunnelBuilder(){
   if(!active)return;updateBlock(active.id,{items:active.items.map((it,i)=>i===index?{...it,[key]:value}:it)});
  }
  return <div className="anFB">
-  <header className="anFBTop"><div className="anFBHeadingBrand"><span className="anFBHeadingIcon"><Layers3 size={22}/></span><div><h1>Custom Pages &amp; Funnel Builder <span className="anFBEnterprise"><Crown size={13}/> Enterprise</span></h1><p>Build landing pages, campaign funnels and custom pages with drag &amp; drop.</p></div></div><div className="anFBTopActions"><div className="anFBGlobalSearch"><Search size={15}/><input aria-label="Search saved campaigns" value={search} onChange={e=>{setSearch(e.target.value);setShowPages(true)}} placeholder="Search pages, templates, components…"/><kbd>⌘ K</kbd></div><button type="button" onClick={create}><Plus size={16}/> Create New Page</button></div></header>
-  <nav className="anFBRibbon" aria-label="Funnel builder features"><Link className="active" href="/admin/custom-pages"><Layers3 size={16}/> Custom Pages</Link><button onClick={()=>{setShowPages(v=>!v);setLeftTab("elements")}}><Rows3 size={15}/> Funnels</button><button onClick={()=>setLeftTab("templates")}><LayoutTemplate size={15}/> Templates</button><button disabled title="A/B testing needs verified visitor assignment and conversion attribution"><Rows3 size={15}/> A/B Testing</button><button disabled={!page} onClick={()=>{setRightTab("history");void loadRevisions()}}><RotateCcw size={15}/> Revisions</button><button disabled={!page} onClick={()=>setRightTab("seo")}><Settings2 size={15}/> SEO</button><button disabled title="Funnel analytics requires verified event tracking"><ChartNoAxesColumnIncreasing size={15}/> Analytics</button><button disabled={!page} onClick={()=>setRightTab("advanced")}><Settings2 size={15}/> Settings</button><div className="anFBRibbonEnd"><button onClick={()=>upload.current?.click()}><Upload size={15}/> Import JSON</button><button onClick={exportPage} disabled={!page}><Download size={15}/> Export JSON</button><button onClick={create} className="anFBCreate"><Plus size={16}/> New Page</button></div><input ref={upload} hidden type="file" accept=".json,application/json" onChange={e=>void importPage(e.target.files?.[0])}/></nav>
-  {error&&<p role="alert" className="anFBError">{error}</p>}{notice&&<p role="status" className="anFBNotice">{notice}</p>}
-  <div className="anFBGrid">
+  <header className="anFBTop" inert={pending}><div className="anFBHeadingBrand"><span className="anFBHeadingIcon"><Layers3 size={22}/></span><div><h1>Custom Pages &amp; Funnel Builder <span className="anFBEnterprise"><Crown size={13}/> Enterprise</span></h1><p>Build landing pages, campaign funnels and custom pages with drag &amp; drop.</p></div></div><div className="anFBTopActions"><div className="anFBGlobalSearch"><Search size={15}/><input aria-label="Search saved campaigns" value={search} onChange={e=>{setSearch(e.target.value);setShowPages(true)}} placeholder="Search pages, templates, components…"/><kbd>⌘ K</kbd></div><button type="button" onClick={create}><Plus size={16}/> Create New Page</button></div></header>
+  <nav inert={pending} className="anFBRibbon" aria-label="Funnel builder features"><Link className="active" href="/admin/custom-pages"><Layers3 size={16}/> Custom Pages</Link><button onClick={()=>{setShowPages(v=>!v);setLeftTab("elements")}}><Rows3 size={15}/> Funnels</button><button onClick={()=>setLeftTab("templates")}><LayoutTemplate size={15}/> Templates</button><button disabled title="A/B testing needs verified visitor assignment and conversion attribution"><Rows3 size={15}/> A/B Testing</button><button disabled={!page} onClick={()=>{setRightTab("history");void loadRevisions()}}><RotateCcw size={15}/> Revisions</button><button disabled={!page} onClick={()=>setRightTab("seo")}><Settings2 size={15}/> SEO</button><button disabled title="Funnel analytics requires verified event tracking"><ChartNoAxesColumnIncreasing size={15}/> Analytics</button><button disabled={!page} onClick={()=>setRightTab("advanced")}><Settings2 size={15}/> Settings</button><div className="anFBRibbonEnd"><button onClick={()=>upload.current?.click()}><Upload size={15}/> Import JSON</button><button onClick={exportPage} disabled={!page}><Download size={15}/> Export JSON</button><button onClick={create} className="anFBCreate"><Plus size={16}/> New Page</button></div><input ref={upload} hidden type="file" accept=".json,application/json" onChange={e=>void importPage(e.target.files?.[0])}/></nav>
+  {error&&<p role="alert" className="anFBError">{error}</p>}{(pending||notice)&&<p role="status" className="anFBNotice">{uploading?"Uploading image…":busy?"Saving campaign…":notice}</p>}
+  <div className="anFBGrid" inert={pending} aria-busy={pending}>
    <aside className="anFBLeft"><div className="anFBLeftTabs"><button className={leftTab==="elements"?"active":""} onClick={()=>setLeftTab("elements")}>Elements</button><button className={leftTab==="sections"?"active":""} onClick={()=>setLeftTab("sections")}>Sections</button><button className={leftTab==="templates"?"active":""} onClick={()=>setLeftTab("templates")}>Templates</button></div>
     {leftTab==="elements"?<><div className="anFBElementSearch"><Search size={15}/><input value={elementSearch} onChange={e=>setElementSearch(e.target.value)} placeholder="Search element…"/></div><div className="anFBSectionHeading"><strong>Basic Elements</strong><ChevronUp size={15}/></div><div className="anFBElements">{funnelKinds.filter(k=>names[k].toLowerCase().includes(elementSearch.toLowerCase())||k.includes(elementSearch.toLowerCase())).map(kind=>{const Icon=elementIcons[kind];return <button key={kind} title={"Add "+names[kind]} disabled={!page||page.blocks.length>=50} onClick={()=>add(kind)}><Icon size={21}/><span>{names[kind]}</span></button>})}</div><div className="anFBElementGroups">{["Funnel & Marketing","Ecommerce","Media & Interactive","Layout & Grid","Social & Trust","Advanced"].map(group=><button key={group} onClick={()=>setLeftTab("templates")}><Layers3 size={14}/>{group}<ChevronDown size={14}/></button>)}</div></>:leftTab==="sections"?<><div className="anFBSectionHeading"><strong>Page Sections</strong><span>{page?.blocks.length||0}</span></div>{page?.blocks.map((b,i)=><button className={"anFBSectionItem"+(selected===b.id?" active":"")} key={b.id} onClick={()=>setSelected(b.id)}><GripVertical size={14}/> {i+1}. {names[b.kind]}</button>)}<button className="anFBSectionItem" onClick={()=>add("hero")} disabled={!page}><Plus size={14}/> Add Section</button></>:<><div className="anFBSectionHeading"><strong>Ready-made Templates</strong><span>3</span></div><div className="anFBPresets"><button disabled={!page} onClick={()=>applyPreset("product")}>Product Launch</button><button disabled={!page} onClick={()=>applyPreset("offer")}>Flash Sale / Offer</button><button disabled={!page} onClick={()=>applyPreset("story")}>Brand Story</button></div></>}
     <div className="anFBSectionHeading"><strong>Campaign Pages</strong><button className="anFBMiniButton" onClick={()=>setShowPages(v=>!v)}>{showPages?"Hide":"Browse"}</button></div>{showPages&&<div className="anFBPageList">{filtered.map(p=><button key={p.slug} onClick={()=>choose(p)} className={page?.slug===p.slug?"active":""}><span><strong>{p.title}</strong><small>/funnel/{p.slug}</small></span><em>{p.archived?"Archived":p.published?"Live":"Draft"}</em></button>)}{!filtered.length&&<p>No saved funnels yet</p>}</div>}
@@ -241,12 +251,12 @@ export default function FunnelBuilder(){
    </aside>
    <section className="anFBCenter">{page?<><div className="anFBToolbar"><div><input className="anFBPageTitle" aria-label="Funnel title" value={page.title} maxLength={100} placeholder="Campaign title" onChange={e=>patch({title:e.target.value})}/><small className="anFBPageStatus"><span className={page.published&&!page.archived?"live":"draft"}>{page.archived?"Archived":page.published?"● Live":"● Draft"}</span> /funnel/{page.slug||"new-campaign"} · Rev {page.revision}{page.hasDraft?" · Unpublished changes":""}</small></div>
     <div className="anFBToolbarRight"><button aria-label="Desktop preview" className={viewport==="desktop"?"active":""} onClick={()=>setViewport("desktop")}><Monitor size={16}/></button><button aria-label="Tablet preview" className={viewport==="tablet"?"active":""} onClick={()=>setViewport("tablet")}><Tablet size={16}/></button><button aria-label="Mobile preview" className={viewport==="mobile"?"active":""} onClick={()=>setViewport("mobile")}><Smartphone size={16}/></button></div></div>
-    <div className="anFBActionbar"><div className="anFBUndoGroup"><button type="button" aria-label="Undo edit" onClick={undoEdit}><RotateCcw size={15}/></button><button type="button" aria-label="Redo edit" onClick={redoEdit}><RotateCw size={15}/></button></div><button onClick={()=>void save("draft")} disabled={busy}><Save size={15}/> Save Draft</button><button className="primary" onClick={()=>void save("publish")} disabled={busy||page.archived}><Check size={15}/> Publish</button>{page.published&&!page.archived&&<Link href={"/funnel/"+page.slug} target="_blank"><Eye size={15}/> Live</Link>}<span>{dirty?"Unsaved changes":"All changes saved"}</span></div>
-    <div className={"anFBCanvasStage "+viewport}><div className="anFunnelRoot anFBPreviewRoot"><div className="anFunnelPublicHeader"><span className="anFunnelLogo">ANUSMITA</span><span>Discover Your Glow</span></div><FunnelBlocks blocks={page.blocks} selected={selected} onPick={setSelected}/></div></div>
+    <div className="anFBActionbar"><div className="anFBUndoGroup"><button type="button" aria-label="Undo edit" onClick={undoEdit}><RotateCcw size={15}/></button><button type="button" aria-label="Redo edit" onClick={redoEdit}><RotateCw size={15}/></button></div><button onClick={()=>void save("draft")} disabled={pending}><Save size={15}/> Save Draft</button><button className="primary" onClick={()=>void save("publish")} disabled={pending||page.archived}><Check size={15}/> Publish</button>{page.published&&!page.archived&&<Link href={"/funnel/"+page.slug} target="_blank"><Eye size={15}/> Live</Link>}<span>{dirty?"Unsaved changes":"All changes saved"}</span></div>
+    <div className={"anFBCanvasStage "+viewport}><div className="anFunnelRoot anFBPreviewRoot"><div className="anFunnelPublicHeader"><span className="anFunnelLogo">ANUSMITA</span><span>Discover Your Glow</span></div><FunnelBlocks blocks={page.blocks} selected={selected} selectedSlide={selectedSlide} onPick={setSelected} onPickSlide={(blockId,slideId)=>{setSelected(blockId);setSelectedSlide(slideId)}}/></div></div>
     <div className="anFBOutline"><strong>Layers ({page.blocks.length})</strong>{page.blocks.map((b,i)=><div draggable key={b.id} onDragStart={()=>{dragged.current=i}} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(dragged.current!==null)move(dragged.current,i);dragged.current=null}} className={selected===b.id?"selected":""}><button onClick={()=>setSelected(b.id)}><GripVertical size={15}/>{i+1}. {names[b.kind]}</button><button title="Move up" disabled={i===0} onClick={()=>move(i,i-1)}><ArrowUp size={14}/></button><button title="Move down" disabled={i===page.blocks.length-1} onClick={()=>move(i,i+1)}><ArrowDown size={14}/></button><button title="Duplicate" onClick={()=>duplicate(b.id)}><Copy size={14}/></button><button title="Delete" disabled={page.blocks.length===1} onClick={()=>remove(b.id)}><Trash2 size={14}/></button></div>)}</div>
    </>:<div className="anFBEmpty"><ImageIcon size={38}/><h2>Build your next high-converting page</h2><p>Select a saved campaign or create a funnel to start adding sections.</p><button onClick={create}><Plus size={16}/> Create Funnel</button></div>}</section>
    <aside className="anFBRight">{page?<><div className="anFBInspectorTabs"><button className={rightTab==="content"?"active":""} onClick={()=>setRightTab("content")}>Design</button><button className={rightTab==="style"?"active":""} onClick={()=>setRightTab("style")}>Style</button><button className={rightTab==="advanced"?"active":""} onClick={()=>setRightTab("advanced")}>Advanced</button></div><div className="anFBSelectedLabel">Selected: <strong>{active?names[active.kind]:"No element"}</strong></div>
-    {rightTab==="history"?<div className="anFBFields"><h3>Revision History</h3><p>Restoring a version creates a new draft; published pages do not change until you publish again.</p><button onClick={()=>void loadRevisions()}><RefreshCw size={15}/> Refresh History</button>{revisions.map(v=><div key={v.revision} className="anFBItem"><strong>Revision {v.revision} · {v.mode}</strong><small>{new Date(v.createdAt).toLocaleString("en-BD")}</small><span>{v.title} · {v.blockCount} blocks</span><button disabled={busy||dirty} onClick={()=>void rollback(v.revision)}><Undo2 size={14}/> Restore as Draft</button></div>)}</div>:rightTab==="seo"?<div className="anFBFields"><h3>Campaign Settings</h3><label>URL Slug<input disabled={page.revision>0} value={page.slug} onChange={e=>patch({slug:e.target.value.toLowerCase()})} maxLength={80}/></label><p>New pages receive a unique slug automatically; edit it here before the first save.</p><label>Meta Title<input value={page.seoTitle} maxLength={70} onChange={e=>patch({seoTitle:e.target.value})}/></label><label>Meta Description<textarea value={page.description} maxLength={160} onChange={e=>patch({description:e.target.value})}/></label><label>Campaign Expiration (optional)<input type="datetime-local" value={page.endsAt?new Date(page.endsAt).toISOString().slice(0,16):""} onChange={e=>patch({endsAt:e.target.value?new Date(e.target.value).toISOString():""})}/></label><p>Once expired, the public funnel route automatically becomes unavailable. Existing draft/history records remain stored.</p><label className="anFBCheck"><input type="checkbox" checked={page.noIndex} onChange={e=>patch({noIndex:e.target.checked})}/> NoIndex</label><button onClick={()=>void save(page.archived?"restore":"archive")} disabled={busy}>{page.archived?<Undo2 size={15}/>:<Archive size={15}/>} {page.archived?"Restore as Draft":"Archive Page"}</button><p>Archive hides published content without deleting saved records.</p></div>:
+    {rightTab==="history"?<div className="anFBFields"><h3>Revision History</h3><p>Restoring a version creates a new draft; published pages do not change until you publish again.</p><button onClick={()=>void loadRevisions()}><RefreshCw size={15}/> Refresh History</button>{revisions.map(v=><div key={v.revision} className="anFBItem"><strong>Revision {v.revision} · {v.mode}</strong><small>{new Date(v.createdAt).toLocaleString("en-BD")}</small><span>{v.title} · {v.blockCount} blocks</span><button disabled={pending||dirty} onClick={()=>void rollback(v.revision)}><Undo2 size={14}/> Restore as Draft</button></div>)}</div>:rightTab==="seo"?<div className="anFBFields"><h3>Campaign Settings</h3><label>URL Slug<input disabled={page.revision>0} value={page.slug} onChange={e=>patch({slug:e.target.value.toLowerCase()})} maxLength={80}/></label><p>New pages receive a unique slug automatically; edit it here before the first save.</p><label>Meta Title<input value={page.seoTitle} maxLength={70} onChange={e=>patch({seoTitle:e.target.value})}/></label><label>Meta Description<textarea value={page.description} maxLength={160} onChange={e=>patch({description:e.target.value})}/></label><label>Campaign Expiration (optional)<input type="datetime-local" value={page.endsAt?new Date(page.endsAt).toISOString().slice(0,16):""} onChange={e=>patch({endsAt:e.target.value?new Date(e.target.value).toISOString():""})}/></label><p>Once expired, the public funnel route automatically becomes unavailable. Existing draft/history records remain stored.</p><label className="anFBCheck"><input type="checkbox" checked={page.noIndex} onChange={e=>patch({noIndex:e.target.checked})}/> NoIndex</label><button onClick={()=>void save(page.archived?"restore":"archive")} disabled={pending}>{page.archived?<Undo2 size={15}/>:<Archive size={15}/>} {page.archived?"Restore as Draft":"Archive Page"}</button><p>Archive hides published content without deleting saved records.</p></div>:
      active?<div className="anFBFields">{rightTab!=="style"&&<h3>{names[active.kind]}</h3>}
       {rightTab==="content"?<>
        <label>Block Type<select value={active.kind} onChange={e=>updateBlock(active.id,{kind:e.target.value as Block["kind"]})}>{funnelKinds.map(k=><option key={k} value={k}>{names[k]}</option>)}</select></label>
@@ -255,30 +265,30 @@ export default function FunnelBuilder(){
        {["hero","banner","image"].includes(active.kind)&&<div className="anFBMediaPanel">
         <div className="anFBMediaHeading"><strong>{active.kind==="banner"?"Banner Image":active.kind==="image"?"Image Media":"Hero Banner Image"}</strong><span>Independent image · JPG/PNG/WebP · 3 MB</span></div><div className={"anFBMediaReadiness "+mediaStatus}>{mediaStatus==="ready"?"R2 upload connection ready":mediaStatus==="checking"?"Checking upload connection…":"Image upload unavailable: "+mediaProblem}<button type="button" disabled={mediaStatus==="checking"} onClick={()=>void checkMedia()}><RefreshCw size={13}/> Recheck</button></div>
         {active.imageUrl?<img className="anFBMediaPreview" src={active.imageUrl} alt={active.title||"Selected funnel image"}/>:<div className="anFBMediaPlaceholder"><ImageIcon size={23}/><span>No image selected — upload your own image</span></div>}
-        <input ref={imageFile} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void uploadImage(e.target.files?.[0])}/>
+        <input ref={imageFile} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void uploadImage(e.currentTarget)}/>
         <div className="anFBMediaActions"><button type="button" disabled={uploading} onClick={()=>imageFile.current?.click()}><Upload size={15}/> {uploading?"Uploading…":active.imageUrl?"Replace Image":"Upload Image"}</button><button type="button" disabled={!active.imageUrl||uploading} onClick={()=>updateBlock(active.id,{imageUrl:""})}><Trash2 size={14}/> Remove</button></div>
-        <label>Image URL (HTTPS or /path)<input value={active.imageUrl} onChange={e=>updateBlock(active.id,{imageUrl:e.target.value})} placeholder="https://…"/></label>
+        <label>Image URL (HTTPS or /path)<input maxLength={2048} value={active.imageUrl} onChange={e=>updateBlock(active.id,{imageUrl:e.target.value})} placeholder="https://…"/></label>
         <small>Image changes update the canvas immediately. Save Draft then Publish to update the public funnel.</small>
        </div>}
-       {["hero","banner","image","button","coupon"].includes(active.kind)&&<><label>Button / Coupon Label<input value={active.buttonLabel} onChange={e=>updateBlock(active.id,{buttonLabel:e.target.value})}/></label><label>Destination URL<input value={active.buttonUrl} onChange={e=>updateBlock(active.id,{buttonUrl:e.target.value})} placeholder="/shop"/></label></>}
+       {["hero","banner","image","button","coupon"].includes(active.kind)&&<><label>Button / Coupon Label<input maxLength={100} value={active.buttonLabel} onChange={e=>updateBlock(active.id,{buttonLabel:e.target.value})}/></label><label>Destination URL<input maxLength={400} value={active.buttonUrl} onChange={e=>updateBlock(active.id,{buttonUrl:e.target.value})} placeholder="/shop"/></label></>}
        {(active.kind==="slider"||active.kind==="carousel")&&<div className="anFBSlideEditor">
         <h4>{names[active.kind]} · {active.slides.length} slides</h4>
         <label>Autoplay<input type="checkbox" checked={active.autoplay} onChange={e=>updateBlock(active.id,{autoplay:e.target.checked})}/></label>
         <label>Autoplay Seconds<input type="number" min="2" max="15" value={active.intervalMs/1000} onChange={e=>updateBlock(active.id,{intervalMs:Math.min(15000,Math.max(2000,Math.round((Number(e.target.value)||5)*1000)))})}/></label>
         <label>Show Arrows<input type="checkbox" checked={active.showArrows} onChange={e=>updateBlock(active.id,{showArrows:e.target.checked})}/></label>
         <label>Show Dots<input type="checkbox" checked={active.showDots} onChange={e=>updateBlock(active.id,{showDots:e.target.checked})}/></label>
-        <input ref={slideFile} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>void uploadImage(e.target.files?.[0],targetSlideRef.current||active.slides[0]?.id)}/>
+        <input ref={slideFile} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>{const id=targetSlideRef.current;targetSlideRef.current=null;if(id)void uploadImage(e.currentTarget,id)}}/>
         <div className="anFBMediaHeading"><strong>Slide Image Manager</strong><span>Each slide has its own image, text and link</span></div><div className={"anFBMediaReadiness "+mediaStatus}>{mediaStatus==="ready"?"R2 upload connection ready":mediaStatus==="checking"?"Checking upload connection…":"Image upload unavailable: "+mediaProblem}<button type="button" disabled={mediaStatus==="checking"} onClick={()=>void checkMedia()}><RefreshCw size={13}/> Recheck</button></div>
         {active.slides.map((slide,i)=><div key={slide.id} className="anFBSlideCard">
-         <div className="anFBSlideCardTop"><strong>Slide {i+1}</strong><button disabled={i===0} onClick={()=>moveSlide(active.id,i,-1)} aria-label="Move earlier"><ArrowUp size={14}/></button><button disabled={i===active.slides.length-1} onClick={()=>moveSlide(active.id,i,1)} aria-label="Move later"><ArrowDown size={14}/></button><button disabled={active.slides.length<=1} onClick={()=>removeSlide(active.id,slide.id)} aria-label="Delete slide"><Trash2 size={14}/></button></div>
-         <label>Image URL<input value={slide.imageUrl} onChange={e=>patchSlide(active.id,slide.id,{imageUrl:e.target.value})} placeholder="https://…"/></label>
+         <div className="anFBSlideCardTop"><button type="button" aria-pressed={(active.slides.find(item=>item.id===selectedSlide)??active.slides[0]).id===slide.id} onClick={()=>setSelectedSlide(slide.id)}>Preview Slide {i+1}</button><button disabled={i===0} onClick={()=>moveSlide(active.id,i,-1)} aria-label="Move earlier"><ArrowUp size={14}/></button><button disabled={i===active.slides.length-1} onClick={()=>moveSlide(active.id,i,1)} aria-label="Move later"><ArrowDown size={14}/></button><button disabled={active.slides.length<=1} onClick={()=>removeSlide(active.id,slide.id)} aria-label="Delete slide"><Trash2 size={14}/></button></div>
+         <label>Image URL<input maxLength={2048} value={slide.imageUrl} onChange={e=>patchSlide(active.id,slide.id,{imageUrl:e.target.value})} placeholder="https://…"/></label>
          <div className="anFBMediaActions"><button type="button" disabled={uploading} onClick={()=>{targetSlideRef.current=slide.id;setSelectedSlide(slide.id);slideFile.current?.click()}}><Upload size={14}/> {uploading?"Uploading…":slide.imageUrl?"Replace Slide Image":"Upload Slide Image"}</button><button type="button" disabled={!slide.imageUrl||uploading} onClick={()=>patchSlide(active.id,slide.id,{imageUrl:""})}><Trash2 size={14}/> Remove Image</button></div>
          {slide.imageUrl&&<img className="anFBSlideThumb" src={slide.imageUrl} alt={slide.alt||slide.title}/>}
          <label>Title<input maxLength={220} value={slide.title} onChange={e=>patchSlide(active.id,slide.id,{title:e.target.value})}/></label>
          <label>Description<textarea maxLength={700} rows={2} value={slide.body} onChange={e=>patchSlide(active.id,slide.id,{body:e.target.value})}/></label>
          <label>Image Alt Text<input maxLength={160} value={slide.alt} onChange={e=>patchSlide(active.id,slide.id,{alt:e.target.value})}/></label>
-         <label>CTA Text<input value={slide.buttonLabel} onChange={e=>patchSlide(active.id,slide.id,{buttonLabel:e.target.value})}/></label>
-         <label>CTA URL<input value={slide.buttonUrl} onChange={e=>patchSlide(active.id,slide.id,{buttonUrl:e.target.value})}/></label>
+         <label>CTA Text<input maxLength={100} value={slide.buttonLabel} onChange={e=>patchSlide(active.id,slide.id,{buttonLabel:e.target.value})}/></label>
+         <label>CTA URL<input maxLength={400} value={slide.buttonUrl} onChange={e=>patchSlide(active.id,slide.id,{buttonUrl:e.target.value})}/></label>
         </div>)}
         <button type="button" disabled={active.slides.length>=16} onClick={()=>addSlide(active.id)}><Plus size={15}/> Add New Slide</button>
        </div>}
