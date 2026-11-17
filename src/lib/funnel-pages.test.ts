@@ -1,5 +1,5 @@
 import {describe,it,expect} from "vitest";
-import {funnelWrite,funnelContent,safeFunnelStyle,safeFunnelUrl,initialFunnelBlock} from "./funnel-pages";
+import {funnelWrite,funnelContent,funnelDeviceStyleVariables,safeFunnelStyle,safeFunnelUrl,initialFunnelBlock} from "./funnel-pages";
 const base=()=>({slug:"beauty-serum",revision:0,mode:"draft",content:{title:"Beauty Serum Landing Page",description:"Limited offer",seoTitle:"Beauty Serum",noIndex:false,blocks:[initialFunnelBlock("hero")]}});
 describe("secure ANUSMITA funnel campaign contracts",()=>{
  it("validates a structured, editable campaign",()=>{
@@ -58,7 +58,21 @@ describe("secure ANUSMITA funnel campaign contracts",()=>{
   expect(parsed.blocks[1].slides.map(x=>x.imageUrl)).toHaveLength(2);
   expect(parsed.blocks[2].buttonLabel).toBe("Browse");
  });
-  it("does not accept unbounded page content",()=>{
+ it("keeps device styles independent and ignores unsafe CSS values",()=>{
+  const block=initialFunnelBlock("banner");
+  const responsiveStyle={tablet:{padding:"32px"},mobile:{padding:"12px",fontSize:"22px",width:"10px;position:fixed"}};
+  const raw={...base().content,blocks:[{...block,responsiveStyle}]};
+  const parsed=funnelContent.parse(raw);
+  const overrides=parsed.blocks[0].responsiveStyle;
+  expect(overrides).toEqual(responsiveStyle);
+  expect(funnelDeviceStyleVariables(overrides,"desktop")).toEqual({});
+  expect(funnelDeviceStyleVariables(overrides,"tablet")).toEqual({"--funnel-active-padding":"32px"});
+  expect(funnelDeviceStyleVariables(overrides,"mobile")).toEqual({"--funnel-active-padding":"12px","--funnel-active-fontSize":"22px"});
+  expect(funnelDeviceStyleVariables(overrides)).toEqual({"--funnel-tablet-padding":"32px","--funnel-mobile-padding":"12px","--funnel-mobile-fontSize":"22px"});
+  expect(funnelDeviceStyleVariables(undefined)).toEqual({});
+  expect(funnelContent.safeParse({...raw,blocks:[{...block,responsiveStyle:{mobile:{display:"none"}}}]}).success).toBe(false);
+ });
+ it("does not accept unbounded page content",()=>{
   const content={...base().content,title:"a".repeat(101)};
   expect(funnelContent.safeParse(content).success).toBe(false);
  });

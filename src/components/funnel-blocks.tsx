@@ -2,7 +2,7 @@ import type {CSSProperties} from "react";
 import Link from "next/link";
 import FunnelCountdown from "./funnel-countdown";
 import FunnelSlides from "./funnel-slides";
-import {safeFunnelStyle,safeFunnelUrl,type funnelBlock} from "@/lib/funnel-pages";
+import {funnelDeviceStyleVariables,safeFunnelStyle,safeFunnelUrl,type FunnelDevice,type funnelBlock} from "@/lib/funnel-pages";
 import type {z} from "zod";
 import "./funnel-public.css";
 type Block=z.infer<typeof funnelBlock>;
@@ -12,12 +12,22 @@ function Button({url,label}:{url:string;label:string}){
  if(href.startsWith("/"))return <Link className="anFunnelCta" href={href}>{label||"Shop Now"}</Link>;
  return <a className="anFunnelCta" href={href} rel="noopener noreferrer" target="_blank">{label||"Shop Now"}</a>;
 }
-export function FunnelBlocks({blocks,selected,selectedSlide,onPick,onPickSlide}:{blocks:Block[];selected?:string|null;selectedSlide?:string|null;onPick?:(id:string)=>void;onPickSlide?:(blockId:string,slideId:string)=>void}){
- return <div className="anFunnelBody">
+export function FunnelBlocks({blocks,selected,selectedSlide,onPick,onPickSlide,preview}:{preview?:FunnelDevice;blocks:Block[];selected?:string|null;selectedSlide?:string|null;onPick?:(id:string)=>void;onPickSlide?:(blockId:string,slideId:string)=>void}){
+ return <div className="anFunnelBody" data-funnel-preview={preview}>
  {blocks.map(block=>{
-  const style=safeFunnelStyle(block.style) as CSSProperties;
+  const base=safeFunnelStyle(block.style);
+  const style:CSSProperties={...base,...funnelDeviceStyleVariables(block.responsiveStyle,preview)};
+  if(block.responsiveStyle){
+   const responsiveProperties=["width","minHeight","margin","padding","fontSize"] as const;
+   for(const key of responsiveProperties){
+    if(base[key]!==undefined){
+     Object.assign(style,{["--funnel-base-"+key]:base[key]});
+     delete style[key];
+    }
+   }
+  }
   const image=safeFunnelUrl(block.imageUrl,true);
-  const headingStyle:CSSProperties={color:style.color,fontFamily:style.fontFamily,fontSize:style.fontSize,fontWeight:style.fontWeight,lineHeight:style.lineHeight,letterSpacing:style.letterSpacing,textAlign:style.textAlign};
+  const headingStyle:CSSProperties={color:style.color,fontFamily:style.fontFamily,fontSize:block.responsiveStyle&&base.fontSize?"var(--funnel-active-fontSize, var(--funnel-base-fontSize))":style.fontSize,fontWeight:style.fontWeight,lineHeight:style.lineHeight,letterSpacing:style.letterSpacing,textAlign:style.textAlign};
   const content=<>
    {block.kind==="divider"?<hr/>:
    block.kind==="slider"||block.kind==="carousel"?<FunnelSlides slides={block.slides} mode={block.kind} autoplay={block.autoplay} intervalMs={block.intervalMs} showArrows={block.showArrows} showDots={block.showDots} editing={!!onPick} selectedSlide={selected===block.id?selectedSlide:undefined} onPickSlide={onPickSlide?slideId=>onPickSlide(block.id,slideId):undefined}/>:
@@ -40,8 +50,8 @@ export function FunnelBlocks({blocks,selected,selectedSlide,onPick,onPickSlide}:
    block.kind==="coupon"?<div className="anFunnelCoupon"><h2>{block.title}</h2><p>{block.body}</p><code>{block.buttonLabel}</code></div>:null}
   </>;
   return onPick?
-   <div key={block.id} className={"anFunnelBlock anFunnelEditable"+(selected===block.id?" selected":"")} style={style} onClick={event=>{event.preventDefault();onPick(block.id)}} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==="Enter")onPick(block.id)}}>{content}</div>:
-   <section key={block.id} className="anFunnelBlock" style={style}>{content}</section>;
+   <div key={block.id} data-responsive={block.responsiveStyle?"":undefined} className={"anFunnelBlock anFunnelEditable"+(selected===block.id?" selected":"")} style={style} onClick={event=>{event.preventDefault();onPick(block.id)}} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==="Enter")onPick(block.id)}}>{content}</div>:
+   <section key={block.id} data-responsive={block.responsiveStyle?"":undefined} className="anFunnelBlock" style={style}>{content}</section>;
  })}
  </div>;
 }

@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import {Archive,ArrowDown,ArrowUp,Check,Copy,Download,Eye,FilePlus2,GripVertical,Image as ImageIcon,Layers3,Monitor,Plus,RefreshCw,Save,Smartphone,Tablet,Trash2,Upload,Undo2,Type,Heading1,MousePointer2,RectangleHorizontal,Minus,Clock3,Star,Package,Settings2,ChartNoAxesColumnIncreasing,Search,ChevronDown,ChevronUp,Maximize2,LayoutTemplate,Rows3,PanelRight,RotateCcw,RotateCw,Crown} from "lucide-react";
 import type {z} from "zod";
-import {funnelKinds,funnelSlug,funnelWrite,funnelContent,initialFunnelBlock,initialFunnelSlide,funnelBlock,type funnelStyle} from "@/lib/funnel-pages";
+import {funnelKinds,funnelResponsiveFields,funnelSlug,type FunnelDevice,funnelWrite,funnelContent,initialFunnelBlock,initialFunnelSlide,funnelBlock,type funnelStyle} from "@/lib/funnel-pages";
 import {FunnelBlocks} from "./funnel-blocks";
 import "./funnel-builder.css";
 type Block=z.infer<typeof funnelBlock>;
@@ -24,7 +24,7 @@ export default function FunnelBuilder(){
  const [revisions,setRevisions]=useState<{revision:number;mode:string;createdAt:string;title:string;blockCount:number}[]>([]);
  const [selectedSlide,setSelectedSlide]=useState<string|null>(null);
  const [leftTab,setLeftTab]=useState<"elements"|"sections"|"templates">("elements"),[elementSearch,setElementSearch]=useState(""),[showPages,setShowPages]=useState(false),[showLayers,setShowLayers]=useState(true);
- const [viewport,setViewport]=useState<"desktop"|"tablet"|"mobile">("desktop"),[notice,setNotice]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false),[uploading,setUploading]=useState(false),[mediaStatus,setMediaStatus]=useState<"checking"|"ready"|"unavailable">("checking"),[mediaProblem,setMediaProblem]=useState(""),[search,setSearch]=useState("");
+ const [viewport,setViewport]=useState<FunnelDevice>("desktop"),[notice,setNotice]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false),[uploading,setUploading]=useState(false),[mediaStatus,setMediaStatus]=useState<"checking"|"ready"|"unavailable">("checking"),[mediaProblem,setMediaProblem]=useState(""),[search,setSearch]=useState("");
  const previous=useRef<Funnel|null>(null),past=useRef<Funnel[]>([]),future=useRef<Funnel[]>([]),skipHistory=useRef(false);
  const pending=busy||uploading;
  const dirty=!!page&&JSON.stringify(page)!==saved;
@@ -252,7 +252,7 @@ export default function FunnelBuilder(){
    <section className="anFBCenter">{page?<><div className="anFBToolbar"><div><input className="anFBPageTitle" aria-label="Funnel title" value={page.title} maxLength={100} placeholder="Campaign title" onChange={e=>patch({title:e.target.value})}/><small className="anFBPageStatus"><span className={page.published&&!page.archived?"live":"draft"}>{page.archived?"Archived":page.published?"● Live":"● Draft"}</span> /funnel/{page.slug||"new-campaign"} · Rev {page.revision}{page.hasDraft?" · Unpublished changes":""}</small></div>
     <div className="anFBToolbarRight"><button aria-label="Desktop preview" className={viewport==="desktop"?"active":""} onClick={()=>setViewport("desktop")}><Monitor size={16}/></button><button aria-label="Tablet preview" className={viewport==="tablet"?"active":""} onClick={()=>setViewport("tablet")}><Tablet size={16}/></button><button aria-label="Mobile preview" className={viewport==="mobile"?"active":""} onClick={()=>setViewport("mobile")}><Smartphone size={16}/></button></div></div>
     <div className="anFBActionbar"><div className="anFBUndoGroup"><button type="button" aria-label="Undo edit" onClick={undoEdit}><RotateCcw size={15}/></button><button type="button" aria-label="Redo edit" onClick={redoEdit}><RotateCw size={15}/></button></div><button onClick={()=>void save("draft")} disabled={pending}><Save size={15}/> Save Draft</button><button className="primary" onClick={()=>void save("publish")} disabled={pending||page.archived}><Check size={15}/> Publish</button>{page.published&&!page.archived&&<Link href={"/funnel/"+page.slug} target="_blank"><Eye size={15}/> Live</Link>}<span>{dirty?"Unsaved changes":"All changes saved"}</span></div>
-    <div className={"anFBCanvasStage "+viewport}><div className="anFunnelRoot anFBPreviewRoot"><div className="anFunnelPublicHeader"><span className="anFunnelLogo">ANUSMITA</span><span>Discover Your Glow</span></div><FunnelBlocks blocks={page.blocks} selected={selected} selectedSlide={selectedSlide} onPick={setSelected} onPickSlide={(blockId,slideId)=>{setSelected(blockId);setSelectedSlide(slideId)}}/></div></div>
+    <div className={"anFBCanvasStage "+viewport}><div className="anFunnelRoot anFBPreviewRoot"><div className="anFunnelPublicHeader"><span className="anFunnelLogo">ANUSMITA</span><span>Discover Your Glow</span></div><FunnelBlocks preview={viewport} blocks={page.blocks} selected={selected} selectedSlide={selectedSlide} onPick={setSelected} onPickSlide={(blockId,slideId)=>{setSelected(blockId);setSelectedSlide(slideId)}}/></div></div>
     <div className="anFBOutline"><strong>Layers ({page.blocks.length})</strong>{page.blocks.map((b,i)=><div draggable key={b.id} onDragStart={()=>{dragged.current=i}} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(dragged.current!==null)move(dragged.current,i);dragged.current=null}} className={selected===b.id?"selected":""}><button onClick={()=>setSelected(b.id)}><GripVertical size={15}/>{i+1}. {names[b.kind]}</button><button title="Move up" disabled={i===0} onClick={()=>move(i,i-1)}><ArrowUp size={14}/></button><button title="Move down" disabled={i===page.blocks.length-1} onClick={()=>move(i,i+1)}><ArrowDown size={14}/></button><button title="Duplicate" onClick={()=>duplicate(b.id)}><Copy size={14}/></button><button title="Delete" disabled={page.blocks.length===1} onClick={()=>remove(b.id)}><Trash2 size={14}/></button></div>)}</div>
    </>:<div className="anFBEmpty"><ImageIcon size={38}/><h2>Build your next high-converting page</h2><p>Select a saved campaign or create a funnel to start adding sections.</p><button onClick={create}><Plus size={16}/> Create Funnel</button></div>}</section>
    <aside className="anFBRight">{page?<><div className="anFBInspectorTabs"><button className={rightTab==="content"?"active":""} onClick={()=>setRightTab("content")}>Design</button><button className={rightTab==="style"?"active":""} onClick={()=>setRightTab("style")}>Style</button><button className={rightTab==="advanced"?"active":""} onClick={()=>setRightTab("advanced")}>Advanced</button></div><div className="anFBSelectedLabel">Selected: <strong>{active?names[active.kind]:"No element"}</strong></div>
@@ -300,6 +300,21 @@ export default function FunnelBuilder(){
         <details className="anFBAccordion"><summary>Opacity &amp; Effects</summary><label>Opacity (0–1)<input type="number" min="0" max="1" step=".05" value={active.style.opacity||"1"} onChange={e=>updateStyle(active.id,"opacity",e.target.value)}/></label><label>Box Shadow<select value={active.style.boxShadow||"none"} onChange={e=>updateStyle(active.id,"boxShadow",e.target.value)}>{["none","soft","medium","strong"].map(k=><option key={k} value={k}>{k}</option>)}</select></label></details>
         <button onClick={()=>duplicate(active.id)}><Copy size={15}/> Duplicate Element</button><button disabled={page.blocks.length<=1} onClick={()=>remove(active.id)}><Trash2 size={15}/> Delete Element</button>
        </>:<>
+        <details className="anFBAccordion" open={viewport!=="desktop"}>
+         <summary>Responsive overrides</summary>
+         <label>Preview device<select value={viewport} onChange={e=>setViewport(e.target.value as FunnelDevice)}>
+          <option value="desktop">Desktop</option><option value="tablet">Tablet</option><option value="mobile">Mobile</option>
+         </select></label>
+         {viewport==="desktop"?<p>Choose Tablet or Mobile to edit this block for that screen size.</p>:<>
+          <p>Blank fields use the base style. Enter sizes like 24px or 95%.</p>
+          {(Object.keys(funnelResponsiveFields) as Array<keyof typeof funnelResponsiveFields>).map(key=><label key={key}>{funnelResponsiveFields[key]}
+           <input maxLength={40} value={active.responsiveStyle?.[viewport]?.[key]??""} placeholder="Use base style"
+            onChange={e=>updateBlock(active.id,{responsiveStyle:{...active.responsiveStyle,[viewport]:{...active.responsiveStyle?.[viewport],[key]:e.target.value}}})}/>
+          </label>)}
+          <button type="button" disabled={!active.responsiveStyle?.[viewport]}
+           onClick={()=>{const overrides={...active.responsiveStyle};delete overrides[viewport];updateBlock(active.id,{responsiveStyle:Object.keys(overrides).length?overrides:undefined});}}>Reset {viewport} overrides</button>
+         </>}
+        </details>
         <details className="anFBAccordion" open><summary>Typography</summary>
          <label>Font Family<select value={active.style.fontFamily||"Georgia"} onChange={e=>updateStyle(active.id,"fontFamily",e.target.value)}><option value="Georgia">Georgia / Display Serif</option><option value="Arial">Arial / Sans</option><option value="serif">Serif</option><option value="sans-serif">Sans Serif</option></select></label>
          <label>Weight<select value={active.style.fontWeight||"700"} onChange={e=>updateStyle(active.id,"fontWeight",e.target.value)}>{["400","500","600","700","800"].map(k=><option key={k} value={k}>{k}</option>)}</select></label>

@@ -79,7 +79,7 @@ describe.skipIf(!uri)("authenticated funnel upload and publishing with isolated 
    const content={
     title:"Funnel integration test",
     blocks:[
-     {...initialFunnelBlock("banner"),imageUrl:banner.url},
+     {...initialFunnelBlock("banner"),imageUrl:banner.url,responsiveStyle:{tablet:{padding:"32px"},mobile:{padding:"12px",fontSize:"22px"}}},
      {...carousel,slides:carousel.slides.map((item,index)=>index===1?{...item,title:"Edited slide",imageUrl:slide.url}:item)}
     ]
    };
