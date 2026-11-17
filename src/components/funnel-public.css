@@ -53,3 +53,18 @@
 @media (width <= 700px) {
  .anFunnelBody:not([data-funnel-preview]) .anFunnelGroupGrid {grid-template-columns:1fr}
 }
+
+.anFunnelAttribution {
+ margin:0 auto 24px;
+ width:min(1160px,100% - 32px);
+}
+.anFunnelAttribution p {font-size:13px}
+.anFunnelAttribution button {
+ padding:8px 12px;
+ margin-right:8px;
+ border:1px solid #d9a9ba;
+ border-radius:8px;
+ color:#711032;
+ background:#fff;
+}
+.anFunnelAttribution button:disabled {opacity:.6}

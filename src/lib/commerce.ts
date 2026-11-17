@@ -14,7 +14,7 @@ export function shippingFor(district:string) {
  if(!Number.isSafeInteger(amount)||amount<0) throw new Error("Bad shipping configuration");
  return amount;
 }
-export async function createOrder(input:unknown,idempotencyKey:string) {
+export async function createOrder(input:unknown,idempotencyKey:string,funnelAttribution?:string) {
  const data=checkoutSchema.parse(input);
  if(!/^[a-zA-Z0-9_-]{12,128}$/.test(idempotencyKey)) throw new HttpError(400,"Valid Idempotency-Key required (12-128 characters)");
  const ids=data.items.map(x=>x.productId);
@@ -44,7 +44,7 @@ export async function createOrder(input:unknown,idempotencyKey:string) {
    if(data.paymentMethod==="cod" && data.depositPaisa>0) throw new HttpError(400,"COD deposit requires a separate payment method");
    const counter=await Counter.findOneAndUpdate({key:"orders"},{$inc:{value:1}},{upsert:true,new:true,session,setDefaultsOnInsert:true});
    const num="AN-"+new Date().getUTCFullYear()+"-"+String(counter.value).padStart(6,"0");
-   const [order]=await Order.create([{orderNumber:num,idempotencyKey,requestHash:hash,lines,customer:data.customer,paymentMethod:data.paymentMethod,depositPaisa:data.depositPaisa,...totals}],{session});
+   const [order]=await Order.create([{orderNumber:num,idempotencyKey,requestHash:hash,funnelSlug:funnelAttribution,lines,customer:data.customer,paymentMethod:data.paymentMethod,depositPaisa:data.depositPaisa,...totals}],{session});
    for(const line of lines) await StockMovement.create([{productId:line.productId,orderId:order._id,type:"reserve",deltaReserved:line.quantity,note:"Checkout reserved stock"}],{session});
    await Audit.create([{action:"checkout.created",entity:"Order",entityId:String(order._id),details:{orderNumber:num}}],{session});
    placed=order.toObject();

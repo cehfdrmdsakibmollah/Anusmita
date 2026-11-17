@@ -1,4 +1,7 @@
 import type {Metadata} from "next";
+import {cookies} from "next/headers";
+import {funnelAttributionCookie,verifyFunnelAttribution} from "@/lib/funnel-attribution";
+import {FunnelAttributionControl} from "@/components/funnel-attribution-control";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import {db} from "@/lib/db";
@@ -30,6 +33,7 @@ export default async function FunnelPublicPage({params}:{params:Promise<{slug:st
  return <main className="anFunnelRoot">
   <header className="anFunnelPublicHeader"><Link className="anFunnelLogo" href="/">ANUSMITA</Link><Link href="/shop">Explore Collection</Link></header>
   <FunnelBlocks blocks={funnel.blocks}/>
+  <FunnelAttributionControl slug={slug} enabledForPage={await verifyFunnelAttribution((await cookies()).get(funnelAttributionCookie)?.value)===slug}/>
   <footer className="anFunnelFooter">ANUSMITA · Fashion · Jewellery · Beauty</footer>
  </main>;
 }

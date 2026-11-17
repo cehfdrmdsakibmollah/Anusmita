@@ -3,15 +3,20 @@ import mongoose from "mongoose";
 import {afterAll,beforeAll,describe,expect,it,vi} from "vitest";
 import {signSession} from "@/lib/auth";
 import {initialFunnelBlock} from "@/lib/funnel-pages";
-import {Audit,Counter,FunnelPage,FunnelRevision,User} from "@/lib/models";
+import {Audit,Counter,FunnelPage,FunnelRevision,Order,Product,StockMovement,User} from "@/lib/models";
 import {GET as listFunnels,POST as writeFunnel} from "./route";
 import {GET as checkMedia,POST as uploadMedia} from "./media/route";
+import {POST as checkout} from "../../checkout/route";
+import {POST as enableAttribution,DELETE as disableAttribution} from "../../funnel-attribution/route";
+import {GET as readAnalytics} from "./analytics/route";
+import {funnelAttributionCookie} from "@/lib/funnel-attribution";
 import worker from "../../../../../workers/r2-media/index.mjs";
 
-const session=vi.hoisted(()=>({token:""}));
+const session=vi.hoisted(()=>({token:"",attribution:""}));
 vi.mock("server-only",()=>({}));
-vi.mock("next/headers",()=>({cookies:async()=>({get:()=>session.token?{value:session.token}:undefined})}));
+vi.mock("next/headers",()=>({cookies:async()=>({get:(name:string)=>{const value=name===funnelAttributionCookie?session.attribution:session.token;return value?{value}:undefined;}})}));
 vi.mock("@/lib/db",()=>({db:async()=>mongoose}));
+vi.mock("@/lib/launch-config",()=>({checkoutEnabled:()=>true}));
 
 const uri=process.env.FUNNEL_TEST_MONGODB_URI;
 const allowedUri="mongodb://127.0.0.1:27018/?directConnection=true&replicaSet=funnel-test";
@@ -24,7 +29,7 @@ describe.skipIf(!uri)("authenticated funnel upload and publishing with isolated 
  beforeAll(async()=>{
   if(uri!==allowedUri)throw new Error("Funnel integration tests require the dedicated loopback replica set");
   await mongoose.connect(uri,{dbName:database,serverSelectionTimeoutMS:5000});
-  await Promise.all([Audit,Counter,FunnelPage,FunnelRevision,User].map(model=>model.init()));
+  await Promise.all([Audit,Counter,FunnelPage,FunnelRevision,Order,Product,StockMovement,User].map(model=>model.init()));
  });
  afterAll(async()=>{
   if(mongoose.connection.name===database){
@@ -114,4 +119,51 @@ describe.skipIf(!uri)("authenticated funnel upload and publishing with isolated 
    vi.unstubAllEnvs();
   }
  });
+ it("attributes only opted-in website checkouts and reports their actual order states",async()=>{
+  vi.stubEnv("SESSION_SECRET",randomUUID()+randomUUID());
+  const ownerId=new mongoose.Types.ObjectId();
+  const slug="attribution-campaign";
+  const url=origin+"/api/funnel-attribution?slug="+slug;
+  const consentRequest=(method:string)=>new Request(url,{method,headers:{origin}});
+  const analyticsRequest=new Request(origin+"/api/admin/funnel-pages/analytics?slug="+slug+"&days=7");
+  try{
+   expect((await readAnalytics(analyticsRequest)).status).toBe(403);
+   expect((await enableAttribution(consentRequest("POST"))).status).toBe(404);
+   await User.collection.insertOne({_id:ownerId,name:"Analytics Owner",email:"analytics@example.test",role:"owner",active:true});
+   await FunnelPage.create({slug,title:"Attribution campaign",published:true,updatedBy:ownerId});
+   const product=await Product.create({name:"Sample Product",slug:"sample-product",sku:"SAMPLE-1",category:"Sample",pricePaisa:10000,costPaisa:5000,onHand:10,active:true});
+   expect((await enableAttribution(new Request(url,{method:"POST",headers:{origin:"https://other.example"}}))).status).toBe(403);
+   const enabled=await enableAttribution(consentRequest("POST"));
+   expect(enabled.status).toBe(200);
+   const cookie=enabled.headers.get("set-cookie")??"";
+   expect(cookie).toContain("HttpOnly");
+   expect(cookie).toContain("Max-Age=86400");
+   session.attribution=cookie.split(";",1)[0].slice(funnelAttributionCookie.length+1);
+   expect(session.attribution).toBeTruthy();
+
+   const orderInput={items:[{productId:String(product._id),quantity:1}],customer:{
+    name:"Sample Shopper",phone:"01700000000",district:"Dhaka",area:"Dhanmondi",address:"Sample house and road"
+   },paymentMethod:"cod"};
+   const place=(key:string)=>checkout(new Request(origin+"/api/checkout",{method:"POST",headers:{origin,
+    "Content-Type":"application/json","Idempotency-Key":key},body:JSON.stringify(orderInput)}));
+   const first=await place("funnel-test-order-001");
+   expect(first.status).toBe(201);
+   const {id}=await first.json();
+   await Order.updateOne({_id:id},{$set:{orderStatus:"delivered"}});
+   session.attribution+="invalid";
+   expect((await place("funnel-test-order-002")).status).toBe(201);
+   expect(await (await place("funnel-test-order-001")).json()).toMatchObject({id});
+   expect((await disableAttribution(consentRequest("DELETE"))).headers.get("set-cookie")).toContain("Max-Age=0");
+
+   session.token=await signSession(String(ownerId));
+   const report=await readAnalytics(analyticsRequest);
+   expect(report.status).toBe(200);
+   expect(await report.json()).toEqual({orders:1,delivered:1,cancelledOrReturned:0});
+  }finally{
+   session.token="";
+   session.attribution="";
+   vi.unstubAllEnvs();
+  }
+ });
+
 });

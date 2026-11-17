@@ -58,6 +58,7 @@ const OrderLineSchema = new Schema({
 const OrderSchema = new Schema({
  orderNumber:{type:String,unique:true,required:true},
  idempotencyKey:{type:String,unique:true,required:true},
+ funnelSlug:{type:String,maxlength:80},
  requestHash:{type:String,required:true}, lines:{type:[OrderLineSchema],required:true},
  customer:{name:String,phone:String,district:String,area:String,address:String,notes:String},
  paymentMethod:{type:String,enum:["cod","bank_transfer","bkash_manual","nagad_manual"],required:true},
@@ -71,6 +72,7 @@ const OrderSchema = new Schema({
  financeNote:{type:String,default:""},source:{type:String,default:"website"},isTest:{type:Boolean,default:false}
 },opts);
 OrderSchema.index({createdAt:-1,orderStatus:1});
+OrderSchema.index({funnelSlug:1,createdAt:-1},{partialFilterExpression:{funnelSlug:{$exists:true}}});
 OrderSchema.index({ "customer.phone":1 });
 
 const PaymentSchema = new Schema({
