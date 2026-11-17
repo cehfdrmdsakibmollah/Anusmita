@@ -3,11 +3,13 @@ import mongoose from "mongoose";
 import {afterAll,beforeAll,describe,expect,it,vi} from "vitest";
 import {signSession} from "@/lib/auth";
 import {initialFunnelBlock} from "@/lib/funnel-pages";
-import {Audit,Counter,FunnelPage,FunnelRevision,Order,Product,StockMovement,User} from "@/lib/models";
+import {Audit,Counter,FunnelExposure,FunnelPage,FunnelRevision,Order,Product,StockMovement,User} from "@/lib/models";
 import {GET as listFunnels,POST as writeFunnel} from "./route";
 import {GET as checkMedia,POST as uploadMedia} from "./media/route";
 import {POST as checkout} from "../../checkout/route";
 import {POST as enableAttribution,DELETE as disableAttribution} from "../../funnel-attribution/route";
+import {POST as startExperiment,GET as reportExperiment} from "./experiments/route";
+import {POST as enterExperiment} from "../../funnel-experiment/route";
 import {GET as readAnalytics} from "./analytics/route";
 import {funnelAttributionCookie} from "@/lib/funnel-attribution";
 import worker from "../../../../../workers/r2-media/index.mjs";
@@ -29,7 +31,7 @@ describe.skipIf(!uri)("authenticated funnel upload and publishing with isolated 
  beforeAll(async()=>{
   if(uri!==allowedUri)throw new Error("Funnel integration tests require the dedicated loopback replica set");
   await mongoose.connect(uri,{dbName:database,serverSelectionTimeoutMS:5000});
-  await Promise.all([Audit,Counter,FunnelPage,FunnelRevision,Order,Product,StockMovement,User].map(model=>model.init()));
+  await Promise.all([Audit,Counter,FunnelExposure,FunnelPage,FunnelRevision,Order,Product,StockMovement,User].map(model=>model.init()));
  });
  afterAll(async()=>{
   if(mongoose.connection.name===database){
@@ -159,6 +161,55 @@ describe.skipIf(!uri)("authenticated funnel upload and publishing with isolated 
    const report=await readAnalytics(analyticsRequest);
    expect(report.status).toBe(200);
    expect(await report.json()).toEqual({orders:1,delivered:1,cancelledOrReturned:0});
+  }finally{
+   session.token="";
+   session.attribution="";
+   vi.unstubAllEnvs();
+  }
+ });
+
+ it("measures consented A/B assignments and counts repeat orders once per assignment",async()=>{
+  vi.stubEnv("SESSION_SECRET",randomUUID()+randomUUID());
+  const ownerId=new mongoose.Types.ObjectId();
+  const campaigns=["experiment-control","experiment-variant"];
+  const adminUrl=origin+"/api/admin/funnel-pages/experiments";
+  function begin(){
+   return startExperiment(new Request(adminUrl+"?a="+campaigns[0]+"&b="+campaigns[1],{method:"POST",headers:{origin}}));
+  }
+  try{
+   expect((await begin()).status).toBe(403);
+   await User.collection.insertOne({_id:ownerId,name:"Experiment Owner",email:"experiment@example.test",role:"owner",active:true});
+   session.token=await signSession(String(ownerId));
+   expect((await begin()).status).toBe(409);
+   await FunnelPage.create(campaigns.map(slug=>({slug,title:slug,published:true,updatedBy:ownerId})));
+   const created=await begin();
+   expect(created.status).toBe(201);
+   const {token}=await created.json();
+   const entry=(allow:string)=>enterExperiment(new Request(origin+"/api/funnel-experiment?"+new URLSearchParams({token,allow}),
+    {method:"POST",headers:{origin}}));
+   const untracked=await entry("no");
+   expect(untracked.status).toBe(200);
+   expect(await FunnelExposure.countDocuments()).toBe(0);
+   const tracked=await entry("yes");
+   expect(tracked.status).toBe(200);
+   const {url}=await tracked.json();
+   session.attribution=(tracked.headers.get("set-cookie")??"").split(";",1)[0].slice(funnelAttributionCookie.length+1);
+   expect(await (await entry("yes")).json()).toEqual({url});
+   expect(await FunnelExposure.countDocuments()).toBe(1);
+
+   const product=await Product.create({name:"Experiment Product",slug:"experiment-product",sku:"AB-SKU-1",category:"Sample",pricePaisa:10000,costPaisa:5000,onHand:10,active:true});
+   const body=JSON.stringify({items:[{productId:String(product._id),quantity:1}],customer:{
+    name:"Sample Shopper",phone:"01700000000",district:"Dhaka",area:"Dhanmondi",address:"Sample house and road"
+   },paymentMethod:"cod"});
+   for(const key of ["experiment-order-001","experiment-order-002"]){
+    const response=await checkout(new Request(origin+"/api/checkout",{method:"POST",headers:{origin,
+     "Content-Type":"application/json","Idempotency-Key":key},body}));
+    expect(response.status).toBe(201);
+   }
+   const result=await reportExperiment(new Request(adminUrl+"?"+new URLSearchParams({token})));
+   expect(result.status).toBe(200);
+   const slug=url.slice("/funnel/".length);
+   expect(await result.json()).toEqual({variants:campaigns.map(item=>({slug:item,assignments:Number(item===slug),converting:Number(item===slug)}))});
   }finally{
    session.token="";
    session.attribution="";
