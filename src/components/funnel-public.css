@@ -6,17 +6,18 @@
  padding:var(--funnel-active-padding,var(--funnel-base-padding,clamp(18px,3vw,40px)));
  font-size:var(--funnel-active-fontSize,var(--funnel-base-fontSize,inherit));
 }
-.anFunnelRoot .anFunnelBlock[data-responsive] h1 {
+.anFunnelRoot .anFunnelBlock[data-responsive]:not([data-funnel-group]) h1 {
  font-size:var(--funnel-active-fontSize,clamp(36px,5vw,66px));
 }
-.anFunnelRoot .anFunnelBlock[data-responsive] h2 {
+.anFunnelRoot .anFunnelBlock[data-responsive]:not([data-funnel-group]) h2,
+.anFunnelBlock[data-responsive][data-funnel-group] > h2 {
  font-size:var(--funnel-active-fontSize,clamp(24px,3vw,36px));
 }
 .anFunnelRoot .anFunnelBody[data-funnel-preview] .anFunnelBlock[data-responsive] {
  padding:var(--funnel-active-padding,var(--funnel-base-padding,clamp(14px,2vw,24px)));
 }
 @media (700px < width <= 1024px) {
- .anFunnelBody:not([data-funnel-preview]) > .anFunnelBlock[data-responsive] {
+ .anFunnelBody:not([data-funnel-preview]) .anFunnelBlock[data-responsive] {
   --funnel-active-width:var(--funnel-tablet-width);
   --funnel-active-minHeight:var(--funnel-tablet-minHeight);
   --funnel-active-margin:var(--funnel-tablet-margin);
@@ -25,7 +26,7 @@
  }
 }
 @media (width <= 700px) {
- .anFunnelRoot .anFunnelBody:not([data-funnel-preview]) > .anFunnelBlock[data-responsive] {
+ .anFunnelRoot .anFunnelBody:not([data-funnel-preview]) .anFunnelBlock[data-responsive] {
   --funnel-active-width:var(--funnel-mobile-width);
   --funnel-active-minHeight:var(--funnel-mobile-minHeight);
   --funnel-active-margin:var(--funnel-mobile-margin);
@@ -33,4 +34,22 @@
   --funnel-active-fontSize:var(--funnel-mobile-fontSize);
   padding:var(--funnel-active-padding,var(--funnel-base-padding,18px));
  }
+}
+
+
+.anFunnelGroupGrid {
+ display:grid;
+ grid-template-columns:repeat(var(--funnel-group-columns,2),minmax(0,1fr));
+ gap:14px;
+}
+.anFunnelGroupGrid > .anFunnelBlock {
+ --funnel-active-width:initial;
+ --funnel-active-minHeight:initial;
+ --funnel-active-margin:initial;
+ --funnel-active-padding:initial;
+ --funnel-active-fontSize:initial;
+}
+.anFunnelBody[data-funnel-preview="mobile"] .anFunnelGroupGrid {grid-template-columns:1fr}
+@media (width <= 700px) {
+ .anFunnelBody:not([data-funnel-preview]) .anFunnelGroupGrid {grid-template-columns:1fr}
 }

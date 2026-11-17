@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import {Archive,ArrowDown,ArrowUp,Check,Copy,Download,Eye,FilePlus2,GripVertical,Image as ImageIcon,Layers3,Monitor,Plus,RefreshCw,Save,Smartphone,Tablet,Trash2,Upload,Undo2,Type,Heading1,MousePointer2,RectangleHorizontal,Minus,Clock3,Star,Package,Settings2,ChartNoAxesColumnIncreasing,Search,ChevronDown,ChevronUp,Maximize2,LayoutTemplate,Rows3,PanelRight,RotateCcw,RotateCw,Crown} from "lucide-react";
 import type {z} from "zod";
-import {funnelKinds,funnelResponsiveFields,funnelSlug,type FunnelDevice,funnelWrite,funnelContent,initialFunnelBlock,initialFunnelSlide,funnelBlock,type funnelStyle} from "@/lib/funnel-pages";
+import {flattenFunnelBlocks,MAX_FUNNEL_BLOCKS,funnelKinds,funnelResponsiveFields,funnelSlug,type FunnelDevice,funnelWrite,funnelContent,initialFunnelBlock,initialFunnelSlide,funnelBlock,type funnelStyle} from "@/lib/funnel-pages";
 import {FunnelBlocks} from "./funnel-blocks";
 import "./funnel-builder.css";
 type Block=z.infer<typeof funnelBlock>;
@@ -11,14 +11,14 @@ type Content=z.infer<typeof funnelContent>;
 type Style=z.infer<typeof funnelStyle>;
 type Funnel={id?:string;slug:string;revision:number;published:boolean;archived:boolean;hasDraft?:boolean;updatedAt?:string;publishedAt?:string|null}&Content;
 const empty=():Funnel=>({slug:"new-campaign-"+crypto.randomUUID().slice(0,8),revision:0,published:false,archived:false,title:"New Campaign",description:"",seoTitle:"",noIndex:false,endsAt:"",blocks:[initialFunnelBlock("hero") as Block,initialFunnelBlock("features") as Block]});
-const names:Record<Block["kind"],string>={hero:"Hero Banner",banner:"Editable Banner",slider:"Auto Image Slider",carousel:"Image Carousel",heading:"Heading",paragraph:"Paragraph",image:"Image",button:"CTA Button",features:"Feature Grid",faq:"FAQ Accordion",divider:"Divider",countdown:"Countdown Timer",trust:"Trust / Benefit Cards",coupon:"Coupon Display"};
+const names:Record<Block["kind"],string>={hero:"Hero Banner",banner:"Editable Banner",group:"Layout Group",slider:"Auto Image Slider",carousel:"Image Carousel",heading:"Heading",paragraph:"Paragraph",image:"Image",button:"CTA Button",features:"Feature Grid",faq:"FAQ Accordion",divider:"Divider",countdown:"Countdown Timer",trust:"Trust / Benefit Cards",coupon:"Coupon Display"};
 
 const getContent=(p:Funnel):Content=>({title:p.title,description:p.description,seoTitle:p.seoTitle,noIndex:p.noIndex,endsAt:p.endsAt,blocks:p.blocks});
 const numbered=["width","minHeight","fontSize","borderRadius","padding","margin","gap"] as const;
 const colored=["backgroundColor","color"] as const;
-const elementIcons={hero:ImageIcon,banner:ImageIcon,slider:Rows3,carousel:Layers3,heading:Heading1,paragraph:Type,image:ImageIcon,button:MousePointer2,features:Rows3,faq:Rows3,divider:Minus,countdown:Clock3,trust:Star,coupon:Package} as const;
+const elementIcons={hero:ImageIcon,banner:ImageIcon,group:Layers3,slider:Rows3,carousel:Layers3,heading:Heading1,paragraph:Type,image:ImageIcon,button:MousePointer2,features:Rows3,faq:Rows3,divider:Minus,countdown:Clock3,trust:Star,coupon:Package} as const;
 export default function FunnelBuilder(){
- const upload=useRef<HTMLInputElement>(null),imageFile=useRef<HTMLInputElement>(null),slideFile=useRef<HTMLInputElement>(null),targetSlideRef=useRef<string|null>(null),dragged=useRef<number|null>(null);
+ const upload=useRef<HTMLInputElement>(null),imageFile=useRef<HTMLInputElement>(null),slideFile=useRef<HTMLInputElement>(null),targetSlideRef=useRef<string|null>(null),dragged=useRef<string|null>(null);
  const [pages,setPages]=useState<Funnel[]>([]),[page,setPage]=useState<Funnel|null>(null);
  const [saved,setSaved]=useState(""),[selected,setSelected]=useState<string|null>(null),[rightTab,setRightTab]=useState<"content"|"style"|"seo"|"history"|"advanced">("content");
  const [revisions,setRevisions]=useState<{revision:number;mode:string;createdAt:string;title:string;blockCount:number}[]>([]);
@@ -28,7 +28,9 @@ export default function FunnelBuilder(){
  const previous=useRef<Funnel|null>(null),past=useRef<Funnel[]>([]),future=useRef<Funnel[]>([]),skipHistory=useRef(false);
  const pending=busy||uploading;
  const dirty=!!page&&JSON.stringify(page)!==saved;
- const active=page?.blocks.find(b=>b.id===selected);
+ const allBlocks=flattenFunnelBlocks(page?.blocks??[]);
+ const active=allBlocks.find(block=>block.id===selected);
+ const activeGroup=page?.blocks.find(block=>block.children?.some(child=>child.id===selected));
  const filtered=useMemo(()=>pages.filter(x=>(x.title+" "+x.slug).toLowerCase().includes(search.toLowerCase())),[pages,search]);
  useEffect(()=>{
   if(!page){previous.current=null;return;}
@@ -66,50 +68,108 @@ export default function FunnelBuilder(){
   resetHistory();const next=empty();setPage(next);setSaved(JSON.stringify(next));setSelected(next.blocks[0].id);setSelectedSlide(null);setRightTab("content");setNotice("");setError("");
  }
  function patch(values:Partial<Funnel>){setPage(p=>p?{...p,...values}:p);}
- function updateBlock(id:string,values:Partial<Block>){
-  setPage(p=>p?{...p,blocks:p.blocks.map(b=>{
-   if(b.id!==id)return b;
-   const changed={...b,...values};
-   if((values.kind==="slider"||values.kind==="carousel")&&b.kind!==values.kind&&!changed.slides.length)
-    changed.slides=[initialFunnelSlide(),initialFunnelSlide()];
-   return funnelBlock.parse(changed);
+ function editBlock(id:string,edit:(block:Block)=>Block){
+  setPage(p=>p?{...p,blocks:p.blocks.map(block=>{
+   if(block.id===id)return edit(block);
+   return block.children?.some(child=>child.id===id)
+    ?{...block,children:block.children.map(child=>child.id===id?edit(child):child) as NonNullable<Block["children"]>}
+    :block;
   })}:p);
  }
+ function updateBlock(id:string,values:Partial<Block>){
+  editBlock(id,block=>{
+   const changed={...block,...values};
+   if((values.kind==="slider"||values.kind==="carousel")&&block.kind!==values.kind&&!changed.slides.length)
+    changed.slides=[initialFunnelSlide(),initialFunnelSlide()];
+   return funnelBlock.parse(changed);
+  });
+ }
  function patchSlide(blockId:string,slideId:string,values:Partial<Block["slides"][number]>){
-  setPage(p=>p?{...p,blocks:p.blocks.map(b=>b.id===blockId?{...b,slides:b.slides.map(sl=>sl.id===slideId?{...sl,...values}:sl)}:b)}:p);
+  editBlock(blockId,block=>({...block,slides:block.slides.map(slide=>slide.id===slideId?{...slide,...values}:slide)}));
  }
  function addSlide(blockId:string){
-  const block=page?.blocks.find(b=>b.id===blockId);if(!block||block.slides.length>=16)return;
+  const block=allBlocks.find(b=>b.id===blockId);if(!block||block.slides.length>=16)return;
   const next=initialFunnelSlide();updateBlock(blockId,{slides:[...block.slides,next]});setSelectedSlide(next.id);
  }
  function removeSlide(blockId:string,slideId:string){
-  const block=page?.blocks.find(b=>b.id===blockId);if(!block||block.slides.length<=1)return;
+  const block=allBlocks.find(b=>b.id===blockId);if(!block||block.slides.length<=1)return;
   const slides=block.slides.filter(sl=>sl.id!==slideId);updateBlock(blockId,{slides});setSelectedSlide(slides[0]?.id||null);
  }
  function moveSlide(blockId:string,index:number,delta:number){
-  const block=page?.blocks.find(b=>b.id===blockId);if(!block||index+delta<0||index+delta>=block.slides.length)return;
+  const block=allBlocks.find(b=>b.id===blockId);if(!block||index+delta<0||index+delta>=block.slides.length)return;
   const slides=[...block.slides],removed=slides.splice(index,1);slides.splice(index+delta,0,removed[0]);updateBlock(blockId,{slides});
  }
  function updateStyle(id:string,key:keyof Style,value:string){
-  setPage(p=>p?{...p,blocks:p.blocks.map(b=>b.id===id?{...b,style:{...b.style,[key]:value}}:b)}:p);
+  editBlock(id,block=>({...block,style:{...block.style,[key]:value}}));
+ }
+ function cloneBlock(block:Block):Block{
+  const copy=structuredClone(block);
+  return funnelBlock.parse({...copy,id:crypto.randomUUID(),
+   slides:copy.slides.map(slide=>({...slide,id:crypto.randomUUID()})),
+   ...(copy.children?{children:copy.children.map(cloneBlock)}:{})});
+ }
+ function blockList(id:string):{parent:Block|undefined;items:Block[]}{
+  const parent=page?.blocks.find(block=>block.children?.some(child=>child.id===id));
+  return {parent,items:parent?.children??page?.blocks??[]};
+ }
+ function replaceList(parent:Block|undefined,items:Block[]){
+  if(parent)updateBlock(parent.id,{children:items as NonNullable<Block["children"]>});
+  else patch({blocks:items});
  }
  function add(kind:Block["kind"]){
-  if(!page||page.blocks.length>=50)return;
-  const block=initialFunnelBlock(kind) as Block;
-  patch({blocks:[...page.blocks,block]});setSelected(block.id);setSelectedSlide(block.slides[0]?.id||null);setRightTab("content");
+  if(!page||allBlocks.length>=MAX_FUNNEL_BLOCKS)return;
+  const block=funnelBlock.parse(initialFunnelBlock(kind));
+  const parent=kind==="group"?undefined:active?.kind==="group"?active:activeGroup;
+  replaceList(parent,[...(parent?parent.children??[]:page.blocks),block]);
+  setSelected(block.id);setSelectedSlide(block.slides[0]?.id||null);setRightTab("content");
  }
- function move(from:number,to:number){
-  if(!page||from<0||to<0||from>=page.blocks.length||to>=page.blocks.length||from===to)return;
-  const list=[...page.blocks];const [item]=list.splice(from,1);list.splice(to,0,item);patch({blocks:list});
+ function move(id:string,to:number){
+  const {parent,items}=blockList(id);
+  const from=items.findIndex(block=>block.id===id);
+  if(from<0||to<0||to>=items.length||from===to)return;
+  const list=[...items];const [item]=list.splice(from,1);list.splice(to,0,item);replaceList(parent,list);
  }
  function duplicate(id:string){
-  if(!page||page.blocks.length>=50)return;
-  const index=page.blocks.findIndex(b=>b.id===id);if(index<0)return;
-  const clone={...structuredClone(page.blocks[index]),id:crypto.randomUUID()};const blocks=[...page.blocks];blocks.splice(index+1,0,clone);patch({blocks});setSelected(clone.id);
+  const {parent,items}=blockList(id);
+  const index=items.findIndex(block=>block.id===id);
+  if(index<0||allBlocks.length+1+(items[index].children?.length??0)>MAX_FUNNEL_BLOCKS)return;
+  const clone=cloneBlock(items[index]);const list=[...items];list.splice(index+1,0,clone);
+  replaceList(parent,list);setSelected(clone.id);
  }
  function remove(id:string){
-  if(!page||page.blocks.length===1)return;
-  patch({blocks:page.blocks.filter(b=>b.id!==id)});if(selected===id)setSelected(page.blocks.find(b=>b.id!==id)?.id||null);
+  const {parent,items}=blockList(id);
+  if(!parent&&items.length<=1)return;
+  const block=items.find(item=>item.id===id);
+  if(block?.children?.length&&!window.confirm("Delete this group and its blocks from the campaign?"))return;
+  const next=items.filter(item=>item.id!==id);
+  replaceList(parent,next);
+  if(selected===id||block?.children?.some(child=>child.id===selected))setSelected(parent?.id??next[0]?.id??null);
+ }
+ function relocate(id:string,destination:string){
+  if(!page||(destination&&!page.blocks.some(block=>block.id===destination&&block.kind==="group")))return;
+  const {parent,items}=blockList(id);
+  const block=items.find(item=>item.id===id);
+  if(!block||block.kind==="group"||(parent?.id??"")===destination)return;
+  const blocks=page.blocks.filter(item=>item.id!==id).map(item=>{
+   if(item.id===parent?.id)return {...item,children:item.children?.filter(child=>child.id!==id)};
+   if(item.kind==="group"&&item.id===destination)return {...item,children:[...(item.children??[]),block]} as Block;
+   return item;
+  });
+  patch({blocks:destination?blocks:[...blocks,block]});
+ }
+ function renderLayers(items:Block[],parent?:Block){
+  return items.map((block,index)=><div key={block.id} className="anFBLayer">
+   <div draggable onDragStart={()=>{dragged.current=block.id}} onDragEnd={()=>{dragged.current=null}}
+    onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(items.some(item=>item.id===dragged.current))move(dragged.current!,index);dragged.current=null;}}
+    className={"anFBLayerRow"+(selected===block.id?" selected":"")}>
+    <button onClick={()=>setSelected(block.id)}><GripVertical size={15}/>{index+1}. {block.kind==="group"?(block.title||names.group):names[block.kind]}</button>
+    <button title="Move up" disabled={index===0} onClick={()=>move(block.id,index-1)}><ArrowUp size={14}/></button>
+    <button title="Move down" disabled={index===items.length-1} onClick={()=>move(block.id,index+1)}><ArrowDown size={14}/></button>
+    <button title="Duplicate" disabled={allBlocks.length+1+(block.children?.length??0)>MAX_FUNNEL_BLOCKS} onClick={()=>duplicate(block.id)}><Copy size={14}/></button>
+    <button title="Delete" disabled={!parent&&items.length===1} onClick={()=>remove(block.id)}><Trash2 size={14}/></button>
+   </div>
+   {!!block.children?.length&&<div className="anFBChildLayers">{renderLayers(block.children,block)}</div>}
+  </div>);
  }
  function applyPreset(name:"product"|"offer"|"story"){
   if(!page)return;
@@ -138,7 +198,7 @@ export default function FunnelBuilder(){
   function clonePage(){
   if(!page)return;
   const next={...structuredClone(page),id:undefined,title:page.title+" (Copy)",slug:"campaign-copy-"+crypto.randomUUID().slice(0,8),revision:0,published:false,archived:false,hasDraft:false,
-   blocks:page.blocks.map(b=>({...b,id:crypto.randomUUID()}))};
+   blocks:page.blocks.map(cloneBlock)};
   resetHistory();setPage(next);setSelected(next.blocks[0].id);setSaved(JSON.stringify(next));setNotice("Campaign cloned locally with a new unique slug. You can edit its slug before saving.");
  }
  async function checkMedia():Promise<boolean>{
@@ -231,7 +291,7 @@ export default function FunnelBuilder(){
    if(file.size>1024*1024)throw Error("Maximum upload size is 1 MB");
    const parsed=JSON.parse(await file.text()),validated=funnelContent.parse(parsed?.kind==="anusmita.funnel-page"&&parsed?.version===1?parsed.content:null);
    if(dirty&&!window.confirm("Discard unsaved work to import?"))return;
-   const next:{[K in keyof Funnel]:Funnel[K]}={...empty(),...validated,blocks:validated.blocks.map(b=>funnelBlock.parse({...b,id:crypto.randomUUID(),slides:b.slides.map(sl=>({...sl,id:crypto.randomUUID()}))}))};
+   const next:{[K in keyof Funnel]:Funnel[K]}={...empty(),...validated,blocks:validated.blocks.map(cloneBlock)};
    resetHistory();setPage(next);setSaved(JSON.stringify(next));setSelected(next.blocks[0].id);setNotice("JSON imported as a new draft. Choose a unique slug.");
   }catch(e){setError("Import rejected: "+(e instanceof Error?e.message:String(e)));}
   finally{if(upload.current)upload.current.value="";}
@@ -245,7 +305,7 @@ export default function FunnelBuilder(){
   {error&&<p role="alert" className="anFBError">{error}</p>}{(pending||notice)&&<p role="status" className="anFBNotice">{uploading?"Uploading image…":busy?"Saving campaign…":notice}</p>}
   <div className="anFBGrid" inert={pending} aria-busy={pending}>
    <aside className="anFBLeft"><div className="anFBLeftTabs"><button className={leftTab==="elements"?"active":""} onClick={()=>setLeftTab("elements")}>Elements</button><button className={leftTab==="sections"?"active":""} onClick={()=>setLeftTab("sections")}>Sections</button><button className={leftTab==="templates"?"active":""} onClick={()=>setLeftTab("templates")}>Templates</button></div>
-    {leftTab==="elements"?<><div className="anFBElementSearch"><Search size={15}/><input value={elementSearch} onChange={e=>setElementSearch(e.target.value)} placeholder="Search element…"/></div><div className="anFBSectionHeading"><strong>Basic Elements</strong><ChevronUp size={15}/></div><div className="anFBElements">{funnelKinds.filter(k=>names[k].toLowerCase().includes(elementSearch.toLowerCase())||k.includes(elementSearch.toLowerCase())).map(kind=>{const Icon=elementIcons[kind];return <button key={kind} title={"Add "+names[kind]} disabled={!page||page.blocks.length>=50} onClick={()=>add(kind)}><Icon size={21}/><span>{names[kind]}</span></button>})}</div><div className="anFBElementGroups">{["Funnel & Marketing","Ecommerce","Media & Interactive","Layout & Grid","Social & Trust","Advanced"].map(group=><button key={group} onClick={()=>setLeftTab("templates")}><Layers3 size={14}/>{group}<ChevronDown size={14}/></button>)}</div></>:leftTab==="sections"?<><div className="anFBSectionHeading"><strong>Page Sections</strong><span>{page?.blocks.length||0}</span></div>{page?.blocks.map((b,i)=><button className={"anFBSectionItem"+(selected===b.id?" active":"")} key={b.id} onClick={()=>setSelected(b.id)}><GripVertical size={14}/> {i+1}. {names[b.kind]}</button>)}<button className="anFBSectionItem" onClick={()=>add("hero")} disabled={!page}><Plus size={14}/> Add Section</button></>:<><div className="anFBSectionHeading"><strong>Ready-made Templates</strong><span>3</span></div><div className="anFBPresets"><button disabled={!page} onClick={()=>applyPreset("product")}>Product Launch</button><button disabled={!page} onClick={()=>applyPreset("offer")}>Flash Sale / Offer</button><button disabled={!page} onClick={()=>applyPreset("story")}>Brand Story</button></div></>}
+    {leftTab==="elements"?<><div className="anFBElementSearch"><Search size={15}/><input value={elementSearch} onChange={e=>setElementSearch(e.target.value)} placeholder="Search element…"/></div><div className="anFBSectionHeading"><strong>Basic Elements</strong><ChevronUp size={15}/></div><div className="anFBElements">{funnelKinds.filter(k=>names[k].toLowerCase().includes(elementSearch.toLowerCase())||k.includes(elementSearch.toLowerCase())).map(kind=>{const Icon=elementIcons[kind];return <button key={kind} title={"Add "+names[kind]} disabled={!page||allBlocks.length>=MAX_FUNNEL_BLOCKS} onClick={()=>add(kind)}><Icon size={21}/><span>{names[kind]}</span></button>})}</div><div className="anFBElementGroups">{["Funnel & Marketing","Ecommerce","Media & Interactive","Layout & Grid","Social & Trust","Advanced"].map(group=><button key={group} onClick={()=>setLeftTab("templates")}><Layers3 size={14}/>{group}<ChevronDown size={14}/></button>)}</div></>:leftTab==="sections"?<><div className="anFBSectionHeading"><strong>Page Sections</strong><span>{page?.blocks.length||0}</span></div>{page?.blocks.map((b,i)=><button className={"anFBSectionItem"+(selected===b.id?" active":"")} key={b.id} onClick={()=>setSelected(b.id)}><GripVertical size={14}/> {i+1}. {names[b.kind]}</button>)}<button className="anFBSectionItem" onClick={()=>add("hero")} disabled={!page}><Plus size={14}/> Add Section</button></>:<><div className="anFBSectionHeading"><strong>Ready-made Templates</strong><span>3</span></div><div className="anFBPresets"><button disabled={!page} onClick={()=>applyPreset("product")}>Product Launch</button><button disabled={!page} onClick={()=>applyPreset("offer")}>Flash Sale / Offer</button><button disabled={!page} onClick={()=>applyPreset("story")}>Brand Story</button></div></>}
     <div className="anFBSectionHeading"><strong>Campaign Pages</strong><button className="anFBMiniButton" onClick={()=>setShowPages(v=>!v)}>{showPages?"Hide":"Browse"}</button></div>{showPages&&<div className="anFBPageList">{filtered.map(p=><button key={p.slug} onClick={()=>choose(p)} className={page?.slug===p.slug?"active":""}><span><strong>{p.title}</strong><small>/funnel/{p.slug}</small></span><em>{p.archived?"Archived":p.published?"Live":"Draft"}</em></button>)}{!filtered.length&&<p>No saved funnels yet</p>}</div>}
     <div className="anFBAssets"><button onClick={()=>setLeftTab("templates")}><Layers3 size={15}/> Saved Blocks <strong>{page?.blocks.length||0}</strong></button><button onClick={()=>setLeftTab("templates")}><LayoutTemplate size={15}/> Global Templates <strong>3</strong></button><button onClick={()=>upload.current?.click()}><Copy size={15}/> Import Components</button></div>
    </aside>
@@ -253,14 +313,23 @@ export default function FunnelBuilder(){
     <div className="anFBToolbarRight"><button aria-label="Desktop preview" className={viewport==="desktop"?"active":""} onClick={()=>setViewport("desktop")}><Monitor size={16}/></button><button aria-label="Tablet preview" className={viewport==="tablet"?"active":""} onClick={()=>setViewport("tablet")}><Tablet size={16}/></button><button aria-label="Mobile preview" className={viewport==="mobile"?"active":""} onClick={()=>setViewport("mobile")}><Smartphone size={16}/></button></div></div>
     <div className="anFBActionbar"><div className="anFBUndoGroup"><button type="button" aria-label="Undo edit" onClick={undoEdit}><RotateCcw size={15}/></button><button type="button" aria-label="Redo edit" onClick={redoEdit}><RotateCw size={15}/></button></div><button onClick={()=>void save("draft")} disabled={pending}><Save size={15}/> Save Draft</button><button className="primary" onClick={()=>void save("publish")} disabled={pending||page.archived}><Check size={15}/> Publish</button>{page.published&&!page.archived&&<Link href={"/funnel/"+page.slug} target="_blank"><Eye size={15}/> Live</Link>}<span>{dirty?"Unsaved changes":"All changes saved"}</span></div>
     <div className={"anFBCanvasStage "+viewport}><div className="anFunnelRoot anFBPreviewRoot"><div className="anFunnelPublicHeader"><span className="anFunnelLogo">ANUSMITA</span><span>Discover Your Glow</span></div><FunnelBlocks preview={viewport} blocks={page.blocks} selected={selected} selectedSlide={selectedSlide} onPick={setSelected} onPickSlide={(blockId,slideId)=>{setSelected(blockId);setSelectedSlide(slideId)}}/></div></div>
-    <div className="anFBOutline"><strong>Layers ({page.blocks.length})</strong>{page.blocks.map((b,i)=><div draggable key={b.id} onDragStart={()=>{dragged.current=i}} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(dragged.current!==null)move(dragged.current,i);dragged.current=null}} className={selected===b.id?"selected":""}><button onClick={()=>setSelected(b.id)}><GripVertical size={15}/>{i+1}. {names[b.kind]}</button><button title="Move up" disabled={i===0} onClick={()=>move(i,i-1)}><ArrowUp size={14}/></button><button title="Move down" disabled={i===page.blocks.length-1} onClick={()=>move(i,i+1)}><ArrowDown size={14}/></button><button title="Duplicate" onClick={()=>duplicate(b.id)}><Copy size={14}/></button><button title="Delete" disabled={page.blocks.length===1} onClick={()=>remove(b.id)}><Trash2 size={14}/></button></div>)}</div>
+    <div className="anFBOutline"><strong>Layers ({allBlocks.length})</strong>{renderLayers(page.blocks)}</div>
    </>:<div className="anFBEmpty"><ImageIcon size={38}/><h2>Build your next high-converting page</h2><p>Select a saved campaign or create a funnel to start adding sections.</p><button onClick={create}><Plus size={16}/> Create Funnel</button></div>}</section>
    <aside className="anFBRight">{page?<><div className="anFBInspectorTabs"><button className={rightTab==="content"?"active":""} onClick={()=>setRightTab("content")}>Design</button><button className={rightTab==="style"?"active":""} onClick={()=>setRightTab("style")}>Style</button><button className={rightTab==="advanced"?"active":""} onClick={()=>setRightTab("advanced")}>Advanced</button></div><div className="anFBSelectedLabel">Selected: <strong>{active?names[active.kind]:"No element"}</strong></div>
     {rightTab==="history"?<div className="anFBFields"><h3>Revision History</h3><p>Restoring a version creates a new draft; published pages do not change until you publish again.</p><button onClick={()=>void loadRevisions()}><RefreshCw size={15}/> Refresh History</button>{revisions.map(v=><div key={v.revision} className="anFBItem"><strong>Revision {v.revision} · {v.mode}</strong><small>{new Date(v.createdAt).toLocaleString("en-BD")}</small><span>{v.title} · {v.blockCount} blocks</span><button disabled={pending||dirty} onClick={()=>void rollback(v.revision)}><Undo2 size={14}/> Restore as Draft</button></div>)}</div>:rightTab==="seo"?<div className="anFBFields"><h3>Campaign Settings</h3><label>URL Slug<input disabled={page.revision>0} value={page.slug} onChange={e=>patch({slug:e.target.value.toLowerCase()})} maxLength={80}/></label><p>New pages receive a unique slug automatically; edit it here before the first save.</p><label>Meta Title<input value={page.seoTitle} maxLength={70} onChange={e=>patch({seoTitle:e.target.value})}/></label><label>Meta Description<textarea value={page.description} maxLength={160} onChange={e=>patch({description:e.target.value})}/></label><label>Campaign Expiration (optional)<input type="datetime-local" value={page.endsAt?new Date(page.endsAt).toISOString().slice(0,16):""} onChange={e=>patch({endsAt:e.target.value?new Date(e.target.value).toISOString():""})}/></label><p>Once expired, the public funnel route automatically becomes unavailable. Existing draft/history records remain stored.</p><label className="anFBCheck"><input type="checkbox" checked={page.noIndex} onChange={e=>patch({noIndex:e.target.checked})}/> NoIndex</label><button onClick={()=>void save(page.archived?"restore":"archive")} disabled={pending}>{page.archived?<Undo2 size={15}/>:<Archive size={15}/>} {page.archived?"Restore as Draft":"Archive Page"}</button><p>Archive hides published content without deleting saved records.</p></div>:
      active?<div className="anFBFields">{rightTab!=="style"&&<h3>{names[active.kind]}</h3>}
       {rightTab==="content"?<>
-       <label>Block Type<select value={active.kind} onChange={e=>updateBlock(active.id,{kind:e.target.value as Block["kind"]})}>{funnelKinds.map(k=><option key={k} value={k}>{names[k]}</option>)}</select></label>
+       <label>Block Type<select disabled={active.kind==="group"} value={active.kind} onChange={e=>updateBlock(active.id,{kind:e.target.value as Block["kind"]})}>{funnelKinds.filter(k=>k!=="group"||active.kind==="group").map(k=><option key={k} value={k}>{names[k]}</option>)}</select></label>
        <label>Title<input maxLength={220} value={active.title} onChange={e=>updateBlock(active.id,{title:e.target.value})}/></label>
+       {active.kind==="group"?<>
+        <label>Columns<select value={active.style.gridColumns??"2"} onChange={e=>updateStyle(active.id,"gridColumns",e.target.value)}>
+         {["1","2","3","4"].map(count=><option key={count}>{count}</option>)}
+        </select></label>
+        <p>Select an element from the left panel to add it to this group.</p>
+       </>:<label>Parent layout<select value={activeGroup?.id??""} onChange={e=>relocate(active.id,e.target.value)}>
+        <option value="">Page root</option>
+        {page.blocks.filter(block=>block.kind==="group").map(group=><option key={group.id} value={group.id}>{group.title||names.group}</option>)}
+       </select></label>}
        <label>Body<textarea maxLength={2400} rows={4} value={active.body} onChange={e=>updateBlock(active.id,{body:e.target.value})}/></label>
        {["hero","banner","image"].includes(active.kind)&&<div className="anFBMediaPanel">
         <div className="anFBMediaHeading"><strong>{active.kind==="banner"?"Banner Image":active.kind==="image"?"Image Media":"Hero Banner Image"}</strong><span>Independent image · JPG/PNG/WebP · 3 MB</span></div><div className={"anFBMediaReadiness "+mediaStatus}>{mediaStatus==="ready"?"R2 upload connection ready":mediaStatus==="checking"?"Checking upload connection…":"Image upload unavailable: "+mediaProblem}<button type="button" disabled={mediaStatus==="checking"} onClick={()=>void checkMedia()}><RefreshCw size={13}/> Recheck</button></div>
@@ -295,10 +364,10 @@ export default function FunnelBuilder(){
        {active.kind==="countdown"&&<label>Expiration (ISO datetime)<input type="datetime-local" value={active.expiresAt.slice(0,16)} onChange={e=>updateBlock(active.id,{expiresAt:e.target.value?new Date(e.target.value).toISOString():""})}/></label>}
        {["features","faq","trust"].includes(active.kind)&&<><strong>Cards / Accordion Items</strong>{active.items.map((it,i)=><div key={i} className="anFBItem"><label>Title<input value={it.title} maxLength={140} onChange={e=>setItem(i,"title",e.target.value)}/></label><label>Description<textarea value={it.body} maxLength={500} onChange={e=>setItem(i,"body",e.target.value)}/></label><button onClick={()=>updateBlock(active.id,{items:active.items.filter((_,j)=>j!==i)})}><Trash2 size={14}/> Remove</button></div>)}<button disabled={active.items.length>=12} onClick={()=>updateBlock(active.id,{items:[...active.items,{title:"New item",body:"Description"}]})}><Plus size={14}/> Add Item</button></>}
        </>:rightTab==="advanced"?<>
-        <details className="anFBAccordion" open><summary>Layout &amp; Grid</summary><label>Display<select value={active.style.display||"block"} onChange={e=>updateStyle(active.id,"display",e.target.value)}>{["block","flex","grid"].map(k=><option key={k} value={k}>{k}</option>)}</select></label><label>Flex Direction<select value={active.style.flexDirection||"row"} onChange={e=>updateStyle(active.id,"flexDirection",e.target.value)}>{["row","column"].map(k=><option key={k} value={k}>{k}</option>)}</select></label><label>Grid Columns<select value={active.style.gridColumns||"3"} onChange={e=>updateStyle(active.id,"gridColumns",e.target.value)}>{["1","2","3","4"].map(k=><option key={k} value={k}>{k}</option>)}</select></label></details>
+        {active.kind!=="group"&&<details className="anFBAccordion" open><summary>Layout &amp; Grid</summary><label>Display<select value={active.style.display||"block"} onChange={e=>updateStyle(active.id,"display",e.target.value)}>{["block","flex","grid"].map(k=><option key={k} value={k}>{k}</option>)}</select></label><label>Flex Direction<select value={active.style.flexDirection||"row"} onChange={e=>updateStyle(active.id,"flexDirection",e.target.value)}>{["row","column"].map(k=><option key={k} value={k}>{k}</option>)}</select></label><label>Grid Columns<select value={active.style.gridColumns||"3"} onChange={e=>updateStyle(active.id,"gridColumns",e.target.value)}>{["1","2","3","4"].map(k=><option key={k} value={k}>{k}</option>)}</select></label></details>}
         <details className="anFBAccordion" open><summary>Dimensions</summary>{(["width","minHeight","gap"] as const).map(key=><label key={key}>{key}<input value={active.style[key]||""} placeholder="auto" onChange={e=>updateStyle(active.id,key,e.target.value)}/></label>)}</details>
         <details className="anFBAccordion"><summary>Opacity &amp; Effects</summary><label>Opacity (0–1)<input type="number" min="0" max="1" step=".05" value={active.style.opacity||"1"} onChange={e=>updateStyle(active.id,"opacity",e.target.value)}/></label><label>Box Shadow<select value={active.style.boxShadow||"none"} onChange={e=>updateStyle(active.id,"boxShadow",e.target.value)}>{["none","soft","medium","strong"].map(k=><option key={k} value={k}>{k}</option>)}</select></label></details>
-        <button onClick={()=>duplicate(active.id)}><Copy size={15}/> Duplicate Element</button><button disabled={page.blocks.length<=1} onClick={()=>remove(active.id)}><Trash2 size={15}/> Delete Element</button>
+        <button onClick={()=>duplicate(active.id)}><Copy size={15}/> Duplicate Element</button><button disabled={!activeGroup&&page.blocks.length<=1} onClick={()=>remove(active.id)}><Trash2 size={15}/> Delete Element</button>
        </>:<>
         <details className="anFBAccordion" open={viewport!=="desktop"}>
          <summary>Responsive overrides</summary>

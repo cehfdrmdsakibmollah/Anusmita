@@ -78,10 +78,10 @@ describe.skipIf(!uri)("authenticated funnel upload and publishing with isolated 
    const carousel=initialFunnelBlock("carousel");
    const content={
     title:"Funnel integration test",
-    blocks:[
+    blocks:[{...initialFunnelBlock("group"),style:{gridColumns:"2"},children:[
      {...initialFunnelBlock("banner"),imageUrl:banner.url,responsiveStyle:{tablet:{padding:"32px"},mobile:{padding:"12px",fontSize:"22px"}}},
      {...carousel,slides:carousel.slides.map((item,index)=>index===1?{...item,title:"Edited slide",imageUrl:slide.url}:item)}
-    ]
+    ]}]
    };
    function save(mode:"draft"|"publish",revision:number){
     return writeFunnel(new Request(origin+"/api/admin/funnel-pages",{method:"POST",headers:{origin,"Content-Type":"application/json"},

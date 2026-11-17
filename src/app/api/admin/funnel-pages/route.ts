@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import {authorize,assertOrigin,apiError,HttpError} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {FunnelPage,FunnelRevision,Audit} from "@/lib/models";
-import {funnelWrite} from "@/lib/funnel-pages";
+import {flattenFunnelBlocks,funnelWrite} from "@/lib/funnel-pages";
 export const dynamic="force-dynamic";
 export const runtime="nodejs";
 const readable=["owner","admin"] as const;
@@ -26,7 +26,7 @@ export async function POST(request:Request){
   assertOrigin(request);
   const actor=await authorize([...readable],"settings.edit");
   const data=funnelWrite.parse(await request.json());
-  if(data.mode==="publish"&&data.content.blocks.some(b=>b.kind==="image"&&b.imageUrl&&!/^https:\/\//.test(b.imageUrl)&&!b.imageUrl.startsWith("/")))
+  if(data.mode==="publish"&&flattenFunnelBlocks(data.content.blocks).some(b=>b.kind==="image"&&b.imageUrl&&!/^https:\/\//.test(b.imageUrl)&&!b.imageUrl.startsWith("/")))
    throw new HttpError(400,"Invalid image URL");
   await db();const session=await mongoose.startSession();let output:any=null;
   try{
