@@ -1,7 +1,8 @@
 import {z} from "zod";
 export const funnelSlug=z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(80);
-export const funnelKinds=["hero","banner","slider","carousel","heading","paragraph","image","button","features","faq","divider","countdown","trust","coupon"] as const;
-const blockKind=z.enum(funnelKinds);
+const leafKinds=["hero","banner","slider","carousel","heading","paragraph","image","button","features","faq","divider","countdown","trust","coupon"] as const;
+export const funnelKinds=[...leafKinds,"group"] as const;
+export const MAX_FUNNEL_BLOCKS=50;
 export const funnelStyle=z.object({
  width:z.string().max(40).optional(),minHeight:z.string().max(40).optional(),
  padding:z.string().max(50).optional(),margin:z.string().max(50).optional(),gap:z.string().max(40).optional(),
@@ -18,6 +19,10 @@ export const funnelStyle=z.object({
  justifyContent:z.enum(["start","center","end","space-between"]).optional(),
  gridColumns:z.enum(["1","2","3","4"]).optional()
 }).strict();
+export const funnelResponsiveFields={width:"Width",minHeight:"Minimum height",padding:"Padding",margin:"Margin",fontSize:"Font size"} as const;
+const funnelDeviceStyle=funnelStyle.pick({width:true,minHeight:true,padding:true,margin:true,fontSize:true});
+export const funnelResponsiveStyle=z.object({tablet:funnelDeviceStyle.optional(),mobile:funnelDeviceStyle.optional()}).strict();
+export type FunnelDevice="desktop"|"tablet"|"mobile";
 export const funnelSlide=z.object({
  id:z.string().uuid(),
  imageUrl:z.string().max(2048).default(""),
@@ -27,8 +32,8 @@ export const funnelSlide=z.object({
  buttonUrl:z.string().max(400).default(""),
  alt:z.string().max(160).default("")
 }).strict();
-export const funnelBlock=z.object({
- id:z.string().uuid(),kind:blockKind,
+const funnelLeaf=z.object({
+ id:z.string().uuid(),kind:z.enum(leafKinds),
  title:z.string().max(220).default(""),body:z.string().max(2400).default(""),
  imageUrl:z.string().max(2048).default(""),buttonLabel:z.string().max(100).default(""),
  buttonUrl:z.string().max(400).default(""),expiresAt:z.string().max(40).default(""),
@@ -36,13 +41,25 @@ export const funnelBlock=z.object({
  slides:z.array(funnelSlide).max(16).default([]).refine(slides=>new Set(slides.map(s=>s.id)).size===slides.length,"Duplicate slide IDs"),
  autoplay:z.boolean().default(true),intervalMs:z.number().int().min(2000).max(15000).default(5000),
  showArrows:z.boolean().default(true),showDots:z.boolean().default(true),
- style:funnelStyle.default({})
+ style:funnelStyle.default({}),responsiveStyle:funnelResponsiveStyle.optional()
 }).strict();
+export const funnelBlock=funnelLeaf.extend({
+ kind:z.enum(funnelKinds),
+ children:z.array(funnelLeaf).max(MAX_FUNNEL_BLOCKS).optional()
+}).refine(block=>block.kind==="group"||block.children===undefined,"Only layout groups can contain blocks");
+export type FunnelBlock=z.infer<typeof funnelBlock>;
+export function flattenFunnelBlocks(blocks:FunnelBlock[]):FunnelBlock[]{
+ return blocks.flatMap(block=>[block,...(block.children??[])]);
+}
 export const funnelContent=z.object({
  title:z.string().trim().min(3).max(100),description:z.string().trim().max(160).default(""),
  seoTitle:z.string().trim().max(70).default(""),noIndex:z.boolean().default(false),
  endsAt:z.union([z.string().datetime(),z.literal("")]).default(""),
- blocks:z.array(funnelBlock).min(1).max(50).refine(blocks=>new Set(blocks.map(b=>b.id)).size===blocks.length,"Duplicate block IDs")
+ blocks:z.array(funnelBlock).min(1).max(MAX_FUNNEL_BLOCKS).superRefine((blocks,context)=>{
+  const all=flattenFunnelBlocks(blocks);
+  if(all.length>MAX_FUNNEL_BLOCKS)context.addIssue({code:"custom",message:"Too many blocks including grouped blocks"});
+  if(new Set(all.map(block=>block.id)).size!==all.length)context.addIssue({code:"custom",message:"Duplicate block IDs"});
+ })
 }).strict();
 export const funnelWrite=z.object({
  slug:funnelSlug,revision:z.number().int().nonnegative(),
@@ -93,4 +110,17 @@ export function initialFunnelSlide(){
 export function initialFunnelBlock(kind:typeof funnelKinds[number]){
  const id=crypto.randomUUID();
  return {id,kind,title:kind==="slider"?"Image Slider":kind==="carousel"?"Image Carousel":kind==="banner"?"Campaign Banner":kind==="hero"?"Discover your glow":kind==="faq"?"Frequently asked questions":"New "+kind,body:kind==="hero"?"A beautiful discovery, made for you.":"",imageUrl:"",buttonLabel:kind==="hero"||kind==="button"?"Shop Now":"",buttonUrl:"/shop",expiresAt:"",items:kind==="faq"?[{title:"How can I order?",body:"Use the official checkout to place your order."}]:[],slides:kind==="slider"||kind==="carousel"?[initialFunnelSlide(),initialFunnelSlide()]:[],autoplay:true,intervalMs:5000,showArrows:true,showDots:true,style:{}};
+}
+
+export function funnelDeviceStyleVariables(responsive:z.infer<typeof funnelResponsiveStyle>|undefined,preview?:FunnelDevice){
+ const variables:Record<string,string|number>={};
+ for(const device of ["tablet","mobile"] as const){
+  const safe=safeFunnelStyle(responsive?.[device]??{});
+  for(const key of Object.keys(funnelResponsiveFields)){
+   if(safe[key]===undefined)continue;
+   if(preview===undefined)variables["--funnel-"+device+"-"+key]=safe[key];
+   if(preview===device)variables["--funnel-active-"+key]=safe[key];
+  }
+ }
+ return variables;
 }

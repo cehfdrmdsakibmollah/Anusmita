@@ -27,9 +27,26 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Start isolated Funnel Builder replica set
+        run: |
+          docker run -d --name funnel-test-mongo -p 127.0.0.1:27018:27017 mongo:8.0 --replSet funnel-test --bind_ip_all
+          for attempt in {1..30}; do
+            if docker exec funnel-test-mongo mongosh --quiet --eval 'rs.initiate({_id:"funnel-test",members:[{_id:0,host:"localhost:27017"}]})'; then
+              break
+            fi
+            sleep 1
+          done
+          for attempt in {1..30}; do
+            if docker exec funnel-test-mongo mongosh --quiet --eval 'quit(db.hello().isWritablePrimary ? 0 : 1)'; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
       - name: Unit and isolated database tests
         run: npm test
         env:
+          FUNNEL_TEST_MONGODB_URI: mongodb://127.0.0.1:27018/?directConnection=true&replicaSet=funnel-test
           DASHBOARD_TEST_MONGODB_URI: mongodb://127.0.0.1:27017/anusmita_dashboard_test
       - name: Typecheck
         run: npm run typecheck
