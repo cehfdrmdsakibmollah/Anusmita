@@ -4,3 +4,28 @@ body:has(.aaApp)>.anAnnouncement,body:has(.aaApp)>.anHeader,body:has(.aaApp)>.an
 @media(max-width:1200px){.aaWorkspace{grid-template-columns:minmax(0,1fr) 300px}.aaSidebar{width:200px}.aaMain{margin-left:200px}.aaBrand{font-size:28px}.aaStats section{padding:12px;gap:9px}.aaStats small{display:block}.aaApp .aaTabs button{padding:10px;font-size:13px}.aaGuide summary span{display:none}.aaFilters{gap:7px}.aaFilters select{max-width:145px}.aaLower{grid-template-columns:1fr}}
 @media(max-width:1000px){.aaWorkspace{grid-template-columns:1fr}.aaInspector{grid-template-columns:1fr 1fr}.aaLower{grid-template-columns:1fr 1fr}.aaStats{gap:8px}.aaStats section{gap:8px}.aaStats svg{width:22px}.aaStats strong{font-size:25px}.aaStats b{font-size:11px}}
 @media(max-width:720px){.aaSidebar{transform:translateX(-100%);transition:transform .2s}.aaSidebar.aaOpen{transform:translateX(0);box-shadow:8px 0 25px #390a2540}.aaMain{margin-left:0}.aaApp .aaMobile{display:flex;position:fixed;right:12px;bottom:15px;z-index:30;background:var(--aaWine);color:white;padding:12px}.aaTop{padding:9px 12px;font-size:11px}.aaTop .aaUser{display:none}.aaContent{padding:14px 10px}.aaHeading{align-items:flex-start;flex-direction:column}.aaApp h1{font-size:30px}.aaActions{width:100%;justify-content:flex-end}.aaStats{grid-template-columns:1fr 1fr}.aaStats section{min-height:74px}.aaInspector,.aaLower{grid-template-columns:1fr}.aaGuide summary{font-size:12px;padding:9px}.aaLive{margin-left:0}.aaFilters .aaSearch{flex-basis:100%}.aaApp th,.aaApp td{padding:8px 6px}.aaTop>span{gap:7px}.aaApp .aaTabs button{font-size:12px}.aaFoot{padding-right:45px}}
+
+/* Match the existing light-blush business dashboard palette. */
+body:has(.aaApp){background:#fff8f8}
+.aaApp{--aaWine:#870e3a;--aaBorder:#edd2db;--aaBg:#fff8f8;color:#2b1922}
+.aaSidebar{background:linear-gradient(150deg,#fff7f6,#f8e9ee);color:#42212e;border-right:1px solid #e9d2d9}
+.aaBrand{color:#351822!important;border-bottom-color:#ead2db}
+.aaBrand small{color:#79505f}
+.aaSidebar nav{border-bottom-color:#ead2db}
+.aaSidebar nav h3{color:#8b2343}
+.aaSidebar nav a:hover{background:#f5e0e7}
+.aaSidebar .aaActive{background:linear-gradient(100deg,#870e3a,#aa4b66);color:#fff;box-shadow:0 3px 8px #870e3a16}
+.aaSidebar .aaActive:hover{background:linear-gradient(100deg,#870e3a,#aa4b66)}
+.aaAvatar{background:#eed6df;color:#870e3a}
+.aaTop{background:#fffafa}
+.aaCard{background:#fffafa;border-color:#edd2db;box-shadow:0 2px 4px #63414708}
+.aaApp h1,.aaApp h2,.aaApp h3,.aaStats strong{color:#311722}
+.aaGuide{background:#faecef;border-color:#edd2db}
+.aaApp button{border-color:#d8a4b5;background:#fffafa}
+.aaApp .aaPrimary{background:#870e3a;border-color:#870e3a;color:#fff}
+.aaApp input,.aaApp select,.aaApp textarea,.aaSearch{background:#fffcfc;border-color:#e1c6cf}
+.aaApp th{background:#f6e8ed}
+.aaApp .aaRowSelected{background:#fae9ef}
+.aaApp .aaChip{background:#f8e5ec;border-color:#edd2db}
+.aaMetadata{background:#faf2f5}
+.aaFoot,.aaHelp{color:#795e6b}
