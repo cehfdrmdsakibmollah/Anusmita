@@ -14,6 +14,7 @@ import HomepageCategoryRail from "@/components/homepage-category-rail";
 import HomepageMotion from "@/components/homepage-motion";
 import HomepagePromotion from "@/components/homepage-promotion";
 import HomepageFeatured,{type FeaturedShelf,type FeaturedProduct} from "@/components/homepage-featured";
+import StorefrontMediaBanners from "@/components/storefront-media-banners";
 import Storefront from "@/components/storefront";
 export const dynamic="force-dynamic";
 type ShopProduct=FeaturedProduct&{origin:string};
@@ -83,6 +84,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{item?:s
  const announcement=active.find(x=>x.kind==="announcement");
  const canOrder=configured&&checkoutEnabled(process.env);
  return <div className="anHomeStyleScope">
+ {configured&&<StorefrontMediaBanners/>}
   {css&&<style>{css}</style>}
   <HomepageMotion/>
   <HomepageCarousel slides={slides}/>
