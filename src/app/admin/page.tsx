@@ -19,6 +19,7 @@ export default async function AdminPage({searchParams}:{searchParams:Promise<{ta
  if(params.tab==="Assistant Replies")redirect("/admin/chatbot-responses");
  if(params.tab==="Integration Hub")redirect("/admin/integrations");
  if(params.tab==="Social Inbox")redirect("/admin/social-inbox");
+ if(params.tab==="Activity Logs")redirect("/admin/activity-logs");
  if(params.tab==="Customers")redirect("/admin/customers");
  if(params.tab==="Inventory")redirect("/admin/inventory");
  if(params.tab==="Orders")redirect("/admin/orders");
