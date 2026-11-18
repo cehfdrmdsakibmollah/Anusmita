@@ -679,3 +679,12 @@ const FunnelExposureSchema=new Schema({
 FunnelExposureSchema.index({experiment:1,createdAt:1});
 FunnelExposureSchema.index({expiresAt:1},{expireAfterSeconds:0});
 export const FunnelExposure=mongoose.models.FunnelExposure||mongoose.model("FunnelExposure",FunnelExposureSchema);
+
+const BannerMediaSchema=new Schema({
+ id:{type:String,required:true,unique:true},
+ revision:{type:Number,required:true},
+ title:String,desktopUrl:String,mobileUrl:String,alt:String,target:String,cta:String,
+ slot:{type:String,index:true},start:String,end:String,
+ focalX:Number,focalY:Number,scrim:Number,status:String,updatedBy:Schema.Types.ObjectId
+},opts);
+export const BannerMedia=mongoose.models.BannerMedia||mongoose.model("BannerMedia",BannerMediaSchema);
