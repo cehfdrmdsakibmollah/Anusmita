@@ -13,12 +13,13 @@ import StorefrontHelp from "@/components/storefront-help";
 import {publicChrome} from "@/lib/public-store-chrome";
 import {defaultNavLinks,defaultShopLinks,defaultCareLinks} from "@/lib/store-chrome-links";
 import {db} from "@/lib/db";
+import {siteEntityGraph} from "@/lib/search-readiness";
 import {SiteSeo} from "@/lib/models";
 const defaultMetadata:Metadata={
  title:{default:"ANUSMITA | Fashion · Jewellery · Beauty",template:"%s | ANUSMITA"},
  description:"Discover ANUSMITA's curated collection of beauty, skincare, fashion, jewellery, watches, bags, perfume, home and everyday accessories in Bangladesh.",
  robots:{index:checkoutEnabled(process.env),follow:checkoutEnabled(process.env)},
- alternates:{canonical:"/"},
+ verification:{google:process.env.GOOGLE_SITE_VERIFICATION,other:process.env.BING_SITE_VERIFICATION?{"msvalidate.01":process.env.BING_SITE_VERIFICATION}:{}},
  metadataBase:new URL(process.env.NEXT_PUBLIC_SITE_URL||"http://localhost:3000"),
  openGraph:{type:"website",title:"ANUSMITA",description:"Beauty · Fashion · Lifestyle",siteName:"ANUSMITA"}
 };
@@ -30,7 +31,8 @@ export async function generateMetadata():Promise<Metadata>{
 }
 export default async function RootLayout({children}:{children:React.ReactNode}){
  const chrome=await publicChrome();
- return <html lang="en"><body className="anBody"><a className="anSkipLink" href="#main-content">Skip to content</a>
+ return <html lang="en"><body className="anBody">
+  <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(siteEntityGraph(process.env.NEXT_PUBLIC_SITE_URL||"https://anusmita.netlify.app")).replace(/</g,"\\u003c")}}/><a className="anSkipLink" href="#main-content">Skip to content</a>
   <div className="anAnnouncement"><span>✿</span> {chrome?.announcement||"Discover the ANUSMITA edit ✦ Beauty, Fashion & Lifestyle ✦ Curated for Bangladesh"}</div>
   <header className="anHeader"><div className="anWide anHeaderInner">
    {(chrome?.headerOrder||["logo","navigation","search","tools"]).map(section=>{

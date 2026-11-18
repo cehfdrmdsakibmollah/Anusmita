@@ -1,3 +1,5 @@
+import type {Metadata} from "next";
+export const metadata:Metadata={alternates:{canonical:"/"}};
 import {selectCatalogue} from '@/lib/sheet-catalogue';
 import {CatalogueCard} from '@/components/sheet-catalogue';
 import Link from "next/link";
