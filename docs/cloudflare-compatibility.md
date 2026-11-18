@@ -35,7 +35,7 @@ These dependency changes need CI and preview review before merging.
 - Local `cf auth whoami` reported unauthenticated. The Cloudflare connector can
   inspect the account but does not provide a CLI credential.
 - Netlify returns masked secret values, not usable database/session/provider keys.
-- No remote deployment or authenticated acceptance tests have completed.
+- The full application has not been remotely deployed or acceptance-tested. A separate runtime probe was subsequently deployed; see below.
 - Next.js production build passed on retry. Its first run emitted a security
   upgrade warning for the existing Next 16.4.2 version; this PR does not resolve
   that warning or assert that the framework has no advisories.
@@ -90,3 +90,21 @@ References:
 - https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/
 - https://developers.cloudflare.com/workers/databases/third-party-integrations/mongodb/
 - https://developers.cloudflare.com/workers/platform/limits/
+
+## Separate hosted runtime probe (2026-11-19 Asia/Dhaka)
+
+`anusmita-runtime-probe.mdsakibmolla545.workers.dev` is a diagnostic Worker,
+not the application deployment. Source: `workers/compat-probe/index.mjs`.
+It has no database, R2, payment, courier or messaging bindings. A fresh secret
+protects POST probes; no passwords, hashes or JWTs are returned. Secrets are
+not in source control. Uploaded via the connected Cloudflare API, avoiding
+the unavailable local CLI login. Compatibility date uses UTC 2026-11-18.
+
+Observed HTTP results: health 200; unauthorized probe 401; authorized Mongoose
+loading 200 (8.24.10, connect function present); synthetic bcrypt cost-12
+comparison and HS256 sign/verify 200 with both checks true. Worker upload
+reported startup time 129 ms. CPU duration was not measured; wall-clock output
+is not a CPU benchmark or proof of Free-plan suitability. No actual database
+connection, user login/cookie flow, checkout, uploads or webhook was tested.
+The account rejected custom CPU limits because it is on Free; no plan change
+was made. Existing production media Worker was not changed.
