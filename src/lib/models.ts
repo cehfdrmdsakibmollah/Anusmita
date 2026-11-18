@@ -685,6 +685,6 @@ const BannerMediaSchema=new Schema({
  revision:{type:Number,required:true},
  title:String,desktopUrl:String,mobileUrl:String,alt:String,target:String,cta:String,
  slot:{type:String,index:true},start:String,end:String,
- focalX:Number,focalY:Number,scrim:Number,status:String,updatedBy:Schema.Types.ObjectId
+ focalX:Number,focalY:Number,scrim:Number,status:String,draftContent:{type:Schema.Types.Mixed,default:null},updatedBy:Schema.Types.ObjectId
 },opts);
 export const BannerMedia=mongoose.models.BannerMedia||mongoose.model("BannerMedia",BannerMediaSchema);

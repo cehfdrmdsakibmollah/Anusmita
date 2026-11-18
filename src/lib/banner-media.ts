@@ -19,3 +19,17 @@ export const bannerMedia=z.object({
 }).strict().refine(value=>!value.start||!value.end||value.start<value.end,"End must be after start")
  .refine(value=>value.status!=="published"||!!value.alt.trim(),"Published banners require alt text");
 export type BannerMediaData=z.infer<typeof bannerMedia>;
+
+export function bannerSaveUpdate(data:BannerMediaData,currentStatus?:string){
+ const revision=data.revision+1;
+ if(data.status==="draft"&&currentStatus==="published"){
+  return {revision,draftContent:{...data,revision}};
+ }
+ return {...data,revision,draftContent:null};
+}
+
+export function bannerEditorData(record:Record<string,unknown>){
+ const draft=record.draftContent;
+ const source=draft&&typeof draft==="object"?draft as Record<string,unknown>:record;
+ return bannerMedia.parse(Object.fromEntries(Object.keys(bannerMedia.shape).map(key=>[key,key==="revision"?record.revision:source[key]])));
+}
