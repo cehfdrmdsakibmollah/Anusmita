@@ -2,20 +2,20 @@ import {NextResponse,type NextRequest} from "next/server";
 import {jwtVerify} from "jose";
 import {currentStoreSettings} from "@/lib/store-settings-server";
 import {User} from "@/lib/models";
-import {maintenanceExemptPath,maintenanceHtml} from "@/lib/maintenance-access";
+import {maintenanceHtml} from "@/lib/maintenance-access";
 
-export async function proxy(request:NextRequest){
- if(!process.env.MONGODB_URI||maintenanceExemptPath(request.nextUrl.pathname))return NextResponse.next();
+export async function GET(request:NextRequest){
+ if(!process.env.MONGODB_URI)return new NextResponse(null,{status:204,headers:{"Cache-Control":"no-store"}});
  try{
   const policy=await currentStoreSettings();
-  if(!policy.maintenanceEnabled)return NextResponse.next();
+  if(!policy.maintenanceEnabled)return new NextResponse(null,{status:204,headers:{"Cache-Control":"no-store"}});
   const token=request.cookies.get("anusmita_session")?.value;
   const secret=process.env.SESSION_SECRET;
   if(token&&secret&&secret.length>=32){
    try{
     const {payload}=await jwtVerify(token,new TextEncoder().encode(secret),{algorithms:["HS256"]});
     if(typeof payload.sub==="string"&&/^[a-f0-9]{24}$/i.test(payload.sub)&&await User.exists({_id:payload.sub,active:true,role:"owner"}))
-     return NextResponse.next({headers:{"Cache-Control":"private, no-store"}});
+     return new NextResponse(null,{status:204,headers:{"Cache-Control":"private, no-store"}});
    }catch{/* An invalid session never grants a maintenance bypass. */}
   }
   return new NextResponse(maintenanceHtml(policy.maintenanceMessage),{status:503,headers:{
@@ -27,4 +27,5 @@ export async function proxy(request:NextRequest){
   });
  }
 }
-export const config={matcher:["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|webp|svg|woff2?|css|js)$).*)"]};
+export const dynamic="force-dynamic";
+export const runtime="nodejs";
