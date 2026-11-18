@@ -679,3 +679,13 @@ const FunnelExposureSchema=new Schema({
 FunnelExposureSchema.index({experiment:1,createdAt:1});
 FunnelExposureSchema.index({expiresAt:1},{expireAfterSeconds:0});
 export const FunnelExposure=mongoose.models.FunnelExposure||mongoose.model("FunnelExposure",FunnelExposureSchema);
+
+const StoreSettingsSchema=new Schema({
+ key:{type:String,unique:true,required:true},
+ revision:{type:Number,default:0},content:{type:Schema.Types.Mixed,required:true}
+},opts);
+export const StoreSettings=mongoose.models.StoreSettings||mongoose.model("StoreSettings",StoreSettingsSchema);
+const StoreSettingsRevisionSchema=new Schema({
+ revision:{type:Number,unique:true,required:true},content:Schema.Types.Mixed,actorId:Schema.Types.ObjectId
+},opts);
+export const StoreSettingsRevision=mongoose.models.StoreSettingsRevision||mongoose.model("StoreSettingsRevision",StoreSettingsRevisionSchema);

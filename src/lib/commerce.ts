@@ -1,3 +1,4 @@
+import {currentStoreSettings} from "@/lib/store-settings-server";
 import {priceForQuantity} from "@/lib/quantity-discounts";
 
 import { createHash } from "node:crypto";
@@ -26,6 +27,7 @@ export async function createOrder(input:unknown,idempotencyKey:string,funnelAttr
    if(existing.requestHash!==hash) throw new HttpError(409,"Idempotency key already used for a different order");
    return existing;
  }
+ const policy=await currentStoreSettings();
  const session=await mongoose.startSession();
  let placed:any;
  try {
@@ -39,7 +41,10 @@ export async function createOrder(input:unknown,idempotencyKey:string,funnelAttr
     const volume=priceForQuantity(product.pricePaisa,item.quantity,product.quantityDiscounts||[]);
     lines.push({productId:product._id,sku:product.sku,name:product.name,quantity:item.quantity,unitPricePaisa:product.pricePaisa,unitCostPaisa:product.costPaisa,lineTotalPaisa:volume.totalPaisa,discountPercent:volume.percent,discountPaisa:volume.savingsPaisa});
    }
-   const totals=cartTotals(lines,shippingFor(data.customer.district));
+   const delivery=data.customer.district.toLowerCase().trim()==="dhaka"?policy.dhakaShippingPaisa:policy.outsideShippingPaisa;
+   const totals=cartTotals(lines,delivery);
+   if(totals.subtotalPaisa<policy.minimumOrderPaisa)throw new HttpError(400,"Order subtotal is below the store minimum");
+   if(data.paymentMethod==="cod"&&policy.maximumCodPaisa>0&&totals.totalPaisa>policy.maximumCodPaisa)throw new HttpError(400,"Order total exceeds the COD limit");
    if(data.depositPaisa>totals.totalPaisa) throw new HttpError(400,"Deposit exceeds order total");
    if(data.paymentMethod==="cod" && data.depositPaisa>0) throw new HttpError(400,"COD deposit requires a separate payment method");
    const counter=await Counter.findOneAndUpdate({key:"orders"},{$inc:{value:1}},{upsert:true,new:true,session,setDefaultsOnInsert:true});
