@@ -1,5 +1,7 @@
 import {z} from "zod";
 export const storeSettings=z.object({
+ maintenanceEnabled:z.boolean().default(false),
+ maintenanceMessage:z.string().trim().min(5).max(300).default("We are updating our store. Please check back soon."),
  revision:z.number().int().nonnegative(),
  storeName:z.string().trim().min(2).max(80),
  supportEmail:z.union([z.email(),z.literal("")]),
@@ -14,6 +16,6 @@ export const storeSettings=z.object({
 export type StoreSettingsData=z.infer<typeof storeSettings>;
 export function defaultStoreSettings(env:Record<string,string|undefined>):StoreSettingsData{
  const fee=(value:string|undefined,fallback:number)=>{const number=Number(value??fallback);return Number.isSafeInteger(number)&&number>=0&&number<=10000000?number:fallback;};
- return {revision:0,storeName:"ANUSMITA",supportEmail:"",supportPhone:"",currency:"BDT",timezone:"Asia/Dhaka",minimumOrderPaisa:0,maximumCodPaisa:0,
+ return {maintenanceEnabled:false,maintenanceMessage:"We are updating our store. Please check back soon.",revision:0,storeName:"ANUSMITA",supportEmail:"",supportPhone:"",currency:"BDT",timezone:"Asia/Dhaka",minimumOrderPaisa:0,maximumCodPaisa:0,
  dhakaShippingPaisa:fee(env.SHIPPING_DHAKA_PAISA,7000),outsideShippingPaisa:fee(env.SHIPPING_OTHER_PAISA,12000)};
 }

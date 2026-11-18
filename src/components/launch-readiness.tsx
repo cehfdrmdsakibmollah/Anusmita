@@ -52,6 +52,11 @@ export default function SettingsControlCenter(){
     <article><h2><Truck size={19}/> Checkout &amp; delivery policies</h2><div className="scFields">{money("minimumOrderPaisa","Minimum product subtotal (৳)")}{money("maximumCodPaisa","Maximum COD total (৳, 0 = unlimited)")}</div>
      <h3>Shipping zones</h3><div className="scFields">{money("dhakaShippingPaisa","Dhaka district fee (৳)")}{money("outsideShippingPaisa","Outside Dhaka fee (৳)")}</div>
      <p>Server checkout applies these fees and limits to new orders. Existing orders retain their original totals.</p></article>
+    <article><h2>Maintenance mode</h2>
+     <label><input type="checkbox" checked={data.maintenanceEnabled} onChange={e=>setData({...data,maintenanceEnabled:e.target.checked})}/> Pause storefront and new checkout requests</label>
+     <label>Storefront message<textarea maxLength={300} value={data.maintenanceMessage} onChange={e=>setData({...data,maintenanceMessage:e.target.value})}/></label>
+     <p>Signed-in active owners can preview storefront pages. Admin login, webhooks and order receipts stay accessible. New orders are paused for every role.</p>
+    </article>
     <article><h2><History size={19}/> Configuration history</h2>{history.length?history.map(item=><p key={item.revision}>Revision {item.revision} · {new Date(item.createdAt).toLocaleString("en-BD",{timeZone:"Asia/Dhaka"})} <button disabled={busy||dirty||item.revision===data.revision} onClick={()=>void restore(item.revision)}>Restore revision</button></p>):<p>Saved revisions will appear here.</p>}</article>
    </>}
    {["Payments","Messaging"].includes(tab)&&<IntegrationHub/>}

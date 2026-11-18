@@ -28,6 +28,7 @@ export async function createOrder(input:unknown,idempotencyKey:string,funnelAttr
    return existing;
  }
  const policy=await currentStoreSettings();
+ if(policy.maintenanceEnabled)throw new HttpError(503,policy.maintenanceMessage);
  const session=await mongoose.startSession();
  let placed:any;
  try {
