@@ -20,7 +20,7 @@ export async function POST(req:Request) {
     inventory=await Product.findOneAndUpdate(filter,{$inc:{onHand:data.quantity}},{new:true,session});
     if(!inventory) throw new HttpError(409,"Insufficient available stock or invalid product");
     await StockMovement.create([{productId:data.productId,type:data.type,deltaOnHand:data.quantity,actorId:actor.id,note:data.note}],{session});
-    await Audit.create([{actorId:actor.id,action:"stock."+data.type,entity:"Product",entityId:data.productId,details:{quantity:data.quantity,note:data.note}}],{session});
+    await Audit.create([{actorId:actor.id,action:"stock."+data.type,entity:"Product",entityId:data.productId,details:{quantity:data.quantity,note:data.note,before:{onHand:inventory.onHand-data.quantity,reserved:inventory.reserved},after:{onHand:inventory.onHand,reserved:inventory.reserved}}}],{session});
    });
   }finally{await session.endSession();}
   return Response.json({sku:inventory.sku,onHand:inventory.onHand,reserved:inventory.reserved});

@@ -689,3 +689,8 @@ const StoreSettingsRevisionSchema=new Schema({
  revision:{type:Number,unique:true,required:true},content:Schema.Types.Mixed,actorId:Schema.Types.ObjectId
 },opts);
 export const StoreSettingsRevision=mongoose.models.StoreSettingsRevision||mongoose.model("StoreSettingsRevision",StoreSettingsRevisionSchema);
+
+// Investigation notes are separate records; the original audit event is never updated.
+const AuditReviewSchema=new Schema({eventId:{type:Schema.Types.ObjectId,ref:"Audit",required:true},reviewerId:{type:Schema.Types.ObjectId,ref:"User",required:true},note:{type:String,required:true,maxlength:1000}},opts);
+AuditReviewSchema.index({eventId:1,createdAt:-1});
+export const AuditReview=mongoose.models.AuditReview||mongoose.model("AuditReview",AuditReviewSchema);
