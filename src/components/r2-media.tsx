@@ -38,7 +38,7 @@ export default function BannerMedia(){
  }
  useEffect(()=>{void loadCampaigns().catch(error=>setError(error.message));},[]);
  function editAsset(asset:Asset){
-  setSelected(asset);
+  setSelected(asset);setUsage(null);
   const saved=campaigns.find(item=>item.desktopUrl===asset.url);
   const next=saved??{id:crypto.randomUUID(),revision:0,title:asset.key.split("/").at(-1)??"Banner",desktopUrl:asset.url,mobileUrl:"",alt:"",target:"",cta:"",slot:"GENERAL_MEDIA" as const,start:"",end:"",focalX:50,focalY:50,scrim:0,status:"draft" as const};
   setCampaign(next);setFocal({x:next.focalX,y:next.focalY});setScrim(next.scrim);
@@ -54,6 +54,18 @@ export default function BannerMedia(){
    const data=await response.json();if(!response.ok)throw Error(data.error||"Save failed");
    setCampaign(data);await loadCampaigns();setMessage(status==="published"?"Campaign published for the selected schedule.":"Campaign saved.");
   }catch(error){setError(error instanceof Error?error.message:"Save failed");}finally{setBusy(false);}
+ }
+ const [usage,setUsage]=useState<{references:{collection:string;id:string}[];complete:boolean}|null>(null);
+ const [usageBusy,setUsageBusy]=useState(false);
+ async function checkUsage(){
+  if(!selected)return;
+  setUsageBusy(true);setUsage(null);setError("");
+  try{
+   const response=await fetch("/api/admin/banner-media/usage?"+new URLSearchParams({url:selected.url}),{cache:"no-store"});
+   const data=await response.json();if(!response.ok)throw Error(data.error||"Usage scan unavailable");
+   setUsage(data);
+  }catch(error){setError(error instanceof Error?error.message:"Usage scan unavailable");}
+  finally{setUsageBusy(false);}
  }
  const input=useRef<HTMLInputElement>(null);
  const [assets,setAssets]=useState<Asset[]>([]),[selected,setSelected]=useState<Asset|null>(null);
@@ -142,7 +154,10 @@ export default function BannerMedia(){
     <button onClick={()=>void copy("object-position: "+focal.x+"% "+focal.y+"%;")}>Copy focal CSS</button>{campaign&&<div className="bmActions"><button disabled={busy} onClick={()=>void saveCampaign("draft")}>Save Draft</button><button disabled={busy} className="bmPrimary" onClick={()=>void saveCampaign("published")}>Review &amp; Publish</button><button disabled={busy||!campaign.revision} onClick={()=>void saveCampaign("archived")}>Archive</button></div>}
     <a className="bmPrimary" href="/admin?tab=Homepage%20Studio">Open Homepage Studio</a>
    </>:<p>Select an asset to inspect its URL, preview crop and focal point.</p>}</div>
-   <div className="bmCard bmInspector"><h2>Usage &amp; publishing</h2><p>Product images retain their existing upload and editing workflow in Product Images.</p><a href="/admin/custom-pages/funnels">Campaign analytics &amp; experiments <ExternalLink size={14}/></a></div>
+   <div className="bmCard bmInspector"><h2>Usage &amp; publishing</h2>
+   <button disabled={!selected||usageBusy} onClick={()=>void checkUsage()}>{usageBusy?"Checking references…":"Check asset references"}</button>
+   {usage&&<><p>{usage.references.length} references found{usage.complete?"":" · scan incomplete"}</p>{usage.references.map(item=><p key={item.collection+item.id}>{item.collection} · {item.id}</p>)}<p>Historical audit and revision records are excluded. This scan does not authorize permanent deletion.</p></>}
+<p>Product images retain their existing upload and editing workflow in Product Images.</p><a href="/admin/custom-pages/funnels">Campaign analytics &amp; experiments <ExternalLink size={14}/></a></div>
   </aside></div>
  </section>;
 }
