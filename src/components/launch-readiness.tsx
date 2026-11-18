@@ -15,6 +15,16 @@ export default function SettingsControlCenter(){
   catch(error){setNotice(error instanceof Error?error.message:"Settings unavailable");}
  }
  useEffect(()=>{void load();},[]);
+ async function restore(sourceRevision:number){
+  if(!data||dirty||busy)return;
+  if(!window.confirm("Restore revision "+sourceRevision+"? New checkouts will use its saved limits and fees."))return;
+  setBusy(true);
+  try{
+   const response=await fetch("/api/admin/store-settings/rollback",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({revision:data.revision,sourceRevision})});
+   const result=await response.json();if(!response.ok)throw Error(result.error||"Restore failed");
+   setNotice("Configuration restored as revision "+result.revision+".");await load();
+  }catch(error){setNotice(error instanceof Error?error.message:"Restore failed");}finally{setBusy(false);}
+ }
  async function save(){
   if(!data)return;setBusy(true);setNotice("");
   try{
@@ -38,11 +48,11 @@ export default function SettingsControlCenter(){
      <label>Support email<input type="email" value={data.supportEmail} onChange={e=>setData({...data,supportEmail:e.target.value})}/></label>
      <label>Support phone<input maxLength={25} value={data.supportPhone} onChange={e=>setData({...data,supportPhone:e.target.value})}/></label>
      <label>Currency<input readOnly value="BDT — Bangladeshi Taka"/></label><label>Timezone<input readOnly value="Asia/Dhaka"/></label>
-    </div><p>Store profile is saved here. Header and footer content is managed in <a href="/admin?tab=Header%20%26%20Footer">Header &amp; Footer</a>.</p></article>}
+    </div><p>Store name and support contacts appear in the storefront footer. Navigation content is managed in <a href="/admin?tab=Header%20%26%20Footer">Header &amp; Footer</a>.</p></article>}
     <article><h2><Truck size={19}/> Checkout &amp; delivery policies</h2><div className="scFields">{money("minimumOrderPaisa","Minimum product subtotal (৳)")}{money("maximumCodPaisa","Maximum COD total (৳, 0 = unlimited)")}</div>
      <h3>Shipping zones</h3><div className="scFields">{money("dhakaShippingPaisa","Dhaka district fee (৳)")}{money("outsideShippingPaisa","Outside Dhaka fee (৳)")}</div>
      <p>Server checkout applies these fees and limits to new orders. Existing orders retain their original totals.</p></article>
-    <article><h2><History size={19}/> Configuration history</h2>{history.length?history.map(item=><p key={item.revision}>Revision {item.revision} · {new Date(item.createdAt).toLocaleString("en-BD",{timeZone:"Asia/Dhaka"})}</p>):<p>Saved revisions will appear here.</p>}</article>
+    <article><h2><History size={19}/> Configuration history</h2>{history.length?history.map(item=><p key={item.revision}>Revision {item.revision} · {new Date(item.createdAt).toLocaleString("en-BD",{timeZone:"Asia/Dhaka"})} <button disabled={busy||dirty||item.revision===data.revision} onClick={()=>void restore(item.revision)}>Restore revision</button></p>):<p>Saved revisions will appear here.</p>}</article>
    </>}
    {["Payments","Messaging"].includes(tab)&&<IntegrationHub/>}
    {tab==="System & Health"&&<LaunchDiagnostics/>}

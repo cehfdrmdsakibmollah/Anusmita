@@ -13,6 +13,7 @@ import StorefrontHelp from "@/components/storefront-help";
 import {publicChrome} from "@/lib/public-store-chrome";
 import {defaultNavLinks,defaultShopLinks,defaultCareLinks} from "@/lib/store-chrome-links";
 import {db} from "@/lib/db";
+import {currentStoreSettings} from "@/lib/store-settings-server";
 import {SiteSeo} from "@/lib/models";
 const defaultMetadata:Metadata={
  title:{default:"ANUSMITA | Fashion · Jewellery · Beauty",template:"%s | ANUSMITA"},
@@ -30,6 +31,7 @@ export async function generateMetadata():Promise<Metadata>{
 }
 export default async function RootLayout({children}:{children:React.ReactNode}){
  const chrome=await publicChrome();
+ const profile=process.env.MONGODB_URI?await currentStoreSettings().catch(()=>null):null;
  return <html lang="en"><body className="anBody"><a className="anSkipLink" href="#main-content">Skip to content</a>
   <div className="anAnnouncement"><span>✿</span> {chrome?.announcement||"Discover the ANUSMITA edit ✦ Beauty, Fashion & Lifestyle ✦ Curated for Bangladesh"}</div>
   <header className="anHeader"><div className="anWide anHeaderInner">
@@ -46,7 +48,7 @@ export default async function RootLayout({children}:{children:React.ReactNode}){
   <main id="main-content">{children}<StorefrontHelp/></main>
   <footer className="anFooter anFooterCompact"><div className="anWide"><div className="anFooterTop">{(chrome?.footerOrder||["brand","shop","care"]).map(section=>{
    switch(section){
-    case "brand":return <div key="brand" className="anFooterBrand"><Link href="/" className="anFooterLogo">ANUSMITA</Link><p>{chrome?.footerNote||"FASHION · JEWELLERY · BEAUTY"}</p></div>;
+    case "brand":return <div key="brand" className="anFooterBrand"><Link href="/" className="anFooterLogo">{profile?.storeName||"ANUSMITA"}</Link><p>{chrome?.footerNote||"FASHION · JEWELLERY · BEAUTY"}</p>{profile?.supportEmail&&<a href={"mailto:"+profile.supportEmail}>{profile.supportEmail}</a>}{profile?.supportPhone&&<a href={"tel:"+profile.supportPhone.replace(/[^+0-9]/g,"")}>{profile.supportPhone}</a>}</div>;
     case "shop":return <div key="shop" className="anFooterLinks"><strong>SHOP</strong>{(chrome?.footerShopLinks||defaultShopLinks).map(item=><Link key={item.id} href={item.href}>{item.label}</Link>)}</div>;
     case "care":return <div key="care" className="anFooterLinks"><strong>CUSTOMER CARE</strong>{(chrome?.footerCareLinks||defaultCareLinks).map(item=><Link key={item.id} href={item.href}>{item.label}</Link>)}</div>;
     default:return null;
