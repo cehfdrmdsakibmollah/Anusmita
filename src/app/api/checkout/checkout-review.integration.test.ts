@@ -32,6 +32,7 @@ describe.skipIf(!uri)("isolated COD and verified-review acceptance",()=>{
 
  it("checks saved shipping totals, COD reservation, idempotency, receipt and review moderation",async()=>{
   vi.stubEnv("SESSION_SECRET",randomUUID()+randomUUID());
+  vi.stubEnv("NEXT_PUBLIC_SITE_URL",origin);
   try{
    const owner=new mongoose.Types.ObjectId();
    await User.collection.insertOne({_id:owner,name:"Test Owner",email:"cod-owner@example.test",role:"owner",active:true});
