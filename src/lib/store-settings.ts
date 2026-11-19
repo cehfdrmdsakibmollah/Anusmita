@@ -17,5 +17,5 @@ export type StoreSettingsData=z.infer<typeof storeSettings>;
 export function defaultStoreSettings(env:Record<string,string|undefined>):StoreSettingsData{
  const fee=(value:string|undefined,fallback:number)=>{const number=Number(value??fallback);return Number.isSafeInteger(number)&&number>=0&&number<=10000000?number:fallback;};
  return {maintenanceEnabled:false,maintenanceMessage:"We are updating our store. Please check back soon.",revision:0,storeName:"ANUSMITA",supportEmail:"",supportPhone:"",currency:"BDT",timezone:"Asia/Dhaka",minimumOrderPaisa:0,maximumCodPaisa:0,
- dhakaShippingPaisa:fee(env.SHIPPING_DHAKA_PAISA,7000),outsideShippingPaisa:fee(env.SHIPPING_OTHER_PAISA,12000)};
+ dhakaShippingPaisa:fee(env.SHIPPING_DHAKA_PAISA,8000),outsideShippingPaisa:fee(env.SHIPPING_OTHER_PAISA,12000)};
 }
