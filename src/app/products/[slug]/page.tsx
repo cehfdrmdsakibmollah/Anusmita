@@ -93,7 +93,7 @@ async function supporting(p:DbProduct){
 }
 export async function generateMetadata({params}:Props):Promise<Metadata>{
  const {slug}=await params;
- const sheet=!process.env.MONGODB_URI?sheetCatalogue.find(p=>p.slug===slug):undefined;
+ const sheet=(process.env.RECOVERY_CATALOG_ONLY==="true"||!process.env.MONGODB_URI)?sheetCatalogue.find(p=>p.slug===slug):undefined;
  if(sheet)return {title:sheet.name,description:sheet.description,alternates:{canonical:"/products/"+slug}};
  const p=await getProduct(slug);
  if(!p)return {title:"Product not available",robots:{index:false,follow:false}};
@@ -121,7 +121,7 @@ const sampleCollections=[
 ];
 export default async function ProductPage({params}:Props){
  const {slug}=await params;
- const sheet=!process.env.MONGODB_URI?sheetCatalogue.find(p=>p.slug===slug):undefined;
+ const sheet=(process.env.RECOVERY_CATALOG_ONLY==="true"||!process.env.MONGODB_URI)?sheetCatalogue.find(p=>p.slug===slug):undefined;
  if(sheet)return <SheetProductDetails p={sheet}/>;
  const p=await getProduct(slug);
  if(!p){const target=await historicalTarget(slug);if(target)permanentRedirect(target);notFound();}
