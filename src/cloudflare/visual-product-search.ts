@@ -4,8 +4,8 @@ import {allowChat} from '../lib/chatbot-server';
 import {visualSearchTerms,visualSearchFilter,rankVisualCandidates} from '../lib/visual-product-search';
 import {validCloudinaryUrl} from '../lib/cloudinary-media';
 
-type VisionAI={run:(model:string,input:Record<string,unknown>)=>Promise<{response?:string}>};
-type VisionEnv={AI?:VisionAI;RECOVERY_CATALOG_ONLY?:string};
+type VisionAI={run:(model:string,input:Record<string,unknown>)=>Promise<{answer?:string;response?:string}>};
+type VisionEnv={AI?:VisionAI;RECOVERY_CATALOG_ONLY?:string;VISION_MODEL?:string};
 const noStore={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
 const json=(body:unknown,status=200)=>Response.json(body,{status,headers:noStore});
 const supported=['image/jpeg','image/png','image/webp'];
@@ -24,6 +24,11 @@ function imageValid(bytes:Uint8Array,type:string){
  if(type==='image/webp')return String.fromCharCode(...bytes.slice(0,4))==='RIFF'&&String.fromCharCode(...bytes.slice(8,12))==='WEBP';
  return false;
 }
+function toBase64(bytes:Uint8Array):string{
+ let binary='';
+ for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
+ return btoa(binary);
+}
 /** Image bytes go to Workers AI only for an explicit user action. Never stored or logged. */
 export async function visualProductSearch(request:Request,env:VisionEnv):Promise<Response>{
  const url=new URL(request.url);
@@ -40,11 +45,12 @@ export async function visualProductSearch(request:Request,env:VisionEnv):Promise
   if(!imageValid(bytes,file.type))return json({error:'Image file did not match its declared format.'},400);
   let description='';
   try{
-   const result=await env.AI.run('@cf/meta/llama-3.2-11b-vision-instruct',{
-    prompt:'Read the visible product brand, product name, variant and any printed words. Describe only clearly visible details in English, separated by spaces. Do not guess or invent brands. If no readable product, say unknown.',
-    image:Array.from(bytes),max_tokens:140,temperature:0.1
-   });
-   description=String(result?.response||'').slice(0,550);
+   const model=env.VISION_MODEL==='llama-3.2-vision'?'@cf/meta/llama-3.2-11b-vision-instruct':'@cf/moondream/moondream3.1-9B-A2B';
+   const prompt='Read only visible product brand, name, variant and packaging words. Do not guess. Return unknown if unreadable.';
+   const result=model.includes('moondream')
+    ?await env.AI.run(model,{task:'query',question:prompt,image:'data:'+file.type+';base64,'+toBase64(bytes),max_tokens:140,temperature:0.1})
+    :await env.AI.run(model,{prompt,image:Array.from(bytes),max_tokens:140,temperature:0.1});
+   description=String(result?.answer||result?.response||'').slice(0,550);
   }catch{return json({error:'Image recognition is temporarily unavailable. Try typing the brand or product name.',available:false},503);}
   const terms=visualSearchTerms(description);
   if(!terms.length)return json({reply:'No readable product name detected. Please upload a clearer photo of the label or search by name.',products:[],recognizedText:''});
