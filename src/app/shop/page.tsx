@@ -16,7 +16,7 @@ type Query={page?:string;category?:string;q?:string;sort?:string;origin?:string|
 export default async function Shop({searchParams}:{searchParams:Promise<Query>}){
  const query=await searchParams;
  const nativeHero=await publishedCmsNativeHero("shop");
- if(!process.env.MONGODB_URI)return <><CmsPublicSlots page="shop" placement="before"/><SheetCatalogue query={query}/><CmsPublicSlots page="shop" placement="after"/></>;
+ if(process.env.RECOVERY_CATALOG_ONLY==="true"||!process.env.MONGODB_URI)return <><CmsPublicSlots page="shop" placement="before"/><SheetCatalogue query={query}/><CmsPublicSlots page="shop" placement="after"/></>;
  const origins=selectedArray(query.origin).filter(x=>options.includes(x));
  const selectedConcerns=selectedArray(query.concern).filter(x=>concerns.includes(x));
  const category=categoryOptions.includes(query.category||"")?query.category!:"All";
