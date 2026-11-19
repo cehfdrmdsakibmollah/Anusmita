@@ -2,7 +2,7 @@ import {NextResponse,type NextRequest} from "next/server";
 import {maintenanceExemptPath,maintenanceHtml} from "@/lib/maintenance-access";
 
 export async function middleware(request:NextRequest){
- if(maintenanceExemptPath(request.nextUrl.pathname))return NextResponse.next();
+ if(maintenanceExemptPath(request.nextUrl.pathname)||process.env.RECOVERY_CATALOG_ONLY==="true")return NextResponse.next();
  try{
   const response=await fetch(new URL("/api/store-maintenance",request.url),{
    headers:{cookie:request.headers.get("cookie")??""},cache:"no-store",signal:AbortSignal.timeout(12000)
