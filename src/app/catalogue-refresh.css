@@ -6,3 +6,21 @@
 @media(min-width:1281px){.anHeaderTools>a[href="/shop#store-search"]{display:none}}
 
 .anShopNewInfo .anShopRating{display:flex;align-items:center;gap:5px;margin:8px 0;color:#7e183c;font-size:13px;text-decoration:none}.anShopRating>span{color:#a7610c}.anShopRating small{font-size:11px;color:#78616b}
+
+/* Catalogue recovery: keep price, review information and CTA in separate rows. */
+.sheetGrid{align-items:stretch}
+.sheetGrid>.sheetCard{display:flex;min-width:0;flex-direction:column}
+.sheetGrid>.sheetCard>a{display:flex;min-width:0;flex:1;flex-direction:column;text-decoration:none}
+.sheetGrid .sheetCardCopy{display:flex;flex:1;min-width:0;flex-direction:column;gap:9px;padding:16px}
+.sheetGrid .sheetCardCopy>small:first-child{display:block;line-height:1.4;overflow-wrap:anywhere}
+.sheetGrid .sheetCardCopy h3{margin:0;min-height:0;font-size:clamp(16px,1.55vw,20px);line-height:1.35;overflow-wrap:anywhere}
+.sheetGrid .sheetCardMeta{display:flex;flex:1;min-width:0;flex-direction:column;align-items:flex-start;gap:8px}
+.sheetGrid .sheetCardPrice{display:block;font-size:19px;line-height:1.35;overflow-wrap:anywhere}
+.sheetGrid .sheetCardReview{display:block;color:#78616b;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.sheetGrid .sheetCardDelivery{margin:0;font-size:12px;line-height:1.5}
+.sheetGrid .sheetCardDetails{display:block;margin-top:auto;padding-top:4px;color:#a92d52;font-size:13px;font-weight:600}
+.sheetGrid .shoppingActions{margin-top:auto;padding:0 14px 14px}
+.sheetGrid .shoppingActions>span{min-height:0;line-height:1.5;overflow-wrap:anywhere}
+.sheetGrid .sheetPhoto{width:100%;aspect-ratio:1;overflow:hidden}
+.sheetGrid .sheetPhoto img{min-width:0;max-width:100%;height:100%;object-fit:contain}
+@media(max-width:600px){.sheetGrid .sheetCardCopy{gap:7px;padding:12px}.sheetGrid .sheetCardPrice{font-size:16px}.sheetGrid .sheetCardReview,.sheetGrid .sheetCardDelivery{font-size:11px}.sheetGrid .shoppingActions{padding:0 10px 10px}}
