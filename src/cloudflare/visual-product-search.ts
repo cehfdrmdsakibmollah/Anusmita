@@ -9,6 +9,15 @@ type VisionEnv={AI?:VisionAI;RECOVERY_CATALOG_ONLY?:string};
 const noStore={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
 const json=(body:unknown,status=200)=>Response.json(body,{status,headers:noStore});
 const supported=['image/jpeg','image/png','image/webp'];
+function publicProductImage(value:unknown):string|undefined{
+ if(typeof value!=='string'||value.length>1800)return undefined;
+ if(validCloudinaryUrl(value))return value;
+ try{
+  const u=new URL(value);
+  if(u.protocol==='https:'&&u.hostname==='anusmita-media.mdsakibmolla545.workers.dev'&&!u.username&&!u.password&&!u.hash)return u.toString();
+ }catch{}
+ return undefined;
+}
 function imageValid(bytes:Uint8Array,type:string){
  if(type==='image/jpeg')return bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff;
  if(type==='image/png')return bytes.slice(0,8).every((b,i)=>b===[137,80,78,71,13,10,26,10][i]);
@@ -48,7 +57,7 @@ export async function visualProductSearch(request:Request,env:VisionEnv):Promise
    const products=ranked.map(p=>({
     id:String(p._id),name:p.name,slug:p.slug,category:p.category||'',size:'',pricePaisa:p.pricePaisa,
     available:Math.max(0,(p.onHand||0)-(p.reserved||0)),description:'',usage:'',
-    imageUrl:Array.isArray(p.imageUrls)?p.imageUrls.find((u:unknown)=>typeof u==='string'&&validCloudinaryUrl(u)):undefined
+    imageUrl:Array.isArray(p.imageUrls)?p.imageUrls.map(publicProductImage).find(Boolean):undefined
    }));
    return json({
     reply:products.length?'Possible catalogue matches from the photo. Please check the label and product details before ordering.':'No reliable catalogue match was found. Try a clearer label photo or type the product name.',
