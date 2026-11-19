@@ -1,4 +1,5 @@
 import handler from "vinext/server/fetch-handler";
+import {visualProductSearch} from "../../src/cloudflare/visual-product-search";
 import {newDatabaseScope,inDatabaseScope,closeDatabaseScope} from "../../src/cloudflare/mongoose-context";
 export default {
  async fetch(request:Request,env:unknown,ctx:unknown){
@@ -7,6 +8,7 @@ export default {
   const scope=newDatabaseScope();
   return inDatabaseScope(scope,async()=>{
    try{
+    if(path==="/api/chat/visual-search"&&request.method==="POST"){const response=await visualProductSearch(request,env as any);await closeDatabaseScope(scope);return response;}
     const response:Response=await (handler as any).fetch(request,env,ctx);
     if(!response.body){await closeDatabaseScope(scope);return response;}
     const reader=response.body.getReader();let closed=false;
