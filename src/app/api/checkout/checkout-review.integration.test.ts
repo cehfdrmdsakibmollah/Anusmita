@@ -26,7 +26,7 @@ describe.skipIf(!uri)("isolated COD and verified-review acceptance",()=>{
   if(uri!==isolated)throw new Error("Isolated loopback MongoDB replica set required");
   await mongoose.connect(uri,{dbName:database,serverSelectionTimeoutMS:5000});
   await Promise.all([Audit,Counter,Order,Product,ProductReview,StockMovement,StoreSettings,User].map(m=>m.init()));
-  await StoreSettings.create({key:"main",revision:1,content:{maintenanceEnabled:false,maintenanceMessage:"Store is open for test orders.",revision:1,storeName:"ANUSMITA",supportEmail:"",supportPhone:"",currency:"BDT",timezone:"Asia/Dhaka",minimumOrderPaisa:0,maximumCodPaisa:0,dhakaShippingPaisa:8500,outsideShippingPaisa:14500}});
+  await StoreSettings.create({key:"main",revision:1,content:{maintenanceEnabled:false,maintenanceMessage:"Store is open for test orders.",revision:1,storeName:"ANUSMITA",supportEmail:"",supportPhone:"",currency:"BDT",timezone:"Asia/Dhaka",minimumOrderPaisa:0,maximumCodPaisa:0,dhakaShippingPaisa:8000,outsideShippingPaisa:12000}});
  });
  afterAll(async()=>{if(mongoose.connection.name===database){await mongoose.connection.dropDatabase();await mongoose.disconnect();}});
 
@@ -41,12 +41,12 @@ describe.skipIf(!uri)("isolated COD and verified-review acceptance",()=>{
    const first=await checkout(post("/api/checkout",input("Dhaka"),"acceptance-cod-232-a"));
    expect(first.status).toBe(201);
    const receipt=await first.json();
-   expect(receipt.totalPaisa).toBe(48500);
+   expect(receipt.totalPaisa).toBe(48000);
    expect(receipt.paymentStatus).toBe("unpaid");
    const token=new URL(receipt.receiptUrl,origin).searchParams.get("token")||"";
    expect(await verifyOrderReceipt(token)).toBe(receipt.id);
    const order=await Order.findById(receipt.id).lean<any>();
-   expect(order).toMatchObject({subtotalPaisa:40000,shippingPaisa:8500,totalPaisa:48500,paymentMethod:"cod",collectedPaisa:0});
+   expect(order).toMatchObject({subtotalPaisa:40000,shippingPaisa:8000,totalPaisa:48000,paymentMethod:"cod",collectedPaisa:0});
    expect((await Product.findById(product._id).lean<any>()).reserved).toBe(2);
    expect(await StockMovement.countDocuments({orderId:receipt.id,type:"reserve"})).toBe(1);
 
@@ -58,7 +58,7 @@ describe.skipIf(!uri)("isolated COD and verified-review acceptance",()=>{
 
    const outside=await checkout(post("/api/checkout",input("Khulna"),"acceptance-cod-232-b"));
    expect(outside.status).toBe(201);
-   expect((await outside.json()).totalPaisa).toBe(54500);
+   expect((await outside.json()).totalPaisa).toBe(52000);
    expect((await Product.findById(product._id).lean<any>()).reserved).toBe(4);
 
    session.token=await signSession(String(owner));
