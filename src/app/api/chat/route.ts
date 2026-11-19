@@ -1,4 +1,5 @@
 import {productFacts} from '@/lib/product-experience';
+import {currentStoreSettings} from '@/lib/store-settings-server';
 import {shouldListGroup} from '@/lib/product-variants';
 import {validCloudinaryUrl} from '@/lib/cloudinary-media';
 import {apiError,HttpError} from '@/lib/auth';
@@ -16,7 +17,20 @@ export async function POST(req:Request){
   assertChatOrigin(req);
   if(!allowChat(req.headers.get('x-nf-client-connection-ip')||'unknown'))return Response.json({error:'Please wait a minute before sending another message.'},{status:429,headers:{...headers,'Retry-After':'60'}});
   const {message,language,context,productSlug}=chatSchema.parse(await boundedJson(req));
-  const builtin=builtinReply(message,language);if(builtin)return Response.json(builtin,{headers});
+  const builtin=builtinReply(message,language);
+  // Prefer owner-saved shipping rules to generic replies; never invent a fee.
+  if(builtin && /(?:delivery|shipping|ডেলিভারি|চার্জ|charge)/i.test(message) && dedicatedDb(process.env.MONGODB_URI)){
+   try{
+    const settings=await currentStoreSettings();
+    if(settings.revision>0){
+     const amount=(n:number)=>'৳'+(n/100).toLocaleString('en-BD');
+     return Response.json({reply:language==='bn'?
+      'ANUSMITA-এর নির্ধারিত delivery charge: ঢাকার ভিতরে '+amount(settings.dhakaShippingPaisa)+', ঢাকার বাইরে '+amount(settings.outsideShippingPaisa)+'। অর্ডারের মোট মূল্য checkout-এ নিশ্চিত হবে।':
+      'Approved ANUSMITA delivery charge: Inside Dhaka '+amount(settings.dhakaShippingPaisa)+', Outside Dhaka '+amount(settings.outsideShippingPaisa)+'. The final order total is confirmed at checkout.'},{headers});
+    }
+   }catch{/* Keep safe generic answer when the store settings are unavailable. */}
+  }
+  if(builtin)return Response.json(builtin,{headers});
   const bn=language==='bn';
   if(!dedicatedDb(process.env.MONGODB_URI))return Response.json({reply:bn?'Live catalogue এখন পাওয়া যাচ্ছে না, তাই দাম বা stock নিশ্চিত করতে পারছি না। পণ্যের নাম দিয়ে আমাদের টিমকে জিজ্ঞেস করুন।':'The live catalogue is unavailable, so I cannot confirm prices or stock. Ask our team about the product you want.',links:supportLinks(language)},{headers});
   try{
