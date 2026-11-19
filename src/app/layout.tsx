@@ -33,6 +33,7 @@ export default async function RootLayout({children}:{children:React.ReactNode}){
  const chrome=await publicChrome();
  const profile=process.env.MONGODB_URI?await currentStoreSettings().catch(()=>null):null;
  return <html lang="en"><body className="anBody"><a className="anSkipLink" href="#main-content">Skip to content</a>
+  {process.env.RECOVERY_CATALOG_ONLY==="true"&&<div role="status" style={{background:"#fff0d9",color:"#602b25",padding:"9px 16px",textAlign:"center",fontSize:13}}>Catalogue recovery mode · Online checkout and admin access are awaiting secure configuration. Product availability and prices must be confirmed with ANUSMITA.</div>}
   <div className="anAnnouncement"><span>✿</span> {chrome?.announcement||"Discover the ANUSMITA edit ✦ Beauty, Fashion & Lifestyle ✦ Curated for Bangladesh"}</div>
   <header className="anHeader"><div className="anWide anHeaderInner">
    {(chrome?.headerOrder||["logo","navigation","search","tools"]).map(section=>{

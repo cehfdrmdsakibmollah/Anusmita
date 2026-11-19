@@ -4,3 +4,5 @@
 
 /* The desktop search form already provides the search action. */
 @media(min-width:1281px){.anHeaderTools>a[href="/shop#store-search"]{display:none}}
+
+.anShopNewInfo .anShopRating{display:flex;align-items:center;gap:5px;margin:8px 0;color:#7e183c;font-size:13px;text-decoration:none}.anShopRating>span{color:#a7610c}.anShopRating small{font-size:11px;color:#78616b}

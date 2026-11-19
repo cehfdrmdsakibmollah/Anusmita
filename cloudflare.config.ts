@@ -2,19 +2,15 @@ import { bindings, defineConfig, defineWorker } from "cf/config";
 
 export default defineConfig({
   worker: defineWorker({
-    name: "anusmita-compat-test",
-    entrypoint: "vinext/server/fetch-handler",
+    name: "anusmita-store",
+    entrypoint: "./workers/app/index.ts",
     compatibilityDate: "2026-11-18",
-    assets: {
-      htmlHandling: "none",
-      notFoundHandling: "none",
-      runWorkerFirst: ["/*", "!/_next/static/*", "!/*/_next/static/*"],
-    },
     env: {
-      ASSETS: bindings.assets(),
-      // This is an isolated compatibility target, never the production store.
+      ASSETS: bindings.worker({worker:"anusmita-store-assets"}),
+      // Recovery remains catalogue-only until production secrets and acceptance tests pass.
       STORE_MODE: bindings.text("catalog"),
-      NEXT_PUBLIC_SITE_URL: bindings.text("https://anusmita-compat-test.mdsakibmolla545.workers.dev"),
+      RECOVERY_CATALOG_ONLY: bindings.text("true"),
+      NEXT_PUBLIC_SITE_URL: bindings.text("https://anusmita-store.mdsakibmolla545.workers.dev"),
     },
   }),
 });

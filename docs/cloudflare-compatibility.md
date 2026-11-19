@@ -1,4 +1,57 @@
-# Cloudflare compatibility test (not production)
+# Cloudflare hosting recovery and compatibility
+
+## Current hosted state — 19 November 2026 (Asia/Dhaka)
+
+The catalogue is publicly reachable at https://anusmita-store.mdsakibmolla545.workers.dev/shop.
+This is catalogue recovery, not a completed production migration. `STORE_MODE=catalog`
+and `RECOVERY_CATALOG_ONLY=true` are enabled. No production MongoDB, session,
+R2 upload or provider secrets are attached. The page displays an explicit warning.
+The legacy catalogue is shown until the production database is securely configured;
+its stock, availability and prices must be confirmed with the store.
+
+The existing Netlify deployment and `anusmita-media` Worker/bucket are unchanged.
+Production DNS was not changed. Netlify credentials remain inaccessible through its
+masked connector response; the signed-in account session is needed to configure
+credentials securely. Never commit credentials or send them in chat.
+
+### Runtime and assets
+
+`workers/app/index.ts` routes static requests to the `anusmita-store-assets` service
+binding and wraps application requests in an isolated Mongoose context. Cloudflare-only
+Vite transforms select request-owned models/connections and transaction sessions;
+stream completion/cancellation closes connections. Normal Next/Netlify source keeps
+its existing connection behaviour. Hosted MongoDB transaction compatibility remains
+unverified, despite passing local request-scope unit tests.
+
+Native Workers Static Assets upload returned an authorization error in this session.
+The recovery asset service embeds generated JS/CSS and serves allowlisted public
+files from an immutable GitHub commit with edge caching. This adds Worker requests
+and an external origin for cold public assets. It is a temporary fallback, with no
+claim of production traffic/CPU capacity. `scripts/package-store-assets.mjs` packages
+both services after `npm run build:cloudflare`; generated transfer files are ignored.
+Use `ASSET_SOURCE_REF` to select the exact 40-character source commit for public files.
+Upload packaged modules through an authorized Cloudflare API/CLI; never include secrets
+in the package. Keep asset versions referenced by an active app deployment available
+when replacing the service. Prefer native static assets once authorization is fixed.
+
+### Reviews
+
+Shop cards now aggregate approved, consented, customer-submitted, purchase-verified
+reviews for just the displayed product IDs. Missing review data is labelled honestly;
+review lookup failures do not hide products. A read-only production check found zero
+`productreviews` records. The legacy catalogue has no verified review linkage and says
+so; this release does not create customer reviews or fabricated stars/counts.
+
+### Browser observations
+
+The deployed shop renders styling and images. JS/CSS assets return 200, and category
+navigation works. No login, checkout, upload, payment, courier or webhook acceptance
+is claimed. Complete the gates below before enabling live checkout or moving DNS.
+
+---
+
+## Earlier preparation evidence (historical; current state above supersedes it)
+
 
 Target: `anusmita-compat-test` on account subdomain `mdsakibmolla545`.
 Baseline: main `097887c693de9f8afcc999d18956d06b7f389750`.
