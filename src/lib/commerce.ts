@@ -29,6 +29,7 @@ export async function createOrder(input:unknown,idempotencyKey:string,funnelAttr
  }
  const policy=await currentStoreSettings();
  if(policy.maintenanceEnabled)throw new HttpError(503,policy.maintenanceMessage);
+ if(policy.revision===0)throw new HttpError(503,"Set and save delivery rates in Admin Store Settings before accepting COD orders");
  const session=await mongoose.startSession();
  let placed:any;
  try {
