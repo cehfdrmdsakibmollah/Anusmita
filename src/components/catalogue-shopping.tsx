@@ -127,7 +127,7 @@ export default function ShoppingPage({mode,codEnabled=false,shippingRates=null,n
     {unknown&&<p>Some items need a price confirmation and are not included in the subtotal.</p>}
     {totalSavings>0&&<div className="anBulkCartSave"><span>Quantity discount saved</span><strong>−{money(totalSavings)}</strong></div>}
     <div><span>Delivery</span><span>{isCheckout?deliveryLabel:extraDelivery?'At checkout':'Included'}</span></div>
-    {isCheckout&&<div><span>Estimated total</span><strong>{knownTotal===null?'To confirm':money(knownTotal)}</strong></div>
+    {isCheckout&&<div><span>Estimated total</span><strong>{knownTotal===null?'To confirm':money(knownTotal)}</strong></div>}
     <p className="anFlowNotice">Shipping and availability are confirmed by our team. No payment is collected in catalogue mode.</p>
     {isCheckout?<><p className="anFlowPaymentLabel">Payment method: <strong>Cash on Delivery</strong></p><p>Complete delivery details in the form on this page.</p><Link href="/cart">Back to cart</Link></>:
      <Link className="sheetPrimary anFlowButton" href="/checkout">Proceed to Checkout <ArrowRight size={16}/></Link>}
