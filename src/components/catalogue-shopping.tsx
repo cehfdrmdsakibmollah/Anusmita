@@ -27,7 +27,7 @@ export function ProductCardWishlist({id}:{id:string}){
 }
 type DisplayProduct={id:string;name:string;slug:string;size:string;image:string;pricePaisa:number|null;deliveryIncluded:boolean;category:string;quantityDiscounts?:QuantityDiscountTier[]};
 const staticProducts:DisplayProduct[]=sheetCatalogue.map(p=>({id:p.id,name:p.name,slug:p.slug,size:p.size,image:p.image,pricePaisa:p.pricePaisa,deliveryIncluded:p.deliveryIncluded,category:p.category}));
-export default function ShoppingPage({mode,codEnabled=false,nativeHero}:{mode:'cart'|'wishlist'|'checkout';codEnabled?:boolean;nativeHero?:CmsNativeHero}){
+export default function ShoppingPage({mode,codEnabled=false,shippingRates=null,nativeHero}:{mode:'cart'|'wishlist'|'checkout';codEnabled?:boolean;shippingRates?:{dhaka:number;outside:number;revision:number}|null;nativeHero?:CmsNativeHero}){
  const {state,ready,error,update}=useShopping();
  const [consent,setConsent]=useState(false);
  const [codCustomer,setCodCustomer]=useState({name:'',phone:'',district:'',area:'',address:'',notes:''});
@@ -61,6 +61,9 @@ export default function ShoppingPage({mode,codEnabled=false,nativeHero}:{mode:'c
  const totalSavings=lines.reduce((sum,l)=>sum+(l.p.pricePaisa===null?0:priceForQuantity(l.p.pricePaisa,l.quantity,l.p.quantityDiscounts||[]).savingsPaisa),0);
  const unknown=lines.some(l=>l.p.pricePaisa===null);
  const extraDelivery=lines.some(l=>!l.p.deliveryIncluded);
+ const deliveryFee=deliveryRegion==='international'?null:!extraDelivery?0:codEnabled&&shippingRates?(deliveryRegion==='dhaka'?shippingRates.dhaka:shippingRates.outside):null;
+ const knownTotal=!unknown&&deliveryFee!==null?total+deliveryFee:null;
+ const deliveryLabel=deliveryFee===null?'Fee to be confirmed':deliveryFee===0?'Included':money(deliveryFee);
  async function submitCod(event:React.FormEvent<HTMLFormElement>){
   event.preventDefault();if(!codEnabled||!consent||codPending||loadError||missing.length||unknown||!locationPairValid(codCustomer.district,codCustomer.area)||deliveryRegion==="international"||lines.some(l=>!/^[0-9a-f]{24}$/i.test(l.id)))return;
   setCodPending(true);setCodError('');
@@ -106,14 +109,14 @@ export default function ShoppingPage({mode,codEnabled=false,nativeHero}:{mode:'c
  </div>
  <h3 className="anCheckoutSectionHeading">Shipping Option</h3>
  <div className="anCheckoutShippingOptions" role="group" aria-label="Shipping region">
- <button type="button" aria-pressed={deliveryRegion==='dhaka'} onClick={()=>{setDeliveryRegion("dhaka");if(codCustomer.district&&codCustomer.district!=="Dhaka")setCodCustomer(x=>({...x,district:"",area:""}));}} className={deliveryRegion==='dhaka'?'selected':''}><span className="anCheckoutRadio">{deliveryRegion==='dhaka'?<Check size={13}/>:null}</span><span><strong>Inside Dhaka</strong><small>Fee confirmed at order submission</small></span></button>
- <button type="button" aria-pressed={deliveryRegion==='outside'} onClick={()=>{setDeliveryRegion("outside");if(codCustomer.district==="Dhaka")setCodCustomer(x=>({...x,district:"",area:""}));}} className={deliveryRegion==='outside'?'selected':''}><span className="anCheckoutRadio">{deliveryRegion==='outside'?<Check size={13}/>:null}</span><span><strong>Outside Dhaka</strong><small>Fee confirmed at order submission</small></span></button>
+ <button type="button" aria-pressed={deliveryRegion==='dhaka'} onClick={()=>{setDeliveryRegion("dhaka");if(codCustomer.district&&codCustomer.district!=="Dhaka")setCodCustomer(x=>({...x,district:"",area:""}));}} className={deliveryRegion==='dhaka'?'selected':''}><span className="anCheckoutRadio">{deliveryRegion==='dhaka'?<Check size={13}/>:null}</span><span><strong>Inside Dhaka</strong><small>{codEnabled&&shippingRates?money(shippingRates.dhaka):'Fee to be confirmed'}</small></span></button>
+ <button type="button" aria-pressed={deliveryRegion==='outside'} onClick={()=>{setDeliveryRegion("outside");if(codCustomer.district==="Dhaka")setCodCustomer(x=>({...x,district:"",area:""}));}} className={deliveryRegion==='outside'?'selected':''}><span className="anCheckoutRadio">{deliveryRegion==='outside'?<Check size={13}/>:null}</span><span><strong>Outside Dhaka</strong><small>{codEnabled&&shippingRates?money(shippingRates.outside):'Fee to be confirmed'}</small></span></button>
  <button type="button" aria-pressed={deliveryRegion==='international'} onClick={()=>setDeliveryRegion('international')} className={deliveryRegion==='international'?'selected':''}><span className="anCheckoutRadio">{deliveryRegion==='international'?<Check size={13}/>:null}</span><span><strong>Outside Bangladesh</strong><small>Quote required · ordering unavailable</small></span></button>
  </div>
  {deliveryRegion==='international'&&<p className="anFlowNotice" role="status">International shipping is not configured. Please contact ANUSMITA for a quote.</p>}
  <h3 className="anCheckoutSectionHeading">Payment Method</h3>
  <div className="anCheckoutPaymentOptions"><div aria-disabled="true"><CreditCard size={19}/><span>bKash</span><small>Not connected</small></div><div aria-disabled="true"><Wallet size={19}/><span>Nagad</span><small>Not connected</small></div><div className="selected"><Truck size={19}/><span>Cash on Delivery</span><small>Pay on delivery</small><Check size={15}/></div></div>
- <div className="anCheckoutFormTotal"><strong>Order Summary</strong><span>{state.cart.reduce((n,l)=>n+l.quantity,0)} item(s)</span><div><span>{unknown?"Known-price subtotal":"Subtotal"}</span><b>{unknown&&total===0?"Price confirmation required":money(total)}</b></div><div><span>Delivery</span><b>{extraDelivery?"Fee to be confirmed":"Included"}</b></div><div className="anCheckoutFormGrand"><span>{unknown?"Known-price subtotal":"Product subtotal"}</span><b>{unknown&&total===0?"To confirm":money(total)}</b></div></div>
+ <div className="anCheckoutFormTotal"><strong>Order Summary</strong><span>{state.cart.reduce((n,l)=>n+l.quantity,0)} item(s)</span><div><span>{unknown?"Known-price subtotal":"Subtotal"}</span><b>{unknown&&total===0?"Price confirmation required":money(total)}</b></div><div><span>Delivery</span><b>{deliveryLabel}</b></div><div className="anCheckoutFormGrand"><span>Estimated total</span><b>{knownTotal===null?'To confirm':money(knownTotal)}</b></div></div>
  <label className="shoppingConsent anCheckoutConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/> I confirm my details and agree to the applicable terms. COD payment is due on delivery.</label>
  {codError&&<p role="alert" className="error">{codError}</p>}
  {!codEnabled&&<div className="anFlowClosed"><LockKeyhole size={18}/><strong>Checkout preview only</strong><p>Live COD checkout has not been enabled. No customer details will be submitted from this preview.</p></div>}
@@ -123,7 +126,8 @@ export default function ShoppingPage({mode,codEnabled=false,nativeHero}:{mode:'c
    <aside className="shoppingSummary anFlowSummary"><h2>Order Summary</h2><p className="anFlowSummaryCaption">{state.cart.reduce((n,l)=>n+l.quantity,0)} item(s) in your bag</p><div><span>{unknown?'Known-price subtotal':'Product subtotal'}</span><strong>{unknown&&total===0?"To confirm":money(total)}</strong></div>
     {unknown&&<p>Some items need a price confirmation and are not included in the subtotal.</p>}
     {totalSavings>0&&<div className="anBulkCartSave"><span>Quantity discount saved</span><strong>−{money(totalSavings)}</strong></div>}
-    <div><span>Delivery</span><span>{extraDelivery?'To be confirmed':'Included'}</span></div>
+    <div><span>Delivery</span><span>{isCheckout?deliveryLabel:extraDelivery?'At checkout':'Included'}</span></div>
+    {isCheckout&&<div><span>Estimated total</span><strong>{knownTotal===null?'To confirm':money(knownTotal)}</strong></div>
     <p className="anFlowNotice">Shipping and availability are confirmed by our team. No payment is collected in catalogue mode.</p>
     {isCheckout?<><p className="anFlowPaymentLabel">Payment method: <strong>Cash on Delivery</strong></p><p>Complete delivery details in the form on this page.</p><Link href="/cart">Back to cart</Link></>:
      <Link className="sheetPrimary anFlowButton" href="/checkout">Proceed to Checkout <ArrowRight size={16}/></Link>}
