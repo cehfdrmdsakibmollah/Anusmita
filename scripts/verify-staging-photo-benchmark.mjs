@@ -8,6 +8,9 @@ const results=[];
 const sample=await fetch(base+'/catalogue/skincare/k30.png',{signal:AbortSignal.timeout(15000)});
 if(!sample.ok)throw Error('Missing public K30 sample image');
 const sampleBytes=Buffer.from(await sample.arrayBuffer());
+const modelConfig=await fetch(base+'/api/public-models/Xenova/clip-vit-base-patch32/config.json',{signal:AbortSignal.timeout(25000)}).catch(()=>null);
+console.log('MODEL_ASSET_PREFLIGHT '+JSON.stringify({status:modelConfig?.status||0,contentType:modelConfig?.headers.get('content-type')||null}));
+
 async function exercise({title,mobile=false,modified=false,unknown=false}){
  const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1280,height:800},deviceScaleFactor:mobile?2:1,isMobile:mobile,hasTouch:mobile});
  const page=await context.newPage();let errors=[];const started=Date.now();
