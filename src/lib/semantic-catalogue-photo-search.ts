@@ -24,8 +24,13 @@ function unit(data:ArrayLike<number>):number[]{
 function cosine(a:number[],b:number[]){let sum=0;for(let i=0;i<a.length;i++)sum+=a[i]*b[i];return sum;}
 async function loader():Promise<Extractor>{
  // URL is pinned, not constructed from customer input.
- const m:{pipeline:(task:string,name:string,opts?:Record<string,unknown>)=>Promise<Extractor>}=
+ const m:{pipeline:(task:string,name:string,opts?:Record<string,unknown>)=>Promise<Extractor>;env:{allowLocalModels:boolean;allowRemoteModels:boolean;localModelPath:string;useBrowserCache:boolean}}=
   await import(/* @vite-ignore */ PACKAGE);
+ // Browser uses only same-origin model files; uploaded photo never leaves the device.
+ m.env.allowLocalModels=true;
+ m.env.allowRemoteModels=false;
+ m.env.localModelPath='/api/public-models/';
+ m.env.useBrowserCache=true;
  const p=await m.pipeline('image-feature-extraction',MODEL,{device:'wasm',dtype:'q8'});
  return p;
 }
