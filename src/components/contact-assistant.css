@@ -18,3 +18,6 @@
 @media(max-width:600px){.aa-visual-match{gap:8px;padding:7px}.aa-visual-match img{width:58px;height:58px}.aa-visual-match strong{font-size:12px}}
 
 .aa-stop-search{margin-left:12px;padding:4px 10px;border:1px solid #e1baca;border-radius:8px;background:#fff7f8;color:#a43e63;cursor:pointer;font:11px Arial,sans-serif}
+
+.aa-suggestion-disclaimer{font:12px/1.5 Arial,sans-serif;color:#754a59;margin:0 0 3px}
+.aa-deep-search{display:inline-flex;align-items:center;justify-content:center;margin:12px 0 4px;padding:10px 14px;max-width:100%;border:1px solid #b43d69;border-radius:10px;background:#fff7fa;color:#9b2958;cursor:pointer;font:600 12px/1.4 Arial,sans-serif;white-space:normal;text-align:center}.aa-deep-search:hover{background:#ffe9f0}.aa-deep-search:disabled{opacity:.55;cursor:wait}
