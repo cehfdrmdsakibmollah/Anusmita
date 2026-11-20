@@ -35,6 +35,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build:cloudflare
+      # Repository-scoped credentials were configured in GitHub; this push verifies access without printing their values.
       - name: Staging deployment availability
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
