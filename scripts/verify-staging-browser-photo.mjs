@@ -11,8 +11,15 @@ try{
  const image=await fetch(base+'/catalogue/skincare/k30.png',{signal:AbortSignal.timeout(16000)});
  if(!image.ok)throw new Error('Could not fetch public catalogue photo: '+image.status);
  const buffer=Buffer.from(await image.arrayBuffer());
- await page.goto(base+'/contact/design-preview',{waitUntil:'domcontentloaded',timeout:30000});
+ await page.goto(base+'/contact/design-preview',{waitUntil:'networkidle',timeout:45000});
+ // SSR HTML is visible before React hydrates; allow the attachment handler to bind.
+ await page.waitForTimeout(1200);
  await page.locator('input[type=file]').setInputFiles({name:'medicube-reference.png',mimeType:'image/png',buffer});
+ try{await page.locator('.aa-pending img').waitFor({state:'visible',timeout:17000});}
+ catch{
+  const error=await page.locator('.aa-error').allTextContents();
+  throw new Error('Photo preparation did not produce a preview: '+JSON.stringify(error));
+ }
  await page.getByRole('button',{name:/Send message|মেসেজ পাঠান/}).click();
  const result=page.locator('.aa-visual-match').filter({hasText:/Medicube Fresh That Lasts/i});
  await result.first().waitFor({state:'visible',timeout:150000});
