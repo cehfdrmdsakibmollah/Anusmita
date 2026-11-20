@@ -35,3 +35,12 @@ Published catalogue replies can include approved ANUSMITA Cloudinary product pho
 - The client-side Canvas matcher compares visible image properties against the existing 90-item catalogue references. It does not perform OCR, object recognition or semantic packaging classification. Uncertain results are rejected rather than making SKU claims.
 - It requires public same-origin catalogue thumbnails, browser Canvas support and first-load image downloads. Customer uploads are not sent to third-party AI services. Product links are shown without fabricated prices, stock or checkout claims.
 - The existing Cloudflare AI endpoint is retained for future explicitly approved experiments, and remains a separate gated feature; new UI does not send photos to it.
+
+
+## Lens-like API-free semantic search (experimental; staging only)
+- Browser photo search first uses local Canvas similarity, and when no match is found attempts semantic image embeddings using Transformers.js CLIP (`Xenova/clip-vit-base-patch32`). Customer photo stays on the device. No Google Lens scraping and no paid per-query inference API.
+- A pinned public Transformers.js ESM bundle and CLIP model weights are downloaded at first use from external public hosting. These requests expose normal web request metadata but **do not include customer photos**. To remove CDN dependency entirely, self-host the licensed model weights and JS runtime with correct asset/CORS/CSP configuration after validation.
+- Index embeddings for public catalogue photos are cached in the browser IndexedDB. Initial indexing may take minutes and consume bandwidth, CPU, battery and storage. Some devices, browsers, network policies, CSP rules or model hosts may not support it. A Cancel button and 180-second search deadline provide a bounded experience; results are only *possible matches*, never authenticated SKU identification.
+- The conservative CLIP similarity threshold and angle robustness require real multi-angle benchmark testing. Exact catalogue-photo hosted Chromium acceptance is a separate check and **does not prove CLIP fallback works**.
+- There can never be an unconditional lifetime/unlimited service guarantee: CDN/hosting quotas, device capabilities, model licensing, storage/bandwidth and vendor policies can change. The architecture removes per-search external AI inference fees, not all infrastructure costs.
+- Existing Cloudflare Workers AI inference endpoint remains separate; chatbot uploads do not call it. Production environment and COD remain unchanged.
