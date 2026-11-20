@@ -5,6 +5,7 @@
  * Loading a pretrained open model is NOT equivalent to Google Lens indexing the web.
  */
 import {sheetCatalogue} from './sheet-catalogue';
+import {choosePhotoCandidates} from './photo-match-confidence';
 import type {FreeVisualMatch} from './free-catalogue-photo-search';
 
 const MODEL='Xenova/clip-vit-base-patch32';
@@ -98,5 +99,5 @@ export async function semanticCataloguePhotoSearch(
   done++;onProgress?.({done,total:references.length,stage:'index'});
  }
  results.sort((a,b)=>b.score-a.score);
- return results.slice(0,5);
+ return choosePhotoCandidates(results,{minimum:.78,margin:.035});
 }
