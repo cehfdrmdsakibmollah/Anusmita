@@ -5,7 +5,7 @@ PR #232 stays **draft**. Only the isolated `anusmita-store-staging` Worker is ta
 
 The application uses a **two-stage, zero-paid-inference-API** browser-only customer photo search:
 1. Canvas structure/colour matching against a bounded public catalogue.
-2. CLIP image embeddings (Transformers.js, `Xenova/clip-vit-base-patch32` with q8) if stage one cannot confidently match. CLIP model files are fetched from a strict same-origin, read-only, allowlisted static-asset mirror; customer photo bytes are *not* sent to the model source.
+2. If quick matching is uncertain, show clearly labeled catalogue browsing suggestions without claiming a confirmed SKU. CLIP embeddings (Transformers.js, `Xenova/clip-vit-base-patch32` q8) run **only after customer explicitly selects Deep AI Search**. This prevents an automatic ~89 MB model download for every unfamiliar photo. CLIP model files are fetched from a strict same-origin, read-only, allowlisted static-asset mirror; customer photo bytes are *not* sent to the model source.
 
 A browser image match is a suggestion, not verified SKU identification. A confusing near-tie is rejected, and at most five suggestions can be rendered. The system does not query Google Lens or perform web-wide reverse image search.
 
@@ -32,3 +32,10 @@ The CORS failure from direct model-host fetches was fixed by the same-origin mod
 
 ## Release decision
 **No production promotion yet.** q8 staging matching is functionally verified for the five hosted scenarios above; real multi-angle and physical mobile-device acceptance remain open. Do not merge the draft PR or enable live COD based on photo matching tests.
+
+## Fast-mode UX update (2026-11-21)
+- User reported a 90 MB CLIP loading delay and an empty suggestion state. Quick Search now returns without triggering CLIP model download; initial image matching may still require loading public catalogue pictures, so speed depends on cache/network.
+- Uncertain textured photos display exploratory catalogue cards, explicitly labelled **not identified from the photo**. Blank/featureless images do not get lookalike suggestions. A separate opt-in deep search is provided with first-use size disclosure; customer photo remains local.
+- Hosted benchmark now asserts zero CLIP model requests during Quick Search and intentionally clicks Deep AI Search for transformed/unknown image acceptance.
+- This update does not provide unlimited lifetime free web-wide Google Lens image search. It is restricted to ANUSMITA's published catalogue and its browser's available compute, model, network and cache.
+- Latest frontend and benchmark changes require a new clean successful CI and hosted browser acceptance before production release. Keep PR draft and COD gate unchanged.
