@@ -10,6 +10,7 @@ on:
       - "public/**"
       - "scripts/deploy-cloudflare-staging.mjs"
       - "scripts/verify-staging-vision.mjs"
+      - "scripts/verify-staging-browser-photo.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/cloudflare-staging.yml"
@@ -48,12 +49,24 @@ jobs:
       - name: Deploy isolated staging Worker
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
         run: npm run deploy:cloudflare:staging
-      - name: Real product photo acceptance
+      - name: Install hosted browser test dependency
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
-        run: node scripts/verify-staging-vision.mjs
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Hosted browser catalogue-photo acceptance
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: node scripts/verify-staging-browser-photo.mjs
+      - name: Upload hosted acceptance screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-photo-acceptance
+          path: staging-photo-acceptance.png
+          if-no-files-found: ignore
       - name: Post-deploy safety instructions
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
         run: |
           echo "Staging Worker: anusmita-store-staging"
           echo "Do not enable COD. Bind staging MongoDB/session secrets through Cloudflare secret bindings."
-          echo "Image recognition is NOT accepted until real-image test results return matching published products."
+          echo "Hosted photo search remains staging-only until matched catalogue items and image/angle variants pass browser acceptance."
