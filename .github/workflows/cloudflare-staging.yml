@@ -9,6 +9,7 @@ on:
       - "src/**"
       - "public/**"
       - "scripts/deploy-cloudflare-staging.mjs"
+      - "scripts/verify-staging-vision.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/cloudflare-staging.yml"
