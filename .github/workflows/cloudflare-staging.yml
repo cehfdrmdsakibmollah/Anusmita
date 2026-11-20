@@ -22,7 +22,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   build-and-stage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
       ANUSMITA_STAGING: "true"
