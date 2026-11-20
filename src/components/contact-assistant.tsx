@@ -8,7 +8,7 @@ import ChatPhotos from './chat-photos';
 import {preparePhoto,MAX_PHOTOS,type ChatPhoto} from '@/lib/chat-attachments';
 import {freeCatalogueImageSearch,type FreeVisualMatch} from '@/lib/free-catalogue-photo-search';
 import {semanticCataloguePhotoSearch} from '@/lib/semantic-catalogue-photo-search';
-type Message=ChatReply&{role:'user'|'assistant';id:number;photos?:ChatPhoto[];visualMatches?:FreeVisualMatch[]};
+type Message=ChatReply&{role:'user'|'assistant';id:number;photos?:ChatPhoto[];visualMatches?:FreeVisualMatch[];visualSuggestions?:FreeVisualMatch[];deepPhoto?:ChatPhoto};
 const greeting=(lang:Language):Message=>({id:0,role:'assistant',reply:lang==='bn'?'আসসালামু আলাইকুম। ANUSMITA-তে স্বাগতম! পণ্যের নাম লিখুন অথবা নিচের একটি প্রশ্ন বেছে নিন।':'Welcome to ANUSMITA. Tell me what you are looking for, or choose a question below.'});
 export default function ContactAssistant(){
  const [language,setLanguage]=useState<Language>('bn'),[messages,setMessages]=useState<Message[]>([greeting('bn')]),[input,setInput]=useState(''),[busy,setBusy]=useState(false),[sound,setSound]=useState(false),[context,setContext]=useState(''),[productSlug,setProductSlug]=useState(''),[error,setError]=useState(''),[bag,setBag]=useState<{product:ChatProduct;quantity:number}[]>([]),[review,setReview]=useState(false);
@@ -28,27 +28,16 @@ export default function ContactAssistant(){
    setPhotoProgress(bn?'দ্রুত catalogue ছবি মিলিয়ে দেখছি…':'Checking catalogue photos…');
    const result=await freeCatalogueImageSearch(attached[0].file,ac.signal);
    if(ac.signal.aborted)return;
-   let matches=result.matches;
-   let semanticUsed=false;
-   if(!matches.length){
-    setPhotoProgress(bn?'Browser-এ CLIP model লোড হচ্ছে (~৯০ MB প্রথমবার); মোবাইল ডেটা খরচ হতে পারে…':'Loading CLIP on your device (~90 MB first use; mobile data may be charged)…');
-    try{
-     matches=await semanticCataloguePhotoSearch(attached[0].file,ac.signal,p=>{
-      if(!ac.signal.aborted)setPhotoProgress(p.stage==='index'?(bn?`পণ্যের ছবি বিশ্লেষণ: ${p.done}/${p.total}`:`Analyzing products: ${p.done}/${p.total}`):(bn?'Browser-এ model load হচ্ছে…':'Loading local model…'));
-     });
-     semanticUsed=true;
-    }catch(e){
-     if(ac.signal.aborted)throw e;
-     // CPU, network or model incompatibility must not turn into made-up matches.
-     setError(bn?'CLIP search চালু হয়নি। Lightweight photo matching-এও নিশ্চিত মিল পাওয়া যায়নি।':'CLIP search could not run and no clear photo match was found.');
-    }
-   }
-   if(ac.signal.aborted)return;
-   const hasMatch=matches.length>0;
+   const matches=result.matches;
+   const alternatives=result.suggestions;
    const reply=bn
-    ?hasMatch?(semanticUsed?'CLIP model দিয়ে সম্ভাব্য মিল পাওয়া গেছে। এটি নিশ্চিত product identification নয়; ছবি, নাম ও variant মিলিয়ে নিন।':'Catalogue ছবির সঙ্গে মিল পাওয়া গেছে। কেনার আগে label ও variant যাচাই করুন।'):'ছবির সঙ্গে যথেষ্ট মিল পাওয়া যায়নি। পণ্যের নাম লিখুন বা স্পষ্ট front-facing ছবি দিন।'
-    :hasMatch?(semanticUsed?'The on-device CLIP model found possible matches. Verify label and variant before ordering.':'Similar catalogue photos found. Verify label and variant before ordering.'):'No confident match. Try a clear front-facing photo or search by product name.';
-   setMessages(m=>[...m,{id:++serial.current,role:'assistant',reply,visualMatches:matches,suggestions:hasMatch?undefined:[bn?'পণ্য খুঁজুন':'Find products']}]);
+    ?matches.length?'ছবির সঙ্গে মিল পাওয়া পণ্য নিচে আছে; নাম ও variant যাচাই করুন।'
+      :alternatives.length?'নিশ্চিত মিল পাওয়া যায়নি। নিচে দেখতে কিছুটা একই রকম পণ্য আছে; এগুলো একই product না-ও হতে পারে। চাইলে Deep AI Search চালান।'
+      :'নিশ্চিত মিল পাওয়া যায়নি। পণ্যের নাম দিয়ে খুঁজুন অথবা Deep AI Search চালান।'
+    :matches.length?'Similar catalogue photos found; verify label and variant.'
+      :alternatives.length?'No confirmed match. These are only visually similar products, not an identification. Try optional deep AI search.'
+      :'No confident match. Search by name or choose optional deep AI search.';
+   setMessages(m=>[...m,{id:++serial.current,role:'assistant',reply,visualMatches:matches,visualSuggestions:alternatives,deepPhoto:matches.length?undefined:attached[0],suggestions:matches.length?undefined:[bn?'পণ্য খুঁজুন':'Find products']}]);
    void chime();
   }catch(e){
    const timedOut=e instanceof Error&&e.name==='AbortError';
@@ -72,6 +61,6 @@ export default function ContactAssistant(){
  <div className="aa-quick" aria-label="Quick questions">{questions.map((q,i)=><button type="button" disabled={busy} key={q} onClick={()=>i===0?void send(bn?'হ্যালো':'hello'):void send(q)}>{q}</button>)}</div>
  {bag.length>0&&<div className="aa-bag"><h4><ShoppingBag/>{bn?'আপনার enquiry list':'Your enquiry list'} <span>{bag.length}/12</span></h4>{bag.map(({product:p,quantity:q})=><div className="aa-bag-line" key={p.id}><span>{p.name} · {p.size}</span><button aria-label={'Reduce '+p.name} onClick={()=>{setReview(false);setBag(items=>items.map(x=>x.product.id===p.id?{...x,quantity:x.quantity-1}:x).filter(x=>x.quantity>0));}}><Minus/></button><b>{q}</b><button disabled={q>=10} aria-label={'Increase '+p.name} onClick={()=>add(p)}><Plus/></button></div>)}<p>{bn?'পণ্যের আনুমানিক মোট':'Estimated product subtotal'}: <strong>{taka(bag.reduce((n,x)=>n+x.quantity*x.product.pricePaisa,0))}</strong></p><small>{bn?'Delivery ও discount অন্তর্ভুক্ত নয়। এটি confirmed order নয়।':'Excludes delivery and discounts. This is not a confirmed order.'}</small>{review?<><p>{bn?'WhatsApp খুললে এই তালিকা WhatsApp-এর সঙ্গে শেয়ার হবে। সেখানে দেখে Send চাপবেন।':'Opening WhatsApp shares this list with WhatsApp. Review it there before pressing Send.'}</p><a className="aa-send" href={enquiryLink(bag)} target="_blank" rel="noopener noreferrer">{bn?'WhatsApp-এ খুলুন':'Open in WhatsApp'} <ArrowUpRight/></a></>:<button className="aa-send" type="button" onClick={()=>setReview(true)}>{bn?'তালিকা দেখে পাঠান':'Review enquiry'}</button>}</div>}
  <div className="aa-attachment-bar"><input ref={picker} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden aria-label="Attach product photos" onChange={e=>{void attach(e.target.files);e.target.value='';}}/><button type="button" disabled={busy||preparing||photos.length>=3} onClick={()=>picker.current?.click()}><Paperclip size={16}/>{bn?'পণ্যের ছবি যোগ করুন':'Attach product photos'}</button><span>{preparing?(bn?'ছবি প্রস্তুত হচ্ছে…':'Preparing photos…'):'JPG / PNG / WebP · 3 photos · first compared locally'}</span><span className="aa-sound-status">{sound?(bn?'Reply sound চালু':'Reply sound on'):(bn?'উপরে 🔇 চাপলে reply sound চালু হবে':'Enable reply sound with the speaker above')}</span></div>
- {photos.length>0&&<div className="aa-pending">{photos.map((p,i)=><figure key={p.id}><img src={p.url} alt={'Selected product photo '+(i+1)} width={80} height={80}/><button type="button" aria-label={'Remove photo '+(i+1)} onClick={()=>setPhotos(items=>items.filter(x=>x.id!==p.id))}><X size={14}/></button></figure>)}<small>{bn?'ছবিটি browser-এ মিলিয়ে দেখা হবে। প্রয়োজন হলে প্রথমবার প্রায় ৯০ MB CLIP model download হবে (মোবাইল ডেটা খরচ হতে পারে)। ছবিটি কোনো AI server-এ পাঠানো হবে না।':'Search runs locally. If quick matching fails, the browser may download approximately 90 MB of CLIP model files on first use (mobile data charges may apply). Your photo is not sent to an AI server.'}</small></div>}
+ {photos.length>0&&<div className="aa-pending">{photos.map((p,i)=><figure key={p.id}><img src={p.url} alt={'Selected product photo '+(i+1)} width={80} height={80}/><button type="button" aria-label={'Remove photo '+(i+1)} onClick={()=>setPhotos(items=>items.filter(x=>x.id!==p.id))}><X size={14}/></button></figure>)}<small>{bn?'দ্রুত ছবি খোঁজায় AI model download হবে না। চাইলে আলাদা Deep AI Search (প্রথমবার ~৯০ MB) চালাতে পারবেন। ছবি AI server-এ যায় না।':'Quick photo search is local and needs no AI model download. Optional deep search downloads ~90 MB on first use. Your photo stays in this browser.'}</small></div>}
  <form className="aa-composer" onSubmit={e=>{e.preventDefault();void send();}}><label className="aa-sr" htmlFor="assistant-message">{bn?'আপনার মেসেজ':'Your message'}</label><textarea id="assistant-message" value={input} onChange={e=>setInput(e.target.value)} maxLength={600} rows={2} disabled={busy} placeholder={bn?'পণ্যের নাম বা আপনার প্রশ্ন লিখুন…':'A product name or your question…'} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();void send();}}}/><button className="aa-send" disabled={busy||preparing||(!input.trim()&&!photos.length)} aria-label={bn?'মেসেজ পাঠান':'Send message'}><Send/></button></form>{error&&<p className="aa-error" role="alert">{error}</p>}<p className="aa-privacy">{bn?'স্বয়ংক্রিয় shopping assistant · Chat history save হয় না। PIN, OTP বা ব্যক্তিগত ঠিকানা এখানে লিখবেন না।':'Automated shopping assistant · Chat history is not saved. Do not enter PINs, OTPs or private addresses.'}</p></div></section>;
 }
