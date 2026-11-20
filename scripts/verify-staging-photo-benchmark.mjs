@@ -19,7 +19,7 @@ async function exercise({title,mobile=false,modified=false,unknown=false,alterna
  const page=await context.newPage();let errors=[];const started=Date.now();
  page.on('console',m=>{if(m.type()==='error'||m.type()==='warning')errors.push(('console '+m.text()).slice(0,250));});
  page.on('requestfailed',r=>errors.push(('request '+r.url()+' '+r.failure()?.errorText).slice(0,250)));
- page.on('response',r=>{if(r.status()>=400&&/transformers|huggingface|onnx|jsdelivr/.test(r.url()))errors.push(('http '+r.status()+' '+r.url()).slice(0,250));});
+ page.on('response',r=>{if(r.status()>=400&&/transformers|huggingface|onnx|jsdelivr|\/api\/public-models\//.test(r.url()))errors.push(('http '+r.status()+' '+r.url()).slice(0,250));});
  page.on('pageerror',e=>errors.push(String(e).slice(0,150)));
  try{
   await page.goto(base+'/contact/design-preview',{waitUntil:'networkidle',timeout:45000});
