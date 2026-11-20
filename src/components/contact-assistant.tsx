@@ -52,6 +52,25 @@ export default function ContactAssistant(){
  catch(e){if(!ac.signal.aborted||controller.current===ac){setError(e instanceof Error&&e.name!=='AbortError'?e.message:(bn?'সংযোগে সময় লাগছে। আবার চেষ্টা করুন।':'The connection timed out. Please retry.'));setInput(message);}}
  finally{clearTimeout(timer);if(controller.current===ac){setBusy(false);lock.current=false;controller.current=null;}}
  }
+ async function deepSearch(photo:ChatPhoto,answerId:number){
+  if(lock.current)return;
+  lock.current=true;setBusy(true);setError('');
+  const ac=new AbortController();controller.current=ac;
+  const timer=setTimeout(()=>ac.abort(),180000);
+  try{
+   setPhotoProgress(bn?'গভীর CLIP search চলছে; প্রথমবার প্রায় ৯০ MB download হতে পারে…':'Running optional CLIP search; first use may download ~90 MB…');
+   const matches=await semanticCataloguePhotoSearch(photo.file,ac.signal,p=>{
+    if(!ac.signal.aborted)setPhotoProgress(p.stage==='index'?(bn?'পণ্য বিশ্লেষণ '+p.done+'/'+p.total:'Matching '+p.done+'/'+p.total):(bn?'AI model load হচ্ছে…':'Loading model…'));
+   });
+   if(ac.signal.aborted)return;
+   setMessages(m=>m.map(x=>x.id===answerId?{...x,deepPhoto:undefined,visualSuggestions:[],visualMatches:matches,reply:matches.length?(bn?'CLIP দিয়ে সম্ভাব্য product পাওয়া গেছে। label এবং variant দেখে নিশ্চিত করুন।':'CLIP found possible products. Verify label and variant.'):(bn?'CLIP দিয়েও নিশ্চিত মিল পাওয়া যায়নি। ভুল SKU দেখাব না; পণ্যের নাম দিয়ে খুঁজুন।':'No confident CLIP match. Search by product name instead.')}:x));
+  }catch{
+   if(!ac.signal.aborted)setError(bn?'Deep AI Search সম্পন্ন হয়নি। Quick search বা পণ্যের নাম ব্যবহার করুন।':'Deep search failed. Try quick search or product name.');
+  }finally{
+   clearTimeout(timer);setPhotoProgress('');
+   if(controller.current===ac){controller.current=null;lock.current=false;setBusy(false);}
+  }
+ }
  function reset(lang=language){photoEpoch.current++;setPhotos([]);controller.current?.abort();controller.current=null;lock.current=false;setBusy(false);setPhotoProgress('');setLanguage(lang);setMessages([greeting(lang)]);setContext('');setProductSlug('');setInput('');setError('');setBag([]);setReview(false);}
  function add(p:ChatProduct){setReview(false);setBag(items=>{const found=items.find(x=>x.product.id===p.id);if(found)return items.map(x=>x.product.id===p.id?{...x,quantity:Math.min(10,x.quantity+1)}:x);return items.length<12?[...items,{product:p,quantity:1}]:items;});}
  const questions=bn?['পণ্য খুঁজুন','ডেলিভারি চার্জ','অর্ডার ট্র্যাকিং','স্কিন টাইপ','অফার','সাপোর্ট']:['Find products','Delivery','Order status','Skin type','Offers','Human support'];
