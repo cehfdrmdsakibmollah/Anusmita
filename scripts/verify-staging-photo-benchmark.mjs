@@ -46,6 +46,14 @@ async function exercise({title,mobile=false,modified=false,unknown=false,alterna
   await page.getByRole('button',{name:/Send message|মেসেজ পাঠান/}).click();
   // Wait for response UI, not a naked HTTP-200 result.
   await page.waitForFunction(()=>document.querySelectorAll('.aa-message.aa-assistant').length>=2,{},{timeout:210000});
+  // A heavy CLIP download is opt-in: explicit click for robustness and negative tests.
+  if(modified||unknown){
+   const deep=page.locator('.aa-deep-search');
+   await deep.waitFor({state:'visible',timeout:20000});
+   await deep.click();
+   await deep.waitFor({state:'detached',timeout:210000});
+  }
+
   const matches=await page.locator('.aa-visual-match').evaluateAll(a=>a.map(x=>({name:x.textContent||'',href:x.getAttribute('href')})));
   const expected=alternate?'skincare-k29':'skincare-k30';
   const correct=matches.some(x=>x.href?.includes(expected));
