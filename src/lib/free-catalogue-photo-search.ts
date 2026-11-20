@@ -5,6 +5,7 @@
  * Nothing from the uploaded image is transmitted to a model provider.
  */
 import {sheetCatalogue} from './sheet-catalogue';
+import {choosePhotoCandidates} from './photo-match-confidence';
 
 export type FreeVisualMatch={id:string;name:string;slug:string;image:string;score:number};
 export type FreeVisualResult={matches:FreeVisualMatch[];examined:number;total:number};
@@ -75,10 +76,10 @@ export async function freeCatalogueImageSearch(photo:Blob,signal?:AbortSignal):P
    examined++;
    const score=similarity(query,ref);
    // Match exact/similar catalogue photographs, not semantic product identity.
-   if(score>=.84)matches.push({id:item.id,name:item.name,slug:item.slug,image:item.image,score});
+   if(score>=.90)matches.push({id:item.id,name:item.name,slug:item.slug,image:item.image,score});
   }
  };
  await Promise.all(Array.from({length:Math.min(4,jobs.length)},()=>worker()));
  matches.sort((a,b)=>b.score-a.score);
- return {matches:matches.slice(0,5),examined,total:jobs.length};
+ return {matches:choosePhotoCandidates(matches,{minimum:.90,margin:.035}),examined,total:jobs.length};
 }
