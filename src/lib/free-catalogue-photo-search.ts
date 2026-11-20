@@ -84,7 +84,8 @@ export async function freeCatalogueImageSearch(photo:Blob,signal?:AbortSignal):P
  const matches=choosePhotoCandidates(ranked,{minimum:.90,margin:.035});
  // These low-confidence cards are browse suggestions, NEVER claimed matches.
  // Refuse uniform/featureless photos or weak image similarities.
- const queryVariance=query.rgb.reduce((n,v)=>n+(v-1/3)**2,0)/query.rgb.length;
+ const channelMean=query.rgb.reduce((n,v)=>n+v,0)/query.rgb.length;
+ const queryVariance=query.rgb.reduce((n,v)=>n+(v-channelMean)**2,0)/query.rgb.length;
  const suggestions=!matches.length&&queryVariance>.0015
   ?ranked.slice(0,4):[];
  return {matches,suggestions,examined,total:jobs.length};
