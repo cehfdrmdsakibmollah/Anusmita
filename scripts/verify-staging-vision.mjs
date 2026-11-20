@@ -18,6 +18,9 @@ const response=await fetch(host+"/api/chat/visual-search",{
 });
 const json=await response.json().catch(()=>({}));
 if(!response.ok)throw new Error("Staging vision request failed, HTTP "+response.status+": "+String(json.error||"unknown"));
-if(json.matchType!=="possible"||!Array.isArray(json.products)||!json.products.some(p=>expected.test(p.name||"")))throw new Error("No verified catalogue match for the real Medicube product photo. Do not release.");
+if(json.matchType!=="possible"||!Array.isArray(json.products)||!json.products.some(p=>expected.test(p.name||""))){
+  console.error("Vision test diagnostics (public catalogue data only):",JSON.stringify({httpStatus:response.status,matchType:json.matchType||null,recognizedText:String(json.recognizedText||"").slice(0,240),productNames:(json.products||[]).slice(0,5).map(p=>p.name),reply:String(json.reply||"").slice(0,180)}));
+  throw new Error("No verified catalogue match for the real Medicube product photo. Do not release.");
+}
 if(json.products.some(p=>!p.slug||typeof p.pricePaisa!=="number"||!Number.isFinite(p.available)))throw new Error("Product response is missing data-backed catalogue fields.");
 console.log("PASS: real ANUSMITA product photo matched a published catalogue product; staged image search returns usable public product fields.");
