@@ -52,8 +52,10 @@ async function exercise({title,mobile=false,modified=false,unknown=false,alterna
   const first=matches[0]?.href||null;
   const pass=unknown?matches.length===0:correct&&first?.includes(expected);
   const elapsed=Date.now()-started;
-  const metrics=await page.evaluate(()=>{const items=performance.getEntriesByType('resource');return {resources:items.length,heapBytes:performance.memory?.usedJSHeapSize??null,modelTransferBytes:items.filter(x=>x.name.includes('/api/public-models/')).reduce((n,x)=>n+(x.transferSize||0),0)};});
-  results.push({title,mobile,modified,unknown,pass,elapsedMs:elapsed,first,matches:matches.length,errors,metrics});
+  const metrics=await page.evaluate(()=>{const items=performance.getEntriesByType('resource');return {resources:items.length,heapBytes:performance.memory?.usedJSHeapSize??null,modelTransferBytes:items.filter(x=>x.name.includes('/api/public-models/')).reduce((n,x)=>n+(x.transferSize||0),0),modelFiles:items.filter(x=>x.name.includes('/api/public-models/')).map(x=>({name:x.name.split('/').slice(-2).join('/'),transfer:x.transferSize||0,duration:Math.round(x.duration)}))};});
+  const assistantError=(await page.locator('.aa-error').allTextContents()).join(' ').slice(0,500);
+  const lastResponse=(await page.locator('.aa-message.aa-assistant').last().innerText()).slice(0,500);
+  results.push({title,mobile,modified,unknown,pass,elapsedMs:elapsed,first,matches:matches.length,assistantError,lastResponse,errors,metrics});
   console.log('BENCHMARK '+JSON.stringify(results.at(-1)));
   if(!pass)throw Error(title+' did not satisfy expected photo-match behavior');
  }catch(e){
