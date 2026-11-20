@@ -1,0 +1,54 @@
+name: Cloudflare Staging (isolated)
+on:
+  push:
+    branches:
+      - feature/cloudflare-recovery
+    paths:
+      - "cloudflare.config.ts"
+      - "workers/**"
+      - "src/**"
+      - "public/**"
+      - "scripts/deploy-cloudflare-staging.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/cloudflare-staging.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anusmita-cloudflare-staging
+  cancel-in-progress: false
+jobs:
+  build-and-stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      ANUSMITA_STAGING: "true"
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build:cloudflare
+      - name: Staging deployment availability
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "STAGING NOT DEPLOYED: configure CLOUDFLARE_STAGING_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in GitHub Actions secrets."
+            echo "The existing production Worker remains unchanged."
+            exit 0
+          fi
+          echo "Credentials available; proceeding to isolated staging Worker."
+      - name: Deploy isolated staging Worker
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: npm run deploy:cloudflare:staging
+      - name: Post-deploy safety instructions
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          echo "Staging Worker: anusmita-store-staging"
+          echo "Do not enable COD. Bind staging MongoDB/session secrets through Cloudflare secret bindings."
+          echo "Image recognition is NOT accepted until real-image test results return matching published products."
