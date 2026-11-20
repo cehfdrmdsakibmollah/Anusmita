@@ -8,7 +8,7 @@ import {sheetCatalogue} from './sheet-catalogue';
 import {choosePhotoCandidates} from './photo-match-confidence';
 
 export type FreeVisualMatch={id:string;name:string;slug:string;image:string;score:number};
-export type FreeVisualResult={matches:FreeVisualMatch[];examined:number;total:number};
+export type FreeVisualResult={matches:FreeVisualMatch[];suggestions:FreeVisualMatch[];examined:number;total:number};
 type Signature={hash:Uint8Array;rgb:Float32Array;hist:Float32Array};
 const catalogue=sheetCatalogue.filter(x=>x.image.startsWith('/catalogue/')&&x.slug);
 const cached=new Map<string,Signature>();
@@ -64,7 +64,7 @@ export async function freeCatalogueImageSearch(photo:Blob,signal?:AbortSignal):P
  let query:Signature;
  try{query=imageSignature(image);}finally{image.close();}
  let examined=0;
- const matches:FreeVisualMatch[]=[];
+ const ranked:FreeVisualMatch[]=[];
  const jobs=catalogue.slice(0,cap);
  let next=0;
  const worker=async()=>{
@@ -76,10 +76,16 @@ export async function freeCatalogueImageSearch(photo:Blob,signal?:AbortSignal):P
    examined++;
    const score=similarity(query,ref);
    // Match exact/similar catalogue photographs, not semantic product identity.
-   if(score>=.90)matches.push({id:item.id,name:item.name,slug:item.slug,image:item.image,score});
+   ranked.push({id:item.id,name:item.name,slug:item.slug,image:item.image,score});
   }
  };
  await Promise.all(Array.from({length:Math.min(4,jobs.length)},()=>worker()));
- matches.sort((a,b)=>b.score-a.score);
- return {matches:choosePhotoCandidates(matches,{minimum:.90,margin:.035}),examined,total:jobs.length};
+ ranked.sort((a,b)=>b.score-a.score);
+ const matches=choosePhotoCandidates(ranked,{minimum:.90,margin:.035});
+ // These low-confidence cards are browse suggestions, NEVER claimed matches.
+ // Refuse uniform/featureless photos or weak image similarities.
+ const queryVariance=query.rgb.reduce((n,v)=>n+(v-1/3)**2,0)/query.rgb.length;
+ const suggestions=!matches.length&&queryVariance>.004&&ranked[0]?.score>=.66
+  ?ranked.filter(p=>p.score>=Math.max(.66,ranked[0].score-.09)).slice(0,4):[];
+ return {matches,suggestions,examined,total:jobs.length};
 }
