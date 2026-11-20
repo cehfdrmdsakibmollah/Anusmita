@@ -38,7 +38,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build:cloudflare
-      # Deploy API-free browser photo matching only to the isolated staging Worker; never print secret values.
+      # Deploy fast catalogue search and opt-in CLIP only to staging; never print secrets.
       - name: Staging deployment availability
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
