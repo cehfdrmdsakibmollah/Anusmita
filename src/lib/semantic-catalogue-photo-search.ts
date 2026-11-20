@@ -10,7 +10,7 @@ import type {FreeVisualMatch} from './free-catalogue-photo-search';
 
 const MODEL='Xenova/clip-vit-base-patch32';
 const PACKAGE='https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm';
-const CACHE_NAME='anusmita-clip-v1';
+const CACHE_NAME='anusmita-clip-q4-v1';
 type Extractor=(input:string,opts?:Record<string,unknown>)=>Promise<{data:ArrayLike<number>;dims?:number[]}>;
 let extractorPromise:Promise<Extractor>|undefined;
 const vectorCache=new Map<string,number[]>();
@@ -31,7 +31,7 @@ async function loader():Promise<Extractor>{
  m.env.allowRemoteModels=false;
  m.env.localModelPath='/api/public-models/';
  m.env.useBrowserCache=true;
- const p=await m.pipeline('image-feature-extraction',MODEL,{device:'wasm',dtype:'q8'});
+ const p=await m.pipeline('image-feature-extraction',MODEL,{device:'wasm',dtype:'q4'});
  return p;
 }
 async function extract(src:string,signal?:AbortSignal){
@@ -89,7 +89,7 @@ export async function semanticCataloguePhotoSearch(
  // One model inference at a time: avoid exhausting memory on low-end phones.
  for(const p of references){
   check(signal);
-  const key=MODEL+':'+p.slug+':'+p.image;
+  const key=MODEL+':q4:'+p.slug+':'+p.image;
   let vector=await readVector(key);
   if(!vector){
    try{vector=await extract(new URL(p.image,location.origin).href,signal);await writeVector(key,vector);}
