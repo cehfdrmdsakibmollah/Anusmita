@@ -46,6 +46,9 @@ jobs:
       - name: Deploy isolated staging Worker
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
         run: npm run deploy:cloudflare:staging
+      - name: Real product photo acceptance
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: node scripts/verify-staging-vision.mjs
       - name: Post-deploy safety instructions
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
         run: |
