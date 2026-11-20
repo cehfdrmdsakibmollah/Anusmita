@@ -11,6 +11,9 @@ const sampleBytes=Buffer.from(await sample.arrayBuffer());
 async function exercise({title,mobile=false,modified=false,unknown=false}){
  const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1280,height:800},deviceScaleFactor:mobile?2:1,isMobile:mobile,hasTouch:mobile});
  const page=await context.newPage();let errors=[];const started=Date.now();
+ page.on('console',m=>{if(m.type()==='error'||m.type()==='warning')errors.push(('console '+m.text()).slice(0,250));});
+ page.on('requestfailed',r=>errors.push(('request '+r.url()+' '+r.failure()?.errorText).slice(0,250)));
+ page.on('response',r=>{if(r.status()>=400&&/transformers|huggingface|onnx|jsdelivr/.test(r.url()))errors.push(('http '+r.status()+' '+r.url()).slice(0,250));});
  page.on('pageerror',e=>errors.push(String(e).slice(0,150)));
  try{
   await page.goto(base+'/contact/design-preview',{waitUntil:'networkidle',timeout:45000});
@@ -56,11 +59,13 @@ async function exercise({title,mobile=false,modified=false,unknown=false}){
   await context.close();
  }
 }
+let failed=false;
 try{
- await exercise({title:'mobile-exact',mobile:true});
- await exercise({title:'desktop-modified-background',modified:true});
- await exercise({title:'unknown-blank',unknown:true});
+ for(const spec of [{title:'mobile-exact',mobile:true},{title:'desktop-modified-background',modified:true},{title:'unknown-blank',unknown:true}]){
+  try{await exercise(spec);}catch{failed=true;}
+ }
 }finally{
  await writeFile('staging-photo-benchmark.json',JSON.stringify({timestamp:new Date().toISOString(),results},null,2));
  await browser.close();
 }
+if(failed)process.exitCode=1;
