@@ -85,7 +85,7 @@ export async function freeCatalogueImageSearch(photo:Blob,signal?:AbortSignal):P
  // These low-confidence cards are browse suggestions, NEVER claimed matches.
  // Refuse uniform/featureless photos or weak image similarities.
  const queryVariance=query.rgb.reduce((n,v)=>n+(v-1/3)**2,0)/query.rgb.length;
- const suggestions=!matches.length&&queryVariance>.004&&ranked[0]?.score>=.66
-  ?ranked.filter(p=>p.score>=Math.max(.66,ranked[0].score-.09)).slice(0,4):[];
+ const suggestions=!matches.length&&queryVariance>.0015
+  ?ranked.slice(0,4):[];
  return {matches,suggestions,examined,total:jobs.length};
 }
