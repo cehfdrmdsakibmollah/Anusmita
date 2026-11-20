@@ -22,7 +22,16 @@ export async function GET(req:Request,{params}:{params:Promise<{parts:string[]}>
   const headers=new Headers();
   const range=req.headers.get('range');
   if(range&&/^bytes=\d*-\d*$/.test(range))headers.set('range',range);
-  const result=await fetch(url,{headers,redirect:'follow',signal:AbortSignal.timeout(120000)});
+  // Files are revision-pinned and public. Cache successful model fetches at the edge
+  // to avoid repeated 90MB upstream requests when many shoppers use CLIP.
+  const init={
+   headers,redirect:'follow' as const,signal:AbortSignal.timeout(120000),
+   cf:{cacheEverything:true,cacheTtlByStatus:{'200-299':604800,'400-599':0}}
+  } as RequestInit & {cf:{cacheEverything:boolean;cacheTtlByStatus:Record<string,number>}};
+  let result=await fetch(url,init);
+  if([429,502,503,504].includes(result.status)){
+   result=await fetch(url,{...init,signal:AbortSignal.timeout(120000)});
+  }
   if(!result.ok||!result.body)return new Response('Model asset unavailable',{status:502,headers:{'Cache-Control':'no-store'}});
   const len=Number(result.headers.get('content-length')||0);
   if(len>180_000_000){void result.body.cancel();return new Response('Model asset exceeds size limit',{status:413});}
