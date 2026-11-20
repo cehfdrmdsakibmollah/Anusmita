@@ -8,10 +8,13 @@ const results=[];
 const sample=await fetch(base+'/catalogue/skincare/k30.png',{signal:AbortSignal.timeout(15000)});
 if(!sample.ok)throw Error('Missing public K30 sample image');
 const sampleBytes=Buffer.from(await sample.arrayBuffer());
+const second=await fetch(base+'/catalogue/skincare/k29.png',{signal:AbortSignal.timeout(15000)});
+if(!second.ok)throw Error('Missing public K29 sample image');
+const secondBytes=Buffer.from(await second.arrayBuffer());
 const modelConfig=await fetch(base+'/api/public-models/Xenova/clip-vit-base-patch32/config.json',{signal:AbortSignal.timeout(25000)}).catch(()=>null);
 console.log('MODEL_ASSET_PREFLIGHT '+JSON.stringify({status:modelConfig?.status||0,contentType:modelConfig?.headers.get('content-type')||null}));
 
-async function exercise({title,mobile=false,modified=false,unknown=false}){
+async function exercise({title,mobile=false,modified=false,unknown=false,alternate=false}){
  const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1280,height:800},deviceScaleFactor:mobile?2:1,isMobile:mobile,hasTouch:mobile});
  const page=await context.newPage();let errors=[];const started=Date.now();
  page.on('console',m=>{if(m.type()==='error'||m.type()==='warning')errors.push(('console '+m.text()).slice(0,250));});
@@ -21,7 +24,7 @@ async function exercise({title,mobile=false,modified=false,unknown=false}){
  try{
   await page.goto(base+'/contact/design-preview',{waitUntil:'networkidle',timeout:45000});
   await page.waitForTimeout(1200);
-  let buffer=sampleBytes;
+  let buffer=alternate?secondBytes:sampleBytes;
   if(unknown||modified){
    const raw=sampleBytes.toString('base64');
    const transformed=await page.evaluate(async({raw,unknown,modified})=>{
@@ -44,11 +47,12 @@ async function exercise({title,mobile=false,modified=false,unknown=false}){
   // Wait for response UI, not a naked HTTP-200 result.
   await page.waitForFunction(()=>document.querySelectorAll('.aa-message.aa-assistant').length>=2,{},{timeout:210000});
   const matches=await page.locator('.aa-visual-match').evaluateAll(a=>a.map(x=>({name:x.textContent||'',href:x.getAttribute('href')})));
-  const correct=matches.some(x=>x.href?.includes('skincare-k30'));
+  const expected=alternate?'skincare-k29':'skincare-k30';
+  const correct=matches.some(x=>x.href?.includes(expected));
   const first=matches[0]?.href||null;
-  const pass=unknown?matches.length===0:correct&&first?.includes('skincare-k30');
+  const pass=unknown?matches.length===0:correct&&first?.includes(expected);
   const elapsed=Date.now()-started;
-  const metrics=await page.evaluate(()=>({resources:performance.getEntriesByType('resource').length,heapBytes:performance.memory?.usedJSHeapSize??null}));
+  const metrics=await page.evaluate(()=>{const items=performance.getEntriesByType('resource');return {resources:items.length,heapBytes:performance.memory?.usedJSHeapSize??null,modelTransferBytes:items.filter(x=>x.name.includes('/api/public-models/')).reduce((n,x)=>n+(x.transferSize||0),0)};});
   results.push({title,mobile,modified,unknown,pass,elapsedMs:elapsed,first,matches:matches.length,errors,metrics});
   console.log('BENCHMARK '+JSON.stringify(results.at(-1)));
   if(!pass)throw Error(title+' did not satisfy expected photo-match behavior');
@@ -64,7 +68,7 @@ async function exercise({title,mobile=false,modified=false,unknown=false}){
 }
 let failed=false;
 try{
- for(const spec of [{title:'mobile-exact',mobile:true},{title:'desktop-modified-background',modified:true},{title:'unknown-blank',unknown:true}]){
+ for(const spec of [{title:'mobile-exact',mobile:true},{title:'mobile-modified-background',mobile:true,modified:true},{title:'desktop-modified-background',modified:true},{title:'another-real-product',alternate:true},{title:'unknown-blank',unknown:true}]){
   try{await exercise(spec);}catch{failed=true;}
  }
 }finally{
