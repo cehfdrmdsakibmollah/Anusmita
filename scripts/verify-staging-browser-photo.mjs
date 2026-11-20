@@ -2,7 +2,7 @@
  * Hosted browser acceptance for the free ANUSMITA catalogue-photo matcher.
  * This intentionally does not assert universal Google Lens accuracy.
  */
-import {chromium} from 'playwright';
+const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const base=process.env.ANUSMITA_STAGING_URL||'https://anusmita-store-staging.mdsakibmolla545.workers.dev';
 if(!/^https:\/\/anusmita-store-staging\./.test(base))throw Error('Refusing to test a production hostname');
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
