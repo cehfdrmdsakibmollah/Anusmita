@@ -15,7 +15,8 @@
     "start:vinext": "vite preview",
     "deploy:vinext": "vinext-cloudflare deploy",
     "check:cloudflare": "vinext check",
-    "build:cloudflare": "node scripts/cloudflare-build.mjs"
+    "build:cloudflare": "node scripts/cloudflare-build.mjs",
+    "deploy:cloudflare:staging": "node scripts/deploy-cloudflare-staging.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
