@@ -46,6 +46,10 @@ async function exercise({title,mobile=false,modified=false,unknown=false,alterna
   await page.getByRole('button',{name:/Send message|মেসেজ পাঠান/}).click();
   // Wait for response UI, not a naked HTTP-200 result.
   await page.waitForFunction(()=>document.querySelectorAll('.aa-message.aa-assistant').length>=2,{},{timeout:210000});
+  const autoModelRequests=await page.evaluate(()=>performance.getEntriesByType('resource').filter(x=>x.name.includes('/api/public-models/')).length);
+  if(autoModelRequests!==0)throw Error('Quick image search unexpectedly downloaded the CLIP model');
+  const deepAvailable=await page.locator('.aa-deep-search').isVisible();
+  if((modified||unknown)&&!deepAvailable)throw Error('Optional Deep Search button not shown for an uncertain photo');
   // A heavy CLIP download is opt-in: explicit click for robustness and negative tests.
   if(modified||unknown){
    const deep=page.locator('.aa-deep-search');
