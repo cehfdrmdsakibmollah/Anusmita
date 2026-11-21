@@ -28,7 +28,7 @@ export async function POST(request:Request) {
   // Staging-only diagnostic category, never raw database errors, URI, or secrets.
   // Production keeps the existing generic error response unchanged.
   if(process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://anusmita-store-staging.")&&
-     !(e instanceof HttpError)&&e instanceof Error){
+     !(e instanceof HttpError)&&e instanceof Error&&!("issues" in e)){
     const msg=e.message;
     const diagnosticCode=msg.startsWith("Refusing MongoDB connection")?"DB_URI_REJECTED":
       msg.includes("database connection unavailable")?"DB_CONNECTION_FAILED":
