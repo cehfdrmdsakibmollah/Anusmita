@@ -2,6 +2,7 @@
 export const ATLAS_HOST="portfolio.tis5sjm.mongodb.net";
 export const ATLAS_DB="anusmita";
 export const ATLAS_APP_USER="anusmita_app";
+export const STAGING_ATLAS_HOST="anusmita.jvvjo1k.mongodb.net";
 export type StoreMode="catalog"|"live";
 export function storeMode(value?:string):StoreMode{return value==="live"?"live":"catalog";}
 export function isProductionUrl(raw?:string):boolean{
@@ -27,6 +28,29 @@ export function dedicatedDbIssue(uri?:string):string{
   const u=new URL(uri);
   if(u.protocol!=="mongodb+srv:")return "DB_URI_SCHEME_MISMATCH";
   if(u.hostname.toLowerCase()!==ATLAS_HOST)return "DB_URI_HOST_MISMATCH";
+  if(decodeURIComponent(u.username)!==ATLAS_APP_USER)return "DB_URI_USERNAME_MISMATCH";
+  if(decodeURIComponent(u.pathname.slice(1))!==ATLAS_DB)return "DB_URI_DATABASE_MISMATCH";
+  if(!u.password||u.password.toLowerCase().includes("replace")||u.password.startsWith("%3C"))return "DB_URI_PASSWORD_NOT_CONFIGURED";
+  return "DB_URI_VALID";
+ }catch{return "DB_URI_MALFORMED";}
+}
+/** Staging is strictly isolated from production, even with valid production credentials. */
+export function dedicatedStagingDb(uri?:string):boolean{
+ if(!uri)return false;
+ try{
+  const u=new URL(uri);
+  return u.protocol==="mongodb+srv:"&&u.hostname.toLowerCase()===STAGING_ATLAS_HOST&&
+   decodeURIComponent(u.pathname.slice(1))===ATLAS_DB&&
+   decodeURIComponent(u.username)===ATLAS_APP_USER&&
+   Boolean(u.password)&&!u.password.toLowerCase().includes("replace")&&!u.password.startsWith("%3C");
+ }catch{return false;}
+}
+export function stagingDbIssue(uri?:string):string{
+ if(!uri)return "DB_URI_MISSING";
+ try{
+  const u=new URL(uri);
+  if(u.protocol!=="mongodb+srv:")return "DB_URI_SCHEME_MISMATCH";
+  if(u.hostname.toLowerCase()!==STAGING_ATLAS_HOST)return "STAGING_DB_HOST_MISMATCH";
   if(decodeURIComponent(u.username)!==ATLAS_APP_USER)return "DB_URI_USERNAME_MISMATCH";
   if(decodeURIComponent(u.pathname.slice(1))!==ATLAS_DB)return "DB_URI_DATABASE_MISMATCH";
   if(!u.password||u.password.toLowerCase().includes("replace")||u.password.startsWith("%3C"))return "DB_URI_PASSWORD_NOT_CONFIGURED";
