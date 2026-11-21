@@ -36,6 +36,10 @@ describe("ANUSMITA safe launch behavior",()=>{
   expect(dedicatedStagingDb(uri)).toBe(false);
   expect(dedicatedDb(staging)).toBe(false);
   expect(stagingDbIssue(staging)).toBe("DB_URI_VALID");
+  expect(dedicatedStagingDb(staging.replace("/anusmita?","/?"))).toBe(true);
+  expect(stagingDbIssue(staging.replace("/anusmita?","/?"))).toBe("DB_URI_VALID");
+  expect(dedicatedDb(uri.replace("/anusmita?","/?"))).toBe(false);
+
   expect(stagingDbIssue(uri)).toBe("STAGING_DB_HOST_MISMATCH");
  });
  it("classifies URI configuration mistakes without exposing secret values",()=>{
