@@ -16,7 +16,7 @@ export function dedicatedDb(uri?:string):boolean{
  try{
   const u=new URL(uri);
   return u.protocol==="mongodb+srv:"&&u.hostname.toLowerCase()===ATLAS_HOST&&
-   decodeURIComponent(u.pathname.slice(1))===ATLAS_DB&&
+   (decodeURIComponent(u.pathname.slice(1))===ATLAS_DB||u.pathname==="/"||u.pathname==="")&&
    decodeURIComponent(u.username)===ATLAS_APP_USER&&
    Boolean(u.password)&&!u.password.toLowerCase().includes("replace")&&!u.password.startsWith("%3C");
  }catch{return false;}
@@ -52,7 +52,7 @@ export function stagingDbIssue(uri?:string):string{
   if(u.protocol!=="mongodb+srv:")return "DB_URI_SCHEME_MISMATCH";
   if(u.hostname.toLowerCase()!==STAGING_ATLAS_HOST)return "STAGING_DB_HOST_MISMATCH";
   if(decodeURIComponent(u.username)!==ATLAS_APP_USER)return "DB_URI_USERNAME_MISMATCH";
-  if(decodeURIComponent(u.pathname.slice(1))!==ATLAS_DB)return "DB_URI_DATABASE_MISMATCH";
+  if(decodeURIComponent(u.pathname.slice(1))!==ATLAS_DB&&u.pathname!=="/"&&u.pathname!=="")return "DB_URI_DATABASE_MISMATCH";
   if(!u.password||u.password.toLowerCase().includes("replace")||u.password.startsWith("%3C"))return "DB_URI_PASSWORD_NOT_CONFIGURED";
   return "DB_URI_VALID";
  }catch{return "DB_URI_MALFORMED";}
