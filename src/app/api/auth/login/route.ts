@@ -16,7 +16,7 @@ export async function POST(request:Request) {
   const data=payload as Record<string,unknown>;
   const email=typeof data.email==="string"?data.email.trim().toLowerCase():"";
   const password=typeof data.password==="string"?data.password:"";
-  if(email.length>320||! /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||
+  if(email.length>320||! /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||
      password.length<1||password.length>256)throw new HttpError(400,"Invalid request");
   await db();
   const user=await User.findOne({email:email.toLowerCase()}).select("+passwordHash");
