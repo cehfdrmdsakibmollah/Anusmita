@@ -3,6 +3,11 @@ export const ATLAS_HOST="portfolio.tis5sjm.mongodb.net";
 export const ATLAS_DB="anusmita";
 export const ATLAS_APP_USER="anusmita_app";
 export const STAGING_ATLAS_HOST="anusmita.jvvjo1k.mongodb.net";
+export const STAGING_PUBLIC_SITE_URL="https://anusmita-store-staging.mdsakibmolla545.workers.dev";
+export function isStagingRuntime(env:{ANUSMITA_STAGING_RUNTIME?:string;NEXT_PUBLIC_SITE_URL?:string}):boolean{
+ return env.ANUSMITA_STAGING_RUNTIME==="true"||env.NEXT_PUBLIC_SITE_URL===STAGING_PUBLIC_SITE_URL;
+}
+
 export type StoreMode="catalog"|"live";
 export function storeMode(value?:string):StoreMode{return value==="live"?"live":"catalog";}
 export function isProductionUrl(raw?:string):boolean{
