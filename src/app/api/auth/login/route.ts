@@ -39,7 +39,8 @@ export async function POST(request:Request) {
   if(process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://anusmita-store-staging.")&&
      !(e instanceof HttpError)&&e instanceof Error&&!("issues" in e)){
     const msg=e.message;
-    const diagnosticCode=msg.startsWith("Refusing MongoDB connection")?stagingDbIssue(process.env.MONGODB_URI):
+    const diagnosticCode=msg.startsWith("STAGING_DB_")&&/^STAGING_DB_[A-Z_]+$/.test(msg)?msg:
+      msg.startsWith("Refusing MongoDB connection")?stagingDbIssue(process.env.MONGODB_URI):
       msg.includes("database connection unavailable")?"DB_CONNECTION_FAILED":
       msg.includes("SESSION_SECRET")?"SESSION_SECRET_INVALID":"AUTH_RUNTIME_ERROR";
     console.error("Staging login diagnostic category:",diagnosticCode);
