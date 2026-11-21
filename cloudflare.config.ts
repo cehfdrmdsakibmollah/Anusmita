@@ -18,6 +18,7 @@ export default defineConfig({
       // The staging build exercises real application routes but cannot take COD orders.
       STORE_MODE: bindings.text("catalog"),
       RECOVERY_CATALOG_ONLY: bindings.text(staging ? "false" : "true"),
+      ANUSMITA_STAGING_RUNTIME: bindings.text(staging ? "true" : "false"),
       NEXT_PUBLIC_SITE_URL: bindings.text(siteUrl),
     },
   }),
