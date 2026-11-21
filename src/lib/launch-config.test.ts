@@ -1,6 +1,6 @@
 
 import {describe,it,expect} from "vitest";
-import {ATLAS_HOST,ATLAS_DB,ATLAS_APP_USER,storeMode,dedicatedDb,isProductionUrl,checkoutEnabled,launchFlags,dedicatedDbIssue,dedicatedStagingDb,stagingDbIssue,STAGING_ATLAS_HOST} from "./launch-config";
+import {ATLAS_HOST,ATLAS_DB,ATLAS_APP_USER,storeMode,dedicatedDb,isProductionUrl,checkoutEnabled,launchFlags,dedicatedDbIssue,dedicatedStagingDb,stagingDbIssue,STAGING_ATLAS_HOST,isStagingRuntime,STAGING_PUBLIC_SITE_URL} from "./launch-config";
 const uri="mongodb+srv://"+ATLAS_APP_USER+":encoded%40password@"+ATLAS_HOST+"/"+ATLAS_DB+"?retryWrites=true&w=majority";
 const configured={STORE_MODE:"live",MONGODB_URI:uri,SESSION_SECRET:"012345678901234567890123456789ABCDEF",NEXT_PUBLIC_SITE_URL:"https://shop.anusmita.example"};
 describe("ANUSMITA safe launch behavior",()=>{
@@ -29,6 +29,12 @@ describe("ANUSMITA safe launch behavior",()=>{
   expect(checkoutEnabled({...configured,NEXT_PUBLIC_SITE_URL:"http://localhost:3000"})).toBe(false);
   expect(launchFlags(configured).cloudinaryConfigured).toBe(false);
   expect(JSON.stringify(launchFlags(configured))).not.toContain("encoded");
+ });
+ it("uses only explicit staging signals, never arbitrary hostnames",()=>{
+  expect(isStagingRuntime({ANUSMITA_STAGING_RUNTIME:"true"})).toBe(true);
+  expect(isStagingRuntime({NEXT_PUBLIC_SITE_URL:STAGING_PUBLIC_SITE_URL})).toBe(true);
+  expect(isStagingRuntime({NEXT_PUBLIC_SITE_URL:"https://anusmita-store.mdsakibmolla545.workers.dev"})).toBe(false);
+  expect(isStagingRuntime({NEXT_PUBLIC_SITE_URL:"https://evil-staging.example.com"})).toBe(false);
  });
  it("isolates staging and production cluster credentials",()=>{
   const staging=uri.replace(ATLAS_HOST,STAGING_ATLAS_HOST);
