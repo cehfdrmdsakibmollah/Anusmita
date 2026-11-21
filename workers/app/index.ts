@@ -5,7 +5,7 @@ export default {
  async fetch(request:Request,env:unknown,ctx:unknown){
   const path=new URL(request.url).pathname;
   if(path.startsWith("/_next/static/")||(!path.startsWith("/api/")&&/\.(?:png|jpe?g|webp|avif|svg|ico|woff2?|wasm|css|js)$/.test(path)))return (env as {ASSETS:{fetch:(request:Request)=>Promise<Response>}}).ASSETS.fetch(request);
-  const scope=newDatabaseScope();
+  const scope=newDatabaseScope(env);
   return inDatabaseScope(scope,async()=>{
    try{
     if(path==="/api/chat/visual-search"&&request.method==="POST"){const response=await visualProductSearch(request,env as any);await closeDatabaseScope(scope);return response;}
