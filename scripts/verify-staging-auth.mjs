@@ -6,10 +6,11 @@ async function probe(label,data,expected){
  const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Origin':new URL(base).origin},body:JSON.stringify(data),signal:AbortSignal.timeout(17000),redirect:'manual'});
  let code='unexpected',diagnosticCode=null;try{const body=await response.json();code=typeof body.error==='string'?body.error.slice(0,100):String(body.ok||'unknown');diagnosticCode=typeof body.diagnosticCode==='string'?body.diagnosticCode:null;}catch{}
  console.log(JSON.stringify({probe:label,status:response.status,message:code,diagnosticCode}));
- if(response.status!==expected)throw Error(label+' expected HTTP '+expected+' but received '+response.status+'. Staging login must remain disabled until diagnosed.');
+ return response.status===expected;
 }
-await probe('valid-origin-invalid-form',{email:'not-an-email',password:'x'},400);
+const validationOk=await probe('valid-origin-invalid-form',{email:'not-an-email',password:'x'},400);
 // Guaranteed-absent identity. The login handler should only SELECT; it must not
 // update attempts or set cookies for a nonexistent account.
-await probe('database-read-nonexistent-user',{email:'staging-readonly-probe-20261121@invalid.example',password:'not-the-real-password'},401);
-console.log('Staging login API responded with correct validation and database-read status. This does NOT prove an authorized owner can log in.');
+const databaseOk=await probe('database-read-nonexistent-user',{email:'staging-readonly-probe-20261121@invalid.example',password:'not-the-real-password'},401);
+if(!validationOk||!databaseOk)throw Error('Staging auth acceptance failed; see safe status/category lines above.');
+console.log('Staging login validation and database-read checks passed. This does not prove owner login.');
