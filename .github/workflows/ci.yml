@@ -57,32 +57,3 @@ jobs:
         env:
           NEXT_PUBLIC_SITE_URL: https://example.com
 
-  staging-login-smoke:
-    # Only trusted same-repository PR #232 branch may deploy this isolated Worker.
-    # Never run deployment credentials for fork PRs or unrelated branches.
-    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/cloudflare-recovery' }}
-    needs: quality
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    permissions:
-      contents: read
-    env:
-      ANUSMITA_STAGING: "true"
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - run: npm ci --no-audit --no-fund
-      - name: Check staging credentials exist
-        run: |
-          test -n "$CLOUDFLARE_API_TOKEN" || { echo "Missing scoped staging token"; exit 1; }
-          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "Missing Cloudflare account ID"; exit 1; }
-      - run: npm run typecheck
-      - run: npm run build:cloudflare
-      - name: Deploy isolated staging only
-        run: npm run deploy:cloudflare:staging
-      - name: Safe login API checks (no real credentials)
-        run: node scripts/verify-staging-auth.mjs
