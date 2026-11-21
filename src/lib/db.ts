@@ -2,14 +2,14 @@
 import mongoose from "mongoose";
 import dns from "node:dns";
 if (process.env.NODE_ENV !== "production") { dns.setServers(["1.1.1.1"]); }
-import {ATLAS_DB,dedicatedDb,dedicatedStagingDb} from "./launch-config";
+import {ATLAS_DB,dedicatedDb,dedicatedStagingDb,isStagingRuntime} from "./launch-config";
 type Cached={conn:typeof mongoose|null;promise:Promise<typeof mongoose>|null};
 const state=globalThis as typeof globalThis & {__anusmitaMongoose?:Cached};
 const cache=state.__anusmitaMongoose??(state.__anusmitaMongoose={conn:null,promise:null});
 export async function db(){
  const uri=process.env.MONGODB_URI;
  // Guard every database connection, including owner initialization.
- const isStaging=process.env.ANUSMITA_STAGING_RUNTIME==="true";
+ const isStaging=isStagingRuntime(process.env);
  if(!(isStaging?dedicatedStagingDb(uri):dedicatedDb(uri)))
   throw new Error("Refusing MongoDB connection: expected approved environment-specific Atlas cluster, database and scoped user");
  if(cache.conn)return cache.conn;
