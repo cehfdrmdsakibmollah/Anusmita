@@ -3,6 +3,7 @@ export const ATLAS_HOST="portfolio.tis5sjm.mongodb.net";
 export const ATLAS_DB="anusmita";
 export const ATLAS_APP_USER="anusmita_app";
 export const STAGING_ATLAS_HOST="anusmita.jvvjo1k.mongodb.net";
+export const STAGING_ATLAS_USER="anusmita_staging_worker";
 export const STAGING_PUBLIC_SITE_URL="https://anusmita-store-staging.mdsakibmolla545.workers.dev";
 export function isStagingRuntime(env:{ANUSMITA_STAGING_RUNTIME?:string;NEXT_PUBLIC_SITE_URL?:string}):boolean{
  return env.ANUSMITA_STAGING_RUNTIME==="true"||env.NEXT_PUBLIC_SITE_URL===STAGING_PUBLIC_SITE_URL;
@@ -46,7 +47,7 @@ export function dedicatedStagingDb(uri?:string):boolean{
   const u=new URL(uri);
   return u.protocol==="mongodb+srv:"&&u.hostname.toLowerCase()===STAGING_ATLAS_HOST&&
    (decodeURIComponent(u.pathname.slice(1))===ATLAS_DB||u.pathname==="/"||u.pathname==="")&&
-   decodeURIComponent(u.username)===ATLAS_APP_USER&&
+   decodeURIComponent(u.username)===STAGING_ATLAS_USER&&
    Boolean(u.password)&&!u.password.toLowerCase().includes("replace")&&!u.password.startsWith("%3C");
  }catch{return false;}
 }
@@ -56,7 +57,7 @@ export function stagingDbIssue(uri?:string):string{
   const u=new URL(uri);
   if(u.protocol!=="mongodb+srv:")return "DB_URI_SCHEME_MISMATCH";
   if(u.hostname.toLowerCase()!==STAGING_ATLAS_HOST)return "STAGING_DB_HOST_MISMATCH";
-  if(decodeURIComponent(u.username)!==ATLAS_APP_USER)return "DB_URI_USERNAME_MISMATCH";
+  if(decodeURIComponent(u.username)!==STAGING_ATLAS_USER)return "DB_URI_USERNAME_MISMATCH";
   if(decodeURIComponent(u.pathname.slice(1))!==ATLAS_DB&&u.pathname!=="/"&&u.pathname!=="")return "DB_URI_DATABASE_MISMATCH";
   if(!u.password||u.password.toLowerCase().includes("replace")||u.password.startsWith("%3C"))return "DB_URI_PASSWORD_NOT_CONFIGURED";
   return "DB_URI_VALID";
