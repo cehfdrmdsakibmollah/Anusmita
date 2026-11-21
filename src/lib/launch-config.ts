@@ -20,6 +20,19 @@ export function dedicatedDb(uri?:string):boolean{
    Boolean(u.password)&&!u.password.toLowerCase().includes("replace")&&!u.password.startsWith("%3C");
  }catch{return false;}
 }
+/** Staging-only safe classification. Never return URI components or credentials. */
+export function dedicatedDbIssue(uri?:string):string{
+ if(!uri)return "DB_URI_MISSING";
+ try{
+  const u=new URL(uri);
+  if(u.protocol!=="mongodb+srv:")return "DB_URI_SCHEME_MISMATCH";
+  if(u.hostname.toLowerCase()!==ATLAS_HOST)return "DB_URI_HOST_MISMATCH";
+  if(decodeURIComponent(u.username)!==ATLAS_APP_USER)return "DB_URI_USERNAME_MISMATCH";
+  if(decodeURIComponent(u.pathname.slice(1))!==ATLAS_DB)return "DB_URI_DATABASE_MISMATCH";
+  if(!u.password||u.password.toLowerCase().includes("replace")||u.password.startsWith("%3C"))return "DB_URI_PASSWORD_NOT_CONFIGURED";
+  return "DB_URI_VALID";
+ }catch{return "DB_URI_MALFORMED";}
+}
 export type LaunchEnvironment={
  [key:string]:string|undefined;
  STORE_MODE?:string;MONGODB_URI?:string;SESSION_SECRET?:string;
