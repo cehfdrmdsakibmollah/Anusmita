@@ -9,7 +9,7 @@ const cache=state.__anusmitaMongoose??(state.__anusmitaMongoose={conn:null,promi
 export async function db(){
  const uri=process.env.MONGODB_URI;
  // Guard every database connection, including owner initialization.
- const isStaging=isStagingRuntime(process.env);
+ const isStaging=isStagingRuntime({ANUSMITA_STAGING_RUNTIME:process.env.ANUSMITA_STAGING_RUNTIME,NEXT_PUBLIC_SITE_URL:process.env.NEXT_PUBLIC_SITE_URL});
  if(!(isStaging?dedicatedStagingDb(uri):dedicatedDb(uri)))
   throw new Error("Refusing MongoDB connection: expected approved environment-specific Atlas cluster, database and scoped user");
  if(cache.conn)return cache.conn;
