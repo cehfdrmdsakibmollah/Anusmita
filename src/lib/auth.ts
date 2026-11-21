@@ -53,13 +53,25 @@ export function assertOrigin(request: Request) {
  const publicHost=normalized(request.headers.get("host"));
  const forwardedHost=normalized(request.headers.get("x-forwarded-host"));
  const isApprovedNetlifyHost=(host:string)=>host==="anusmita.netlify.app"||/^deploy-preview-[0-9]+--anusmita\.netlify\.app$/.test(host);
+ const configuredSite=process.env.NEXT_PUBLIC_SITE_URL;
+ let approvedCloudflare=false;
+ if(configuredSite){
+  try{
+   const configured=new URL(configuredSite);
+   // Only the configured HTTPS public site is trusted, never wildcard workers.dev
+   // domains or arbitrary x-forwarded-host values supplied by requesters.
+   const configuredHost=configured.host.toLowerCase();
+   approvedCloudflare=configured.protocol==="https:"&&received.origin===configured.origin&&
+     (publicHost===configuredHost||expected.host.toLowerCase()===configuredHost);
+  }catch{/* Invalid site configuration cannot grant permission. */}
+ }
  const sameInternalOrigin=received.host===expected.host&&received.protocol===expected.protocol;
  // On Netlify, request.url can be rewritten to an internal server host while the browser
  // sends Origin from the public preview URL. Trust only the exact public Host supplied by
  // Netlify or an exact Netlify deploy-preview hostname in its forwarding metadata.
  const samePublicHost=received.protocol==="https:"&&isApprovedNetlifyHost(received.host)&&
    (received.host===publicHost||(received.host===forwardedHost&&isApprovedNetlifyHost(forwardedHost)));
- if(!sameInternalOrigin&&!samePublicHost)throw new HttpError(403,"Cross-origin request rejected");
+ if(!sameInternalOrigin&&!samePublicHost&&!approvedCloudflare)throw new HttpError(403,"Cross-origin request rejected");
 }
 export function apiError(error: unknown) {
  if (error instanceof HttpError) return Response.json({error:error.message},{status:error.status});

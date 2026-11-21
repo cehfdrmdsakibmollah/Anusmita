@@ -2,16 +2,20 @@
 import mongoose from "mongoose";
 import dns from "node:dns";
 if (process.env.NODE_ENV !== "production") { dns.setServers(["1.1.1.1"]); }
-import {dedicatedDb} from "./launch-config";
+import {ATLAS_DB,dedicatedDb,dedicatedStagingDb,isStagingRuntime} from "./launch-config";
 type Cached={conn:typeof mongoose|null;promise:Promise<typeof mongoose>|null};
 const state=globalThis as typeof globalThis & {__anusmitaMongoose?:Cached};
 const cache=state.__anusmitaMongoose??(state.__anusmitaMongoose={conn:null,promise:null});
 export async function db(){
  const uri=process.env.MONGODB_URI;
  // Guard every database connection, including owner initialization.
- if(!dedicatedDb(uri))throw new Error("Refusing MongoDB connection: expected ANUSMITA Atlas cluster, database and scoped user");
+ const isStaging=isStagingRuntime({ANUSMITA_STAGING_RUNTIME:process.env.ANUSMITA_STAGING_RUNTIME,NEXT_PUBLIC_SITE_URL:process.env.NEXT_PUBLIC_SITE_URL});
+ if(!(isStaging?dedicatedStagingDb(uri):dedicatedDb(uri)))
+  throw new Error("Refusing MongoDB connection: expected approved environment-specific Atlas cluster, database and scoped user");
  if(cache.conn)return cache.conn;
  if(!cache.promise)cache.promise=mongoose.connect(uri!,{
+  // Atlas-generated SRV URIs may omit the path; staging always uses this exact isolated DB.
+  dbName:isStaging?ATLAS_DB:undefined,
   maxPoolSize:10,
   serverSelectionTimeoutMS:10000
  });

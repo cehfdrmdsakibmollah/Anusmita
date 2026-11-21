@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import {afterAll,beforeAll,describe,expect,it,vi} from "vitest";
 import {signSession} from "@/lib/auth";
 import {initialFunnelBlock} from "@/lib/funnel-pages";
-import {Audit,Counter,FunnelExposure,FunnelPage,FunnelRevision,Order,Product,StockMovement,User} from "@/lib/models";
+import {Audit,Counter,FunnelExposure,FunnelPage,FunnelRevision,Order,Product,StockMovement,StoreSettings,User} from "@/lib/models";
 import {GET as listFunnels,POST as writeFunnel} from "./route";
 import {GET as checkMedia,POST as uploadMedia} from "./media/route";
 import {POST as checkout} from "../../checkout/route";
@@ -31,7 +31,9 @@ describe.skipIf(!uri)("authenticated funnel upload and publishing with isolated 
  beforeAll(async()=>{
   if(uri!==allowedUri)throw new Error("Funnel integration tests require the dedicated loopback replica set");
   await mongoose.connect(uri,{dbName:database,serverSelectionTimeoutMS:5000});
-  await Promise.all([Audit,Counter,FunnelExposure,FunnelPage,FunnelRevision,Order,Product,StockMovement,User].map(model=>model.init()));
+  await Promise.all([Audit,Counter,FunnelExposure,FunnelPage,FunnelRevision,Order,Product,StockMovement,StoreSettings,User].map(model=>model.init()));
+  // Explicit, isolated shipping-policy fixture required by the live COD safety gate.
+  await StoreSettings.create({key:"main",revision:1,content:{maintenanceEnabled:false,maintenanceMessage:"Store is available for test orders.",revision:1,storeName:"ANUSMITA",supportEmail:"",supportPhone:"",currency:"BDT",timezone:"Asia/Dhaka",minimumOrderPaisa:0,maximumCodPaisa:0,dhakaShippingPaisa:7000,outsideShippingPaisa:12000}});
  });
  afterAll(async()=>{
   if(mongoose.connection.name===database){

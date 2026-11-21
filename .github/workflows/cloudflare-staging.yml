@@ -1,0 +1,95 @@
+name: Cloudflare Staging (isolated)
+on:
+  push:
+    branches:
+      - feature/cloudflare-recovery
+    paths:
+      - "cloudflare.config.ts"
+      - "workers/**"
+      - "src/**"
+      - "public/**"
+      - "scripts/deploy-cloudflare-staging.mjs"
+      - "scripts/verify-staging-vision.mjs"
+      - "scripts/verify-staging-browser-photo.mjs"
+      - "scripts/verify-staging-photo-benchmark.mjs"
+      - "scripts/verify-staging-auth.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/cloudflare-staging.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anusmita-cloudflare-staging
+  cancel-in-progress: false
+jobs:
+  build-and-stage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      ANUSMITA_STAGING: "true"
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build:cloudflare
+      # Deploy fast catalogue search and opt-in CLIP only to staging; never print secrets.
+      - name: Staging deployment availability
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "STAGING NOT DEPLOYED: configure CLOUDFLARE_STAGING_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in GitHub Actions secrets."
+            echo "The existing production Worker remains unchanged."
+            exit 0
+          fi
+          echo "Credentials available; proceeding to isolated staging Worker."
+      - name: Deploy isolated staging Worker
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: npm run deploy:cloudflare:staging
+      - name: Staging login origin and database-read smoke check
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: node scripts/verify-staging-auth.mjs
+      - name: Install hosted browser test dependency
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          mkdir -p /tmp/anusmita-e2e
+          printf '{"private":true,"type":"module"}\n' > /tmp/anusmita-e2e/package.json
+          npm install --prefix /tmp/anusmita-e2e --no-audit --no-fund playwright@1.56.1
+          /tmp/anusmita-e2e/node_modules/.bin/playwright install --with-deps chromium
+      - name: Hosted browser catalogue-photo acceptance
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        env:
+          PLAYWRIGHT_MODULE: /tmp/anusmita-e2e/node_modules/playwright/index.mjs
+        run: node scripts/verify-staging-browser-photo.mjs
+      - name: Mobile, background and false-match benchmark
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        env:
+          PLAYWRIGHT_MODULE: /tmp/anusmita-e2e/node_modules/playwright/index.mjs
+        run: node scripts/verify-staging-photo-benchmark.mjs
+      - name: Upload benchmark report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-photo-benchmark
+          path: |
+            staging-photo-benchmark.json
+            benchmark-*.png
+          if-no-files-found: ignore
+      - name: Upload hosted acceptance screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-photo-acceptance
+          path: staging-photo-acceptance.png
+          if-no-files-found: ignore
+      - name: Post-deploy safety instructions
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          echo "Staging Worker: anusmita-store-staging"
+          echo "Do not enable COD. Bind staging MongoDB/session secrets through Cloudflare secret bindings."
+          echo "Hosted photo search remains staging-only until matched catalogue items and image/angle variants pass browser acceptance."

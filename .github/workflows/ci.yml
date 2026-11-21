@@ -27,6 +27,8 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Validate staging deployment script syntax
+        run: node --check scripts/deploy-cloudflare-staging.mjs
       - name: Start isolated Funnel Builder replica set
         run: |
           docker run -d --name funnel-test-mongo -p 127.0.0.1:27018:27017 mongo:8.0 --replSet funnel-test --bind_ip_all
@@ -54,3 +56,4 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_SITE_URL: https://example.com
+

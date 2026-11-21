@@ -4,3 +4,69 @@
 
 /* The desktop search form already provides the search action. */
 @media(min-width:1281px){.anHeaderTools>a[href="/shop#store-search"]{display:none}}
+
+.anShopNewInfo .anShopRating{display:flex;align-items:center;gap:5px;margin:8px 0;color:#7e183c;font-size:13px;text-decoration:none}.anShopRating>span{color:#a7610c}.anShopRating small{font-size:11px;color:#78616b}
+
+/* Catalogue recovery: keep price, review information and CTA in separate rows. */
+.sheetGrid{align-items:stretch}
+.sheetGrid>.sheetCard{display:flex;min-width:0;flex-direction:column}
+.sheetGrid>.sheetCard>a{display:flex;min-width:0;flex:1;flex-direction:column;text-decoration:none}
+.sheetGrid .sheetCardCopy{display:flex;flex:1;min-width:0;flex-direction:column;gap:9px;padding:16px}
+.sheetGrid .sheetCardCopy>small:first-child{display:block;line-height:1.4;overflow-wrap:anywhere}
+.sheetGrid .sheetCardCopy h3{margin:0;min-height:0;font-size:clamp(16px,1.55vw,20px);line-height:1.35;overflow-wrap:anywhere}
+.sheetGrid .sheetCardMeta{display:flex;flex:1;min-width:0;flex-direction:column;align-items:flex-start;gap:8px}
+.sheetGrid .sheetCardPrice{display:block;font-size:19px;line-height:1.35;overflow-wrap:anywhere}
+.sheetGrid .sheetCardReview{display:block;color:#78616b;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.sheetGrid .sheetCardDelivery{margin:0;font-size:12px;line-height:1.5}
+.sheetGrid .sheetCardDetails{display:block;margin-top:auto;padding-top:4px;color:#a92d52;font-size:13px;font-weight:600}
+.sheetGrid .shoppingActions{margin-top:auto;padding:0 14px 14px}
+.sheetGrid .shoppingActions>span{min-height:0;line-height:1.5;overflow-wrap:anywhere}
+.sheetGrid .sheetPhoto{width:100%;aspect-ratio:1;overflow:hidden}
+.sheetGrid .sheetPhoto img{min-width:0;max-width:100%;height:100%;object-fit:contain}
+@media(max-width:600px){.sheetGrid .sheetCardCopy{gap:7px;padding:12px}.sheetGrid .sheetCardPrice{font-size:16px}.sheetGrid .sheetCardReview,.sheetGrid .sheetCardDelivery{font-size:11px}.sheetGrid .shoppingActions{padding:0 10px 10px}}
+
+/* Shop card layout v2: stable bottom actions and readable stacked metadata. */
+.catalogPage .sheetGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch;gap:20px}
+.catalogPage .sheetGrid>.sheetCard{display:flex;flex-direction:column;min-width:0;height:100%;overflow:hidden;border:1px solid #eadfe1;border-radius:13px;background:#fffdfc}
+.catalogPage .sheetGrid>.sheetCard>a{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;min-width:0;color:inherit;text-decoration:none}
+.catalogPage .sheetGrid .sheetPhoto{width:100%;height:auto;aspect-ratio:1;min-height:0;overflow:hidden;padding:14px;background:#f7eeea}
+.catalogPage .sheetGrid .sheetPhoto img{display:block;width:100%;height:100%;max-width:100%;object-fit:contain}
+.catalogPage .sheetGrid .sheetCardCopy{display:flex;flex-direction:column;align-items:stretch;flex:1 1 auto;min-width:0;padding:17px 17px 8px;gap:10px}
+.catalogPage .sheetGrid .sheetCardCopy>small:first-child{font-size:10px;line-height:1.5;color:#946773;letter-spacing:.06em;overflow-wrap:anywhere}
+.catalogPage .sheetGrid .sheetCardCopy h3{font-family:Georgia,serif;font-weight:400;font-size:clamp(16px,1.5vw,20px);line-height:1.35;min-height:0;margin:0;overflow-wrap:anywhere}
+.catalogPage .sheetGrid .sheetCardMeta{display:flex;flex-direction:column;align-items:stretch;flex:1;gap:8px;min-width:0}
+.catalogPage .sheetGrid .sheetCardPriceRow{display:block;min-width:0}
+.catalogPage .sheetGrid .sheetCardCopy .sheetCardPrice{display:block;width:100%;font-family:inherit;font-size:19px;font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+.catalogPage .sheetGrid .sheetCardReview{display:block;font-size:11px;line-height:1.5;color:#80666d;overflow-wrap:anywhere}
+.catalogPage .sheetGrid .sheetCardCopy .sheetCardDelivery{display:block;margin:0;color:#75646c;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+.catalogPage .sheetGrid .sheetCardCopy .sheetCardDetails{display:block;margin-top:auto;padding-top:10px;color:#ad3458;font-size:12px;line-height:1.5;font-weight:600}
+.catalogPage .sheetGrid>.sheetCard>.shoppingActions{flex:0 0 auto;margin:0;padding:8px 16px 17px}
+.catalogPage .sheetGrid .shoppingActions>div{display:flex;gap:8px;align-items:stretch}
+.catalogPage .sheetGrid .shoppingActions button{min-height:42px}
+.catalogPage .sheetGrid .shoppingActions .shoppingAdd{min-width:0;flex:1}
+.catalogPage .sheetGrid .shoppingActions .shoppingHeart{width:42px;flex:0 0 42px}
+.catalogPage .sheetGrid .shoppingActions>span{font-size:11px;line-height:1.45;min-height:0;margin-top:5px;overflow-wrap:anywhere}
+@media(max-width:1024px){.catalogPage .sheetGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}}
+@media(max-width:700px){.catalogPage .sheetGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.catalogPage .sheetGrid .sheetCardCopy{padding:12px 12px 7px;gap:7px}.catalogPage .sheetGrid .sheetCardCopy h3{font-size:16px}.catalogPage .sheetGrid .sheetCardCopy .sheetCardPrice{font-size:16px}.catalogPage .sheetGrid>.sheetCard>.shoppingActions{padding:7px 11px 12px}.catalogPage .sheetGrid .shoppingActions button{min-height:38px}}
+@media(max-width:360px){.catalogPage .sheetGrid{grid-template-columns:1fr}.catalogPage .sheetGrid .sheetCardCopy h3{font-size:19px}}
+
+/* Shop-card alignment: 1px smaller typography, consistent title and CTA rows. */
+.catalogPage .sheetGrid .sheetCardCopy h3{
+  font-size:clamp(15px,calc(1.5vw - 1px),19px);
+  line-height:1.35;
+  min-height:4.05em; /* reserve three lines for the longest first-row title */
+}
+.catalogPage .sheetGrid .sheetCardCopy .sheetCardPrice{font-size:18px}
+.catalogPage .sheetGrid .sheetCardReview,
+.catalogPage .sheetGrid .sheetCardCopy .sheetCardDelivery{font-size:10px;line-height:1.55}
+.catalogPage .sheetGrid .sheetCardCopy .sheetCardDetails{font-size:11px}
+.catalogPage .sheetGrid .sheetCardMeta{gap:8px}
+.catalogPage .sheetGrid .sheetCardPriceRow{min-height:1.4em}
+.catalogPage .sheetGrid>.sheetCard>.shoppingActions{margin-top:auto}
+@media(max-width:700px){
+  .catalogPage .sheetGrid .sheetCardCopy h3{font-size:15px;min-height:5.4em}
+  .catalogPage .sheetGrid .sheetCardCopy .sheetCardPrice{font-size:15px}
+}
+@media(max-width:360px){
+  .catalogPage .sheetGrid .sheetCardCopy h3{font-size:18px;min-height:0}
+}

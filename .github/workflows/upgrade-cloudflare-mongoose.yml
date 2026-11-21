@@ -1,0 +1,34 @@
+name: Upgrade Cloudflare MongoDB driver (one-time draft PR)
+on:
+  push:
+    branches: [feature/cloudflare-recovery]
+    paths:
+      - ".github/workflows/upgrade-cloudflare-mongoose.yml"
+permissions:
+  contents: write
+jobs:
+  regenerate:
+    if: github.repository == 'cehfdrmdsakibmollah/Anusmita'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/cloudflare-recovery
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Update mongoose and lockfile together
+        run: npm install 'mongoose@^9' --save --no-audit --no-fund
+      - name: Verify TypeScript before pushing draft branch
+        run: npm run typecheck
+      - name: Commit lockfile-only dependency upgrade to the draft PR branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Upgrade mongoose driver for Cloudflare Workers runtime"
+          git push origin HEAD:feature/cloudflare-recovery

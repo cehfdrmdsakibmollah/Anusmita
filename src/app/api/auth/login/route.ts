@@ -4,12 +4,21 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { User } from "@/lib/models";
 import { SESSION,signSession,assertOrigin,apiError,HttpError } from "@/lib/auth";
-import { z } from "zod";
+import {stagingDbIssue} from "@/lib/launch-config";
 export const runtime="nodejs";
 export async function POST(request:Request) {
  try {
   assertOrigin(request);
-  const {email,password}=z.object({email:z.email(),password:z.string().min(1).max(256)}).parse(await request.json());
+  // Keep login request validation runtime-portable on Node and Cloudflare.
+  // Invalid input must return 400 before any database access or login attempt.
+  let payload:unknown;
+  try{payload=await request.json();}catch{throw new HttpError(400,"Invalid request");}
+  if(!payload||typeof payload!=="object"||Array.isArray(payload))throw new HttpError(400,"Invalid request");
+  const data=payload as Record<string,unknown>;
+  const email=typeof data.email==="string"?data.email.trim().toLowerCase():"";
+  const password=typeof data.password==="string"?data.password:"";
+  if(email.length>320||! /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||
+     password.length<1||password.length>256)throw new HttpError(400,"Invalid request");
   await db();
   const user=await User.findOne({email:email.toLowerCase()}).select("+passwordHash");
   if(!user?.active) throw new HttpError(401,"Invalid credentials");
@@ -24,5 +33,19 @@ export async function POST(request:Request) {
   const res=NextResponse.json({ok:true,role:user.role});
   res.cookies.set(SESSION,token,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:12*60*60});
   return res;
- }catch(e){return apiError(e);}
+ }catch(e){
+  // Staging-only diagnostic category, never raw database errors, URI, or secrets.
+  // Production keeps the existing generic error response unchanged.
+  if(process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://anusmita-store-staging.")&&
+     !(e instanceof HttpError)&&e instanceof Error&&!("issues" in e)){
+    const msg=e.message;
+    const diagnosticCode=msg.startsWith("STAGING_DB_")&&/^STAGING_DB_[A-Z_]+$/.test(msg)?msg:
+      msg.startsWith("Refusing MongoDB connection")?stagingDbIssue(process.env.MONGODB_URI):
+      msg.includes("database connection unavailable")?"DB_CONNECTION_FAILED":
+      msg.includes("SESSION_SECRET")?"SESSION_SECRET_INVALID":"AUTH_RUNTIME_ERROR";
+    console.error("Staging login diagnostic category:",diagnosticCode);
+    return Response.json({error:"Unable to process request",diagnosticCode},{status:500});
+  }
+  return apiError(e);
+ }
 }
