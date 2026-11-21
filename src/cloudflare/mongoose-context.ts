@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import {AsyncLocalStorage} from "node:async_hooks";
-import {ATLAS_DB,dedicatedDb,dedicatedStagingDb,isStagingRuntime} from "../lib/launch-config";
+import {ATLAS_DB,dedicatedDb,dedicatedStagingDb,isStagingRuntime,stagingDbIssue} from "../lib/launch-config";
 type WorkerDbBindings={MONGODB_URI?:string;ANUSMITA_STAGING_RUNTIME?:string;NEXT_PUBLIC_SITE_URL?:string};
 export type DatabaseScope={instance:typeof mongoose;connection?:Promise<typeof mongoose>;bindings:WorkerDbBindings};
 const context=new AsyncLocalStorage<DatabaseScope>();
@@ -32,11 +32,24 @@ export async function cloudflareDb(){
  const uri=scope.bindings.MONGODB_URI;
  const isStaging=isStagingRuntime(scope.bindings);
  if(!(isStaging?dedicatedStagingDb(uri):dedicatedDb(uri)))
-  throw new Error("Refusing MongoDB connection: expected approved environment-specific Atlas cluster, database and scoped user");
+  throw new Error(isStaging?`STAGING_DB_GUARD_${stagingDbIssue(uri)}`:"Refusing MongoDB connection: expected approved environment-specific Atlas cluster, database and scoped user");
  if(!scope.connection){
   // Populate/ref resolution must use the same connection as the referring model.
   for(const [name,model] of Object.entries(mongoose.models))if(!scope.instance.models[name])scope.instance.model(name,model.schema);
   scope.connection=scope.instance.connect(uri!,{dbName:isStaging?ATLAS_DB:undefined,maxPoolSize:2,minPoolSize:0,serverSelectionTimeoutMS:10000,autoIndex:false});
  }
- return scope.connection;
+ try{return await scope.connection;}
+ catch(error){
+  scope.connection=undefined;
+  if(!isStaging)throw error;
+  const candidate=error as {name?:string;code?:string;message?:string};
+  const code=String(candidate?.code||"");
+  const name=String(candidate?.name||"");
+  const message=String(candidate?.message||"");
+  const category=/^(ENOTFOUND|EAI_AGAIN|ETIMEOUT)$/.test(code)||/querySrv|DNS|ENOTFOUND|EAI_AGAIN/i.test(message)?"STAGING_DB_DNS_FAILED":
+   /MongoServerSelectionError|MongoNetworkError|ETIMEDOUT|ECONNREFUSED|ECONNRESET/.test(name+" "+code)?"STAGING_DB_NETWORK_FAILED":
+   /AuthenticationFailed|MongoServerError/.test(name)&&(/auth/i.test(message)||code==="18")?"STAGING_DB_AUTH_FAILED":
+   "STAGING_DB_CONNECTION_FAILED";
+  throw new Error(category);
+ }
 }
