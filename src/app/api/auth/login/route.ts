@@ -24,5 +24,18 @@ export async function POST(request:Request) {
   const res=NextResponse.json({ok:true,role:user.role});
   res.cookies.set(SESSION,token,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:12*60*60});
   return res;
- }catch(e){return apiError(e);}
+ }catch(e){
+  // Staging-only diagnostic category, never raw database errors, URI, or secrets.
+  // Production keeps the existing generic error response unchanged.
+  if(process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://anusmita-store-staging.")&&
+     !(e instanceof HttpError)&&e instanceof Error){
+    const msg=e.message;
+    const diagnosticCode=msg.startsWith("Refusing MongoDB connection")?"DB_URI_REJECTED":
+      msg.includes("database connection unavailable")?"DB_CONNECTION_FAILED":
+      msg.includes("SESSION_SECRET")?"SESSION_SECRET_INVALID":"AUTH_RUNTIME_ERROR";
+    console.error("Staging login diagnostic category:",diagnosticCode);
+    return Response.json({error:"Unable to process request",diagnosticCode},{status:500});
+  }
+  return apiError(e);
+ }
 }
