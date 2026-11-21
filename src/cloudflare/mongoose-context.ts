@@ -5,7 +5,7 @@ type WorkerDbBindings={MONGODB_URI?:string;ANUSMITA_STAGING_RUNTIME?:string;NEXT
 export type DatabaseScope={instance:typeof mongoose;connection?:Promise<typeof mongoose>;bindings:WorkerDbBindings};
 const context=new AsyncLocalStorage<DatabaseScope>();
 export function activeMongoose(){return context.getStore()?.instance||mongoose;}
-export function newDatabaseScope(rawBindings:unknown):DatabaseScope{
+export function newDatabaseScope(rawBindings:unknown=undefined):DatabaseScope{
  const candidate=rawBindings&&typeof rawBindings==="object"?rawBindings as Record<string,unknown>:{};
  const pick=(name:string)=>typeof candidate[name]==="string"?candidate[name] as string:undefined;
  return {instance:new mongoose.Mongoose() as typeof mongoose,bindings:{
