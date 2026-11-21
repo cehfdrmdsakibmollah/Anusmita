@@ -12,6 +12,7 @@ on:
       - "scripts/verify-staging-vision.mjs"
       - "scripts/verify-staging-browser-photo.mjs"
       - "scripts/verify-staging-photo-benchmark.mjs"
+      - "scripts/verify-staging-auth.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/cloudflare-staging.yml"
@@ -50,6 +51,9 @@ jobs:
       - name: Deploy isolated staging Worker
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
         run: npm run deploy:cloudflare:staging
+      - name: Staging login origin and database-read smoke check
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: node scripts/verify-staging-auth.mjs
       - name: Install hosted browser test dependency
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
         run: |
