@@ -16,7 +16,7 @@ export function dedicatedDb(uri?:string):boolean{
  try{
   const u=new URL(uri);
   return u.protocol==="mongodb+srv:"&&u.hostname.toLowerCase()===ATLAS_HOST&&
-   (decodeURIComponent(u.pathname.slice(1))===ATLAS_DB||u.pathname==="/"||u.pathname==="")&&
+   decodeURIComponent(u.pathname.slice(1))===ATLAS_DB&&
    decodeURIComponent(u.username)===ATLAS_APP_USER&&
    Boolean(u.password)&&!u.password.toLowerCase().includes("replace")&&!u.password.startsWith("%3C");
  }catch{return false;}
@@ -40,7 +40,7 @@ export function dedicatedStagingDb(uri?:string):boolean{
  try{
   const u=new URL(uri);
   return u.protocol==="mongodb+srv:"&&u.hostname.toLowerCase()===STAGING_ATLAS_HOST&&
-   decodeURIComponent(u.pathname.slice(1))===ATLAS_DB&&
+   (decodeURIComponent(u.pathname.slice(1))===ATLAS_DB||u.pathname==="/"||u.pathname==="")&&
    decodeURIComponent(u.username)===ATLAS_APP_USER&&
    Boolean(u.password)&&!u.password.toLowerCase().includes("replace")&&!u.password.startsWith("%3C");
  }catch{return false;}
