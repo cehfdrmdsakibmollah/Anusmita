@@ -4,12 +4,20 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { User } from "@/lib/models";
 import { SESSION,signSession,assertOrigin,apiError,HttpError } from "@/lib/auth";
-import { z } from "zod";
 export const runtime="nodejs";
 export async function POST(request:Request) {
  try {
   assertOrigin(request);
-  const {email,password}=z.object({email:z.email(),password:z.string().min(1).max(256)}).parse(await request.json());
+  // Keep login request validation runtime-portable on Node and Cloudflare.
+  // Invalid input must return 400 before any database access or login attempt.
+  let payload:unknown;
+  try{payload=await request.json();}catch{throw new HttpError(400,"Invalid request");}
+  if(!payload||typeof payload!=="object"||Array.isArray(payload))throw new HttpError(400,"Invalid request");
+  const data=payload as Record<string,unknown>;
+  const email=typeof data.email==="string"?data.email.trim().toLowerCase():"";
+  const password=typeof data.password==="string"?data.password:"";
+  if(email.length>320||! /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||
+     password.length<1||password.length>256)throw new HttpError(400,"Invalid request");
   await db();
   const user=await User.findOne({email:email.toLowerCase()}).select("+passwordHash");
   if(!user?.active) throw new HttpError(401,"Invalid credentials");
