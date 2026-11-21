@@ -8,7 +8,9 @@ if (process.env.ANUSMITA_STAGING !== "true") {
   console.error("Refusing to deploy: ANUSMITA_STAGING=true is required.");
   process.exit(2);
 }
-// Explicit staging-only conflict override. Cloudflare cf RC preserves dashboard-managed secrets.\n// Production must never use this script; ANUSMITA_STAGING=true is enforced above.\nconst result=await new Promise((resolve,reject)=>{
+// Explicit staging-only conflict override. Cloudflare cf RC preserves dashboard-managed secrets.
+// Production must never use this script; ANUSMITA_STAGING=true is enforced above.
+const result=await new Promise((resolve,reject)=>{
   const child=spawn(process.execPath,["node_modules/cf/bin/cf","deploy","--force"],{
     stdio:"inherit",env:{...process.env,ANUSMITA_STAGING:"true"}
   });
